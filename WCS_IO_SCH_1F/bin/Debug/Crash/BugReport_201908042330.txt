@@ -1,0 +1,261 @@
+Application:       TSK_COMM_IOSCH
+Version:           1.0.0.0
+Date:              04-08-2019 23:30:11
+Computer name:     CHOIWONBIN
+User name:         wonbin.choi
+OS:                Microsoft Windows NT 6.2.9200.0
+Culture:           ko-KR
+Resolution:        {Width=1536, Height=864}
+System up time:    01:57:51.8510000
+App up time:       00:00:24.8756616
+Total memory:      8106Mb
+Available memory:  2502Mb
+
+Exception classes:   
+   System.IndexOutOfRangeException
+Exception messages: 
+   인덱스가 배열 범위를 벗어났습니다.
+Stack Traces:
+   위치: TSK_COMM_IOSCH.SYS_MAIN.WrkThStart() 파일 D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\FRM\SYS\SYS_MAIN.cs:줄 130
+   위치: TSK_COMM_IOSCH.SYS_MAIN.SYS_MAIN_Load(Object sender, EventArgs e) 파일 D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\FRM\SYS\SYS_MAIN.cs:줄 110
+   위치: System.Windows.Forms.Form.OnLoad(EventArgs e)
+   위치: System.Windows.Forms.Form.OnCreateControl()
+   위치: System.Windows.Forms.Control.CreateControl(Boolean fIgnoreVisible)
+   위치: System.Windows.Forms.Control.CreateControl()
+   위치: System.Windows.Forms.Control.WmShowWindow(Message& m)
+   위치: System.Windows.Forms.Control.WndProc(Message& m)
+   위치: System.Windows.Forms.ScrollableControl.WndProc(Message& m)
+   위치: System.Windows.Forms.Form.WmShowWindow(Message& m)
+   위치: System.Windows.Forms.Form.WndProc(Message& m)
+   위치: System.Windows.Forms.Control.ControlNativeWindow.OnMessage(Message& m)
+   위치: System.Windows.Forms.Control.ControlNativeWindow.WndProc(Message& m)
+   위치: System.Windows.Forms.NativeWindow.Callback(IntPtr hWnd, Int32 msg, IntPtr wparam, IntPtr lparam)
+Loaded Modules:
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.vshost.exe 10.0.30319.1
+C:\WINDOWS\SYSTEM32\ntdll.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\MSCOREE.DLL 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\KERNEL32.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\KERNELBASE.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\f_im.dll 1, 0, 2, 13
+C:\Program Files (x86)\Fasoo DRM\f_ah.dll 1, 5, 0, 50
+C:\WINDOWS\System32\USER32.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\win32u.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\GDI32.dll 10.0.17763.592 (WinBuild.160101.0800)
+C:\WINDOWS\System32\gdi32full.dll 10.0.17763.615 (WinBuild.160101.0800)
+C:\WINDOWS\System32\msvcp_win.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\ucrtbase.dll 10.0.17763.404 (WinBuild.160101.0800)
+C:\WINDOWS\System32\MSVCRT.dll 7.0.17763.475 (WinBuild.160101.0800)
+C:\WINDOWS\System32\IMM32.DLL 10.0.17763.1 (WinBuild.160101.0800)
+C:\Program Files (x86)\Fasoo DRM\f_sps.dll 2.8.1.263
+C:\WINDOWS\System32\ADVAPI32.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\sechost.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\RPCRT4.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\SspiCli.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\CRYPTBASE.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\bcryptPrimitives.dll 10.0.17763.615 (WinBuild.160101.0800)
+C:\WINDOWS\System32\ole32.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\combase.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\OLEAUT32.dll 10.0.17763.437 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\ntmarta.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\msimg32.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\version.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\winspool.drv 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\kernel.appcore.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\bcrypt.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\PROPSYS.dll 7.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\shcore.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\IPHLPAPI.DLL 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\psapi.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\wtsapi32.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\shell32.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\cfgmgr32.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\windows.storage.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\profapi.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\powrprof.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\shlwapi.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\cryptsp.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\mscoreei.dll 4.7.3190.0 built by: NET472REL1LAST_C
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\clr.dll 4.7.3416.0 built by: NET472REL1LAST_B
+C:\WINDOWS\SYSTEM32\MSVCR120_CLR0400.dll 12.00.52519.0 built by: VSWINSERVICING
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\mscorlib\a5a47e8e5e2880adecca43eb928673f1\mscorlib.ni.dll 4.7.3416.0 built by: NET472REL1LAST_B
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\clrjit.dll 4.7.3416.0 built by: NET472REL1LAST_B
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\System\2fb412bd4cb1d503da1dc52104e9b1a4\System.ni.dll 4.7.3416.0 built by: NET472REL1LAST_B
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\System.Drawing\ea876753c0c4a56336a570bda21534c9\System.Drawing.ni.dll 4.7.3190.0 built by: NET472REL1LAST_C
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\System.Windows.Forms\a212bd5697ff95c10df6609211086c99\System.Windows.Forms.ni.dll 4.7.3324.0 built by: NET472REL1LAST_C
+C:\Program Files\Microsoft Visual Studio 10.0\Common7\Packages\Debugger\x86\Microsoft.VisualStudio.Debugger.Runtime.Impl.dll 10.0.30319.1 built by: RTMRel
+C:\WINDOWS\SYSTEM32\MSVCR100.dll 10.00.40219.325
+C:\WINDOWS\System32\clbcatq.dll 2001.12.10941.16384 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\sxs.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\System.Core\f59803675bd581586c80878df4179d8a\System.Core.ni.dll 4.7.3429.0 built by: NET472REL1LAST_C
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\Microsoft.V9921e851#\be0f939bdb2683417a54d05b51c89f4b\Microsoft.VisualBasic.ni.dll 14.7.3190.0 built by: NET472REL1LAST_C
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\System.Data\7ddfa5bab2f6437acd4ce4fd5e9e4b9d\System.Data.ni.dll 4.7.3260.0 built by: NET472REL1LAST_C
+C:\WINDOWS\Microsoft.Net\assembly\GAC_32\System.Data\v4.0_4.0.0.0__b77a5c561934e089\System.Data.dll 4.7.3260.0 built by: NET472REL1LAST_C
+C:\WINDOWS\System32\WS2_32.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\CRYPT32.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\MSASN1.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\System.Deployment\d3f4b75b9297275b394cf2c2e53b9794\System.Deployment.ni.dll 4.7.3190.0 built by: NET472REL1LAST_C
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\System.Xml\8154a985b143af64c1c8e7b3c9aef692\System.Xml.ni.dll 4.7.3190.0 built by: NET472REL1LAST_C
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\System.Configuration\4535ef5b7257234ff4b10886e2a2fd57\System.Configuration.ni.dll 4.7.3324.0 built by: NET472REL1LAST_C
+C:\WINDOWS\system32\rsaenh.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\system32\uxtheme.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82.17763.615_none_588d17fb78ae80f3\comctl32.dll 5.82 (WinBuild.160101.0800)
+C:\Program Files\PrintChaser\PCSW.DLL 1, 2015, 127, 1
+C:\WINDOWS\SYSTEM32\NETAPI32.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\MSVCP60.dll 7.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\NETUTILS.DLL 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\WKSCLI.DLL 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\system32\dwmapi.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\MSCTF.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\TextInputFramework.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\CoreMessaging.dll 10.0.17763.194
+C:\WINDOWS\System32\CoreUIComponents.dll 10.0.17763.1
+C:\WINDOWS\SYSTEM32\wintypes.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\Windows\System32\IME\IMEKR\imkrtip.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\Windows\System32\IME\shared\imetip.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\OLEACC.dll 7.2.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\DUI70.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\Windows\System32\IME\IMEKR\imkrapi.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\Windows\System32\IME\shared\imjkapi.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\WinSxS\x86_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.17763.615_none_7e4c6b06762ec7a8\gdiplus.dll 10.0.17763.615 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\DWrite.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_6.0.17763.615_none_4d6178211b9c4dda\comctl32.dll 6.10 (WinBuild.160101.0800)
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\diasymreader.dll 14.7.3190.0 built by: NET472REL1LAST_C
+C:\Program Files\PrintChaser\DRUVER.DLL 1, 2014, 1210, 2
+C:\WINDOWS\System32\comdlg32.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\coml2.dll 10.0.17763.134 (WinBuild.160101.0800)
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\perfcounter.dll 4.7.3190.0 built by: NET472REL1LAST_C
+C:\WINDOWS\SYSTEM32\pdh.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\Windows\System32\BitsProxy.dll 7.8.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\NSI.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\cscapi.dll 10.0.17763.404 (WinBuild.160101.0800)
+C:\WINDOWS\WinSxS\x86_microsoft.vc80.crt_1fc8b3b9a1e18e3b_8.0.50727.9554_none_d08d6fa2442aa556\MSVCR80.dll 8.00.50727.9554
+c:\Program Files (x86)\Microsoft SQL Server\100\Shared\instapi10.dll 2007.0100.1600.022 ((SQL_PreRelease).080709-1414 )
+C:\WINDOWS\SYSTEM32\rasman.dll 10.0.17763.292 (WinBuild.160101.0800)
+C:\WINDOWS\System32\perfos.dll 10.0.17763.702 (WinBuild.160101.0800)
+
+Application:       TSK_COMM_IOSCH
+Version:           1.0.0.0
+Date:              04-08-2019 23:30:32
+Computer name:     CHOIWONBIN
+User name:         wonbin.choi
+OS:                Microsoft Windows NT 6.2.9200.0
+Culture:           ko-KR
+Resolution:        {Width=1536, Height=864}
+System up time:    01:58:09.1740000
+App up time:       00:00:03.9752506
+Total memory:      8106Mb
+Available memory:  2481Mb
+
+Exception classes:   
+   System.IndexOutOfRangeException
+Exception messages: 
+   인덱스가 배열 범위를 벗어났습니다.
+Stack Traces:
+   위치: TSK_COMM_IOSCH.SYS_MAIN.WrkThStart() 파일 D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\FRM\SYS\SYS_MAIN.cs:줄 130
+   위치: TSK_COMM_IOSCH.SYS_MAIN.SYS_MAIN_Load(Object sender, EventArgs e) 파일 D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\FRM\SYS\SYS_MAIN.cs:줄 110
+   위치: System.Windows.Forms.Form.OnLoad(EventArgs e)
+   위치: System.Windows.Forms.Form.OnCreateControl()
+   위치: System.Windows.Forms.Control.CreateControl(Boolean fIgnoreVisible)
+   위치: System.Windows.Forms.Control.CreateControl()
+   위치: System.Windows.Forms.Control.WmShowWindow(Message& m)
+   위치: System.Windows.Forms.Control.WndProc(Message& m)
+   위치: System.Windows.Forms.ScrollableControl.WndProc(Message& m)
+   위치: System.Windows.Forms.Form.WmShowWindow(Message& m)
+   위치: System.Windows.Forms.Form.WndProc(Message& m)
+   위치: System.Windows.Forms.Control.ControlNativeWindow.OnMessage(Message& m)
+   위치: System.Windows.Forms.Control.ControlNativeWindow.WndProc(Message& m)
+   위치: System.Windows.Forms.NativeWindow.Callback(IntPtr hWnd, Int32 msg, IntPtr wparam, IntPtr lparam)
+Loaded Modules:
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe 1.0.0.0
+C:\WINDOWS\SYSTEM32\ntdll.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\MSCOREE.DLL 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\KERNEL32.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\KERNELBASE.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\f_im.dll 1, 0, 2, 13
+C:\Program Files (x86)\Fasoo DRM\f_ah.dll 1, 5, 0, 50
+C:\WINDOWS\System32\USER32.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\win32u.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\GDI32.dll 10.0.17763.592 (WinBuild.160101.0800)
+C:\WINDOWS\System32\gdi32full.dll 10.0.17763.615 (WinBuild.160101.0800)
+C:\WINDOWS\System32\msvcp_win.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\ucrtbase.dll 10.0.17763.404 (WinBuild.160101.0800)
+C:\WINDOWS\System32\MSVCRT.dll 7.0.17763.475 (WinBuild.160101.0800)
+C:\WINDOWS\System32\IMM32.DLL 10.0.17763.1 (WinBuild.160101.0800)
+C:\Program Files (x86)\Fasoo DRM\f_sps.dll 2.8.1.263
+C:\WINDOWS\System32\ADVAPI32.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\sechost.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\RPCRT4.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\SspiCli.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\CRYPTBASE.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\bcryptPrimitives.dll 10.0.17763.615 (WinBuild.160101.0800)
+C:\WINDOWS\System32\ole32.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\combase.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\OLEAUT32.dll 10.0.17763.437 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\ntmarta.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\msimg32.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\version.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\winspool.drv 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\kernel.appcore.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\bcrypt.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\PROPSYS.dll 7.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\shcore.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\IPHLPAPI.DLL 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\psapi.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\wtsapi32.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\shell32.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\cfgmgr32.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\windows.storage.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\profapi.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\powrprof.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\shlwapi.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\cryptsp.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\mscoreei.dll 4.7.3190.0 built by: NET472REL1LAST_C
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\clr.dll 4.7.3416.0 built by: NET472REL1LAST_B
+C:\WINDOWS\SYSTEM32\MSVCR120_CLR0400.dll 12.00.52519.0 built by: VSWINSERVICING
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\mscorlib\a5a47e8e5e2880adecca43eb928673f1\mscorlib.ni.dll 4.7.3416.0 built by: NET472REL1LAST_B
+C:\WINDOWS\system32\uxtheme.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\Program Files\PrintChaser\PCSW.DLL 1, 2015, 127, 1
+C:\WINDOWS\System32\WS2_32.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\NETAPI32.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\MSVCP60.dll 7.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\NETUTILS.DLL 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\WKSCLI.DLL 10.0.17763.1 (WinBuild.160101.0800)
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\clrjit.dll 4.7.3416.0 built by: NET472REL1LAST_B
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\System\2fb412bd4cb1d503da1dc52104e9b1a4\System.ni.dll 4.7.3416.0 built by: NET472REL1LAST_B
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\System.Drawing\ea876753c0c4a56336a570bda21534c9\System.Drawing.ni.dll 4.7.3190.0 built by: NET472REL1LAST_C
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\System.Windows.Forms\a212bd5697ff95c10df6609211086c99\System.Windows.Forms.ni.dll 4.7.3324.0 built by: NET472REL1LAST_C
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\System.Core\f59803675bd581586c80878df4179d8a\System.Core.ni.dll 4.7.3429.0 built by: NET472REL1LAST_C
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\System.Data\7ddfa5bab2f6437acd4ce4fd5e9e4b9d\System.Data.ni.dll 4.7.3260.0 built by: NET472REL1LAST_C
+C:\WINDOWS\Microsoft.Net\assembly\GAC_32\System.Data\v4.0_4.0.0.0__b77a5c561934e089\System.Data.dll 4.7.3260.0 built by: NET472REL1LAST_C
+C:\WINDOWS\System32\CRYPT32.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\MSASN1.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\System.Configuration\4535ef5b7257234ff4b10886e2a2fd57\System.Configuration.ni.dll 4.7.3324.0 built by: NET472REL1LAST_C
+C:\WINDOWS\assembly\NativeImages_v4.0.30319_32\System.Xml\8154a985b143af64c1c8e7b3c9aef692\System.Xml.ni.dll 4.7.3190.0 built by: NET472REL1LAST_C
+C:\WINDOWS\system32\rsaenh.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_5.82.17763.615_none_588d17fb78ae80f3\comctl32.dll 6.10 (WinBuild.160101.0800)
+C:\WINDOWS\system32\dwmapi.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\WinSxS\x86_microsoft.windows.gdiplus_6595b64144ccf1df_1.1.17763.615_none_7e4c6b06762ec7a8\gdiplus.dll 10.0.17763.615 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\DWrite.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\MSCTF.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\WinSxS\x86_microsoft.windows.common-controls_6595b64144ccf1df_6.0.17763.615_none_4d6178211b9c4dda\comctl32.dll 6.10 (WinBuild.160101.0800)
+C:\WINDOWS\System32\TextInputFramework.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\CoreMessaging.dll 10.0.17763.194
+C:\WINDOWS\System32\CoreUIComponents.dll 10.0.17763.1
+C:\WINDOWS\SYSTEM32\wintypes.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\WINDOWS\System32\clbcatq.dll 2001.12.10941.16384 (WinBuild.160101.0800)
+C:\Windows\System32\IME\IMEKR\imkrtip.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\Windows\System32\IME\shared\imetip.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\OLEACC.dll 7.2.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\DUI70.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\Windows\System32\IME\IMEKR\imkrapi.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\Windows\System32\IME\shared\imjkapi.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\perfcounter.dll 4.7.3190.0 built by: NET472REL1LAST_C
+C:\WINDOWS\SYSTEM32\pdh.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\Windows\System32\BitsProxy.dll 7.8.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\System32\NSI.dll 10.0.17763.1 (WinBuild.160101.0800)
+C:\WINDOWS\SYSTEM32\cscapi.dll 10.0.17763.404 (WinBuild.160101.0800)
+C:\WINDOWS\WinSxS\x86_microsoft.vc80.crt_1fc8b3b9a1e18e3b_8.0.50727.9554_none_d08d6fa2442aa556\MSVCR80.dll 8.00.50727.9554
+c:\Program Files (x86)\Microsoft SQL Server\100\Shared\instapi10.dll 2007.0100.1600.022 ((SQL_PreRelease).080709-1414 )
+C:\WINDOWS\SYSTEM32\rasman.dll 10.0.17763.292 (WinBuild.160101.0800)
+C:\WINDOWS\System32\perfos.dll 10.0.17763.702 (WinBuild.160101.0800)
+C:\Windows\Microsoft.NET\Framework\v4.0.30319\diasymreader.dll 14.7.3190.0 built by: NET472REL1LAST_C

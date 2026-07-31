@@ -1,0 +1,81 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DeviceMap>
+	<EquipType desc="생략가능-CV로만 사용될것이므로">CV</EquipType>
+    <CommMethod desc="Ethernet(TCP):1,Ethernet(UDP):2,Serial:3,XCom:4,RFC:5">1</CommMethod>
+    <CPU desc="MelsecQ:1,AB:2,Simens:3,Fara:5">1</CPU>
+
+    <!--<WordPerTrack desc="한 트랙당 워드수(2,4,5,10)">10</WordPerTrack>-->
+    <AddressArea desc="D:1,R:2">1</AddressArea>
+	<UseDestTable use="0" desc="미사용(소스에서도 없앴음) - EcsDefine.xml에서 DestCode라는 것으로 운영함"/>
+	<UseScDest use="1" from="1" to="11" list="" listDesc="list의 구분자는 ,(콤마)임!"/>
+	<TrackingArea keywords="LuggNum, JobType, DestPos" desc="Keywords는 DeviceMap.xml마다 (순서도) 다 같아야 함!">
+		<KeyWord>LuggNum</KeyWord>
+		<KeyWord>JobType</KeyWord>
+		<KeyWord>DestPos</KeyWord>
+	</TrackingArea>
+	
+	<!--한 트랙당 워드수가 2,4,5일때-->
+	<TrackDatas Count="28" desc="하위Node의 type=>Byte(B),Nibble(N),Word(W),bit(b),Multi(M)">
+		<Word type="W" addr="D5n+0" name="LuggNum" />
+		<Word type="B" addr="D5n+1" name="D5n+1" desc="Type이 M 일때는 하위의 엘리먼트 값을 아래처럼 지정해줘야 한다.(ByteL,Nibble0,Bit0,BitF) ">
+			<ByteL name="DestPos"/>
+			<ByteH name="JobType"/>
+		</Word>
+		<Word type="b" addr="D5n+2" name="SensorData">
+			<Bit name="ProductSensor" desc="D5n+2.0"/>
+		</Word>
+		<Word type="W" addr="D5n+3" name="ErrorCode" />
+		<Word type="W" addr="D5n+4" name="D5n+4" />
+	</TrackDatas>
+
+	<SeparatelyETC use="1" desc="Seq:해당 비트가 연속되는지 => :연속성 없음(0), 16개내의 연속성(1), 16개외의 연속성(2), 전Tag에서 연결(3)">
+		<Area type="b" seq="0" name="StoStation" address="200"/>
+		<Area type="b" seq="0" name="RetStation" address="201"/>
+		<Area type="b" seq="0" name="ScStoHS" address="202"/>
+		<Area type="b" seq="0" name="ScRetHS" address="203"/>
+		<Area type="b" seq="0" name="RtvDepartHS" address="204"/>
+		<Area type="b" seq="0" name="RtvArriveHS" address="205"/>
+		<Area type="b" seq="0" name="Emergency" address="206"/>
+		<Area type="b" seq="1" name="Auto" address="207">
+			<Bit  desc="D207.0" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
+				<TrList>801</TrList>
+				<TrList>802</TrList>
+				<TrList>803</TrList>
+				<TrList>804</TrList>
+				<TrList>805</TrList>
+				<TrList>806</TrList>
+				<TrList>807</TrList>
+				<TrList>808</TrList>
+				<TrList>809</TrList>
+				<TrList>810</TrList>
+				<TrList>811</TrList>
+				<TrList>812</TrList>
+				<TrList>813</TrList>
+				<TrList>814</TrList>
+				<TrList>815</TrList>
+				<TrList>816</TrList>
+				<TrList>817</TrList>
+				<TrList>818</TrList>
+				<TrList>819</TrList>
+				<TrList>820</TrList>
+				<TrList>821</TrList>
+				<TrList>822</TrList>
+				<TrList>823</TrList>
+				<TrList>824</TrList>
+				<TrList>825</TrList>
+				<TrList>826</TrList>
+				<TrList>827</TrList>
+				<TrList>828</TrList>
+				<TrList>829</TrList>
+				<TrList>830</TrList>
+				<TrList>831</TrList>
+				<TrList>832</TrList>
+				<TrList>833</TrList>
+				<TrList>834</TrList>
+				<TrList>835</TrList>
+			</Bit>
+		</Area>
+	</SeparatelyETC>
+
+	<FlantEquip use="0"/>
+</DeviceMap>

@@ -1,0 +1,305 @@
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\WCS_TASK_CV.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\WCS_TASK_CV.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\Mono.Security.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\Npgsql.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\FarPoint.Win.Spread.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\FarPoint.Win.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\FarPoint.Excel.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\FarPoint.CalcEngine.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\Npgsql.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\FarPoint.Win.Spread.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\FarPoint.Win.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\FarPoint.Excel.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\FarPoint.CalcEngine.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\de\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\es\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\fi\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\fr\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\ja\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.SYS_MAIN.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.Properties.Resources.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.csproj.GenerateResource.Cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\obj\Debug\WCS_TASK_CV.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\obj\Debug\WCS_TASK_CV.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\WCS_TASK_CV.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\WCS_TASK_CV.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\Mono.Security.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\Npgsql.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\FarPoint.Win.Spread.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\FarPoint.Win.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\FarPoint.Excel.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\FarPoint.CalcEngine.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\Npgsql.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\FarPoint.Win.Spread.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\FarPoint.Win.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\FarPoint.Excel.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\FarPoint.CalcEngine.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\de\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\es\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\fi\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\fr\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\ja\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\obj\Debug\WCS_TASK_CV.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\obj\Debug\WCS_TASK_CV.SYS_MAIN.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\obj\Debug\WCS_TASK_CV.Properties.Resources.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\WCS_TASK_CV - 수정중\obj\Debug\WCS_TASK_CV.csproj.GenerateResource.Cache
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.exe
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.pdb
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\WCS_TASK_CV.exe
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\WCS_TASK_CV.pdb
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\Mono.Security.dll
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\Npgsql.dll
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Win.Spread.dll
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Win.dll
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Excel.dll
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.CalcEngine.dll
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\Npgsql.xml
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Win.Spread.xml
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Win.xml
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Excel.xml
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.CalcEngine.xml
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\de\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\es\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\fi\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\fr\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\ja\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.SYS_MAIN.resources
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.Properties.Resources.resources
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.csproj.GenerateResource.Cache
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.exe
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.pdb
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\WCS_TASK_CV.exe
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\WCS_TASK_CV.pdb
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\Mono.Security.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\Npgsql.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Win.Spread.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Win.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Excel.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.CalcEngine.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\Npgsql.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Win.Spread.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Win.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Excel.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.CalcEngine.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\de\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\es\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\fi\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\fr\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\ja\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.SYS_MAIN.resources
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.Properties.Resources.resources
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.csproj.GenerateResource.Cache
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\obj\Debug\WCS_TASK_CV.exe
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\obj\Debug\WCS_TASK_CV.pdb
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\WCS_TASK_CV.exe
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\WCS_TASK_CV.pdb
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\Mono.Security.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\Npgsql.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\FarPoint.Win.Spread.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\FarPoint.Win.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\FarPoint.Excel.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\FarPoint.CalcEngine.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\Npgsql.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\FarPoint.Win.Spread.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\FarPoint.Win.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\FarPoint.Excel.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\FarPoint.CalcEngine.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\de\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\es\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\fi\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\fr\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\ja\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\obj\Debug\WCS_TASK_CV.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\obj\Debug\WCS_TASK_CV.SYS_MAIN.resources
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\obj\Debug\WCS_TASK_CV.Properties.Resources.resources
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\WCS_TASK_CV(0125_테스트 해야할 프로그램)\obj\Debug\WCS_TASK_CV.csproj.GenerateResource.Cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\WCS_TASK_CV.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\WCS_TASK_CV.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\Mono.Security.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\Npgsql.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\FarPoint.Win.Spread.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\FarPoint.Win.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\FarPoint.Excel.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\FarPoint.CalcEngine.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\Npgsql.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\FarPoint.Win.Spread.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\FarPoint.Win.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\FarPoint.Excel.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\FarPoint.CalcEngine.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\de\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\es\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\fi\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\fr\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\ja\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.csprojResolveAssemblyReference.cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.SYS_MAIN.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.Properties.Resources.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.csproj.GenerateResource.Cache
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.exe
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.pdb
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\WCS_TASK_CV.exe
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\WCS_TASK_CV.pdb
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\Mono.Security.dll
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\Npgsql.dll
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Win.Spread.dll
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Win.dll
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Excel.dll
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.CalcEngine.dll
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\Npgsql.xml
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Win.Spread.xml
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Win.xml
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.Excel.xml
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\FarPoint.CalcEngine.xml
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\de\Npgsql.resources.dll
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\es\Npgsql.resources.dll
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\fi\Npgsql.resources.dll
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\fr\Npgsql.resources.dll
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\ja\Npgsql.resources.dll
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.csprojResolveAssemblyReference.cache
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.SYS_MAIN.resources
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.Properties.Resources.resources
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.csproj.GenerateResource.Cache
+D:\1_프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.exe
+D:\1_프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.pdb
+D:\OneDrive - Doosan\Project\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.exe
+D:\OneDrive - Doosan\Project\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.pdb
+C:\Users\USER\Downloads\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.SYS_MAIN.resources
+C:\Users\USER\Downloads\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.Properties.Resources.resources
+C:\Users\USER\Downloads\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.csproj.GenerateResource.cache
+C:\Users\USER\Downloads\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.exe
+C:\Users\USER\Downloads\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.pdb
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\WCS_TASK_CV.exe
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\WCS_TASK_CV.pdb
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\Mono.Security.dll
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\Npgsql.dll
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\FarPoint.Win.Spread.dll
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\FarPoint.Win.dll
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\FarPoint.Excel.dll
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\FarPoint.CalcEngine.dll
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\Npgsql.xml
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\FarPoint.Win.Spread.xml
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\FarPoint.Win.xml
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\FarPoint.Excel.xml
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\FarPoint.CalcEngine.xml
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\de\Npgsql.resources.dll
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\es\Npgsql.resources.dll
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\fi\Npgsql.resources.dll
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\fr\Npgsql.resources.dll
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\ja\Npgsql.resources.dll
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\zh-CN\Npgsql.resources.dll
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\7_DeviceMap\KeyWord.xml
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\7_DeviceMap\DeviceMap01.xml
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\7_DeviceMap\DeviceMap02.xml
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\7_DeviceMap\DeviceMap03.xml
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\7_DeviceMap\DeviceMap04.xml
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\7_DeviceMap\DeviceMap05.xml
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\7_DeviceMap\DeviceMap06.xml
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\7_DeviceMap\DeviceMap07.xml
+C:\Users\USER\Downloads\WCS_TASK_CV\bin\Debug\7_DeviceMap\DeviceMap08.xml
+C:\Users\USER\Downloads\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.csprojResolveAssemblyReference.cache
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\7_DeviceMap\KeyWord.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\7_DeviceMap\DeviceMap01.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\7_DeviceMap\DeviceMap02.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\7_DeviceMap\DeviceMap03.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\7_DeviceMap\DeviceMap04.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\7_DeviceMap\DeviceMap05.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\7_DeviceMap\DeviceMap06.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\7_DeviceMap\DeviceMap07.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\7_DeviceMap\DeviceMap08.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\WCS_TASK_CV.exe
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\WCS_TASK_CV.pdb
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\Mono.Security.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\Npgsql.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\FarPoint.Win.Spread.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\FarPoint.Win.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\FarPoint.Excel.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\FarPoint.CalcEngine.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\Npgsql.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\FarPoint.Win.Spread.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\FarPoint.Win.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\FarPoint.Excel.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\FarPoint.CalcEngine.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\de\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\es\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\fi\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\fr\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\ja\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.csproj.AssemblyReference.cache
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.SYS_MAIN.resources
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.Properties.Resources.resources
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.csproj.GenerateResource.cache
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.csproj.CoreCompileInputs.cache
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\obj\Debug\WCS_TASK.D115DFD0.Up2Date
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.exe
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_CV\obj\Debug\WCS_TASK_CV.pdb
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\7_DeviceMap\KeyWord.xml
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\7_DeviceMap\DeviceMap01.xml
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\7_DeviceMap\DeviceMap02.xml
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\7_DeviceMap\DeviceMap03.xml
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\7_DeviceMap\DeviceMap04.xml
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\7_DeviceMap\DeviceMap05.xml
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\7_DeviceMap\DeviceMap06.xml
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\7_DeviceMap\DeviceMap07.xml
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\7_DeviceMap\DeviceMap08.xml
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\WCS_TASK_CV.exe
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\WCS_TASK_CV.pdb
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\Mono.Security.dll
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\Npgsql.dll
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\FarPoint.Win.Spread.dll
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\FarPoint.Win.dll
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\FarPoint.Excel.dll
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\FarPoint.CalcEngine.dll
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\Npgsql.xml
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\FarPoint.Win.Spread.xml
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\FarPoint.Win.xml
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\FarPoint.Excel.xml
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\FarPoint.CalcEngine.xml
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\de\Npgsql.resources.dll
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\es\Npgsql.resources.dll
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\fi\Npgsql.resources.dll
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\fr\Npgsql.resources.dll
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\ja\Npgsql.resources.dll
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\obj\Debug\WCS_TASK_CV.csproj.AssemblyReference.cache
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\obj\Debug\WCS_TASK_CV.SYS_MAIN.resources
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\obj\Debug\WCS_TASK_CV.Properties.Resources.resources
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\obj\Debug\WCS_TASK_CV.csproj.GenerateResource.cache
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\obj\Debug\WCS_TASK_CV.csproj.CoreCompileInputs.cache
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\obj\Debug\WCS_TASK.D115DFD0.Up2Date
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\obj\Debug\WCS_TASK_CV.exe
+D:\project\한국단자\TASK\WCS_TASK_CV_1F\obj\Debug\WCS_TASK_CV.pdb

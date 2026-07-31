@@ -1,0 +1,200 @@
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\obj\x86\Debug\TSK_HostCom.csprojResolveAssemblyReference.cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\obj\x86\Debug\TSK_HostCom.frmMain.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.Properties.Resources.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\obj\x86\Debug\TSK_HostCom.csproj.GenerateResource.Cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\bin\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\bin\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\bin\Debug\Npgsql.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\bin\Debug\Mono.Security.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\bin\Debug\Npgsql.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\bin\Debug\de\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\bin\Debug\es\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\bin\Debug\fi\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\bin\Debug\fr\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\bin\Debug\ja\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\task\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\TSK_HostCom\bin\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\TSK_HostCom\bin\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\TSK_HostCom\bin\Debug\Npgsql.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\TSK_HostCom\bin\Debug\Mono.Security.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\TSK_HostCom\bin\Debug\Npgsql.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\TSK_HostCom\bin\Debug\de\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\TSK_HostCom\bin\Debug\es\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\TSK_HostCom\bin\Debug\fi\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\TSK_HostCom\bin\Debug\fr\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\TSK_HostCom\bin\Debug\ja\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\TSK_HostCom\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\TSK_HostCom\obj\x86\Debug\TSK_HostCom.csprojResolveAssemblyReference.cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\TSK_HostCom\obj\x86\Debug\TSK_HostCom.frmMain.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.Properties.Resources.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\TSK_HostCom\obj\x86\Debug\TSK_HostCom.csproj.GenerateResource.Cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\bin\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\bin\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\bin\Debug\Npgsql.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\bin\Debug\Mono.Security.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\bin\Debug\Npgsql.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\bin\Debug\de\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\bin\Debug\es\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\bin\Debug\fi\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\bin\Debug\fr\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\bin\Debug\ja\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\obj\x86\Debug\TSK_HostCom.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\obj\x86\Debug\TSK_HostCom.frmMain.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.Properties.Resources.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom\obj\x86\Debug\TSK_HostCom.csproj.GenerateResource.Cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\bin\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\bin\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\bin\Debug\Npgsql.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\bin\Debug\Mono.Security.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\bin\Debug\Npgsql.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\bin\Debug\de\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\bin\Debug\es\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\bin\Debug\fi\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\bin\Debug\fr\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\bin\Debug\ja\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\obj\x86\Debug\TSK_HostCom.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\obj\x86\Debug\TSK_HostCom.frmMain.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.Properties.Resources.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0608)\obj\x86\Debug\TSK_HostCom.csproj.GenerateResource.Cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\bin\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\bin\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\bin\Debug\Npgsql.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\bin\Debug\Mono.Security.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\bin\Debug\Npgsql.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\bin\Debug\de\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\bin\Debug\es\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\bin\Debug\fi\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\bin\Debug\fr\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\bin\Debug\ja\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\obj\x86\Debug\TSK_HostCom.csprojResolveAssemblyReference.cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\obj\x86\Debug\TSK_HostCom.frmMain.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.Properties.Resources.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom(0608)\obj\x86\Debug\TSK_HostCom.csproj.GenerateResource.Cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\bin\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\bin\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\bin\Debug\Npgsql.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\bin\Debug\Mono.Security.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\bin\Debug\Npgsql.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\bin\Debug\de\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\bin\Debug\es\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\bin\Debug\fi\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\bin\Debug\fr\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\bin\Debug\ja\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\obj\x86\Debug\TSK_HostCom.csprojResolveAssemblyReference.cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\obj\x86\Debug\TSK_HostCom.frmMain.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.Properties.Resources.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\Host_TASK\TSK_HostCom\obj\x86\Debug\TSK_HostCom.csproj.GenerateResource.Cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\bin\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\bin\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\bin\Debug\Npgsql.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\bin\Debug\Mono.Security.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\bin\Debug\Npgsql.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\bin\Debug\de\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\bin\Debug\es\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\bin\Debug\fi\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\bin\Debug\fr\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\bin\Debug\ja\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\obj\x86\Debug\TSK_HostCom.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\obj\x86\Debug\TSK_HostCom.frmMain.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.Properties.Resources.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\TSK_HostCom(0611)\obj\x86\Debug\TSK_HostCom.csproj.GenerateResource.Cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\bin\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\bin\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\bin\Debug\Npgsql.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\bin\Debug\Mono.Security.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\bin\Debug\Npgsql.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\bin\Debug\de\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\bin\Debug\es\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\bin\Debug\fi\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\bin\Debug\fr\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\bin\Debug\ja\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\obj\x86\Debug\TSK_HostCom.csprojResolveAssemblyReference.cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\obj\x86\Debug\TSK_HostCom.frmMain.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.Properties.Resources.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom(0612)_jhs\obj\x86\Debug\TSK_HostCom.csproj.GenerateResource.Cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\bin\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\bin\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\bin\Debug\Npgsql.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\bin\Debug\Mono.Security.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\bin\Debug\Npgsql.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\bin\Debug\de\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\bin\Debug\es\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\bin\Debug\fi\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\bin\Debug\fr\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\bin\Debug\ja\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\obj\x86\Debug\TSK_HostCom.frmMain.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.Properties.Resources.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\obj\x86\Debug\TSK_HostCom.csproj.GenerateResource.Cache
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\현장자료\롯데정밀화학(울산)\2. 소스\2. TASK\1. 최신\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\bin\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\bin\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\bin\Debug\Npgsql.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\bin\Debug\Mono.Security.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\bin\Debug\Npgsql.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\bin\Debug\de\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\bin\Debug\es\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\bin\Debug\fi\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\bin\Debug\fr\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\bin\Debug\ja\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\obj\x86\Debug\TSK_HostCom.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\obj\x86\Debug\TSK_HostCom.frmMain.resources
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.Properties.Resources.resources
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\obj\x86\Debug\TSK_HostCom.csproj.GenerateResource.Cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\bin\Debug\TASK_LFC10_G1_ECSCOM.exe.config
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\Host_TASK\TSK_HostCom\obj\x86\Debug\TSK_HostCom.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\TSK_HostCom\bin\Debug\TASK_LFC10_G1_ECSCOM.exe.config
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\TSK_HostCom\bin\Debug\TASK_LFC10_G1_ECSCOM.exe.config
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\1_프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\TSK_HostCom\bin\Debug\TASK_LFC10_G1_ECSCOM.exe.config
+D:\1_프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\1_프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\TSK_HostCom\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\bin\Debug\TASK_LFC10_G1_ECSCOM.exe.config
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\bin\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\bin\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\bin\Debug\Npgsql.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\bin\Debug\Mono.Security.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\bin\Debug\Npgsql.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\bin\Debug\de\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\bin\Debug\es\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\bin\Debug\fi\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\bin\Debug\fr\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\bin\Debug\ja\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\obj\x86\Debug\TSK_HostCom.csproj.AssemblyReference.cache
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\obj\x86\Debug\TSK_HostCom.frmMain.resources
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.Properties.Resources.resources
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\obj\x86\Debug\TSK_HostCom.csproj.GenerateResource.cache
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\obj\x86\Debug\TSK_HostCom.csproj.CoreCompileInputs.cache
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\obj\x86\Debug\TSK_HostCom.csproj.CopyComplete
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_TASK_HOST\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb

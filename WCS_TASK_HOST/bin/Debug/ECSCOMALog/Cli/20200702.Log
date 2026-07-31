@@ -1,0 +1,9 @@
+16:26:09:304;IMP;DB 로그인 중...
+16:26:09:323;IMP;DB 로그인 성공.
+16:27:04:307;IMP;[DeleteJobMst] .. 정상 처리되었습니다. 작업번호[9991]
+16:27:04:342;IMP;[GetJobCompleteReport] .. SIM MODE 작업 (완료)삭제 성공하였습니다. [작업번호:9991]
+16:27:04:380;IMP;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+16:27:25:167;IMP;[DeleteJobMst] .. 정상 처리되었습니다. 작업번호[9993]
+16:27:25:177;IMP;[GetJobCompleteReport] .. SIM MODE 작업 (완료)삭제 성공하였습니다. [작업번호:9993]
+16:28:12:882;IMP;[DeleteJobMst] .. 정상 처리되었습니다. 작업번호[9991]
+16:28:12:898;IMP;[GetJobCompleteReport] .. SIM MODE 작업 (완료)삭제 성공하였습니다. [작업번호:9991]

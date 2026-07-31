@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/USER/AppData/Roaming/Claude/local-agent-mode-sessions/skills-plugin/9aac5ac9-3c73-475b-8a43-330726d9bdc0/e3c874e2-fa56-4a7c-a66d-266a9a24ea8e/skills/pptx/**)",
+      "Bash(python scripts/extract_text.py \"C:\\\\Users\\\\USER\\\\Downloads\\\\일반비_LG생명과학\\(2011_04_13\\)\\\\ECS-분석-PLC사양및시나리오_LG생명과학_V0.9.ppt\")",
+      "Bash(dir \"C:\\\\Users\\\\USER\\\\Downloads\\\\WCS_TASK_CV\")",
+      "Bash(python scripts/office/unpack.py \"C:\\\\Users\\\\USER\\\\Downloads\\\\일반비_LG생명과학\\(2011_04_13\\)\\\\ECS-분석-PLC사양및시나리오_LG생명과학_V0.9.ppt\" \"C:\\\\Users\\\\USER\\\\Downloads\\\\WCS_TASK_CV\\\\ppt_unpacked\")",
+      "Bash(python -c ' *)",
+      "PowerShell(& \"C:\\\\Windows\\\\Microsoft.NET\\\\Framework\\\\v4.0.30319\\\\MSBuild.exe\" \"C:\\\\Users\\\\USER\\\\Downloads\\\\WCS_TASK_CV\\\\WCS_TASK_CV.csproj\" /p:Configuration=Debug /p:Platform=AnyCPU /t:Build /v:minimal 2>&1)"
+    ]
+  }
+}

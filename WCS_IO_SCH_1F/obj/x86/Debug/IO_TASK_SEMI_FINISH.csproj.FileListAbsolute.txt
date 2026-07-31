@@ -1,0 +1,474 @@
+D:\Project\SKI 중국상주\SOC\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\Project\SKI 중국상주\SOC\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\Project\SKI 중국상주\SOC\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\Project\SKI 중국상주\SOC\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\Project\SKI 중국상주\SOC\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\Project\SKI 중국상주\SOC\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\Project\SKI 중국상주\SOC\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\Project\SKI 중국상주\SOC\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\Mono.Security.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\Npgsql.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\Oracle.ManagedDataAccess.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Win.Spread.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Win.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Excel.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.CalcEngine.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\Npgsql.xml
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Win.Spread.xml
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Win.xml
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Excel.xml
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.CalcEngine.xml
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\de\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\es\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\fi\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\fr\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\ja\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\Mono.Security.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\Npgsql.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\Oracle.ManagedDataAccess.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Win.Spread.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Win.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Excel.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\FarPoint.CalcEngine.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\Npgsql.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Win.Spread.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Win.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Excel.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\FarPoint.CalcEngine.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\de\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\es\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\fi\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\fr\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\ja\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\SEMI_IO\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\Mono.Security.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\Npgsql.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\Oracle.ManagedDataAccess.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\FarPoint.Win.Spread.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\FarPoint.Win.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\FarPoint.Excel.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\FarPoint.CalcEngine.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\Npgsql.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\FarPoint.Win.Spread.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\FarPoint.Win.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\FarPoint.Excel.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\FarPoint.CalcEngine.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\de\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\es\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\fi\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\fr\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\ja\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\Mono.Security.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\Npgsql.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\Oracle.ManagedDataAccess.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\FarPoint.Win.Spread.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\FarPoint.Win.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\FarPoint.Excel.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\FarPoint.CalcEngine.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\Npgsql.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\FarPoint.Win.Spread.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\FarPoint.Win.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\FarPoint.Excel.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\FarPoint.CalcEngine.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\de\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\es\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\fi\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\fr\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\ja\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\obj\x86\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK._OLD\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\Mono.Security.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\Npgsql.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\Oracle.ManagedDataAccess.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\Npgsql.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\de\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\es\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\fi\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\fr\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\ja\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\Mono.Security.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\Npgsql.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\Oracle.ManagedDataAccess.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\FarPoint.Win.Spread.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\FarPoint.Win.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\FarPoint.Excel.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\FarPoint.CalcEngine.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\Npgsql.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\FarPoint.Win.Spread.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\FarPoint.Win.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\FarPoint.Excel.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\FarPoint.CalcEngine.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\de\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\es\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\fi\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\fr\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\ja\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\obj\x86\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200605_8일 TEST 할 소스_CVPLC 줄이기 이전\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200608_8일 TEST 할 소스_CVPLC 줄이기 이전\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200608_8일 TEST 할 소스_CVPLC 줄이기 이전\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200608_8일 TEST 할 소스_CVPLC 줄이기 이전\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\Mono.Security.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\Npgsql.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\Oracle.ManagedDataAccess.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\FarPoint.Win.Spread.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\FarPoint.Win.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\FarPoint.Excel.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\FarPoint.CalcEngine.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\Npgsql.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\FarPoint.Win.Spread.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\FarPoint.Win.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\FarPoint.Excel.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\FarPoint.CalcEngine.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\de\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\es\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\fi\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\fr\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\ja\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\obj\x86\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200608_9일 TEST 할 소스_호기간 이동 작업완료\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jhs\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jhs\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jhs\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\Mono.Security.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\Npgsql.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\Oracle.ManagedDataAccess.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\FarPoint.Win.Spread.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\FarPoint.Win.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\FarPoint.Excel.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\FarPoint.CalcEngine.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\Npgsql.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\FarPoint.Win.Spread.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\FarPoint.Win.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\FarPoint.Excel.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\FarPoint.CalcEngine.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\de\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\es\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\fi\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\fr\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\ja\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\obj\x86\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\IO_TASK\IO_TASK_20200609_jhs\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\Mono.Security.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\Npgsql.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\Oracle.ManagedDataAccess.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\FarPoint.Win.Spread.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\FarPoint.Win.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\FarPoint.Excel.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\FarPoint.CalcEngine.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\Npgsql.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\FarPoint.Win.Spread.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\FarPoint.Win.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\FarPoint.Excel.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\FarPoint.CalcEngine.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\de\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\es\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\fi\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\fr\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\ja\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\obj\x86\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200609_jby_호기간 이동 수정\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\Mono.Security.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\Npgsql.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\Oracle.ManagedDataAccess.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\FarPoint.Win.Spread.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\FarPoint.Win.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\FarPoint.Excel.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\FarPoint.CalcEngine.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\Npgsql.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\FarPoint.Win.Spread.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\FarPoint.Win.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\FarPoint.Excel.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\FarPoint.CalcEngine.xml
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\de\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\es\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\fi\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\fr\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\ja\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\obj\x86\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\현장자료\롯데정밀화학(울산)\소스\TASK\IO_TASK_20200610_jhs_호기간이동 수정\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\Mono.Security.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\Npgsql.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\Oracle.ManagedDataAccess.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\FarPoint.Win.Spread.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\FarPoint.Win.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\FarPoint.Excel.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\FarPoint.CalcEngine.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\Npgsql.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\FarPoint.Win.Spread.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\FarPoint.Win.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\FarPoint.Excel.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\FarPoint.CalcEngine.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\de\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\es\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\fi\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\fr\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\ja\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\obj\x86\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK(0612)_jhs\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\Mono.Security.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\Npgsql.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\Oracle.ManagedDataAccess.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\Npgsql.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\de\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\es\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\fi\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\fr\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\ja\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\Mono.Security.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\Npgsql.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\Oracle.ManagedDataAccess.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\FarPoint.Win.Spread.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\FarPoint.Win.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\FarPoint.Excel.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\FarPoint.CalcEngine.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\Npgsql.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\FarPoint.Win.Spread.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\FarPoint.Win.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\FarPoint.Excel.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\FarPoint.CalcEngine.xml
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\de\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\es\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\fi\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\fr\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\ja\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\현장자료\롯데정밀화학(울산)\1. 소스\2. TASK\1. 최신\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\FarPoint.Win.Spread.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\FarPoint.Win.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\FarPoint.Excel.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\FarPoint.CalcEngine.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\FarPoint.Win.Spread.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\FarPoint.Win.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\FarPoint.Excel.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK\IO_TASK\bin\Debug\FarPoint.CalcEngine.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\Mono.Security.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\Npgsql.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\Oracle.ManagedDataAccess.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\FarPoint.Win.Spread.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\FarPoint.Win.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\FarPoint.Excel.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\FarPoint.CalcEngine.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\Npgsql.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\FarPoint.Win.Spread.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\FarPoint.Win.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\FarPoint.Excel.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\FarPoint.CalcEngine.xml
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\de\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\es\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\fi\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\fr\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\ja\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\project\롯데정밀화학\메셀로스\G동\Source\TASK\IO_TASK_20200126_기존\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\1_프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\1_프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\1_프로젝트\[005] 롯데정밀화학(울산)\[01] 소스\[02] TASK\1. 최신\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+C:\Users\USER\Downloads\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.AssemblyReference.cache
+C:\Users\USER\Downloads\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+C:\Users\USER\Downloads\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+C:\Users\USER\Downloads\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.cache
+C:\Users\USER\Downloads\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.CoreCompileInputs.cache
+C:\Users\USER\Downloads\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+C:\Users\USER\Downloads\IO_TASK\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\Mono.Security.dll
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\Npgsql.dll
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\Oracle.ManagedDataAccess.dll
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\Npgsql.xml
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\de\Npgsql.resources.dll
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\es\Npgsql.resources.dll
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\fi\Npgsql.resources.dll
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\fr\Npgsql.resources.dll
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\ja\Npgsql.resources.dll
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\zh-CN\Npgsql.resources.dll
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\FarPoint.Win.Spread.dll
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\FarPoint.Win.dll
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\FarPoint.Excel.dll
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\FarPoint.CalcEngine.dll
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\FarPoint.Win.Spread.xml
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\FarPoint.Win.xml
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\FarPoint.Excel.xml
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+C:\Users\USER\Downloads\IO_TASK\bin\Debug\FarPoint.CalcEngine.xml
+C:\Users\USER\Downloads\IO_TASK\obj\x86\Debug\IO_TASK_.B7A1D3A6.Up2Date
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\Mono.Security.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\Npgsql.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\Oracle.ManagedDataAccess.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\FarPoint.Win.Spread.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\FarPoint.Win.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\FarPoint.Excel.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\FarPoint.CalcEngine.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\Npgsql.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\FarPoint.Win.Spread.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\FarPoint.Win.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\FarPoint.Excel.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\FarPoint.CalcEngine.xml
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\de\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\es\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\fi\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\fr\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\ja\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\bin\Debug\zh-CN\Npgsql.resources.dll
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.AssemblyReference.cache
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\obj\x86\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.cache
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\obj\x86\Debug\IO_TASK_SEMI_FINISH.csproj.CoreCompileInputs.cache
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\obj\x86\Debug\IO_TASK_.B7A1D3A6.Up2Date
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\obj\x86\Debug\IO_TASK_SEMI_FINISH.exe
+D:\인수인계\한국단자\ReNewal\CSharp\WCS_IO_SCH\obj\x86\Debug\IO_TASK_SEMI_FINISH.pdb

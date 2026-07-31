@@ -1,0 +1,86 @@
+12:02:44:182;IMP;통신이 연결되었습니다..
+12:02:44:188;IMP;DB 로그인 중...
+12:02:44:200;IMP;DB 로그인 성공.
+12:03:02:545;NOR;WMS_MBX   0062 O5100300407002020030500202100                              2
+12:03:02:711;NOR;[ParseOorR] .. 작업 추가 되었습니다.[작업번호:1003]
+12:03:02:746;NOR;ECS_MBX   0010 oA001003
+13:54:23:135;IMP;리모트 시스템과 연결 실패 !(10004)
+13:54:23:142;IMP;통신 쓰레드를 종료합니다.
+13:54:23:527;NOR;Socket Listener 종료.
+13:54:23:532;NOR;Write Log Thread 종료.
+14:02:55:223;IMP;통신이 연결되었습니다..
+14:02:55:236;IMP;DB 로그인 중...
+14:02:55:259;IMP;DB 로그인 성공.
+14:02:56:545;NOR;WMS_MBX   0062 O5100300407002020030500202100                              2
+14:02:56:722;NOR;[ParseOorR] .. 작업 추가 되었습니다.[작업번호:1003]
+14:02:56:743;NOR;ECS_MBX   0010 oA001003
+14:14:53:462;NOR;WMS_MBX   0062 O5100300407002020030500202100                              2
+14:14:53:569;NOR;[ParseOorR] .. 작업 추가 되었습니다.[작업번호:1003]
+14:14:53:588;NOR;ECS_MBX   0010 oA001003
+14:17:31:822;NOR;WMS_MBX   0062 O5100300407002020030500202100                              2
+14:17:31:907;NOR;[ParseOorR] .. 작업 추가 되었습니다.[작업번호:1003]
+14:17:31:910;NOR;ECS_MBX   0010 oA001003
+14:21:59:670;NOR;WMS_MBX   0062 O5100300407002020030500202100                              2
+14:21:59:736;NOR;[ParseOorR] .. 작업 추가 되었습니다.[작업번호:1003]
+14:21:59:739;NOR;ECS_MBX   0010 oA001003
+15:01:18:604;NOR;WMS_MBX   0062 O5100300407002020030500202100                              2
+15:01:18:722;NOR;[ParseOorR] .. 작업 추가 되었습니다.[작업번호:1003]
+15:01:18:766;NOR;ECS_MBX   0010 oA001003
+15:05:43:028;NOR;WMS_MBX   0062 O5100300407002020030500202100                              2
+15:05:43:168;NOR;[ParseOorR] .. 작업 추가 되었습니다.[작업번호:1003]
+15:05:43:269;NOR;ECS_MBX   0010 oA001003
+15:17:45:393;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:18:22:745;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+15:19:49:058;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:20:39:518;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+15:22:08:995;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:23:02:048;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+15:24:33:487;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:25:18:224;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+15:27:04:309;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:27:53:210;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+15:29:17:449;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:30:19:513;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+15:31:43:748;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:32:46:951;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+15:34:18:358;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:35:10:277;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+15:36:56:899;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:37:53:018;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+15:39:17:474;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:40:13:898;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+15:42:04:176;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:42:51:260;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+15:44:19:302;ERR;[GetJobCompleteReport] .. 도착 Location이 금지랙 입니다. 다음 로케이션을 검색하도록 준비합니다.[작업번호:9993][도착지:903][다음도착LOC:05-012-01]
+15:44:43:383;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:45:31:236;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+15:47:19:271;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:48:12:209;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+15:50:02:248;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:50:56:236;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+15:52:48:642;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:53:43:753;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+15:55:37:834;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:56:33:109;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+15:58:26:350;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+15:59:21:564;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+16:01:15:708;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+16:02:14:106;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+16:04:08:366;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+16:05:11:133;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+16:07:02:781;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+16:08:10:225;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+16:10:02:464;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+16:11:07:862;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+16:12:59:077;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+16:14:08:588;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+16:16:00:437;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+16:17:10:943;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+16:19:02:452;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+16:20:14:280;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+16:22:07:769;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+16:23:19:422;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+16:25:17:307;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+16:26:28:140;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]
+16:28:24:627;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9991]
+16:29:40:282;NOR;[GetJobCompleteReport] .. SIM MODE 작업 추가 되었습니다.[작업번호:9993]

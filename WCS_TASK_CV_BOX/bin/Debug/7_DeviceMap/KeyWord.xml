@@ -1,0 +1,59 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<KeyWords>
+	<KeyWord name="LuggNum" parent="D5n+0"/>
+	<KeyWord name="DestPos" parent="D5n+1"/>
+	<KeyWord name="JobType" parent="D5n+1"/>
+	<KeyWord name="SensorData" parent="D5n+2"/>
+	<KeyWord name="ErrorCode" parent="D5n+3"/>
+	<KeyWord name="D5n+4" parent="D5n+4"/>
+	
+	<KeyWord name="ProductSensor" parent="SensorData"/>
+
+	<KeyWord name="Auto" parent="StatusData"/>
+	<KeyWord name="StoStation" parent="StatusData">
+		<Condition content="1">Auto</Condition>
+		<Condition content="1">ProductSensor</Condition>
+		<Condition content="3">LuggNum</Condition>
+		<Condition content="3">DestPos</Condition>
+	</KeyWord>
+	<KeyWord name="RetStation" parent="StatusData">
+		<Condition content="1">Auto</Condition>
+		<Condition content="1">ProductSensor</Condition>
+		<Condition content="2">LuggNum</Condition>
+		<Condition content="2">DestPos</Condition>
+		<Condition content="11">DestPos</Condition>
+	</KeyWord>
+	<KeyWord name="ScStoHS" parent="StatusData">
+		<Condition content="1">Auto</Condition>
+		<Condition content="1">ProductSensor</Condition>
+		<Condition content="2">LuggNum</Condition>
+		<Condition content="2">DestPos</Condition>
+		<Condition content="13">DestPos</Condition>
+	</KeyWord>
+	<KeyWord name="ScRetHS" parent="StatusData">
+		<Condition content="1">Auto</Condition>
+		<Condition content="0">ProductSensor</Condition>
+		<Condition content="3">LuggNum</Condition>
+		<Condition content="3">DestPos</Condition>
+	</KeyWord>
+	<KeyWord name="RtvDepartHS" parent="StatusData">
+		<Condition content="1">Auto</Condition>
+		<Condition content="1">ProductSensor</Condition>
+		<Condition content="2">LuggNum</Condition>
+		<Condition content="2">DestPos</Condition>
+		<Condition content="12">DestPos</Condition>
+	</KeyWord>
+	<KeyWord name="RtvArriveHS" parent="StatusData">
+		<Condition content="1">Auto</Condition>
+		<Condition content="0">ProductSensor</Condition>
+		<Condition content="3">LuggNum</Condition>
+		<Condition content="3">DestPos</Condition>
+	</KeyWord>
+	<KeyWord name="CvCheckPos" parent="StatusData">
+		<Condition content="1">Auto</Condition>
+		<Condition content="1">ProductSensor</Condition>
+		<Condition content="2">LuggNum</Condition>
+		<Condition content="2">DestPos</Condition>
+		<Condition content="11">DestPos</Condition>
+	</KeyWord>
+</KeyWords>

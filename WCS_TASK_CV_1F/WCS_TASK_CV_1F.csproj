@@ -1,0 +1,252 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003" ToolsVersion="4.0">
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProductVersion>8.0.50727</ProductVersion>
+    <SchemaVersion>2.0</SchemaVersion>
+    <ProjectGuid>{FAD8A8B3-64F9-4400-AB97-C7040444B227}</ProjectGuid>
+    <OutputType>WinExe</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>WCS_TASK_CV</RootNamespace>
+    <AssemblyName>WCS_TASK_CV_1F</AssemblyName>
+    <ApplicationIcon>cv.ico</ApplicationIcon>
+    <TargetFrameworkVersion>v4.8</TargetFrameworkVersion>
+    <FileUpgradeFlags>
+    </FileUpgradeFlags>
+    <UpgradeBackupLocation>
+    </UpgradeBackupLocation>
+    <OldToolsVersion>2.0</OldToolsVersion>
+    <PublishUrl>publish\</PublishUrl>
+    <Install>true</Install>
+    <InstallFrom>Disk</InstallFrom>
+    <UpdateEnabled>false</UpdateEnabled>
+    <UpdateMode>Foreground</UpdateMode>
+    <UpdateInterval>7</UpdateInterval>
+    <UpdateIntervalUnits>Days</UpdateIntervalUnits>
+    <UpdatePeriodically>false</UpdatePeriodically>
+    <UpdateRequired>false</UpdateRequired>
+    <MapFileExtensions>true</MapFileExtensions>
+    <ApplicationRevision>0</ApplicationRevision>
+    <ApplicationVersion>1.0.0.%2a</ApplicationVersion>
+    <IsWebBootstrapper>false</IsWebBootstrapper>
+    <UseApplicationTrust>false</UseApplicationTrust>
+    <BootstrapperEnabled>true</BootstrapperEnabled>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>TRACE;DEBUG;POSTGRESQL</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+    <PlatformTarget>x86</PlatformTarget>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Debug|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\x64\Debug\</OutputPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)' == 'Release|x64'">
+    <PlatformTarget>x64</PlatformTarget>
+    <OutputPath>bin\x64\Release\</OutputPath>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+      <HintPath>bin\Debug\log4net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Microsoft.VisualBasic" />
+    <Reference Include="Mono.Security">
+      <HintPath>packages\Npgsql.2.2.7\lib\net45\Mono.Security.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Npgsql">
+      <HintPath>packages\Npgsql.2.2.7\lib\net45\Npgsql.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Samoh_Lib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>bin\Debug\Samoh_Lib.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Samoh_Socket, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>bin\Debug\Samoh_Socket.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="System" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Deployment" />
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Windows.Forms" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="3_Lib\cCmLib.cs" />
+    <Compile Include="4_Static\DbLang.cs" />
+    <Compile Include="5_DB\cDbBaseOra.cs" />
+    <Compile Include="5_DB\cDbUse.cs" />
+    <Compile Include="4_Static\cDefApi.cs" />
+    <Compile Include="4_Static\cComSetting.cs" />
+    <Compile Include="4_Static\cDefApp.cs" />
+    <Compile Include="6_Log\CLogging.cs" />
+    <Compile Include="2_Thread\EQP_THREAD\CvThread.cs" />
+    <Compile Include="7_DeviceMap\cDeviceMapRuntime.cs" />
+    <Compile Include="7_Socket\cWrkWcSkt.cs" />
+    <Compile Include="6_Log\cLogThread.cs" />
+    <Compile Include="6_Log\Log.cs" />
+    <Compile Include="4_Static\maindefine.cs" />
+    <Compile Include="7_Socket\MelsecQ3EProtocol.cs" />
+    <Compile Include="7_Socket\SocketClient.cs" />
+    <Compile Include="5_DB\cCbBasePost.cs" />
+    <Compile Include="5_DB\cDbPostUse.cs" />
+    <Compile Include="1_FRM\SYS\SYS_MAIN.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="1_FRM\SYS\SYS_MAIN.Designer.cs">
+      <DependentUpon>SYS_MAIN.cs</DependentUpon>
+    </Compile>
+    <Compile Include="1_FRM\SYS\FRM_XML_FIELD_SYNC.cs">
+      <SubType>Form</SubType>
+    </Compile>
+    <Compile Include="1_FRM\SYS\FRM_XML_FIELD_SYNC.Designer.cs">
+      <DependentUpon>FRM_XML_FIELD_SYNC.cs</DependentUpon>
+    </Compile>
+    <Compile Include="7_DeviceMap\cXmlFieldSync.cs" />
+    <Compile Include="Program.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+    <EmbeddedResource Include="1_FRM\SYS\SYS_MAIN.resx">
+      <SubType>Designer</SubType>
+      <DependentUpon>SYS_MAIN.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Properties\Resources.resx">
+      <Generator>ResXFileCodeGenerator</Generator>
+      <LastGenOutput>Resources.Designer.cs</LastGenOutput>
+      <SubType>Designer</SubType>
+    </EmbeddedResource>
+    <Compile Include="Properties\Resources.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Resources.resx</DependentUpon>
+      <DesignTime>True</DesignTime>
+    </Compile>
+    <Content Include="7_DeviceMap\KeyWord.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="7_DeviceMap\DeviceMap01.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="7_DeviceMap\DeviceMap02.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="7_DeviceMap\DeviceMap03.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="7_DeviceMap\DeviceMap04.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="7_DeviceMap\DeviceMap05.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="7_DeviceMap\DeviceMap06.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="7_DeviceMap\DeviceMap07.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="7_DeviceMap\DeviceMap08.xml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="bin\Debug\BAG.BAT" />
+    <None Include="bin\Debug\PACK.BAT" />
+    <None Include="bin\Debug\sqlnet.log" />
+    <None Include="bin\Debug\WCS_DB.INI" />
+    <None Include="bin\Release\BAG.BAT" />
+    <None Include="bin\Release\ENV_CV.INI" />
+    <None Include="bin\Release\ENV_CV_BAG.INI" />
+    <None Include="bin\Release\ENV_CV_PACK.INI" />
+    <None Include="bin\Release\PACK.BAT" />
+    <None Include="bin\Release\sqlnet.log" />
+    <None Include="bin\Release\TSK_COMM_CV.vshost.exe.manifest" />
+    <None Include="packages.config" />
+    <None Include="Properties\Settings.settings">
+      <Generator>SettingsSingleFileGenerator</Generator>
+      <LastGenOutput>Settings.Designer.cs</LastGenOutput>
+    </None>
+    <Compile Include="Properties\Settings.Designer.cs">
+      <AutoGen>True</AutoGen>
+      <DependentUpon>Settings.settings</DependentUpon>
+      <DesignTimeSharedInput>True</DesignTimeSharedInput>
+    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Content Include="1473414292_com_plug01.ico" />
+    <Content Include="bin\Debug\CVlog4net.xml" />
+    <Content Include="bin\Debug\FarPoint.CalcEngine.dll" />
+    <Content Include="bin\Debug\FarPoint.CalcEngine.xml" />
+    <Content Include="bin\Debug\FarPoint.Excel.dll" />
+    <Content Include="bin\Debug\FarPoint.Excel.xml" />
+    <Content Include="bin\Debug\FarPoint.PluginCalendar.WinForms.dll" />
+    <Content Include="bin\Debug\FarPoint.PluginCalendar.WinForms.xml" />
+    <Content Include="bin\Debug\FarPoint.Win.dll" />
+    <Content Include="bin\Debug\FarPoint.Win.Spread.dll" />
+    <Content Include="bin\Debug\FarPoint.Win.Spread.xml" />
+    <Content Include="bin\Debug\FarPoint.Win.xml" />
+    <Content Include="bin\Debug\log4net.dll" />
+    <Content Include="bin\Debug\Samoh_Lib.dll" />
+    <Content Include="bin\Debug\Samoh_Socket.dll" />
+    <Content Include="bin\Release\CVlog4net.xml" />
+    <Content Include="bin\Release\FarPoint.CalcEngine.dll" />
+    <Content Include="bin\Release\FarPoint.CalcEngine.xml" />
+    <Content Include="bin\Release\FarPoint.Excel.dll" />
+    <Content Include="bin\Release\FarPoint.Excel.xml" />
+    <Content Include="bin\Release\FarPoint.PluginCalendar.WinForms.dll" />
+    <Content Include="bin\Release\FarPoint.PluginCalendar.WinForms.xml" />
+    <Content Include="bin\Release\FarPoint.Win.dll" />
+    <Content Include="bin\Release\FarPoint.Win.Spread.dll" />
+    <Content Include="bin\Release\FarPoint.Win.Spread.xml" />
+    <Content Include="bin\Release\FarPoint.Win.xml" />
+    <Content Include="bin\Release\log4net.dll" />
+    <Content Include="bin\Release\Samoh_Lib.dll" />
+    <Content Include="bin\Release\Samoh_Socket.dll" />
+    <Content Include="bin\Release\TSK_COMM_CV.exe" />
+    <Content Include="bin\Release\TSK_COMM_CV.pdb" />
+    <Content Include="bin\Release\TSK_COMM_CV.vshost.exe" />
+    <Content Include="bin\Release\TSK_COMM_WC.pdb" />
+    <Content Include="7_Socket\CVlog4net.xml" />
+    <Content Include="cv.ico" />
+  </ItemGroup>
+  <ItemGroup>
+    <BootstrapperPackage Include="Microsoft.Net.Client.3.5">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1 Client Profile</ProductName>
+      <Install>false</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Net.Framework.3.5.SP1">
+      <Visible>False</Visible>
+      <ProductName>.NET Framework 3.5 SP1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+    <BootstrapperPackage Include="Microsoft.Windows.Installer.3.1">
+      <Visible>False</Visible>
+      <ProductName>Windows Installer 3.1</ProductName>
+      <Install>true</Install>
+    </BootstrapperPackage>
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

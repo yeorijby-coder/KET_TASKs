@@ -1,0 +1,32 @@
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\x64\Debug\TSK_COMM_IOSCH.exe.config
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\obj\x64\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\obj\x64\Debug\TSK_COMM_IOSCH.Properties.Resources.resources
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\obj\x64\Debug\TSK_COMM_IOSCH.csproj.GenerateResource.Cache
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\x64\Debug\TSK_COMM_IOSCH.exe
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\x64\Debug\TSK_COMM_IOSCH.pdb
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\x64\Debug\EXCOMLib.dll
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\x64\Debug\XCOMLib.dll
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\x64\Debug\FarPoint.Win.Spread.dll
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\x64\Debug\FarPoint.Win.dll
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\x64\Debug\FarPoint.Excel.dll
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\x64\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\x64\Debug\FarPoint.CalcEngine.dll
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\x64\Debug\FarPoint.Win.Spread.xml
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\x64\Debug\FarPoint.Win.xml
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\x64\Debug\FarPoint.Excel.xml
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\x64\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\x64\Debug\FarPoint.CalcEngine.xml
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\obj\x64\Debug\TSK_COMM_IOSCH.csprojResolveAssemblyReference.cache
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\obj\x64\Debug\TSK_COMM_IOSCH.exe
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\obj\x64\Debug\TSK_COMM_IOSCH.pdb
+D:\SKI_ECS\IO_TASK\bin\x64\Debug\TSK_COMM_IOSCH.exe.config
+D:\SKI_ECS\IO_TASK\obj\x64\Debug\TSK_COMM_IOSCH.exe
+D:\SKI_ECS\IO_TASK\obj\x64\Debug\TSK_COMM_IOSCH.pdb
+D:\SKI_ECS\IO_TASK\bin\x64\Debug\TSK_COMM_IOSCH.exe
+D:\SKI_ECS\IO_TASK\bin\x64\Debug\TSK_COMM_IOSCH.pdb
+D:\SKI_ECS\IO_TASK\bin\x64\Debug\EXCOMLib.dll
+D:\SKI_ECS\IO_TASK\bin\x64\Debug\XCOMLib.dll
+D:\SKI_ECS\IO_TASK\obj\x64\Debug\TSK_COMM_IOSCH.csprojResolveAssemblyReference.cache
+D:\SKI_ECS\IO_TASK\obj\x64\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\SKI_ECS\IO_TASK\obj\x64\Debug\TSK_COMM_IOSCH.Properties.Resources.resources
+D:\SKI_ECS\IO_TASK\obj\x64\Debug\TSK_COMM_IOSCH.csproj.GenerateResource.Cache

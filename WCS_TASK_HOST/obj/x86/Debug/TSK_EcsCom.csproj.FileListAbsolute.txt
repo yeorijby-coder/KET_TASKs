@@ -1,0 +1,11 @@
+C:\WMS\개발소스\WMS_Project\TSK_EcsCom_G1\bin\Debug\TASK_LFC10_G1_ECSCOM.exe
+C:\WMS\개발소스\WMS_Project\TSK_EcsCom_G1\bin\Debug\TASK_LFC10_G1_ECSCOM.pdb
+C:\WMS\개발소스\WMS_Project\TSK_EcsCom_G1\bin\Debug\WmsInfo.dll
+C:\WMS\개발소스\WMS_Project\TSK_EcsCom_G1\obj\x86\Debug\TSK_EcsCom.csprojResolveAssemblyReference.cache
+C:\WMS\개발소스\WMS_Project\TSK_EcsCom_G1\obj\x86\Debug\TSK_EcsCom.frmMain.resources
+C:\WMS\개발소스\WMS_Project\TSK_EcsCom_G1\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.Properties.Resources.resources
+C:\WMS\개발소스\WMS_Project\TSK_EcsCom_G1\obj\x86\Debug\TSK_EcsCom.csproj.GenerateResource.Cache
+C:\WMS\개발소스\WMS_Project\TSK_EcsCom_G1\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
+C:\WMS\개발소스\WMS_Project\TSK_EcsCom_G1\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
+D:\project\롯데정밀화학\메셀로스\G동\Source\task(200327)\TSK_EcsCom_G1\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb

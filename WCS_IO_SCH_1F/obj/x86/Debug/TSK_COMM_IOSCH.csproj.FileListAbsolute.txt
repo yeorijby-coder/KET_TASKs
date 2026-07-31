@@ -1,0 +1,236 @@
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\bin\x86\Debug\TSK_COMM_IOSCH.exe.config
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.Properties.Resources.resources
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.csproj.GenerateResource.Cache
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe.config
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.pdb
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.Spread.dll
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.dll
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\bin\Debug\FarPoint.Excel.dll
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\bin\Debug\FarPoint.CalcEngine.dll
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.Spread.xml
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.xml
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\bin\Debug\FarPoint.Excel.xml
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\bin\Debug\FarPoint.CalcEngine.xml
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.exe
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.csprojResolveAssemblyReference.cache
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\bin\Debug\TSK_COMM_IOSCH.exe.config
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\obj\x86\Debug\TSK_COMM_IOSCH.exe
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\bin\Debug\TSK_COMM_IOSCH.exe
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\bin\Debug\TSK_COMM_IOSCH.pdb
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.Win.Spread.dll
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.Win.dll
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.Excel.dll
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.CalcEngine.dll
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.Win.Spread.xml
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.Win.xml
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.Excel.xml
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.CalcEngine.xml
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\obj\x86\Debug\TSK_COMM_IOSCH.csprojResolveAssemblyReference.cache
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\obj\x86\Debug\TSK_COMM_IOSCH.Properties.Resources.resources
+C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH (3)\obj\x86\Debug\TSK_COMM_IOSCH.csproj.GenerateResource.Cache
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\서산 TEST용\cwb0422\TSK_COMM_IOSCH (3)\bin\Debug\TSK_COMM_IOSCH.exe.config
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\서산 TEST용\cwb0422\TSK_COMM_IOSCH (3)\obj\x86\Debug\TSK_COMM_IOSCH.exe
+D:\CompanyProject\헝가리 SKI\03. 소스프로그램\서산 TEST용\cwb0422\TSK_COMM_IOSCH (3)\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\bin\Debug\TSK_COMM_IOSCH.exe.config
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\obj\x86\Debug\TSK_COMM_IOSCH.exe
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\bin\Debug\TSK_COMM_IOSCH.exe
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\bin\Debug\TSK_COMM_IOSCH.pdb
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.Win.Spread.dll
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.Win.dll
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.Excel.dll
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.CalcEngine.dll
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.Win.Spread.xml
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.Win.xml
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.Excel.xml
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\bin\Debug\FarPoint.CalcEngine.xml
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\obj\x86\Debug\TSK_COMM_IOSCH.csprojResolveAssemblyReference.cache
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\obj\x86\Debug\TSK_COMM_IOSCH.Properties.Resources.resources
+D:\Company Project\헝가리 SKI\03. 소스프로그램\대전 TEST용\TSK_COMM_IOSCH (3)\obj\x86\Debug\TSK_COMM_IOSCH.csproj.GenerateResource.Cache
+C:\Users\ia01507\Desktop\20190527\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe.config
+C:\Users\ia01507\Desktop\20190527\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.exe
+C:\Users\ia01507\Desktop\20190527\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe.config
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.exe
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.Properties.Resources.resources
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.csproj.GenerateResource.Cache
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.pdb
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.Spread.dll
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.dll
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Excel.dll
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.CalcEngine.dll
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.Spread.xml
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.xml
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Excel.xml
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+C:\Users\ia01507\Desktop\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.CalcEngine.xml
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe.config
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.exe
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.pdb
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.Spread.dll
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.dll
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Excel.dll
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.CalcEngine.dll
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.Spread.xml
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.xml
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Excel.xml
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.CalcEngine.xml
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.csprojResolveAssemblyReference.cache
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.Properties.Resources.resources
+C:\Users\wonbin.choi\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.csproj.GenerateResource.Cache
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe.config
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.exe
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.pdb
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.Spread.dll
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.dll
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Excel.dll
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.CalcEngine.dll
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.Spread.xml
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.xml
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Excel.xml
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.CalcEngine.xml
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.csprojResolveAssemblyReference.cache
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.Properties.Resources.resources
+C:\Users\Administrator\Desktop\20190603\SOC\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.csproj.GenerateResource.Cache
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe.config
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.exe
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.pdb
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.Spread.dll
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.dll
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Excel.dll
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.CalcEngine.dll
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.Spread.xml
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.xml
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Excel.xml
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.CalcEngine.xml
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.csprojResolveAssemblyReference.cache
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.Properties.Resources.resources
+C:\Users\ia01507\Downloads\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.csproj.GenerateResource.Cache
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe.config
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.exe
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.pdb
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.Spread.dll
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.dll
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Excel.dll
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.CalcEngine.dll
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.Spread.xml
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.xml
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.Excel.xml
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\bin\Debug\FarPoint.CalcEngine.xml
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.csprojResolveAssemblyReference.cache
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.Properties.Resources.resources
+C:\Users\wonbin.choi\Downloads\2019.06.14_헝가리 테스트 소스\20190614_IOSECSDMP\20190614_IOSECS\TSK_COMM_IOSCH\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.csproj.GenerateResource.Cache
+D:\Project\SKI 중국상주\SOC\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe.config
+D:\Project\SKI 중국상주\SOC\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.exe
+D:\Project\SKI 중국상주\SOC\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+D:\Project\SKI 중국상주\SOC\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe
+D:\Project\SKI 중국상주\SOC\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.pdb
+D:\Project\SKI 중국상주\SOC\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\Project\SKI 중국상주\SOC\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.Properties.Resources.resources
+D:\Project\SKI 중국상주\SOC\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.csproj.GenerateResource.Cache
+C:\Users\wonbin.choi\Desktop\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe.config
+C:\Users\wonbin.choi\Desktop\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.exe
+C:\Users\wonbin.choi\Desktop\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+C:\Users\wonbin.choi\Desktop\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.csprojResolveAssemblyReference.cache
+C:\Users\wonbin.choi\Desktop\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+C:\Users\wonbin.choi\Desktop\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.Properties.Resources.resources
+C:\Users\wonbin.choi\Desktop\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.csproj.GenerateResource.Cache
+C:\Users\wonbin.choi\Desktop\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe
+C:\Users\wonbin.choi\Desktop\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.pdb
+C:\Users\wonbin.choi\Desktop\TSK_COMM_IOSCH_이승민대리\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe.config
+C:\Users\wonbin.choi\Desktop\TSK_COMM_IOSCH_이승민대리\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.exe
+C:\Users\wonbin.choi\Desktop\TSK_COMM_IOSCH_이승민대리\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe.config
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.exe
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.exe
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\Debug\TSK_COMM_IOSCH.pdb
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.csprojResolveAssemblyReference.cache
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.Properties.Resources.resources
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\obj\x86\Debug\TSK_COMM_IOSCH.csproj.GenerateResource.Cache
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.Spread.dll
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.dll
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\Debug\FarPoint.Excel.dll
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\Debug\FarPoint.CalcEngine.dll
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.Spread.xml
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\Debug\FarPoint.Win.xml
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\Debug\FarPoint.Excel.xml
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\CompanyProject\헝가리 SKI\04.최종테스트 소스\TSK_COMM_IOSCH\bin\Debug\FarPoint.CalcEngine.xml
+D:\SKI_ECS\IO_TASK\bin\Debug\TSK_COMM_IOSCH.exe.config
+D:\SKI_ECS\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.exe
+D:\SKI_ECS\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+D:\SKI_ECS\IO_TASK\bin\Debug\TSK_COMM_IOSCH.exe
+D:\SKI_ECS\IO_TASK\bin\Debug\TSK_COMM_IOSCH.pdb
+D:\SKI_ECS\IO_TASK\bin\Debug\FarPoint.Win.Spread.dll
+D:\SKI_ECS\IO_TASK\bin\Debug\FarPoint.Win.dll
+D:\SKI_ECS\IO_TASK\bin\Debug\FarPoint.Excel.dll
+D:\SKI_ECS\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\SKI_ECS\IO_TASK\bin\Debug\FarPoint.CalcEngine.dll
+D:\SKI_ECS\IO_TASK\bin\Debug\FarPoint.Win.Spread.xml
+D:\SKI_ECS\IO_TASK\bin\Debug\FarPoint.Win.xml
+D:\SKI_ECS\IO_TASK\bin\Debug\FarPoint.Excel.xml
+D:\SKI_ECS\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\SKI_ECS\IO_TASK\bin\Debug\FarPoint.CalcEngine.xml
+D:\SKI_ECS\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.csprojResolveAssemblyReference.cache
+D:\SKI_ECS\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\SKI_ECS\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.Properties.Resources.resources
+D:\SKI_ECS\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.csproj.GenerateResource.Cache
+D:\DLS\SOC\IO_TASK\bin\Debug\TSK_COMM_IOSCH.exe.config
+D:\DLS\SOC\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.exe
+D:\DLS\SOC\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+D:\DLS\SOC\IO_TASK\bin\Debug\TSK_COMM_IOSCH.exe
+D:\DLS\SOC\IO_TASK\bin\Debug\TSK_COMM_IOSCH.pdb
+D:\DLS\SOC\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\DLS\SOC\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.Properties.Resources.resources
+D:\DLS\SOC\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.csproj.GenerateResource.Cache
+D:\Project\SKI 중국상주\SOC\IO_TASK\bin\Debug\TSK_COMM_IOSCH.exe.config
+D:\Project\SKI 중국상주\SOC\IO_TASK\bin\Debug\TSK_COMM_IOSCH.exe
+D:\Project\SKI 중국상주\SOC\IO_TASK\bin\Debug\TSK_COMM_IOSCH.pdb
+D:\Project\SKI 중국상주\SOC\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\Project\SKI 중국상주\SOC\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.Properties.Resources.resources
+D:\Project\SKI 중국상주\SOC\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.csproj.GenerateResource.Cache
+D:\Project\SKI 중국상주\SOC\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.exe
+D:\Project\SKI 중국상주\SOC\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+C:\Users\changyu.park\Desktop\IO_TASK\bin\Debug\TSK_COMM_IOSCH.exe.config
+C:\Users\changyu.park\Desktop\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.exe
+C:\Users\changyu.park\Desktop\IO_TASK\obj\x86\Debug\TSK_COMM_IOSCH.pdb
+D:\Project\SKI 중국상주\SOC\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config

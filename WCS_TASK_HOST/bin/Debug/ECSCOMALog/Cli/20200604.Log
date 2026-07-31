@@ -1,0 +1,470 @@
+06:28:08:179;ERR;[GetEmptyPltRequest] .. 전송 연결 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다에 데이터를 쓸 수 없습니다.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = '10'
+    AND  KIND   = '1'
+    AND  STN    = '108'
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+06:28:10:194;ERR;[GetEmptyPltRequest] .. 전송 연결 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다에 데이터를 쓸 수 없습니다.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = '10'
+    AND  KIND   = '1'
+    AND  STN    = '149'
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+06:28:11:491;ERR;[GetEmptyPltRequest] .. 전송 연결 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다에 데이터를 쓸 수 없습니다.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = '10'
+    AND  KIND   = '2'
+    AND  STN    = '108'
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+06:28:12:538;ERR;[GetEmptyPltRequest] .. 전송 연결 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다에 데이터를 쓸 수 없습니다.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = '10'
+    AND  KIND   = '2'
+    AND  STN    = '149'
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+06:28:12:788;IMP;이상 발생.DB Logout...
+06:28:13:975;IMP;통신 쓰레드를 종료합니다.
+06:28:19:050;IMP;DB 로그인 중...
+06:28:19:723;IMP;DB 로그인 성공.
+06:28:21:863;IMP;통신이 연결되었습니다.
+06:30:08:871;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+06:30:24:040;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+06:30:39:234;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+06:30:54:409;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+06:30:54:508;IMP;이상 발생.DB Logout...
+06:30:54:643;IMP;통신 쓰레드를 종료합니다.
+06:30:58:915;IMP;DB 로그인 중...
+06:30:59:031;IMP;DB 로그인 성공.
+06:31:01:128;IMP;통신이 연결되었습니다.
+06:32:47:129;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+06:33:02:331;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+06:33:17:533;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+06:33:32:731;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+06:33:32:804;IMP;이상 발생.DB Logout...
+06:33:32:973;IMP;통신 쓰레드를 종료합니다.
+06:33:37:120;IMP;DB 로그인 중...
+06:33:37:198;IMP;DB 로그인 성공.
+06:33:39:267;IMP;통신이 연결되었습니다.
+06:35:24:910;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+06:35:40:040;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+06:35:55:159;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+06:36:10:284;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+06:36:10:359;IMP;이상 발생.DB Logout...
+06:36:10:429;IMP;통신 쓰레드를 종료합니다.
+06:36:14:531;IMP;DB 로그인 중...
+06:36:14:649;IMP;DB 로그인 성공.
+06:36:16:712;IMP;통신이 연결되었습니다.
+07:52:16:354;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:16:620;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:17:589;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:18:474;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:18:792;IMP;이상 발생.DB Logout...
+07:52:19:258;IMP;통신 쓰레드를 종료합니다.
+07:52:23:411;IMP;DB 로그인 중...
+07:52:23:421;IMP;DB 로그인 성공.
+07:52:25:428;IMP;통신이 연결되었습니다.
+07:52:26:134;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:26:273;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:26:390;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:26:531;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:26:557;IMP;이상 발생.DB Logout...
+07:52:26:589;IMP;통신 쓰레드를 종료합니다.
+07:52:31:024;IMP;DB 로그인 중...
+07:52:31:058;IMP;DB 로그인 성공.
+07:52:33:174;IMP;통신이 연결되었습니다.
+07:52:34:857;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:35:051;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:35:216;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:35:375;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:35:422;IMP;이상 발생.DB Logout...
+07:52:35:477;IMP;통신 쓰레드를 종료합니다.
+07:52:39:651;IMP;DB 로그인 중...
+07:52:39:695;IMP;DB 로그인 성공.
+07:52:41:737;IMP;통신이 연결되었습니다.
+07:52:42:235;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:42:355;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:42:492;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:42:595;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:42:646;IMP;이상 발생.DB Logout...
+07:52:42:711;IMP;통신 쓰레드를 종료합니다.
+07:52:46:845;IMP;DB 로그인 중...
+07:52:46:890;IMP;DB 로그인 성공.
+07:52:48:936;IMP;통신이 연결되었습니다.
+07:52:49:458;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:49:582;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:49:706;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:49:811;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:49:861;IMP;이상 발생.DB Logout...
+07:52:49:911;IMP;통신 쓰레드를 종료합니다.
+07:52:54:043;IMP;DB 로그인 중...
+07:52:54:086;IMP;DB 로그인 성공.
+07:52:56:130;IMP;통신이 연결되었습니다.
+07:52:56:629;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:56:740;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:56:867;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:57:009;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:52:57:063;IMP;이상 발생.DB Logout...
+07:52:57:121;IMP;통신 쓰레드를 종료합니다.
+07:53:01:341;IMP;DB 로그인 중...
+07:53:01:401;IMP;DB 로그인 성공.
+07:53:03:462;IMP;통신이 연결되었습니다.
+07:53:04:174;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:53:04:323;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:53:04:498;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:53:04:577;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:53:04:586;IMP;이상 발생.DB Logout...
+07:53:04:603;IMP;통신 쓰레드를 종료합니다.
+07:53:08:718;IMP;DB 로그인 중...
+07:53:08:734;IMP;DB 로그인 성공.
+07:53:10:763;IMP;통신이 연결되었습니다.
+07:53:11:222;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:53:11:305;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:53:11:403;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:53:11:489;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:53:11:552;IMP;이상 발생.DB Logout...
+07:53:11:588;IMP;통신 쓰레드를 종료합니다.
+07:53:15:648;IMP;DB 로그인 중...
+07:53:15:680;IMP;DB 로그인 성공.
+07:53:17:696;IMP;종료 중... 잠시 기다리세요.
+07:53:17:712;IMP;통신이 연결되었습니다.
+07:53:18:326;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:53:18:382;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+07:53:18:382;NOR;Write Log Thread 종료.
+07:53:18:434;ERR;[GetEmptyPltRequest] .. Failed to establish a connection to '10.117.3.174'.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = @WH_TYP
+    AND  KIND   = @KIND
+    AND  STN    = @STN
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT

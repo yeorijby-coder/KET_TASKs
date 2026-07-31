@@ -1,0 +1,206 @@
+
+
+***********************************************************************
+Fatal NI connect error 12514, connecting to:
+ (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.85.11.189)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=orcl)(CID=(PROGRAM=C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH??3?\bin\Debug\TSK_COMM_IOSCH.vshost.exe)(HOST=SKI16N20929)(USER=ia01507))))
+
+  VERSION INFORMATION:
+	TNS for 32-bit Windows: Version 10.2.0.5.0 - Production
+	Windows NT TCP/IP NT Protocol Adapter for 32-bit Windows: Version 10.2.0.5.0 - Production
+  Time: 07-5월 -2019 12:03:40
+  Tracing not turned on.
+  Tns error struct:
+    ns main err code: 12564
+    TNS-12564: TNS:연결이 거부되었습니다
+    ns secondary err code: 0
+    nt main err code: 0
+    nt secondary err code: 0
+    nt OS err code: 0
+
+
+***********************************************************************
+Fatal NI connect error 12514, connecting to:
+ (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.85.11.189)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=orcl)(CID=(PROGRAM=C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH??3?\bin\Debug\TSK_COMM_IOSCH.vshost.exe)(HOST=SKI16N20929)(USER=ia01507))))
+
+  VERSION INFORMATION:
+	TNS for 32-bit Windows: Version 10.2.0.5.0 - Production
+	Windows NT TCP/IP NT Protocol Adapter for 32-bit Windows: Version 10.2.0.5.0 - Production
+  Time: 07-5월 -2019 12:03:41
+  Tracing not turned on.
+  Tns error struct:
+    ns main err code: 12564
+    TNS-12564: TNS:연결이 거부되었습니다
+    ns secondary err code: 0
+    nt main err code: 0
+    nt secondary err code: 0
+    nt OS err code: 0
+
+
+***********************************************************************
+Fatal NI connect error 12514, connecting to:
+ (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=10.85.11.189)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=orcl)(CID=(PROGRAM=C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH??3?\bin\Debug\TSK_COMM_IOSCH.vshost.exe)(HOST=SKI16N20929)(USER=ia01507))))
+
+  VERSION INFORMATION:
+	TNS for 32-bit Windows: Version 10.2.0.5.0 - Production
+	Windows NT TCP/IP NT Protocol Adapter for 32-bit Windows: Version 10.2.0.5.0 - Production
+  Time: 07-5월 -2019 12:03:43
+  Tracing not turned on.
+  Tns error struct:
+    ns main err code: 12564
+    TNS-12564: TNS:연결이 거부되었습니다
+    ns secondary err code: 0
+    nt main err code: 0
+    nt secondary err code: 0
+    nt OS err code: 0
+
+
+***********************************************************************
+Fatal NI connect error 12541, connecting to:
+ (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=169.254.142.218)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=orcl.skcorp.net)(CID=(PROGRAM=C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH??3?\bin\Debug\TSK_COMM_IOSCH.vshost.exe)(HOST=SKI16N20929)(USER=ia01507))))
+
+  VERSION INFORMATION:
+	TNS for 32-bit Windows: Version 10.2.0.5.0 - Production
+	Windows NT TCP/IP NT Protocol Adapter for 32-bit Windows: Version 10.2.0.5.0 - Production
+  Time: 07-5월 -2019 14:15:10
+
+
+***********************************************************************  Tracing not turned on.
+  Tns error struct:
+    ns main err code: 12541
+    
+Fatal NI connect error 12541, connecting to:
+ (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=169.254.142.218)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=orcl.skcorp.net)(CID=(PROGRAM=C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH??3?\bin\Debug\TSK_COMM_IOSCH.vshost.exe)(HOST=SKI16N20929)(USER=ia01507))))
+
+  VERSION INFORMATION:
+	TNS for 32-bit Windows: Version 10.2.0.5.0 - Production
+	Windows NT TCP/IP NT Protocol Adapter for 32-bit Windows: Version 10.2.0.5.0 - Production
+  Time: 07-5월 -2019 14:15:10
+  Tracing not turned on.
+  Tns error struct:
+    ns main err code: 12541
+    TNS-12541: TNS:리스너가 없습니다.
+    ns secondary err code: 12560
+    nt main err code: 511
+    TNS-12541: TNS:리스너가 없습니다.
+    ns secondary err code: 12560
+    nt main err code: 511
+    TNS-00511: 리스너가 없습니다.
+    nt secondary err code: 61
+    nt OS err code: 0
+TNS-00511: 리스너가 없습니다.
+    nt secondary err code: 61
+    nt OS err code: 0
+
+
+***********************************************************************
+Fatal NI connect error 12541, connecting to:
+ (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=169.254.142.218)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=orcl.skcorp.net)(CID=(PROGRAM=C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH??3?\bin\Debug\TSK_COMM_IOSCH.vshost.exe)(HOST=SKI16N20929)(USER=ia01507))))
+
+  VERSION INFORMATION:
+	TNS for 32-bit Windows: Version 10.2.0.5.0 - Production
+	Windows NT TCP/IP NT Protocol Adapter for 32-bit Windows: Version 10.2.0.5.0 - Production
+  Time: 07-5월 -2019 14:15:10
+  Tracing not turned on.
+  Tns error struct:
+    ns main err code: 12541
+    TNS-12541: TNS:리스너가 없습니다.
+    ns secondary err code: 12560
+    nt main err code: 511
+    TNS-00511: 리스너가 없습니다.
+    nt secondary err code: 61
+    nt OS err code: 0
+
+
+***********************************************************************
+Fatal NI connect error 12570, connecting to:
+ (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=169.254.142.217)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=orcl.skcorp.net)(CID=(PROGRAM=C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH??3?\bin\Debug\TSK_COMM_IOSCH.vshost.exe)(HOST=SKI16N20929)(USER=ia01507))))
+
+  VERSION INFORMATION:
+	TNS for 32-bit Windows: Version 10.2.0.5.0 - Production
+	Windows NT TCP/IP NT Protocol Adapter for 32-bit Windows: Version 10.2.0.5.0 - Production
+  Time: 07-5월 -2019 14:30:45
+  Tracing not turned on.
+  Tns error struct:
+    ns main err code: 12570
+    
+
+***********************************************************************
+Fatal NI connect error 12570, connecting to:
+ (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=169.254.142.217)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=orcl.skcorp.net)(CID=(PROGRAM=C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH??3?\bin\Debug\TSK_COMM_IOSCH.vshost.exe)(HOST=SKI16N20929)(USER=ia01507))))
+
+  VERSION INFORMATION:
+	TNS for 32-bit Windows: Version 10.2.0.5.0 - Production
+	Windows NT TCP/IP NT Protocol Adapter for 32-bit Windows: Version 10.2.0.5.0 - Production
+  Time: 07-5월 -2019 14:30:45
+  Tracing not turned on.
+  Tns error struct:
+    ns main err code: 12570
+    TNS-12570: TNS:패킷 리더 실패
+    ns secondary err code: 12560
+    nt main err code: 530
+    TNS-00530: 프로토콜 어댑터 오류입니다
+    nt secondary err code: 53
+    nt OS err code: 0
+TNS-12570: TNS:패킷 리더 실패
+    ns secondary err code: 12560
+    nt main err code: 530
+    TNS-00530: 프로토콜 어댑터 오류입니다
+    nt secondary err code: 53
+    nt OS err code: 0
+
+
+***********************************************************************
+Fatal NI connect error 12570, connecting to:
+ (DESCRIPTION=(ADDRESS=(PROTOCOL=TCP)(HOST=169.254.142.217)(PORT=1521))(CONNECT_DATA=(SERVICE_NAME=orcl.skcorp.net)(CID=(PROGRAM=C:\Users\ia01507\Desktop\cwb0422\TSK_COMM_IOSCH??3?\bin\Debug\TSK_COMM_IOSCH.vshost.exe)(HOST=SKI16N20929)(USER=ia01507))))
+
+  VERSION INFORMATION:
+	TNS for 32-bit Windows: Version 10.2.0.5.0 - Production
+	Windows NT TCP/IP NT Protocol Adapter for 32-bit Windows: Version 10.2.0.5.0 - Production
+  Time: 07-5월 -2019 14:30:46
+  Tracing not turned on.
+  Tns error struct:
+    ns main err code: 12570
+    TNS-12570: TNS:패킷 리더 실패
+    ns secondary err code: 12560
+    nt main err code: 530
+    TNS-00530: 프로토콜 어댑터 오류입니다
+    nt secondary err code: 53
+    nt OS err code: 0
+
+
+***********************************************************************
+Fatal NI connect error 12170.
+
+  VERSION INFORMATION:
+	TNS for 32-bit Windows: Version 10.2.0.5.0 - Production
+	Windows NT TCP/IP NT Protocol Adapter for 32-bit Windows: Version 10.2.0.5.0 - Production
+  Time: 07-5월 -2019 19:24:43
+  Tracing not turned on.
+  Tns error struct:
+    ns main err code: 12535
+    TNS-12535: TNS:작동이 중단중입니다
+    ns secondary err code: 12560
+    nt main err code: 505
+    TNS-00505: 작동이 중단중입니다
+    nt secondary err code: 60
+    nt OS err code: 0
+  Client address: (ADDRESS=(PROTOCOL=tcp)(HOST=10.85.11.95)(PORT=1521))
+
+
+***********************************************************************
+Fatal NI connect error 12170.
+
+  VERSION INFORMATION:
+	TNS for 32-bit Windows: Version 10.2.0.5.0 - Production
+	Windows NT TCP/IP NT Protocol Adapter for 32-bit Windows: Version 10.2.0.5.0 - Production
+  Time: 07-5월 -2019 19:24:43
+  Tracing not turned on.
+  Tns error struct:
+    ns main err code: 12535
+    TNS-12535: TNS:작동이 중단중입니다
+    ns secondary err code: 12560
+    nt main err code: 505
+    TNS-00505: 작동이 중단중입니다
+    nt secondary err code: 60
+    nt OS err code: 0
+  Client address: (ADDRESS=(PROTOCOL=tcp)(HOST=10.85.11.95)(PORT=1521))

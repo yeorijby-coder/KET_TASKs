@@ -1,0 +1,33 @@
+18:31:56:676;ERR;[GetEmptyPltRequest] .. 전송 연결 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다에 데이터를 쓸 수 없습니다.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = '10'
+    AND  KIND   = '1'
+    AND  STN    = '108'
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+18:31:56:898;ERR;[GetEmptyPltRequest] .. 전송 연결 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다에 데이터를 쓸 수 없습니다.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = '10'
+    AND  KIND   = '1'
+    AND  STN    = '149'
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+18:31:57:673;ERR;[GetEmptyPltRequest] .. 전송 연결 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다에 데이터를 쓸 수 없습니다.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = '10'
+    AND  KIND   = '2'
+    AND  STN    = '108'
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+18:31:58:531;ERR;[GetEmptyPltRequest] .. 전송 연결 현재 연결은 원격 호스트에 의해 강제로 끊겼습니다에 데이터를 쓸 수 없습니다.
+  SELECT  * 
+   FROM  HOST_EMPTY_PLT 
+  WHERE  WH_TYP = '10'
+    AND  KIND   = '2'
+    AND  STN    = '149'
+    AND (STATUS = 'Q' OR LUGG_NO <> '0')
+  ORDER  BY     UPD_DT
+18:31:59:244;IMP;이상 발생.DB Logout...

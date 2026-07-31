@@ -1,0 +1,117 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<DeviceMap>
+	<EquipType desc="생략가능-CV로만 사용될것이므로">CV</EquipType>
+    <CommMethod desc="Ethernet(TCP):1,Ethernet(UDP):2,Serial:3,XCom:4,RFC:5">1</CommMethod>
+    <CPU desc="MelsecQ:1,AB:2,Simens:3,Fara:5">1</CPU>
+
+    <!--<WordPerTrack desc="한 트랙당 워드수(2,4,5,10)">10</WordPerTrack>-->
+    <AddressArea desc="D:1,R:2">1</AddressArea>
+	<UseDestTable use="0" desc="미사용(소스에서도 없앴음) - EcsDefine.xml에서 DestCode라는 것으로 운영함"/>
+	<UseScDest use="1" from="1" to="11" list="" listDesc="list의 구분자는 ,(콤마)임!"/>
+	<TrackingArea keywords="LuggNum, JobType, DestPos" desc="Keywords는 DeviceMap.xml마다 (순서도) 다 같아야 함!">
+		<KeyWord>LuggNum</KeyWord>
+		<KeyWord>JobType</KeyWord>
+		<KeyWord>DestPos</KeyWord>
+	</TrackingArea>
+	
+	<!--한 트랙당 워드수가 2,4,5일때-->
+	<TrackDatas Count="28" desc="하위Node의 type=>Byte(B),Nibble(N),Word(W),bit(b),Multi(M)">
+		<Word type="W" addr="D5n+0" name="LuggNum" />
+		<Word type="B" addr="D5n+1" name="D5n+1" desc="Type이 M 일때는 하위의 엘리먼트 값을 아래처럼 지정해줘야 한다.(ByteL,Nibble0,Bit0,BitF) ">
+			<ByteL name="DestPos"/>
+			<ByteH name="JobType"/>
+		</Word>
+		<Word type="b" addr="D5n+2" name="SensorData">
+			<Bit name="ProductSensor" desc="D5n+2.0"/>
+		</Word>
+		<Word type="W" addr="D5n+3" name="ErrorCode" />
+		<Word type="W" addr="D5n+4" name="D5n+4" />
+	</TrackDatas>
+
+	<SeparatelyETC use="1" desc="Seq:해당 비트가 연속되는지 => :연속성 없음(0), 16개내의 연속성(1), 16개외의 연속성(2), 전Tag에서 연결(3)">
+		<Area type="b" seq="0" name="StoStation" address="550">
+			<Bit  desc="D550.0" Use ="1" tid="646" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D550.1" Use ="1" tid="651" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D550.2" Use ="1" tid="647" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D550.3" Use ="1" tid="652" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+		</Area>
+		<Area type="b" seq="0" name="RetStation" address="551">
+			<Bit  desc="D551.0" Use ="1" tid="646" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D551.1" Use ="1" tid="651" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D551.2" Use ="1" tid="647" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D551.3" Use ="1" tid="652" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+		</Area>
+		<Area type="b" seq="0" name="ScStoHS" address="552">
+			<Bit  desc="D552.0" Use ="1" tid="603" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D552.1" Use ="1" tid="609" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D552.2" Use ="1" tid="615" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D552.3" Use ="1" tid="621" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+		</Area>
+		<Area type="b" seq="0" name="ScRetHS" address="553">
+			<Bit  desc="D553.0" Use ="1" tid="604" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D553.1" Use ="1" tid="610" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D553.2" Use ="1" tid="616" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D553.3" Use ="1" tid="622" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+		</Area>
+		<Area type="b" seq="0" name="RtvDepartHS" address="554"/>
+		<Area type="b" seq="0" name="RtvArriveHS" address="555">
+			<Bit  desc="D555.0" Use ="1" tid="646" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D555.1" Use ="1" tid="651" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+		</Area>
+		<Area type="b" seq="0" name="Emergency" address="556"/>
+		<Area type="b" seq="1" name="Auto" address="557">
+			<Bit  desc="D557.0" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
+				<TrList>601</TrList>
+				<TrList>603</TrList>
+				<TrList>604</TrList>
+				<TrList>606</TrList>
+				<TrList>607</TrList>
+				<TrList>609</TrList>
+				<TrList>610</TrList>
+				<TrList>612</TrList>
+				<TrList>631</TrList>
+				<TrList>632</TrList>
+				<TrList>633</TrList>
+				<TrList>634</TrList>
+				<TrList>635</TrList>
+				<TrList>636</TrList>
+				<TrList>637</TrList>
+				<TrList>649</TrList>
+				<TrList>650</TrList>
+				<TrList>651</TrList>
+				<TrList>652</TrList>
+				<TrList>653</TrList>
+				<TrList>654</TrList>
+			</Bit>
+			<Bit  desc="D557.1" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
+				<TrList>613</TrList>
+				<TrList>615</TrList>
+				<TrList>616</TrList>
+				<TrList>618</TrList>
+				<TrList>619</TrList>
+				<TrList>621</TrList>
+				<TrList>622</TrList>
+				<TrList>624</TrList>
+				<TrList>638</TrList>
+				<TrList>639</TrList>
+				<TrList>640</TrList>
+				<TrList>641</TrList>
+				<TrList>642</TrList>
+				<TrList>643</TrList>
+				<TrList>644</TrList>
+				<TrList>645</TrList>
+				<TrList>646</TrList>
+				<TrList>647</TrList>
+				<TrList>648</TrList>
+			</Bit>
+		</Area>
+		<Area type="b" seq="0" name="CvCheckPos" address="558">
+			<Bit  desc="D558.0" Use ="1" tid="606" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D558.1" Use ="1" tid="612" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D558.2" Use ="1" tid="618" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D558.3" Use ="1" tid="624" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+		</Area>
+	</SeparatelyETC>
+
+	<FlantEquip use="0"/>
+</DeviceMap>

@@ -1,0 +1,95 @@
+{
+  "Version": 1,
+  "WorkspaceRootPath": "D:\\project\\\uD55C\uAD6D\uB2E8\uC790\\Renewal\\TASK\\WCS_TASK_CV_3F\\",
+  "Documents": [
+    {
+      "AbsoluteMoniker": "D:0:0:{FAD8A8B3-64F9-4400-AB97-C7040444B227}|WCS_TASK_CV_3F.csproj|d:\\project\\\uD55C\uAD6D\uB2E8\uC790\\renewal\\task\\wcs_task_cv_3f\\1_frm\\sys\\sys_main.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FAD8A8B3-64F9-4400-AB97-C7040444B227}|WCS_TASK_CV_3F.csproj|solutionrelative:1_frm\\sys\\sys_main.designer.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FAD8A8B3-64F9-4400-AB97-C7040444B227}|WCS_TASK_CV_3F.csproj|D:\\project\\\uD55C\uAD6D\uB2E8\uC790\\Renewal\\TASK\\WCS_TASK_CV_3F\\1_frm\\sys\\sys_main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}",
+      "RelativeMoniker": "D:0:0:{FAD8A8B3-64F9-4400-AB97-C7040444B227}|WCS_TASK_CV_3F.csproj|solutionrelative:1_frm\\sys\\sys_main.cs||{A6C744A8-0E4A-4FC6-886A-064283054674}"
+    },
+    {
+      "AbsoluteMoniker": "D:0:0:{FAD8A8B3-64F9-4400-AB97-C7040444B227}|WCS_TASK_CV_3F.csproj|D:\\project\\\uD55C\uAD6D\uB2E8\uC790\\Renewal\\TASK\\WCS_TASK_CV_3F\\bin\\debug\\wcs_db.ini||{3B902123-F8A7-4915-9F01-361F908088D0}",
+      "RelativeMoniker": "D:0:0:{FAD8A8B3-64F9-4400-AB97-C7040444B227}|WCS_TASK_CV_3F.csproj|solutionrelative:bin\\debug\\wcs_db.ini||{3B902123-F8A7-4915-9F01-361F908088D0}"
+    }
+  ],
+  "DocumentGroupContainers": [
+    {
+      "Orientation": 0,
+      "VerticalTabListWidth": 256,
+      "DocumentGroups": [
+        {
+          "DockedWidth": 200,
+          "SelectedChildIndex": 2,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{aa2115a1-9712-457b-9047-dbb71ca2cdd2}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{1c4feeaa-4718-4aa9-859d-94ce25d182ba}"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 0,
+              "Title": "SYS_MAIN.Designer.cs",
+              "DocumentMoniker": "D:\\project\\\uD55C\uAD6D\uB2E8\uC790\\Renewal\\TASK\\WCS_TASK_CV_3F\\1_FRM\\SYS\\SYS_MAIN.Designer.cs",
+              "RelativeDocumentMoniker": "1_FRM\\SYS\\SYS_MAIN.Designer.cs",
+              "ToolTip": "D:\\project\\\uD55C\uAD6D\uB2E8\uC790\\Renewal\\TASK\\WCS_TASK_CV_3F\\1_FRM\\SYS\\SYS_MAIN.Designer.cs",
+              "RelativeToolTip": "1_FRM\\SYS\\SYS_MAIN.Designer.cs",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAcwBYAAAAIAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.000738|",
+              "WhenOpened": "2026-07-31T05:10:50.835Z",
+              "EditorCaption": ""
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 1,
+              "Title": "SYS_MAIN.cs",
+              "DocumentMoniker": "D:\\project\\\uD55C\uAD6D\uB2E8\uC790\\Renewal\\TASK\\WCS_TASK_CV_3F\\1_FRM\\SYS\\SYS_MAIN.cs",
+              "RelativeDocumentMoniker": "1_FRM\\SYS\\SYS_MAIN.cs",
+              "ToolTip": "D:\\project\\\uD55C\uAD6D\uB2E8\uC790\\Renewal\\TASK\\WCS_TASK_CV_3F\\1_FRM\\SYS\\SYS_MAIN.cs",
+              "RelativeToolTip": "1_FRM\\SYS\\SYS_MAIN.cs",
+              "ViewState": "AgIAAKkCAAAAAAAAAAAUwLgCAAAfAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.003525|",
+              "WhenOpened": "2026-07-31T05:10:50.848Z"
+            },
+            {
+              "$type": "Document",
+              "DocumentIndex": 2,
+              "Title": "WCS_DB.INI",
+              "DocumentMoniker": "D:\\project\\\uD55C\uAD6D\uB2E8\uC790\\Renewal\\TASK\\WCS_TASK_CV_3F\\bin\\Debug\\WCS_DB.INI",
+              "RelativeDocumentMoniker": "bin\\Debug\\WCS_DB.INI",
+              "ToolTip": "D:\\project\\\uD55C\uAD6D\uB2E8\uC790\\Renewal\\TASK\\WCS_TASK_CV_3F\\bin\\Debug\\WCS_DB.INI",
+              "RelativeToolTip": "bin\\Debug\\WCS_DB.INI",
+              "ViewState": "AgIAAAAAAAAAAAAAAAAYwBIAAAAJAAAAAAAAAA==",
+              "Icon": "ae27a6b0-e345-4288-96df-5eaf394ee369.002768|",
+              "WhenOpened": "2026-07-31T05:10:50.851Z"
+            }
+          ]
+        },
+        {
+          "DockedWidth": 1881,
+          "SelectedChildIndex": -1,
+          "Children": [
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{004be353-6879-467c-9d1e-9ac23cdf6d49}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{d78612c7-9962-4b83-95d9-268046dad23a}"
+            },
+            {
+              "$type": "Bookmark",
+              "Name": "ST:0:0:{34e76e81-ee4a-11d0-ae2e-00a0c90fffc3}"
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,101 @@
+D:\Project\SKI 중국상주\SOC\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\DLS\SOC\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\DLS\SOC\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\DLS\SOC\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\DLS\SOC\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\DLS\SOC\IO_TASK\obj\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\DLS\SOC\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\DLS\SOC\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\DLS\SOC\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.exe
+D:\DLS\SOC\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\Project\SKI 중국상주\SOC\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\Project\SKI 중국상주\SOC\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.exe
+D:\Project\SKI 중국상주\SOC\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\Project\SKI 중국상주\SOC\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\Project\SKI 중국상주\SOC\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\Project\SKI 중국상주\SOC\SEMI_IO\IO_TASK\obj\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\Project\SKI 중국상주\SOC\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\Project\SKI 중국상주\SOC\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\DLS\SOC\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\DLS\SOC\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.exe
+D:\DLS\SOC\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\DLS\SOC\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\DLS\SOC\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\DLS\SOC\SEMI_IO\IO_TASK\obj\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\DLS\SOC\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\DLS\SOC\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\DLS\SOC\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\2_PROJECT\SKI_BEST\server\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\2_PROJECT\SKI_BEST\server\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.exe
+D:\2_PROJECT\SKI_BEST\server\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\2_PROJECT\SKI_BEST\server\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\2_PROJECT\SKI_BEST\server\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\2_PROJECT\SKI_BEST\server\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\2_PROJECT\SKI_BEST\server\SEMI_IO\IO_TASK\obj\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\2_PROJECT\SKI_BEST\server\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\2_PROJECT\SKI_BEST\server\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\DLS\SOC\relaese_semi\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\DLS\SOC\relaese_semi\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.exe
+D:\DLS\SOC\relaese_semi\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\DLS\SOC\relaese_semi\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\DLS\SOC\relaese_semi\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\DLS\SOC\relaese_semi\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\DLS\SOC\relaese_semi\SEMI_IO\IO_TASK\obj\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\DLS\SOC\relaese_semi\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\DLS\SOC\relaese_semi\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+C:\Users\daehyun.kim\Desktop\20200114\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+C:\Users\daehyun.kim\Desktop\20200114\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.exe
+C:\Users\daehyun.kim\Desktop\20200114\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.pdb
+C:\Users\daehyun.kim\Desktop\20200114\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe
+C:\Users\daehyun.kim\Desktop\20200114\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+C:\Users\daehyun.kim\Desktop\20200114\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+C:\Users\daehyun.kim\Desktop\20200114\SEMI_IO\IO_TASK\obj\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+C:\Users\daehyun.kim\Desktop\20200114\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+C:\Users\daehyun.kim\Desktop\20200114\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+C:\Users\daehyun.kim\Desktop\20200114\올려야할것\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+C:\Users\daehyun.kim\Desktop\20200114\올려야할것\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.exe
+C:\Users\daehyun.kim\Desktop\20200114\올려야할것\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\1_Projoect\SKI\SOURCE\dhkim1210\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\1_Projoect\SKI\SOURCE\dhkim1210\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.exe
+D:\1_Projoect\SKI\SOURCE\dhkim1210\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\DLS\SOC\relaese_semi\dhkim1210\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\DLS\SOC\relaese_semi\dhkim1210\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.exe
+D:\DLS\SOC\relaese_semi\dhkim1210\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\DLS\SOC\relaese_semi\dhkim1210\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\DLS\SOC\relaese_semi\dhkim1210\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\DLS\SOC\relaese_semi\dhkim1210\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\DLS\SOC\relaese_semi\dhkim1210\SEMI_IO\IO_TASK\obj\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\DLS\SOC\relaese_semi\dhkim1210\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\DLS\SOC\relaese_semi\dhkim1210\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+C:\0_SKI_BEST\서버\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+C:\0_SKI_BEST\서버\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.exe
+C:\0_SKI_BEST\서버\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.exe
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.csprojResolveAssemblyReference.cache
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\obj\Debug\TSK_COMM_IOSCH.SYS_MAIN.resources
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.Properties.Resources.resources
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\obj\Debug\IO_TASK_SEMI_FINISH.csproj.GenerateResource.Cache
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.exe
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\Mono.Security.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\Npgsql.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\Oracle.ManagedDataAccess.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Win.Spread.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Win.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Excel.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.CalcEngine.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\Npgsql.xml
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Win.Spread.xml
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Win.xml
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.Excel.xml
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.PluginCalendar.WinForms.xml
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\FarPoint.CalcEngine.xml
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\de\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\es\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\fi\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\fr\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\ja\Npgsql.resources.dll
+D:\현장자료\롯데정밀화학(울산)\소스\task\SEMI_IO\IO_TASK\bin\Debug\zh-CN\Npgsql.resources.dll
