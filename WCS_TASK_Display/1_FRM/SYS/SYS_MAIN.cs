@@ -1,7 +1,9 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Data;
+using System.IO;
+using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using Npgsql;
@@ -39,13 +41,75 @@ namespace WCS_TASK_Display
         public bool IsHex { get { return m_bHex; } set { m_bHex = value; } }
         public bool IsAscii { get { return m_bAscii; } set { m_bAscii = value; } }
 
+
+        // @@.타이틀 표시 정보
+        private const string TITLE_BASE      = "WCS_TASK_Display";  // @.기본 타이틀
+        private const string TITLE_DB_TABLE  = "DISPLAY_DATA";      // @.주 사용 테이블
+        private cTitleBar m_TitleBar;                               // @.타이틀 표시/스크롤 제어
+
+        // @@.폼 아이콘 : disp.ico 를 EmbeddedResource 로 넣어둔 이름 (RootNamespace + 파일명)
+        private const string ICON_RESOURCE = "WCS_TASK_Display.disp.ico";
+
+        /*
+         * PsSetMainTitle
+         *   WCS_TASK_* [DB(DB종류) : DB명@계정/IP:PORT] [DB TABLE : 테이블명] [COMM0 => IP : PORT] ...
+         *   (Display 는 PLC 종류를 표시하지 않는다)
+         *   표시내용이 현재 창 폭보다 길면 왼쪽으로 흘러간다.
+         */
+        #region[Method]@@@.타이틀에 시스템 구성정보 표시
+        private void PsSetMainTitle()
+        {
+            string strTitle = TITLE_BASE;
+
+            strTitle += " " + cTitleBar.GfDbInfo();
+            strTitle += " [DB TABLE : " + TITLE_DB_TABLE + "]";
+
+            for (int ii = 0; ii < m_nProcessCnt; ii++)
+            {
+                if (m_strPLC_NO[ii] == null) break;
+
+                strTitle += " [COMM" + ii.ToString() + " => " + m_strCOMM_IP[ii] + " : " + m_nCOMM_CUR_PORT[ii].ToString() + "]";
+            }
+
+            if (m_TitleBar == null) m_TitleBar = new cTitleBar(this);
+
+            m_TitleBar.SetTitle(strTitle);
+        }
+        #endregion
+
         private const int MSG_MAX = 500;
         #endregion
 
         public SYS_MAIN()
         {
             InitializeComponent();
+            PsSetFormIcon();    // @.창 제목표시줄 / 작업표시줄 아이콘
         }
+
+        /*
+         * PsSetFormIcon
+         *   폼에 Icon 을 지정하지 않으면 WinForms 기본 아이콘(wfc.ico)이 그대로 쓰인다.
+         *   .csproj 의 ApplicationIcon(disp.ico)은 탐색기에 보이는 실행파일 아이콘일 뿐,
+         *   창 제목표시줄과 작업표시줄에는 반영되지 않는다.
+         *   그래서 실행파일에 포함시킨 disp.ico 를 직접 읽어 지정한다.
+         *   (CV / SC / HOST / IO_SCH 는 SYS_MAIN.resx 에 아이콘을 넣어 같은 효과를 낸다)
+         */
+        #region[Method]@@@.폼 아이콘 지정
+        private void PsSetFormIcon()
+        {
+            try
+            {
+                using (Stream st = Assembly.GetExecutingAssembly().GetManifestResourceStream(ICON_RESOURCE))
+                {
+                    if (st != null) this.Icon = new Icon(st);
+                }
+            }
+            catch
+            {
+                // @.아이콘을 못 읽어도 기동에는 영향이 없어야 하므로 무시한다.
+            }
+        }
+        #endregion
 
         #region Load
         private void SYS_MAIN_Load(object sender, EventArgs e)
@@ -114,6 +178,8 @@ namespace WCS_TASK_Display
             cDefApi.GsReadInitProfileDelay("RCV", ref cDefApp.GM_COMM_RCV_TIME_OUT, ref m_strRtnMsg);
 
             FillManualCombos();
+
+            PsSetMainTitle();   // @.타이틀에 시스템 구성정보 표시
 
             cDefApp.GM_STAT_MAIN = true;
             WrkThStart();
@@ -373,7 +439,8 @@ namespace WCS_TASK_Display
                 db.mComMain.Parameters.Clear();
                 db.mComMain.Parameters.Add("CMD_RQ_ID", DbLang.VARCHAR, 255).Value = strCmd;
                 db.mComMain.Parameters.Add("CMD_DATA", DbLang.VARCHAR, 255).Value = strData;
-                db.mComMain.Parameters.Add("CMD_COLOR", DbLang.VARCHAR, 255).Value = nColor.ToString();
+                // CMD_COLOR is an INTEGER column - bind as INT, a Varchar parameter is rejected (42804)
+                db.mComMain.Parameters.Add("CMD_COLOR", DbLang.INT).Value = nColor;
                 db.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR, 255).Value = cDefApp.GM_WH_TYP;
                 db.mComMain.Parameters.Add("PLC_NO", DbLang.VARCHAR, 255).Value = strPlc;
                 db.mComMain.Parameters.Add("DSP_NO", DbLang.VARCHAR, 255).Value = strDsp;

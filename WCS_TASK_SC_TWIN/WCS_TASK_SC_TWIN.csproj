@@ -47,13 +47,16 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;POSTGRESQL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <PropertyGroup />
   <ItemGroup>
-    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL" />
+    <Reference Include="log4net, Version=1.2.10.0, Culture=neutral, PublicKeyToken=1b44e1d426115821, processorArchitecture=MSIL">
+      <HintPath>bin\Debug\log4net.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Mono.Security, Version=2.0.0.0, Culture=neutral, PublicKeyToken=0738eb9f132ed756, processorArchitecture=MSIL">
       <HintPath>packages\Npgsql.2.2.7\lib\net20\Mono.Security.dll</HintPath>
@@ -63,8 +66,14 @@
       <HintPath>packages\Npgsql.2.2.7\lib\net20\Npgsql.dll</HintPath>
       <Private>True</Private>
     </Reference>
-    <Reference Include="Samoh_Lib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
-    <Reference Include="Samoh_Socket, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="Samoh_Lib, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>bin\Debug\Samoh_Lib.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
+    <Reference Include="Samoh_Socket, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>bin\Debug\Samoh_Socket.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="System" />
     <Reference Include="System.Data" />
     <Reference Include="System.Deployment" />
@@ -81,6 +90,7 @@
     <Compile Include="5_DB\cDbUse.cs" />
     <Compile Include="4_Static\cDefApi.cs" />
     <Compile Include="4_Static\cDefApp.cs" />
+    <Compile Include="4_Static\cTitleBar.cs" />
     <Compile Include="6_Log\CLogging.cs" />
     <Compile Include="6_Log\cLogThread.cs" />
     <Compile Include="6_Log\Log.cs" />

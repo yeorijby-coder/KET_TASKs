@@ -42,6 +42,27 @@ namespace TSK_COMM_IOSCH
 		private string m_strRtnMsg = ""; //리턴 문자열.
         private Object thisLock = new object();
 
+
+        // @@.타이틀 표시 정보
+        private const string TITLE_BASE = "WCS_IO_SCH_3F";   // @.기본 타이틀
+        private cTitleBar m_TitleBar;                       // @.타이틀 표시/스크롤 제어
+
+        /*
+         * PsSetMainTitle
+         *   WCS_IO_SCH_* [DB(DB종류) : DB명@계정/IP:PORT]
+         *   표시내용이 현재 창 폭보다 길면 왼쪽으로 흘러간다.
+         */
+        #region[Method]@@@.타이틀에 시스템 구성정보 표시
+        private void PsSetMainTitle()
+        {
+            string strTitle = TITLE_BASE + " " + cTitleBar.GfDbInfo();
+
+            if (m_TitleBar == null) m_TitleBar = new cTitleBar(this);
+
+            m_TitleBar.SetTitle(strTitle);
+        }
+        #endregion
+
 		#region@@@.생성자
 		public SYS_MAIN()
 		{
@@ -83,6 +104,8 @@ namespace TSK_COMM_IOSCH
             // Scheduler 상태 LED (picDbCn0)
             SetVisable(pnlTop, 0, "picDbCn0", "Scheduler STATUS");
             SetDisplay(pnlTop, 0, "picDbCn0", "D");
+
+			PsSetMainTitle();   // @.타이틀에 시스템 구성정보 표시
 
 			WrkThStart();   // @.스레드 시작
 			Thread_Timer.Enabled = true;

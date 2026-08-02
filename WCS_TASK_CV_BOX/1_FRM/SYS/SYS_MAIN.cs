@@ -40,6 +40,40 @@ namespace WCS_TASK_CV
         public bool IsHex { get { return m_bHex; } set { m_bHex = value; } }
         public bool IsAscii { get { return m_bAscii; } set { m_bAscii = value; } }
 
+
+        // @@.타이틀 표시 정보
+        private const string TITLE_BASE      = "WCS_TASK_CV_BOX";  // @.기본 타이틀
+        private const string TITLE_PLC       = "Melsec";    // @.PLC 종류
+        private const string TITLE_DB_TABLE  = "CV_DATA";   // @.주 사용 테이블
+        private cTitleBar m_TitleBar;                       // @.타이틀 표시/스크롤 제어
+
+        /*
+         * PsSetMainTitle
+         *   WCS_TASK_* [PLC종류] [DB(DB종류) : DB명@계정/IP:PORT] [DB TABLE : 테이블명] [COMM0 => IP : PORT] ...
+         *   표시내용이 현재 창 폭보다 길면 왼쪽으로 흘러간다.
+         */
+        #region[Method]@@@.타이틀에 시스템 구성정보 표시
+        private void PsSetMainTitle()
+        {
+            string strTitle = TITLE_BASE;
+
+            strTitle += " [" + TITLE_PLC + "]";
+            strTitle += " " + cTitleBar.GfDbInfo();
+            strTitle += " [DB TABLE : " + TITLE_DB_TABLE + "]";
+
+            for (int ii = 0; ii < m_nProcessCnt; ii++)
+            {
+                if (m_strPLC_NO[ii] == null) break;
+
+                strTitle += " [COMM" + ii.ToString() + " => " + m_strCOMM_IP[ii] + " : " + m_nCOMM_CUR_PORT[ii].ToString() + "]";
+            }
+
+            if (m_TitleBar == null) m_TitleBar = new cTitleBar(this);
+
+            m_TitleBar.SetTitle(strTitle);
+        }
+        #endregion
+
         #region@@@.생성자
         public SYS_MAIN()
         {
@@ -71,8 +105,7 @@ namespace WCS_TASK_CV
             this.IsAscii = checkBox1.Checked;
             this.IsHex = checkBox2.Checked;
 
-            // Melsec : 타이틀에 Melsec 표시, 라디오(Display) 버튼 숨김, XML 파싱 버튼 표시
-            this.Text = this.Text + " [Melsec]";
+            // Melsec : 라디오(Display) 버튼 숨김, XML 파싱 버튼 표시 (타이틀 표시는 PsSetMainTitle 참조)
             checkBox1.Visible = false;
             checkBox2.Visible = false;
             btnXmlSync.Visible = true;
@@ -80,12 +113,10 @@ namespace WCS_TASK_CV
 #if ORACLE
             cDefApi.GsGetInitPorFileDB_1(ref cDefApp.GM_DB1_PROVIDER, ref cDefApp.GM_DB1_ALIAS, ref cDefApp.GM_DB1_USERID, ref cDefApp.GM_DB1_PASSWORD, ref m_strRtnMsg);
             m_strConnectString = "Provider=" + cDefApp.GM_DB1_PROVIDER + "; Data Source=" + cDefApp.GM_DB1_ALIAS + "; User ID=" + cDefApp.GM_DB1_USERID + "; Password =" + cDefApp.GM_DB1_PASSWORD;
-            this.Text = this.Text + " [DB:" + cDefApp.GM_DB1_ALIAS + "]";   // 접속 DB명 타이틀 표시
 #endif
 #if POSTGRESQL
             cDefApi.GsGetInitPorFileDB_2(ref cDefApp.GM_DB2_IP, ref cDefApp.GM_DB2_DATABASE, ref cDefApp.GM_DB2_PORT, ref cDefApp.GM_DB2_USER, ref cDefApp.GM_DB2_USER_PW, ref m_strRtnMsg);
             m_strConnectString = "host=" + cDefApp.GM_DB2_IP + ";username=" + cDefApp.GM_DB2_USER + ";password=" + cDefApp.GM_DB2_USER_PW + ";database=" + cDefApp.GM_DB2_DATABASE + ";MAXPOOLSIZE=50;";
-            this.Text = this.Text + " [DB:" + cDefApp.GM_DB2_DATABASE + "@" + cDefApp.GM_DB2_IP + "]"; // 접속 DB명 타이틀 표시
 #endif
 #if SQL
 #endif
@@ -145,6 +176,8 @@ namespace WCS_TASK_CV
             }
 
             // @@.여기서 부터 쓰레드 시작
+            PsSetMainTitle();   // @.타이틀에 시스템 구성정보 표시
+
             cDefApp.GM_STAT_MAIN  = true; // @.메인 시스템 동작상태
             WrkThStart();   // @.쓰레드 시작
         }

@@ -30,6 +30,40 @@ namespace WCS_TASK_SC
         public bool IsHex { get { return m_bHex; } set { m_bHex = value; } }
         public bool IsAscii { get { return m_bAscii; } set { m_bAscii = value; } }
 
+
+        // @@.타이틀 표시 정보
+        private const string TITLE_BASE      = "WCS_TASK_SC_SINGLE";  // @.기본 타이틀
+        private const string TITLE_PLC       = "Melsec";    // @.PLC 종류
+        private const string TITLE_DB_TABLE  = "SC_DATA";   // @.주 사용 테이블
+        private cTitleBar m_TitleBar;                       // @.타이틀 표시/스크롤 제어
+
+        /*
+         * PsSetMainTitle
+         *   WCS_TASK_* [PLC종류] [DB(DB종류) : DB명@계정/IP:PORT] [DB TABLE : 테이블명] [COMM0 => IP : PORT] ...
+         *   표시내용이 현재 창 폭보다 길면 왼쪽으로 흘러간다.
+         */
+        #region[Method]@@@.타이틀에 시스템 구성정보 표시
+        private void PsSetMainTitle()
+        {
+            string strTitle = TITLE_BASE;
+
+            strTitle += " [" + TITLE_PLC + "]";
+            strTitle += " " + cTitleBar.GfDbInfo();
+            strTitle += " [DB TABLE : " + TITLE_DB_TABLE + "]";
+
+            for (int ii = 0; ii < m_nProcessCnt; ii++)
+            {
+                if (m_strPLC_NO[ii] == null) break;
+
+                strTitle += " [COMM" + ii.ToString() + " => " + m_strCOMM_IP[ii] + " : " + m_strCOMM_CUR_PORT[ii] + "]";
+            }
+
+            if (m_TitleBar == null) m_TitleBar = new cTitleBar(this);
+
+            m_TitleBar.SetTitle(strTitle);
+        }
+        #endregion
+
         public string m_strConnectString;
         public int m_nProcessCnt;
 
@@ -157,6 +191,8 @@ namespace WCS_TASK_SC
             }
 
             // @@.여기서 부터 쓰레드 시작
+            PsSetMainTitle();   // @.타이틀에 시스템 구성정보 표시
+
             cDefApp.GM_STAT_MAIN  = true; // @.메인 시스템 동작상태
             WrkThStart();   // @.쓰레드 시작
         }

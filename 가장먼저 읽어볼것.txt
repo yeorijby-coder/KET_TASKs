@@ -1,0 +1,214 @@
+
+// 여기는 마스터로 했음!(메인이 아니라...)
+
+// 일단 여기는 동작이 되지 않으면... 
+// 1. 카카오 디벨로퍼에서 갱신해야함!
+// 2. Data.gg.go.kr에서 갱신해야함!
+// 3. 카카오 디벨로퍼에 도메인이 등록 되어야 함
+//   3.1. 카카오 디벨로퍼에 접속한후 로그인 후 앱을 선택하고, 
+//   3.2. 앱 설정 -> 플랫폼 -> 웹사이트 -> 사이트 도메인에 https://yeorijby.github.io 추가
+
+// 학교 알리미 데이터 API 
+//  계정 : 4869733875   (kakao)
+//  인증키 : 78d56edb8f784428854ce15ce720fe86
+// 
+//  요청 URL : http://www.schoolinfo.go.kr/openApi.do	
+//  요청 파라미터 :
+//    - apiKey : 78d56edb8f784428854ce15ce720fe86
+//    - apiType : 별도 정의 예정 
+//	  - pbanYr : yyyy(2026)   * 최근 3년간 정보만 제공됨 (apiType:0일때는 없음!)
+//	  - sidoCode : sido_sggCode.xlsx   * Excel Viewer 확장 설치 필요 
+//    - sggCode : sido_sggCode.xlsx   * Excel Viewer 확장 설치 필요 	
+//    - schulKndCode : 학교 급 구분(02:초등 03:중등 04:고등 05:특수 06:그외 07:각종)
+
+// 이거는 LG 노트북에서 진행중이었음! - proxy를 실행해야 하는 거임!
+
+git init
+git add .
+git commit -m "first commit"
+git branch -M main
+git remote remove origin
+git remote add origin https://github.com/yeorijby/MapTest.git
+git push -u origin main
+
+////// 무조건 pull
+//local의 파일들은 모두 날라가도 문제 없는 상황에서 "나는 그저 원격 git 저장소의 main를 내 local로 덮어 씌우고 싶다." 하는 상황에서 사용
+git fetch --all
+git reset --hard origin/main
+git pull origin main
+
+
+
+
+
+
+//==================================================================================================================
+// 각 파일들 임포트 할때 경로를 판단하기 어려우면 몇가지 동작만 해주면 모든 경로에 @로 사용할 수 있도록 하는 방법
+// 이것은 TypeScript 일 때 가능한 부분임!!
+//==================================================================================================================
+vite.config.ts 에다가 
+맨처음에 import path from 'path' 이거하고 
+
+  resolve:{
+    alias : [{find:"@", replacement: path.resolve(__dirname, "src")}]
+  }
+이거를 내용에 집어넣고... 
+
+
+
+tsconfig.json 에서 
+  "compilerOptions": 의 맨처음 에 
+
+    "paths" :{
+      "@/*":["./src/*"]
+    },
+이거를 집어 넣는다. 
+
+
+
+
+이렇게 하면 각 파일에서 SRC 밑에 있는 경로는 모두 @로 치환이 가능하다. 
+EX : main.tsx에서 
+import App from './App.tsx'
+되어 있던 것을 
+import App from '@/App.tsx'로 바꿀수 있다. 
+
+//------------------------------------------------------------------------------------------------------------------
+
+
+
+// 스니펫 정리
+{
+	"comp": {
+		   "prefix": "comp",
+		   "body": [
+		 "const ${1:${TM_FILENAME_BASE/(.)(.*)/${1:/capitalize}${2}/}} = () => {",
+		 "  return (",
+		 "    <div>${1:${TM_FILENAME_BASE/(.)(.*)/${1:/capitalize}${2}/}}</div>",
+		 "  )",
+		 "}",
+		 "",
+		 "export default ${1:${TM_FILENAME_BASE/(.)(.*)/${1:/capitalize}${2}/}}" 
+		   ],
+		   "description": "Create a component"
+	   },
+	"compt": {
+		    "prefix": "compt",
+		    "body": [
+				"const ${1:${TM_FILENAME_BASE/(.)(.*)/${1:/capitalize}${2}/}} = () => {",
+				"  return (",
+				"    <div className=''>${1:${TM_FILENAME_BASE/(.)(.*)/${1:/capitalize}${2}/}}</div>",
+				"  )",
+				"}",
+				"",
+				"export default ${1:${TM_FILENAME_BASE/(.)(.*)/${1:/capitalize}${2}/}}" 
+		    ],
+		    "description": "Create a component with tailwind classname"
+	   },
+	"divc": {
+			"prefix": "divc",
+			"body": [
+				"<div className='${1}'>${2}</div>"
+			],
+			"description": ""
+		},
+	"image tag": {
+		"prefix": "imgc",
+		"body": [
+			"<Image src='/${1}.png' alt='' width={${2}} height={${2}} className='${3}'/>"
+		]
+	}		
+}
+
+
+
+//==================================================================================================================
+// prisma를 사용하기 위해서
+//==================================================================================================================
+npm init -y
+npm install prisma --save-dev
+npm install @prisma/client
+npx prisma init
+
+[typescript를 써야 의미가 있으므로 Typescript를 사용하기 위해서]
+npm install typescript-node @type/node --save-dev
+npx tsc --init
+
+[모델을 파일로 만들어주는것]
+npx prisma migrate dev --name init
+
+
+[schema.prisma에 모델 정의 하고 .env에 db url 저장]
+[기존에 쓰던 DB로 모델을 가져올때.. ]
+npx prisma db full
+
+[DB 에 모델내용을 추가 .. ]
+npx prisma db fush
+
+[Docker내의 postgresql 정보파일 위치]
+/var/lib/postgresql/data/pg_hba.conf
+
+[프리즈마 스투디오를 열때]
+npx prisma studio
+
+[시드파일을 생성하기 위해서]
+1. package.json에 다음을 추가하고
+  "prisma" : {
+    "seed" : "ts-node prisma/seed.ts"
+  },
+1.1. 하지만 Next.js에서는 다음으로 수정해야 한다. 
+  "prisma" : {
+    "seed" : "ts-node --compiler-options {\"module\":\"CommonJs\"} prisma/seed.ts"
+  },
+
+2. 다음의 명령어를 실행한다. 
+	npm install -d ts-node
+
+[만약 schema.prisma의 값이 바뀌었다면 해당 값을 DB에 밀어넣을 때]
+npx prisma db push --force-reset
+
+[seed.ts 파일을 통해서 데이터 시드를 실행하는 명령]
+// 데이터 시드 : 초기 데이터나 테스트 데이터를 생성하고 채우는 과정
+npx prisma db seed
+
+
+[이렇게 하고 나서 아무 TS 파일에서 ... 다음과 같이 사용 가능]
+import { PrismaClient } from '@prisma/client'
+const prisma = new PrismaClient()
+
+async function main(){
+	let result = await prisma.person.findMany();
+	console.log(result);
+}
+
+//------------------------------------------------------------------------------------------------------------------
+
+// .env에 추가 되어져야 할 것들 
+NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY=pk_test_cHJvbW90ZWQteWV0aS0zNC5jbGVyay5hY2NvdW50cy5kZXYk
+CLERK_SECRET_KEY=sk_test_sruE46CkK5i5ynpCsaUYGGOvv0i3OvJMV2kYVlEvNE
+NEXT_PUBLIC_CLERK_SIGN_IN_URL=/
+
+
+
+
+
+
+
+import { Stage, Layer, Rect, Text } from "react-konva";
+
+const OfficeLayout = () => {
+  return (
+    <Stage width={800} height={600}>
+      <Layer>
+        {/* 책상 */}
+        <Rect x={50} y={50} width={100} height={50} fill="blue" draggable />
+        <Text x={70} y={65} text="Desk 1" fill="white" />
+
+        {/* 의자 */}
+        <Rect x={120} y={100} width={30} height={30} fill="gray" draggable />
+      </Layer>
+    </Stage>
+  );
+};
+
+export default OfficeLayout;

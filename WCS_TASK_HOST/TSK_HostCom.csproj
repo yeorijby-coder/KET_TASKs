@@ -45,7 +45,7 @@
     <DebugType>pdbonly</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\</OutputPath>
-    <DefineConstants>TRACE;SQL</DefineConstants>
+    <DefineConstants>TRACE;POSTGRESSQL</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
@@ -57,7 +57,10 @@
     <ApplicationIcon>HOST.ico</ApplicationIcon>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="MaterialSkin, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL" />
+    <Reference Include="MaterialSkin, Version=1.0.0.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>bin\Debug\MaterialSkin.dll</HintPath>
+      <Private>True</Private>
+    </Reference>
     <Reference Include="Microsoft.VisualBasic" />
     <Reference Include="Npgsql">
       <HintPath>packages\Npgsql.2.2.7\lib\net40\Npgsql.dll</HintPath>
@@ -89,6 +92,7 @@
     <Compile Include="modDateTime.cs" />
     <Compile Include="modDefAPI.cs" />
     <Compile Include="modDefApp.cs" />
+    <Compile Include="cTitleBar.cs" />
     <Compile Include="modSpDb.cs" />
     <Compile Include="modUpdate.cs" />
     <Compile Include="frmMain.cs">

@@ -422,7 +422,8 @@ namespace WCS_TASK_Display
                 m_dsp._pBdb.mComMain.CommandType = CommandType.Text;
                 m_dsp._pBdb.mComMain.Parameters.Clear();
                 m_dsp._pBdb.mComMain.Parameters.Add("DISP_DATA", DbLang.VARCHAR, 255).Value = strData;
-                m_dsp._pBdb.mComMain.Parameters.Add("COLOR", DbLang.VARCHAR, 255).Value = nColor.ToString();
+                // COLOR is an INTEGER column - bind as INT, a Varchar parameter is rejected (42804)
+                m_dsp._pBdb.mComMain.Parameters.Add("COLOR", DbLang.INT).Value = nColor;
                 m_dsp._pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR, 255).Value = m_strWh_typ;
                 m_dsp._pBdb.mComMain.Parameters.Add("PLC_NO", DbLang.VARCHAR, 255).Value = m_strPlc_No;
                 m_dsp._pBdb.mComMain.Parameters.Add("DSP_NO", DbLang.VARCHAR, 255).Value = nDspNo.ToString();

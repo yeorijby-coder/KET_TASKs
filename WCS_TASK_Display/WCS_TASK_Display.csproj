@@ -78,6 +78,7 @@
     <Compile Include="4_Static\DbLang.cs" />
     <Compile Include="4_Static\cDefApi.cs" />
     <Compile Include="4_Static\cDefApp.cs" />
+    <Compile Include="4_Static\cTitleBar.cs" />
     <Compile Include="4_Static\maindefine.cs" />
     <Compile Include="5_DB\cDbBaseOra.cs" />
     <Compile Include="5_DB\cDbUse.cs" />
@@ -123,7 +124,7 @@
     </Compile>
   </ItemGroup>
   <ItemGroup>
-    <Content Include="disp.ico" />
+    <EmbeddedResource Include="disp.ico" />
     <Content Include="7_Socket\CVlog4net.xml" />
   </ItemGroup>
   <ItemGroup>

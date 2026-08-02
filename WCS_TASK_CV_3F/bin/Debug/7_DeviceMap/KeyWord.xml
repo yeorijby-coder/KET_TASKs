@@ -9,6 +9,8 @@
 	
 	<KeyWord name="ProductSensor" parent="SensorData"/>
 
+	<KeyWord name="RetCnt" parent="D570"/>
+
 	<KeyWord name="Auto" parent="StatusData"/>
 	<KeyWord name="StoStation" parent="StatusData">
 		<Condition content="1">Auto</Condition>

@@ -106,6 +106,17 @@
 			<Bit  desc="D558.2" Use ="1" tid="518" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 			<Bit  desc="D558.3" Use ="1" tid="524" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 		</Area>
+ 		<Area type="W" name="RetCnt"  address="570"> 
+    			<ExtraTable>
+         			<Table name="eqp_mst">
+		  			<cndtnFields>
+						<Field>eqp_typ</Field>
+						<Field>plc_no</Field>
+		  			</cndtnFields>
+		  			<valueField>cv_ret-cnt</valueField>
+        			</Table>
+    			</ExtraTable>
+		</Area>
 	</SeparatelyETC>
 
 	<FlantEquip use="0"/>

@@ -95,6 +95,33 @@ namespace TSK_HostCom
 		public Thread[] g_thrLogThreadObj = new Thread[2];   // WriteLog 쓰레드 객체
 
 		//---------------------------------------------
+		// 타이틀 표시 정보
+		//---------------------------------------------
+		private const string TITLE_BASE     = "WCS_TASK_HOST";                            // @.기본 타이틀
+		private const string TITLE_DB_TABLE = "JOB_MST, LUGG_MST, CV_DATA, SC_DATA";       // @.주 사용 테이블
+		private cTitleBar m_TitleBar;                                                      // @.타이틀 표시/스크롤 제어
+
+		/*
+		 * PsSetMainTitle
+		 *   WCS_TASK_HOST [DB(DB종류) : DB명@계정/IP:PORT] [DB TABLE : 테이블명] [COMM0(SRV) => IP : PORT] [COMM1(CLI) => IP : PORT]
+		 *   (HOST 는 PLC 종류를 표시하지 않는다. COMM0 은 대기(Listen), COMM1 은 상대(ECS) 접속정보)
+		 *   표시내용이 현재 창 폭보다 길면 왼쪽으로 흘러간다.
+		 */
+		private void PsSetMainTitle()
+		{
+			string strTitle = TITLE_BASE;
+
+			strTitle += " " + cTitleBar.GfDbInfo();
+			strTitle += " [DB TABLE : " + TITLE_DB_TABLE + "]";
+			strTitle += " [COMM0(SRV) => 0.0.0.0 : " + modDefApp.g_iListenPort.ToString() + "]";
+			strTitle += " [COMM1(CLI) => " + modDefApp.g_strRemoteIP + " : " + modDefApp.g_iRemotePort.ToString() + "]";
+
+			if (m_TitleBar == null) m_TitleBar = new cTitleBar(this);
+
+			m_TitleBar.SetTitle(strTitle);
+		}
+
+		//---------------------------------------------
 		// 메인화면 로딩 및 초기화
 		//---------------------------------------------
 		private void frmMain_Load(object sender, EventArgs e)
@@ -121,6 +148,8 @@ namespace TSK_HostCom
 				System.Environment.Exit(0);
 				return;
 			}
+
+			PsSetMainTitle();   // @.타이틀에 시스템 구성정보 표시
 
 			//---------------------------------------------------------------------------------
 			// 컨트롤의 System.Windows.Forms.Control.Handle 속성에 액세스하는 잘못된 스레드에 대한 
