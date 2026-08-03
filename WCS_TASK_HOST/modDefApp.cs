@@ -21,11 +21,11 @@ namespace TSK_HostCom
 		public static UserInfo g_User;
 		public static string g_strUserID;
 		public static string g_strUserName;
-		// Socket Listen Port
+		// 소켓 리슨 포트
 		public static int g_iListenPort;
 		// Remote IP
 		public static string g_strRemoteIP;
-		// Remote Port
+		// 상대 포트
 		public static int g_iRemotePort;
 		// 시스템 운영모드
 		public static OpSta g_SysMode;
@@ -95,7 +95,7 @@ public static frmMain g_frmForm;
 		public static AutoResetEvent g_areListenExitEvent = new AutoResetEvent(false);
 		public static AutoResetEvent[] g_areLogExitEvent = new AutoResetEvent[2];
 
-		// Listen Socket
+		// 리슨 소켓
 		public static System.Net.Sockets.TcpListener g_tcplsn;
 		// Client Socket 정보 리스트
 		public static CliSocketInfo[] g_CliSockList;
@@ -138,11 +138,11 @@ public static frmMain g_frmForm;
 
 		// SOCKET FRAME 제어 문자
 		public const int TRANS_R = 0x52;	//R' - Request
-		public const int TRANS_ACK = 0x41; 	//A' - Response Ack
-		public const int TRANS_NAK = 0x4e;	//N' - Response Nak
+		public const int TRANS_ACK = 0x41; 	//A' - 응답 Ack
+		public const int TRANS_NAK = 0x4e;	//N' - 응답 Nak
 
-		public const string MSG_ACK = "A";	//- Response Ack
-		public const string MSG_NAK = "N";	//- Response Nak
+		public const string MSG_ACK = "A";	//- 응답 Ack
+		public const string MSG_NAK = "N";	//- 응답 Nak
 
 		public const   int MSG_HEAD_CNT = 15;
 		public const int MSG_ORDER_CNT = 61;
@@ -153,7 +153,7 @@ public static frmMain g_frmForm;
         //public const int MSG_DUAL_STO_CNT = 31;
         //public const int MSG_ARRI_BATCH_CNT = 7;
 		
-		//  Error Message Code
+		//  에러 메시지 코드
 		public const int MSG_NO_ERROR = 0;
 		public const int MSG_NO_STX = 1;
 		public const int MSG_NO_ETX = 2;
@@ -447,7 +447,7 @@ public static frmMain g_frmForm;
 		//**************************************************************************************
 	    //Structure 정의
 
-		// DB User Info
+		// DB 사용자 정보
 		public struct UserInfo
 		{
 			public string g_strUserID;

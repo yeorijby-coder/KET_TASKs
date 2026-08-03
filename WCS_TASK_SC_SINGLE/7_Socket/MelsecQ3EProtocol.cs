@@ -249,11 +249,11 @@ namespace WCS_TASK_SC
             byTxBuff[3] = (byte)(_nPCNo);     	                        // PC No.
 
             byTxBuff[4] = (byte)(_nRequestIONo % 0x100);
-            byTxBuff[5] = (byte)(_nRequestIONo / 0x100);	            // Specific value
-            byTxBuff[6] = (byte)(_nRequestKookNo % 0x100);	            // Specific value 2
+            byTxBuff[5] = (byte)(_nRequestIONo / 0x100);	            // 고정값
+            byTxBuff[6] = (byte)(_nRequestKookNo % 0x100);	            // 고정값 2
 
             byTxBuff[7] = 0x0C;
-            byTxBuff[8] = 0x00;	                                        // Request data length
+            byTxBuff[8] = 0x00;	                                        // 요청 데이터 길이
 
             byTxBuff[9] = (byte)(_nCPUWatchTimer % 0x100);              // 0x04;
             byTxBuff[10] = (byte)(_nCPUWatchTimer / 0x100);	            // CPU monitoring timer (unit is 250ms)
@@ -270,7 +270,7 @@ namespace WCS_TASK_SC
             byTxBuff[18] = DeviceCode;					                // Device code (Memory Type)
 
             byTxBuff[19] = (byte)(nReadLen & 0x00FF);				    //WORD단위:읽을 워드수, BIT단위:읽을 비트수
-            byTxBuff[20] = (byte)((nReadLen >> 8) & 0x00FF);		    // Number of device points
+            byTxBuff[20] = (byte)((nReadLen >> 8) & 0x00FF);		    // 디바이스 점 수
 
 
             SndHexString = "";
@@ -309,11 +309,11 @@ namespace WCS_TASK_SC
 	        byTxBuff[3]  = (byte)(_nPCNo);     	                // PC No.
 
             byTxBuff[4]  = (byte)(_nRequestIONo % 0x100);	
-	        byTxBuff[5]  = (byte)(_nRequestIONo / 0x100);	    // Specific value
-	        byTxBuff[6]  = (byte)(_nRequestKookNo % 0x100);	    // Specific value 2
+	        byTxBuff[5]  = (byte)(_nRequestIONo / 0x100);	    // 고정값
+	        byTxBuff[6]  = (byte)(_nRequestKookNo % 0x100);	    // 고정값 2
 
 	        byTxBuff[7]  = (byte)(wReqLen & 0x00FF);
-	        byTxBuff[8]  = (byte)((wReqLen >> 8) & 0x00FF);  	// Request data length
+	        byTxBuff[8]  = (byte)((wReqLen >> 8) & 0x00FF);  	// 요청 데이터 길이
 
 	        byTxBuff[9]  = (byte)(_nCPUWatchTimer % 0x100);         // 0x04;
 	        byTxBuff[10] = (byte)(_nCPUWatchTimer / 0x100);	        // CPU monitoring timer (unit is 250ms)
@@ -330,7 +330,7 @@ namespace WCS_TASK_SC
 	        byTxBuff[18] = DeviceCode;					            // Device code (Memory Type)
 
 	        byTxBuff[19] = (byte)(nWriteLen & 0x00FF);              //WORD단위:쓸 워드수, BIT단위:쓸 비트수
-            byTxBuff[20] = (byte)((nWriteLen >> 8) & 0x00FF);       //Number of device points
+            byTxBuff[20] = (byte)((nWriteLen >> 8) & 0x00FF);       //디바이스 점 수
 
 
 
@@ -423,7 +423,7 @@ namespace WCS_TASK_SC
 		        SetErrorMsg("RecvReadAck.. Network or PC NO 이상..");
 		        return false;
 	        }
-	        if(byRxBuff[4] != 0xFF || byRxBuff[5] != 0x03 || byRxBuff[6] != 0x00)   // Specific value
+	        if(byRxBuff[4] != 0xFF || byRxBuff[5] != 0x03 || byRxBuff[6] != 0x00)   // 고정값
 	        {
 		        SetErrorMsg("RecvReadAck.. Specific Value 이상..");
 		        return false;
@@ -481,7 +481,7 @@ namespace WCS_TASK_SC
                 SetErrorMsg("RecvWriteAck.. Network or PC NO 이상..");
                 return false;
             }
-            if (byRxBuff[4] != 0xFF || byRxBuff[5] != 0x03 || byRxBuff[6] != 0x00)   // Specific value
+            if (byRxBuff[4] != 0xFF || byRxBuff[5] != 0x03 || byRxBuff[6] != 0x00)   // 고정값
             {
                 SetErrorMsg("RecvWriteAck.. Specific Value 이상..");
                 return false;

@@ -12,13 +12,13 @@ namespace WCS_TASK_Display
 {
     public partial class SYS_MAIN : Form
     {
-        #region members
+        #region 멤버
         private maindefine m_mfgClass = new maindefine();
 
         public DisplayThread[] m_thDisplay = new DisplayThread[200];
         public cLogThread[] m_thLogging = new cLogThread[200];
 
-        // per-controller configuration (parallel arrays, loaded from WCS_DB.INI [COMM*])
+        // @@.컨트롤러별 설정 (WCS_DB.INI 의 [COMM*] 에서 읽어오는 병렬 배열)
         public string[] m_strEQMT_TYP = new string[200];
         public string[] m_strPLC_NO = new string[200];
         public string[] m_strCOMM_IP = new string[200];
@@ -78,6 +78,9 @@ namespace WCS_TASK_Display
         #endregion
 
         private const int MSG_MAX = 500;
+
+        // @@.[접속 끊기] 상태. true 면 스레드를 다시 띄우지 않는다.
+        private bool m_bDisconnected = false;
         #endregion
 
         public SYS_MAIN()
@@ -111,12 +114,12 @@ namespace WCS_TASK_Display
         }
         #endregion
 
-        #region Load
+        #region 폼 로드
         private void SYS_MAIN_Load(object sender, EventArgs e)
         {
             m_nProcessCnt = 0;
 
-            // single-instance guard
+            // @.중복실행 방지
             if (cCmLib.GfPrevInstance() == true)
             {
                 cDefApp.GM_RE_START = true;
@@ -165,13 +168,13 @@ namespace WCS_TASK_Display
                     break;
                 }
 
-                // per-thread async log queue + writer thread
+                // @.스레드별 비동기 로그 큐와 기록 스레드
                 cDefApp.m_LogQ[ii] = new Queue<LogParam>();
                 m_thLogging[ii] = new cLogThread(m_strLogPath[ii], m_strLogFileNm[ii], ii);
 
                 CreateStatusBox(ii);
-                SetDisplay("picDspDbCn" + ii, "D");
-                SetDisplay("picDspSkt" + ii, "D", "E");
+                SetDisplay("picDispDbCn" + ii, "D");
+                SetDisplay("picDispSkt" + ii, "D", "E");
             }
 
             cDefApi.GsReadInitProfileDelay("SND", ref cDefApp.GM_COMM_SND_TIME_OUT, ref m_strRtnMsg);
@@ -186,7 +189,7 @@ namespace WCS_TASK_Display
         }
         #endregion
 
-        #region status boxes (BackColor based, replaces image-list)
+        #region 상태 표시 박스 (이미지리스트 대신 BackColor 로 표시)
         private void CreateStatusBox(int ii)
         {
             int x = 8 + (ii * 70);
@@ -198,7 +201,7 @@ namespace WCS_TASK_Display
             pnlTop.Controls.Add(lbl);
 
             PictureBox picDb = new PictureBox();
-            picDb.Name = "picDspDbCn" + ii;
+            picDb.Name = "picDispDbCn" + ii;
             picDb.BorderStyle = BorderStyle.FixedSingle;
             picDb.Location = new Point(x, 38);
             picDb.Size = new Size(26, 26);
@@ -207,7 +210,7 @@ namespace WCS_TASK_Display
             ToolTip.SetToolTip(picDb, "DB Status #" + ii.ToString("00"));
 
             PictureBox picSk = new PictureBox();
-            picSk.Name = "picDspSkt" + ii;
+            picSk.Name = "picDispSkt" + ii;
             picSk.BorderStyle = BorderStyle.FixedSingle;
             picSk.Location = new Point(x + 30, 38);
             picSk.Size = new Size(26, 26);
@@ -232,7 +235,7 @@ namespace WCS_TASK_Display
             else PfSetStatImgView(pic, opt[0], opt[1]);
         }
 
-        // C:Connected, T:Trying, D:Disconnected
+        // @@.C:연결, T:시도중, D:끊김
         private void PfSetStatImgView(PictureBox pPic, string pStat)
         {
             try
@@ -249,14 +252,14 @@ namespace WCS_TASK_Display
             catch { }
         }
 
-        // Stat Connection + Operation (N:normal, W:writing, E:error)
+        // @@.접속상태 + 동작상태 (N:정상, W:기록중, E:에러)
         private void PfSetStatImgView(PictureBox pPic, string pStatSkt, string pStatOp)
         {
             PfSetStatImgView(pPic, pStatSkt);
         }
         #endregion
 
-        #region worker threads
+        #region 작업 스레드
         private void WrkThStart()
         {
             CheckForIllegalCrossThreadCalls = false;
@@ -293,11 +296,19 @@ namespace WCS_TASK_Display
                 {
                     if (m_thDisplay[ii] == null) continue;
 
-                    // start (or restart) the worker + its log thread when not running
+                    // @.[접속 끊기] 상태에서는 재접속하지 않는다
+                    if (m_bDisconnected)
+                    {
+                        SetDisplay("picDispSkt" + ii, "D", "E");
+                        SetDisplay("picDispDbCn" + ii, "D");
+                        continue;
+                    }
+
+                    // @.스레드가 떠 있지 않으면 작업 스레드와 로그 스레드를 시작(또는 재시작)한다
                     if (m_thDisplay[ii].m_thThread == null)
                     {
-                        SetDisplay("picDspSkt" + ii, "T");
-                        SetDisplay("picDspDbCn" + ii, "T");
+                        SetDisplay("picDispSkt" + ii, "T");
+                        SetDisplay("picDispDbCn" + ii, "T");
 
                         m_thDisplay[ii].m_thThread = new Thread(m_thDisplay[ii].Thread_Doing);
                         m_thDisplay[ii].m_thThread.IsBackground = true;
@@ -318,8 +329,8 @@ namespace WCS_TASK_Display
                     {
                         if (m_thDisplay[ii].IsOpen)
                         {
-                            SetDisplay("picDspSkt" + ii, "C");
-                            SetDisplay("picDspDbCn" + ii, "C");
+                            SetDisplay("picDispSkt" + ii, "C");
+                            SetDisplay("picDispDbCn" + ii, "C");
                         }
                     }
                 }
@@ -333,7 +344,7 @@ namespace WCS_TASK_Display
         }
         #endregion
 
-        #region message view (ListView), thread-safe via CheckForIllegalCrossThreadCalls=false
+        #region 메시지 출력 (ListView). CheckForIllegalCrossThreadCalls=false 로 스레드 제약을 푼다
         public void PsMsgView(string pMsg, int nThGbn) { AddMsg("NOR", "", pMsg); }
         public void PsMsgView_Error(string pMsg, int nThGbn) { AddMsg("ERR", "", pMsg); }
         public void PsMsgView_IMP(string pMsg, int nThGbn) { AddMsg("IMP", "", pMsg); }
@@ -346,6 +357,9 @@ namespace WCS_TASK_Display
         {
             try
             {
+                // @.[로그 정지] 체크시 화면 목록에만 쌓지 않는다. 파일 로그와 WCS_LOG_PGR 은 계속 남는다.
+                if (chkLogStop.Checked) return;
+
                 ListViewItem item = new ListViewItem(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.fff"));
                 item.SubItems.Add(strType);
                 item.SubItems.Add(strId);
@@ -353,43 +367,52 @@ namespace WCS_TASK_Display
                 if (strType == "ERR") item.ForeColor = Color.Red;
                 else if (strType == "IMP") item.ForeColor = Color.Blue;
 
-                lvMsg.Items.Add(item);
+                if (chkLatestFirst.Checked)
+                {
+                    // @.최신을 맨 위에 : 위에 끼워넣고, 넘치면 오래된 아래쪽을 버린다
+                    lvMsg.Items.Insert(0, item);
+                    while (lvMsg.Items.Count > MSG_MAX) lvMsg.Items.RemoveAt(lvMsg.Items.Count - 1);
+                }
+                else
+                {
+                    lvMsg.Items.Add(item);
+                    while (lvMsg.Items.Count > MSG_MAX) lvMsg.Items.RemoveAt(0);
+                }
 
-                while (lvMsg.Items.Count > MSG_MAX) lvMsg.Items.RemoveAt(0);
                 item.EnsureVisible();
             }
             catch { }
         }
         #endregion
 
-        #region manual control (Client manual command -> DISPLAY_DATA)
+        #region 수동 조작 (Client 수동지령 -> DISPLAY_DATA)
         private void FillManualCombos()
         {
             cmbController.Items.Clear();
-            int maxDsp = 1;
+            int maxDisp = 1;
             for (int ii = 0; ii < m_nProcessCnt; ii++)
             {
                 if (m_strPLC_NO[ii] == null) continue;
                 cmbController.Items.Add(m_strPLC_NO[ii]);
-                if (m_nCOMM_CNT[ii] > maxDsp) maxDsp = m_nCOMM_CNT[ii];
+                if (m_nCOMM_CNT[ii] > maxDisp) maxDisp = m_nCOMM_CNT[ii];
             }
             if (cmbController.Items.Count > 0) cmbController.SelectedIndex = 0;
 
-            cmbDspNo.Items.Clear();
-            if (maxDsp < 1) maxDsp = 1;
-            for (int d = 1; d <= maxDsp; d++) cmbDspNo.Items.Add(d.ToString());
-            if (cmbDspNo.Items.Count > 0) cmbDspNo.SelectedIndex = 0;
+            cmbDispNo.Items.Clear();
+            if (maxDisp < 1) maxDisp = 1;
+            for (int d = 1; d <= maxDisp; d++) cmbDispNo.Items.Add(d.ToString());
+            if (cmbDispNo.Items.Count > 0) cmbDispNo.SelectedIndex = 0;
 
             cmbColor.Items.Clear();
             cmbColor.Items.Add("RED(4)");
             cmbColor.Items.Add("GREEN(5)");
             cmbColor.Items.Add("YELLOW(6)");
-            cmbColor.SelectedIndex = 2; // Yellow default (legacy)
+            cmbColor.SelectedIndex = 2; // @.레거시와 같이 노랑을 기본으로 둔다
         }
 
         private int SelectedColor()
         {
-            // RED=4, GREEN=5, YELLOW=6
+            // @.빨강=4, 초록=5, 노랑=6
             return cmbColor.SelectedIndex < 0 ? 6 : (DisplayProtocol.COLOR_RED + cmbColor.SelectedIndex);
         }
 
@@ -405,14 +428,14 @@ namespace WCS_TASK_Display
 
         private void WriteManualCmd(string strCmd, string strData)
         {
-            if (cmbController.SelectedItem == null || cmbDspNo.SelectedItem == null)
+            if (cmbController.SelectedItem == null || cmbDispNo.SelectedItem == null)
             {
                 MessageBox.Show("Select controller and display number.");
                 return;
             }
 
             string strPlc = cmbController.SelectedItem.ToString();
-            string strDsp = cmbDspNo.SelectedItem.ToString();
+            string strDisp = cmbDispNo.SelectedItem.ToString();
             int nColor = SelectedColor();
 
 #if POSTGRESQL
@@ -433,23 +456,23 @@ namespace WCS_TASK_Display
                 strSql += CRLF + "      ,UPD_DT     = " + DbLang.SYSDATE + "";
                 strSql += CRLF + "WHERE  WH_TYP = :WH_TYP          ";
                 strSql += CRLF + "AND    PLC_NO = :PLC_NO          ";
-                strSql += CRLF + "AND    DSP_NO = :DSP_NO          ";
+                strSql += CRLF + "AND    DISP_NO = :DISP_NO          ";
 
                 db.mComMain.CommandType = CommandType.Text;
                 db.mComMain.Parameters.Clear();
                 db.mComMain.Parameters.Add("CMD_RQ_ID", DbLang.VARCHAR, 255).Value = strCmd;
                 db.mComMain.Parameters.Add("CMD_DATA", DbLang.VARCHAR, 255).Value = strData;
-                // CMD_COLOR is an INTEGER column - bind as INT, a Varchar parameter is rejected (42804)
+                // @.CMD_COLOR 는 INTEGER 컬럼이다. Varchar 파라미터로 넘기면 거부당하므로(42804) INT 로 바인딩한다.
                 db.mComMain.Parameters.Add("CMD_COLOR", DbLang.INT).Value = nColor;
                 db.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR, 255).Value = cDefApp.GM_WH_TYP;
                 db.mComMain.Parameters.Add("PLC_NO", DbLang.VARCHAR, 255).Value = strPlc;
-                db.mComMain.Parameters.Add("DSP_NO", DbLang.VARCHAR, 255).Value = strDsp;
+                db.mComMain.Parameters.Add("DISP_NO", DbLang.VARCHAR, 255).Value = strDisp;
 
                 int n = db.ExcuteNonQry(strSql);
                 if (n <= 0)
-                    AddMsg("ERR", strPlc, "Manual " + strCmd + " : no DISPLAY_DATA row (DSP_NO=" + strDsp + "). Check table.");
+                    AddMsg("ERR", strPlc, "Manual " + strCmd + " : no DISPLAY_DATA row (DISP_NO=" + strDisp + "). Check table.");
                 else
-                    AddMsg("IMP", strPlc, "Manual " + strCmd + " requested DSP_NO=" + strDsp + " DATA[" + strData + "] COLOR=" + nColor);
+                    AddMsg("IMP", strPlc, "Manual " + strCmd + " requested DISP_NO=" + strDisp + " DATA[" + strData + "] COLOR=" + nColor);
             }
             catch (Exception ex)
             {
@@ -463,7 +486,62 @@ namespace WCS_TASK_Display
         }
         #endregion
 
-        #region hex / ascii toggles
+        #region 접속 제어 / 로그 표시 제어
+        /*
+         * btnDisconnect_Click
+         *   [접속 끊기] : 모든 컨트롤러의 작업 스레드에 중단을 요청한다.
+         *                 스레드는 소켓/DB 를 닫고 EQP_MST 접속상태를 'N' 으로 기록한 뒤 끝난다.
+         *                 끊긴 상태에서는 Thread_Tick 이 스레드를 다시 띄우지 않는다.
+         *   [접속]     : 중단 요청을 풀면 Thread_Tick 이 다음 주기에 다시 접속한다.
+         */
+        private void btnDisconnect_Click(object sender, EventArgs e)
+        {
+            m_bDisconnected = !m_bDisconnected;
+
+            for (int ii = 0; ii < m_nProcessCnt; ii++)
+            {
+                if (m_thDisplay[ii] == null) continue;
+                m_thDisplay[ii].m_bStopReq = m_bDisconnected;
+            }
+
+            if (m_bDisconnected)
+            {
+                btnDisconnect.Text = "접속";
+                AddMsg("IMP", "", "[접속 끊기] 요청 - 모든 컨트롤러 접속을 끊습니다.");
+            }
+            else
+            {
+                btnDisconnect.Text = "접속 끊기";
+                AddMsg("IMP", "", "[접속] 요청 - 재접속을 시작합니다.");
+            }
+        }
+
+        // @@.화면 로그 지우기
+        private void btnLogClear_Click(object sender, EventArgs e)
+        {
+            lvMsg.Items.Clear();
+        }
+
+        // @@.표시 순서를 바꾸면 이미 쌓인 목록도 뒤집어 준다
+        private void chkLatestFirst_CheckedChanged(object sender, EventArgs e)
+        {
+            try
+            {
+                if (lvMsg.Items.Count < 2) return;
+
+                ListViewItem[] items = new ListViewItem[lvMsg.Items.Count];
+                for (int i = 0; i < lvMsg.Items.Count; i++) items[lvMsg.Items.Count - 1 - i] = lvMsg.Items[i];
+
+                lvMsg.BeginUpdate();
+                lvMsg.Items.Clear();
+                lvMsg.Items.AddRange(items);
+                lvMsg.EndUpdate();
+            }
+            catch { }
+        }
+        #endregion
+
+        #region Hex / Ascii 표시 선택
         private void chkHex_CheckedChanged(object sender, EventArgs e) { IsHex = chkHex.Checked; }
         private void chkAscii_CheckedChanged(object sender, EventArgs e) { IsAscii = chkAscii.Checked; }
         #endregion

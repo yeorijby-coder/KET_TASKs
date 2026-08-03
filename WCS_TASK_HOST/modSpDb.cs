@@ -303,7 +303,7 @@ namespace TSK_HostCom
 				cOneChar = Convert.ToChar(Strings.Mid(p_strValue, iMyFor, 1));
 				if (cOneChar == null)
 				{
-					break; // TODO: might not be correct. Was : Exit For
+					break; // TODO: 원본은 Exit For 이었음. 동작이 다를 수 있으니 확인 필요
 				}
 				strrtnValue += Strings.Mid(p_strValue, iMyFor, 1);
 			}

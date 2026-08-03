@@ -114,7 +114,7 @@ namespace TSK_COMM_IOSCH
 		#region Thread 동작상태를 가져온다.
 		private void WrkThStart()
 		{
-			//CrossThread Check False.
+			//크로스 스레드 검사 해제
 			CheckForIllegalCrossThreadCalls = false;
 
             int schId = (int)cDefApp.eThGbn.SCH_GR01;

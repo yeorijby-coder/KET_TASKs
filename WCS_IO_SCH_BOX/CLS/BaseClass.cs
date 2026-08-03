@@ -18,9 +18,9 @@ namespace TSK_COMM_IOSCH
     public class BaseClass 
     {
         /*
-         * Mcs Const
+         * MCS 상수
          */
-        #region Mcs Const
+        #region MCS 상수
         public const string _strUserID = "MCS";
         public const int _COMMAND_STO_ = 0;
         public const int _COMMAND_RET_ = 1;
@@ -29,9 +29,9 @@ namespace TSK_COMM_IOSCH
         public int nStep = _COMMAND_STO_;
         #endregion
         /*
-         * variable define
+         * 변수 선언
          */
-        #region variable define
+        #region 변수 선언
 
 #if ORACLE
         public OleDbConnection _pConObj;
@@ -59,23 +59,23 @@ namespace TSK_COMM_IOSCH
         public string ConnectionString { get { return _strConnectionString; } set { _strConnectionString = value; } }
         public bool IsDBOpen { get { return _IsDBOpen; } set { _IsDBOpen = value; } }
 
-        #endregion variable define
+        #endregion 변수 선언
         /*
-         * Track No Define
+         * 트랙번호 정의
          */
 		//이전 작업을 체크한다.
-        #region RobotPicker Define
+        #region 로봇피커 정의
 		public const string RP_EMPTY = "empty";				//비어있다
 		public const string RP_PICKUP = "pickup";			//Pickup작업
 		public const string RP_UNLOAD = "unload";			//Unload작업
 		public const string RP_MOVE = "move";				//Move작업
 		public const string RP_HOME = "home";				//Home작업
 		public const string RP_MSTACK = "measure stack";	//측정 작업
-        #endregion Track No Define
+        #endregion 트랙번호 정의
         /*
-         * Request Command Define
+         * 요청 명령 정의
          */
-        #region Request Command Define
+        #region 요청 명령 정의
         public const string CmdRequest = "RQ";
         public const string CmdResultError = "ER";
         public const string CmdResultOk = "OK";
@@ -100,11 +100,11 @@ namespace TSK_COMM_IOSCH
         public const string CMD_IOGB_MV     = "04";
         public const string CMD_IOGB_BAGGING= "05";
 
-        #endregion Track No Define
+        #endregion 트랙번호 정의
         /*
-         * CV Read variable
+         * CV 읽기 변수
          */
-        #region CV Read define
+        #region CV 읽기 영역 정의
         private int         _CV_JOB_KIND        ;
         private int         _CV_LUGGNO         ;
         private int         _CV_SOUR_SITE      ;
@@ -275,11 +275,11 @@ namespace TSK_COMM_IOSCH
         public bool     PP_MC_YON           {set { _PP_MC_YON           = value; } get { return _PP_MC_YON          ;} }
         public bool     BOX_AUTO_RET_YON    { set { _BOX_AUTO_RET_YON   = value; } get { return _BOX_AUTO_RET_YON   ;} }
 
-        #endregion CV Read define
+        #endregion CV 읽기 영역 정의
         /*
          * 설비통신상태-PLC_STA_MST(variable)
          */
-        #region Plc Status define
+        #region PLC 상태 정의
         private string      _PLC_COM_STA;
         private DateTime    _PLC_COM_DT;
         private int         _ERR_CODE;
@@ -290,9 +290,9 @@ namespace TSK_COMM_IOSCH
 
 
         /*
-         * Request Order ID
+         * 요청 지시 ID
          */
-        #region Request Order ID
+        #region 요청 지시 ID
         public const string QC_ID_STORE_UROD			="11";
         public const string QC_ID_STORE_CCE_NOREMOVE	="12";
         public const string QC_ID_STORE_CCE_REMOVE		="13";
@@ -312,9 +312,9 @@ namespace TSK_COMM_IOSCH
         #endregion
 
         /*
-         * JobType define
+         * 작업구분 정의
          */
-        #region JobType define
+        #region 작업구분 정의
         public const int JOB_TYPE_BAGGING			= 1;
         public const int JOB_TYPE_MERGE				= 2;
         public const int JOB_TYPE_WEIGHT_ERROR		= 3;
@@ -322,9 +322,9 @@ namespace TSK_COMM_IOSCH
         #endregion
 
         /*
-         * Cv Order Command
+         * CV 지시 명령
          */
-        #region Cv Order Command
+        #region CV 지시 명령
         public const string CV_CMD_IDLE             = "00";
         public const string CV_CMD_WRT_DATA_BOX     = "01"; //데이터+박스
         public const string CV_CMD_DEL_DATA_BOX     = "02"; //데이터+박스
@@ -333,9 +333,9 @@ namespace TSK_COMM_IOSCH
         #endregion
 
         /*
-         * Control Ascii
+         * 제어 문자
          */
-        #region Control Ascii   
+        #region 제어 문자   
         #endregion
 
 

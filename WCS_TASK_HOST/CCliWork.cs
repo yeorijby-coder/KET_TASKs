@@ -30,7 +30,7 @@ namespace TSK_HostCom
 		private string m_strLog = "";
 		//SQL 문장
 		private string m_strSql;
-		//Return record cnt
+		//처리 건수 반환
 		private int m_iSelCnt;
         //Command
         private string m_strHostCmd;
@@ -983,7 +983,7 @@ namespace TSK_HostCom
             #endregion
 
             #region 상위에 보낼 메세지 부분 구성
-            //MAKE FRAME
+            //전문 작성
             string strTemp = null;
             byte[] bytTempByte = null;
 
@@ -1151,7 +1151,7 @@ namespace TSK_HostCom
                     return true;
                 }
                 #region 상위에 보낼 메세지 구성
-                //MAKE FRAME
+                //전문 작성
                 string strTemp = null;
                 byte[] bytTempByte = null;
 
@@ -1347,7 +1347,7 @@ namespace TSK_HostCom
             #endregion
 
             #region 상위에 보낼 메세지 구성
-            //MAKE FRAME
+            //전문 작성
             string strTemp = null;
             byte[] bytTempByte = null;
 
@@ -1447,7 +1447,7 @@ namespace TSK_HostCom
             #endregion
 
             #region 상위에 보낼 메세지 구성
-            //MAKE FRAME
+            //전문 작성
             string strTemp = null;
             byte[] bytTempByte = null;
             int nClass = 0;
@@ -1900,7 +1900,7 @@ namespace TSK_HostCom
 
             //요청중인 작업이 1개라도 있으면 
             #region 상위에 보낼 메세지 구성
-            //MAKE FRAME
+            //전문 작성
             string strTemp = null;
             byte[] bytTempByte = null;
 
@@ -1937,7 +1937,7 @@ namespace TSK_HostCom
             #region 요청 중으로 상태 변경 
             m_BDb.BeginTrans();
 
-            //### update manual_temp
+            //### manual_temp 갱신
             //### Status UPDATE
             m_BDb.ParamsClear();
 
@@ -2025,7 +2025,7 @@ namespace TSK_HostCom
             #region 보고를 못했어도 그냥 지나감! - 다시 보고안하기 위해서 먼저 업데이트 하고 넘어감
             m_BDb.BeginTrans();
 
-            //### update manual_temp
+            //### manual_temp 갱신
             //### Status UPDATE
             m_BDb.ParamsClear();
 
@@ -2064,7 +2064,7 @@ namespace TSK_HostCom
             }
 
             #region 상위에 보낼 메세지 구성
-            //MAKE FRAME
+            //전문 작성
             string strTemp = null;
             byte[] bytTempByte = null;
             int nKind = 0;
@@ -2194,7 +2194,7 @@ namespace TSK_HostCom
 				}
 				if (iSend_Loop >= iSend_Max)
 				{
-					break; // TODO: might not be correct. Was : Exit For
+					break; // TODO: 원본은 Exit For 이었음. 동작이 다를 수 있으니 확인 필요
 				}
 
 				strECS_DIR_DATE = "" + m_BDb.dtMain.Rows[iSend_Loop]["ECS_DIR_DATE"];
@@ -2209,7 +2209,7 @@ namespace TSK_HostCom
 					return false;
 				}
 
-				//### Recv. Frame Log
+				//### 수신 전문 로그
 				m_strLog = System.Text.Encoding.UTF8.GetString(m_bytRxBuff);
 				m_strLog = m_strLog.TrimEnd(ControlChars.NullChar);
 				if (m_bytRxBuff[modDefApp.MSG_HEAD_CNT + 2] == modDefApp.TRANS_NAK)
@@ -2236,7 +2236,7 @@ namespace TSK_HostCom
 
 				m_BDb.BeginTrans();
 
-				//### update manual_temp
+				//### manual_temp 갱신
 				//### Status UPDATE
 				m_BDb.ParamsClear();
 
@@ -2565,7 +2565,7 @@ namespace TSK_HostCom
 				}
 			}
 
-			//### Recv. Frame Log
+			//### 수신 전문 로그
 			{
 				m_strLog = System.Text.Encoding.UTF8.GetString(m_bytRxBuff);
 				m_strLog = m_strLog.TrimEnd(ControlChars.NullChar);
@@ -2766,7 +2766,7 @@ namespace TSK_HostCom
         private bool SendDirOrder(string p_strDIR_DAT)
         {
             m_strHostCmd = "R";
-            //MAKE FRAME
+            //전문 작성
             string strTemp = null;
             byte[] bytTempByte = null;
             int iTxCnt = 0;
@@ -2807,7 +2807,7 @@ namespace TSK_HostCom
         private bool SendLuggOrder(stuSendLuggInfo p_JobInfo)
         {
             m_strHostCmd = "O";
-            //MAKE FRAME
+            //전문 작성
             string strTemp = null;
             byte[] bytTempByte = null;
             int iTxCnt = 0;
@@ -2880,7 +2880,7 @@ namespace TSK_HostCom
 				SendSock(int.Parse(p_strWriteCnt));
 				if (!CheckRecvSock(p_iTimeOut))
 				{
-					//time out
+					//타임아웃
 					m_strLog = m_strHostCmd + " 메세지의 응답이 없습니다.";
                     modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
 

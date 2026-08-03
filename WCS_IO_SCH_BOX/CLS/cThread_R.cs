@@ -17,7 +17,7 @@ namespace TSK_COMM_IOSCH
 {
     public class cThread_R : IOSchDB
     {
-        #region variable define
+        #region 변수 선언
         private int m_nId = 0;
         public PsMsgView callPsMsgView = null;
         public Thread m_Thread;
@@ -28,7 +28,7 @@ namespace TSK_COMM_IOSCH
         //Dictionary<string, IF_EQM_R_WCS_STAT_Data> IfDic = new Dictionary<string, IF_EQM_R_WCS_STAT_Data>();
         string strRTN_MSG = "";
 
-        #endregion variable define
+        #endregion 변수 선언
 
         #region IOSCHThread
         public cThread_R(int Id)

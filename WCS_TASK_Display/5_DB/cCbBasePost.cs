@@ -14,7 +14,7 @@ namespace WCS_TASK_Display
         public NpgsqlConnection mCnMain;                                // @.외부에서 할당해주는 Connection 개체 참조(Connection이 하나 일 경우)
         public NpgsqlTransaction mTrnMain;                              // @.자체 생성되는 DB 객체들
         public NpgsqlCommand mComMain = new NpgsqlCommand();             // @.자체 생성되는 DB 객체들
-        public NpgsqlDataAdapter mDaMain = new NpgsqlDataAdapter();      // @.Data Adapter
+        public NpgsqlDataAdapter mDaMain = new NpgsqlDataAdapter();      // @.데이터 어댑터
 
         public bool mIsBeginTran = false;                             // @.Begin Tran 여부
         public bool mBindingType;
@@ -65,7 +65,7 @@ namespace WCS_TASK_Display
         #endregion
 
         #region @@@.속성[ErrMsg]
-        private string mErrMsg = "";      // @.DB Error Message
+        private string mErrMsg = "";      // @.DB 에러 메시지
         public string ErrMsg
         {
             get
@@ -153,7 +153,7 @@ namespace WCS_TASK_Display
         }
         #endregion
 
-        #region@@@.DB init
+        #region@@@.DB 초기화
         public void Init()
         {
             mComMain.Connection = mCnMain;
@@ -179,10 +179,10 @@ namespace WCS_TASK_Display
         #endregion
 
         #region ExcuteQry : 쿼리 실행 For Select..
-        // @@.Parameter
+        // @@.파라미터
         // @.pIsMsgBox (메세지 박스 표시 여부)
         // @.pIsRtnErr (에러 발생시, 에러를 Return할 지 여부)
-        // @@.Return
+        // @@.리턴값
         // @.성공 - 쿼리한 레코드 수 (양의 정수)
         // @.실패 - DB_ERR(-1):  일반 DB Err
         // @.실패 - DB_LOCK(-2): DB Lock
@@ -248,10 +248,10 @@ namespace WCS_TASK_Display
         #endregion
 
         //#region ExcuteCloneQry : 쿼리 실행 For Select..[mDtClone 에mDtMain를 복제한다.]
-        //    // @@.Parameter
+        //    // @@.파라미터
         //// @.pIsMsgBox (메세지 박스 표시 여부)
         //// @.pIsRtnErr (에러 발생시, 에러를 Return할 지 여부)
-        //// @@.Return
+        //// @@.리턴값
         //// @.성공 - 쿼리한 레코드 수 (양의 정수)
         //// @.실패 - DB_ERR(-1):  일반 DB Err
         //// @.실패 - DB_LOCK(-2): DB Lock
@@ -321,9 +321,9 @@ namespace WCS_TASK_Display
         //#endregion
 
         #region@@@.쿼리 실행 For Select..  [2개 이상 쿼리를 할 경우 datatable을 별도로 바인딩 한다.]
-        // @@.Parameter
+        // @@.파라미터
         // @.bRerutnErr[에러 발생시, 에러를 Return할 지 여부]
-        // @@.Return
+        // @@.리턴값
         // @.성공 - 쿼리한 레코드 수 (양의 정수)
         // @.실패 - DB_ERR(-1):  일반 DB Err
         // @.실패 - DB_LOCK(-2): DB Lock
@@ -386,10 +386,10 @@ namespace WCS_TASK_Display
         }
         #endregion
 
-        #region@@@.None Query For insert, update, ...
-        // @@.Parameter
+        #region@@@.None Query 실행 [insert, update 등]
+        // @@.파라미터
         // @.bRerutnErr[에러 발생시, 에러를 Return할 지 여부]
-        // @@.Return
+        // @@.리턴값
         // @.성공 - 반영된 레코드 수 (양의 정수)
         // @.실패 - DB_ERR(-1):  일반 DB Err
         // @.실패 - DB_LOCK(-2): DB Lock
@@ -455,7 +455,7 @@ namespace WCS_TASK_Display
         }
         #endregion
 
-        #region@@@.Transction Commit
+        #region@@@.트랜잭션 Commit
         public void Commit()
         {
             try
@@ -474,7 +474,7 @@ namespace WCS_TASK_Display
         }
         #endregion
 
-        #region@@@.Transction Rollback
+        #region@@@.트랜잭션 Rollback
         public void Rollback()
         {
             try

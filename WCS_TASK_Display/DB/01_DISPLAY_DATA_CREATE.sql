@@ -21,16 +21,16 @@
 --    신규 구조에서는 이 테이블에 담아두고 CV 태스크 / 스케줄러 / Client 가 쓰고
 --    WCS_TASK_Display 가 읽어서 TCP 로 전광판에 내려보낸다.
 --
---    KEY (WH_TYP, PLC_NO, DSP_NO)
+--    KEY (WH_TYP, PLC_NO, DISP_NO)
 --      WH_TYP : 창고구분        - WCS_DB.INI [CNF] WH_TYP        (예: 10)
 --      PLC_NO : 전광판 컨트롤러 - WCS_DB.INI [COMM*] PLC_NO      (예: 01)
---      DSP_NO : 컨트롤러 내 전광판 번호 (1 부터, [COMM*] CNT 개)
+--      DISP_NO : 컨트롤러 내 전광판 번호 (1 부터, [COMM*] CNT 개)
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS DISPLAY_DATA
 (
     WH_TYP          VARCHAR(4)   NOT NULL,        -- 창고구분
     PLC_NO          VARCHAR(5)   NOT NULL,        -- 전광판 컨트롤러 번호
-    DSP_NO          VARCHAR(5)   NOT NULL,        -- 컨트롤러 내 전광판 번호(1-base)
+    DISP_NO          VARCHAR(5)   NOT NULL,        -- 컨트롤러 내 전광판 번호(1-base)
     TRACK_NO        VARCHAR(20),                  -- 매핑된 컨베이어 트랙(참조용)
 
     -- AUTO 표시내용 : CV 태스크 / 스케줄러가 기록
@@ -54,10 +54,10 @@ CREATE TABLE IF NOT EXISTS DISPLAY_DATA
     UPD_DT          TIMESTAMP    DEFAULT NOW(),
     SEND_DT         TIMESTAMP,
 
-    CONSTRAINT PK_DISPLAY_DATA PRIMARY KEY (WH_TYP, PLC_NO, DSP_NO)
+    CONSTRAINT PK_DISPLAY_DATA PRIMARY KEY (WH_TYP, PLC_NO, DISP_NO)
 );
 
--- 수동지령 폴링(DspManual)이 CMD_RQ_YN='Y' 만 훑기 때문에 부분 인덱스를 둔다.
+-- 수동지령 폴링(DispManual)이 CMD_RQ_YN='Y' 만 훑기 때문에 부분 인덱스를 둔다.
 CREATE INDEX IF NOT EXISTS IX_DISPLAY_DATA_CMD
     ON DISPLAY_DATA (WH_TYP, PLC_NO)
     WHERE CMD_RQ_YN = 'Y';

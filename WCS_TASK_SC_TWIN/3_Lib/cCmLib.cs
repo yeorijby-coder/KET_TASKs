@@ -23,7 +23,7 @@ namespace WCS_TASK_SC
             } 
         }
 
-        //@@@.Data Base Connection Open
+        //@@@.单捞磐海捞胶 立加
         public  static bool GfDBLogIn(ref OleDbConnection pConObj,ref string  pMsg) 
         {
             try

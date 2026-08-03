@@ -2228,14 +2228,14 @@ namespace WCS_TASK_CV
         ///   +3 : Unload Complete #2  (작업자 반출)
         ///   +4 : Load Complete #2    (입고쪽 화물 적재)
         ///   +6 : W.O (작업지시 보고)
-        ///   +10: Pallet Exist #1
-        ///   +11: Pallet Exist #2
+        ///   +10: 파렛트 존재 #1
+        ///   +11: 파렛트 존재 #2
         ///
         ///   ACK base = 801 + (N-1)*10
-        ///   +0 : Unload Complete #1 ACK
-        ///   +1 : Load Complete #1 ACK
-        ///   +2 : Unload Complete #2 ACK
-        ///   +3 : Load Complete #2 ACK
+        ///   +0 : 언로드 완료 #1 ACK
+        ///   +1 : 로드 완료 #1 ACK
+        ///   +2 : 언로드 완료 #2 ACK
+        ///   +3 : 로드 완료 #2 ACK
         /// </summary>
         private bool CvEventCheck(int Idx)
         {

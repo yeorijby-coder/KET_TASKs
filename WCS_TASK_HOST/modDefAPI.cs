@@ -38,7 +38,7 @@ namespace TSK_HostCom
 				{
 					System.Threading.Thread.Sleep(iToTalMillSec);
 					iToTalMillSec = 0;
-					break; // TODO: might not be correct. Was : Exit While
+					break; // TODO: 원본은 Exit While 이었음. 동작이 다를 수 있으니 확인 필요
 				}
 				else
 				{

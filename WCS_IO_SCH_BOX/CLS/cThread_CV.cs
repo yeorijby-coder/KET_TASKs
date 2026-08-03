@@ -32,7 +32,7 @@ namespace TSK_COMM_IOSCH
 
     public class cThread_CV : IOSchDB
     {
-        #region variable define
+        #region 변수 선언
         private int m_nId = 0;
         public PsMsgView callPsMsgView = null;
         public Thread m_Thread;
@@ -48,7 +48,7 @@ namespace TSK_COMM_IOSCH
         public int m_nRetCd = 0;
         static int m_nCurSCNo = 0;
         string strRTN_MSG = "";
-        #endregion variable define
+        #endregion 변수 선언
 
         #region DATATABLE
         DataTable dtBUFFER = new DataTable();
@@ -1631,7 +1631,7 @@ namespace TSK_COMM_IOSCH
                                 continue;
                             }
 
-                            // Dead Lock Check 
+                            // 데드락 체크 
                             if (cDefApi.CHECK_ENTER_DEAD_LOCK_ZONE(_pBdb, strWH_TYP, strTRACK_NO, strDEST_POS, ref pRTN_MSG, ref dtDeadLock) == false)
                             {
                                 _pBdb.Rollback();
@@ -1706,7 +1706,7 @@ namespace TSK_COMM_IOSCH
                             continue;
                         }
 
-                        // Dead Lock Check 
+                        // 데드락 체크 
                         if (cDefApi.CHECK_ENTER_DEAD_LOCK_ZONE(_pBdb, strWH_TYP, strTRACK_NO, strDEST_POS, ref pRTN_MSG, ref dtDeadLock) == false)
                         {
                             _pBdb.Rollback();
@@ -2039,7 +2039,7 @@ namespace TSK_COMM_IOSCH
                                 continue;
                             }
 
-                            // Dead Lock Check 
+                            // 데드락 체크 
                             if (cDefApi.CHECK_ENTER_DEAD_LOCK_ZONE(_pBdb, strWH_TYP, strTRACK_NO, strDEST_POS, ref pRTN_MSG, ref dtDeadLock) == false)
                             {
                                 _pBdb.Rollback();
@@ -2141,7 +2141,7 @@ namespace TSK_COMM_IOSCH
                             continue;
                         }
 
-                        // Dead Lock Check 
+                        // 데드락 체크 
                         if (cDefApi.CHECK_ENTER_DEAD_LOCK_ZONE(_pBdb, strWH_TYP, strTRACK_NO, strDEST_POS, ref pRTN_MSG, ref dtDeadLock) == false)
                         {
                             _pBdb.Rollback();
@@ -2501,7 +2501,7 @@ namespace TSK_COMM_IOSCH
                                 continue;
                             }
 
-                            // Dead Lock Check 
+                            // 데드락 체크 
                             if (cDefApi.CHECK_ENTER_DEAD_LOCK_ZONE(_pBdb, strWH_TYP, strTRACK_NO, strDEST_POS, ref pRTN_MSG, ref dtDeadLock) == false)
                             {
                                 _pBdb.Rollback();
@@ -2602,7 +2602,7 @@ namespace TSK_COMM_IOSCH
                             continue;
                         }
 
-                        // Dead Lock Check 
+                        // 데드락 체크 
                         if (cDefApi.CHECK_ENTER_DEAD_LOCK_ZONE(_pBdb, strWH_TYP, strTRACK_NO, strDEST_POS, ref pRTN_MSG, ref dtDeadLock) == false)
                         {
                             _pBdb.Rollback();

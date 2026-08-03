@@ -23,7 +23,7 @@ namespace TSK_COMM_IOSCH
             } 
         }
 
-        //@@@.Data Base Connection Open
+        //@@@.데이터베이스 접속
         public  static bool GfDBLogIn(ref OleDbConnection pConObj,ref string  pMsg) 
         {
             try

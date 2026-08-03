@@ -557,7 +557,7 @@ namespace TSK_HostCom
 				iCopy += 1;
 				if ((iCopy == p_iCopyLen) | (iLoop > bytTempByte.Length - 1))
 				{
-					break; // TODO: might not be correct. Was : Exit While
+					break; // TODO: 원본은 Exit While 이었음. 동작이 다를 수 있으니 확인 필요
 				}
 			}
 

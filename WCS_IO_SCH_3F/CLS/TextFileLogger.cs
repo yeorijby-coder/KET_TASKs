@@ -6,7 +6,7 @@ using System;
 namespace Utilities
 {
   /// <summary>
-  /// This logger will log to a text file called 'BugReport.txt'
+  /// 이 로거는 'BugReport.txt' 텍스트 파일에 기록한다
   /// </summary>
   public class TextFileLogger : LoggerImplementation
   {
@@ -35,7 +35,7 @@ namespace Utilities
           }
         }
 
-        // truncate the file if it's too long
+        // 파일이 너무 길면 잘라낸다
         int writeStart = 0;
         if (data.Count > 500)
           writeStart = data.Count - 500;

@@ -49,7 +49,7 @@ namespace Utilities
 
     private string url;
     /// <summary>
-    /// Gets or sets the URL that will be used when posting an error to a website.
+    /// 오류를 웹사이트로 전송할 때 사용할 URL 을 가져오거나 설정한다.
     /// </summary>
     public string Url
     {
@@ -65,7 +65,7 @@ namespace Utilities
 
     private string queryString;
     /// <summary>
-    /// Gets or sets the format of the query string that will be used when posting an error to a website. 
+    /// 오류를 웹사이트로 전송할 때 사용할 쿼리 문자열 형식을 가져오거나 설정한다. 
     /// e.g error={0}
     /// </summary>
     public string QueryString

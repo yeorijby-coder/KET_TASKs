@@ -115,7 +115,7 @@ namespace TSK_COMM_IOSCH
 		#region Thread 동작상태를 가져온다.
 		private void WrkThStart()
 		{
-			//CrossThread Check False.
+			//크로스 스레드 검사 해제
 			CheckForIllegalCrossThreadCalls = false;
 
             // LG생명과학 자동 반송 Scheduler THREAD (단일 스케줄러)

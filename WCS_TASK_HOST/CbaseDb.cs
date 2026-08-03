@@ -82,7 +82,7 @@ namespace TSK_HostCom
 		// DB 에러중 중복 데이타
 
 		public const int DB_DUP = -3;
-		// DB Error Message
+		// DB 에러 메시지
 		public string strErrMsg = "";
 
 		public bool blTran;
@@ -144,7 +144,7 @@ namespace TSK_HostCom
 
 		}
 
-		//*** DB Error Message ***
+		//*** DB 에러 메시지 ***
 		//* 프로젝트 별로 메세지를 표시하는 방법을 패생 클래스에서 오버라이드 해서 사용한다.
 		public virtual void ShowErrMsg(bool p_blMsgBox, string p_strERR = "DB")
 		{
@@ -1027,7 +1027,7 @@ namespace TSK_HostCom
 		}
 
 		//*********************************************************************************
-		// None Query For insert, update, ...
+		// None Query 실행 [insert, update 등]
 		// Parameter: bRerutnErr (에러 발생시, 에러를 Return할 지 여부)
 		// Return: 성공 - 반영된 레코드 수 (양의 정수)
 		//         실패 - DB_ERR(-1):  일반 DB Err

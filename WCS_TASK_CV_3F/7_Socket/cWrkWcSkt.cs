@@ -15,8 +15,8 @@ namespace WCS_TASK_CV
         public string mStatComm  = "D" ;                       // @.PLC와 통신하는 쓰레드 연결상태[C:연결, T:시도, D:비연결]
         public string mStatOp  = "W" ;                         // @.PLC와 통신하는 쓰레드 동작상태[N:정상, W:대기, E:에러]
 
-        public cDbUse mDbWrk = new cDbUse("Multi", false ) ;            // @.DB Class[Work]
-        public cDbUse mDbLog = new cDbUse("Multi", false );             // @.DB Class[Log]
+        public cDbUse mDbWrk = new cDbUse("Multi", false ) ;            // @.DB 클래스[작업]
+        public cDbUse mDbLog = new cDbUse("Multi", false );             // @.DB 클래스[로그]
         private DataTable mDtReqIF = new DataTable();                  // @.DataTable[요청]
         public string mRcvTgm   = "";                           // @.수신Tgm
         public string mMsg ="";                                   // @.메세지
@@ -45,13 +45,13 @@ namespace WCS_TASK_CV
             if(cCmLib.GfDBLogIn (ref this.mDbLog.mCnMain, ref mMsg) == true) this.mDbLog.Init(); // @.DB Connetction
         }
 
-        // @@@.Db Connection Close
+        // @@@.DB 접속 종료
         public void DBLogOut(){
             if(this.mDbWrk.mCnMain.State == ConnectionState.Open ) this.mDbWrk.mCnMain.Close(); this.mDbWrk.DbConnted = false;
             if(this.mDbLog.mCnMain.State == ConnectionState.Open ) this.mDbLog.mCnMain.Close(); this.mDbLog.DbConnted = false;
         }
 
-        // @@@.Db Connection Open
+        // @@@.DB 접속
         public void DBLogIn(){
             this.DBLogOut();
             if (cCmLib.GfDBLogIn(ref this.mDbWrk.mCnMain, ref mMsg) == true) this.mDbWrk.Init();

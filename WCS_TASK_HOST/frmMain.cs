@@ -214,7 +214,7 @@ namespace TSK_HostCom
 		{
 			tmrSTOP_REQ.Enabled = false;
 
-			//### Client Work
+			//### 클라이언트 작업
 			// DB LOG IN
 			if (modDefApp.g_blSTOP_REQ)
 			{

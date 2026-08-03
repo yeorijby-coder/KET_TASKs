@@ -118,7 +118,7 @@ namespace TSK_HostCom
                     blResult = modDefApp.g_SrvWork.ReadRequest(ref iBodyLen);
                     if (!blResult)
                     {
-                        break; // TODO: might not be correct. Was : Exit While
+                        break; // TODO: 원본은 Exit While 이었음. 동작이 다를 수 있으니 확인 필요
                     }
 
                     modDefApp.g_SrvWork.Parsing(iBodyLen);
@@ -131,7 +131,7 @@ namespace TSK_HostCom
 				    {
 					    modDefApp.g_SrvWork.m_blDbConnted = false;
                         modDefApp.g_SrvWork.m_BDb.ErrMsg = "";
-                        break; // TODO: might not be correct. Was : Exit While
+                        break; // TODO: 원본은 Exit While 이었음. 동작이 다를 수 있으니 확인 필요
 				    }
 				    else
 				    {
@@ -145,7 +145,7 @@ namespace TSK_HostCom
 				    {
 					    modDefApp.g_SrvWork.m_blDbConnted = false;
                         modDefApp.g_SrvWork.m_BDb.ErrMsg = "";
-                        break; // TODO: might not be correct. Was : Exit While
+                        break; // TODO: 원본은 Exit While 이었음. 동작이 다를 수 있으니 확인 필요
 				    }
 				    else
 				    {
@@ -159,7 +159,7 @@ namespace TSK_HostCom
                     {
                         modDefApp.g_SrvWork.m_blDbConnted = false;
                         modDefApp.g_SrvWork.m_BDb.ErrMsg = "";
-                        break; // TODO: might not be correct. Was : Exit While
+                        break; // TODO: 원본은 Exit While 이었음. 동작이 다를 수 있으니 확인 필요
                     }
                     else
                     {
@@ -173,13 +173,13 @@ namespace TSK_HostCom
                     //strLog = se.Message & "(" & se.ErrorCode.ToString & ")"
                     strLog = "리모트 시스템과 연결 실패 !" + "(" + se.ErrorCode.ToString() + ")";
                     modCmWork.ShowMsgServer(strLog, modDefApp.MSG_IMP);
-                    break; // TODO: might not be correct. Was : Exit While
+                    break; // TODO: 원본은 Exit While 이었음. 동작이 다를 수 있으니 확인 필요
 
                 }
                 catch (Exception ex)
                 {
                     modCmWork.ShowMsgServer(ex.ToString(), modDefApp.MSG_ERR);
-                    break; // TODO: might not be correct. Was : Exit While
+                    break; // TODO: 원본은 Exit While 이었음. 동작이 다를 수 있으니 확인 필요
                 }
                 
 

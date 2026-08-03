@@ -167,7 +167,7 @@ namespace WCS_TASK_CV
             cDefApi.GsReadInitProfileDelay("SND", ref cDefApp.GM_COMM_SND_TIME_OUT, ref m_strRtnMsg); // @.전송
             cDefApi.GsReadInitProfileDelay("RCV", ref cDefApp.GM_COMM_RCV_TIME_OUT, ref m_strRtnMsg); // @.수신
 
-            // Initialize log queues to avoid NullReference when threads enqueue log messages
+            // 스레드가 로그를 큐에 넣을 때 NullReference 가 나지 않도록 로그 큐를 미리 만든다
             int logInitCount = Math.Min(m_nProcessCnt, cDefApp.m_LogQ.Length);
             for (int ii = 0; ii < logInitCount; ii++)
             {

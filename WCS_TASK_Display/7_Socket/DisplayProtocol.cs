@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using System.Data;
@@ -7,29 +7,29 @@ using Npgsql;
 
 namespace WCS_TASK_Display
 {
-    // Display(electric-board / Jeon-gwang-pan) protocol.
+    // 전광판 프로토콜.
     //
-    // This class plays the same architectural role as MelsecQ3EProtocol does for the
-    // CV/SC tasks: it owns BOTH the DB connection (cDbPostUse) and the TCP socket so the
-    // worker thread holds a single comm object per display controller.
+    // CV/SC 태스크의 MelsecQ3EProtocol 과 같은 역할을 한다.
+    // DB 연결(cDbPostUse)과 TCP 소켓을 모두 이 클래스가 들고 있어서,
+    // 작업 스레드는 전광판 컨트롤러 하나당 통신 객체 하나만 다루면 된다.
     //
-    // The on-the-wire packet is reproduced exactly from the legacy MFC system
-    // (CDisplay::makeData, EcsSv\Display.cpp):
+    // 전문 형식은 레거시 MFC 시스템(CDisplay::makeData, EcsSv\Display.cpp)을
+    // 그대로 옮긴 것이다.
     //
-    //   [STX][ID][COLOR][PRODUCT(8 bytes)][CHK_HI][CHK_LO][ETX]    -> 14 bytes
+    //   [STX][ID][COLOR][PRODUCT(8바이트)][CHK_HI][CHK_LO][ETX]    -> 총 14바이트
     //
     //   STX        = 0x02
-    //   ID         = 0x31 + nDisplayNo            (display 0 -> '1', display 1 -> '2' ...)
-    //   COLOR      = 0x04(Red) / 0x05(Green) / 0x06(Yellow)
-    //   PRODUCT    = 8 ASCII chars, space padded / truncated to 8
-    //   CHK        = XOR of every byte from STX through the last PRODUCT byte (11 bytes)
-    //   CHK_HI     = ((CHK >> 4) & 0x0F) | 0x30   (printable ASCII nibble)
+    //   ID         = 0x31 + 전광판번호            (0번 -> '1', 1번 -> '2' ...)
+    //   COLOR      = 0x04(빨강) / 0x05(초록) / 0x06(노랑)
+    //   PRODUCT    = ASCII 8자리, 모자라면 공백채움 / 넘치면 잘라냄
+    //   CHK        = STX 부터 PRODUCT 마지막 바이트까지(11바이트) 전부 XOR
+    //   CHK_HI     = ((CHK >> 4) & 0x0F) | 0x30   (출력 가능한 ASCII 로 만들기 위해 니블에 0x30 을 더한다)
     //   CHK_LO     = ( CHK       & 0x0F) | 0x30
     //   ETX        = 0x03
     public class DisplayProtocol : SocketClient
     {
-        public const int DSP_DATA_LEN = 8;     // fixed product field length
-        public const int DSP_PACKET_LEN = 14;  // STX+ID+COLOR+8+CHK_HI+CHK_LO+ETX
+        public const int DISP_DATA_LEN = 8;     // @.품명 필드 고정 길이
+        public const int DISP_PACKET_LEN = 14;  // @.STX+ID+COLOR+8+CHK_HI+CHK_LO+ETX
 
         public const byte COLOR_RED = 0x04;
         public const byte COLOR_GREEN = 0x05;
@@ -64,7 +64,7 @@ namespace WCS_TASK_Display
             _strConnectionString = ConnectionString;
         }
 
-        #region Open / Close  (DB + Socket, mirror of MelsecQ3EProtocol)
+        #region 접속 / 종료  (DB + 소켓, MelsecQ3EProtocol 과 동일 구조)
         public bool Open(ref string strRtnMsg)
         {
             string strTitle = "[Open]";
@@ -135,42 +135,42 @@ namespace WCS_TASK_Display
         }
         #endregion
 
-        #region Packet build / send
+        #region 전문 작성 / 전송
         public void ResetError() { _strErrorMsg = ""; }
         public void SetErrorMsg(string strMsg) { _strErrorMsg = strMsg; }
         public string ErrorMsg { get { return _strErrorMsg; } }
 
-        // Pad/truncate the product field to exactly 8 chars (legacy behaviour).
+        // @@.품명 필드를 정확히 8자리로 맞춘다.(레거시와 동일 동작 : 모자라면 공백채움, 넘치면 잘라냄)
         public static string FitProduct(string strData)
         {
             if (strData == null) strData = "";
-            if (strData.Length > DSP_DATA_LEN) return strData.Substring(0, DSP_DATA_LEN);
-            return strData.PadRight(DSP_DATA_LEN, ' ');
+            if (strData.Length > DISP_DATA_LEN) return strData.Substring(0, DISP_DATA_LEN);
+            return strData.PadRight(DISP_DATA_LEN, ' ');
         }
 
-        // Build the 14-byte display packet. Identical to CDisplay::makeData.
+        // @@.14바이트 전광판 전문을 만든다.(CDisplay::makeData 와 동일)
         public byte[] MakeData(int nDisplayNo, byte byColor, string strData)
         {
             string strFit = FitProduct(strData);
-            byte[] byData = Encoding.ASCII.GetBytes(strFit); // 8 bytes
+            byte[] byData = Encoding.ASCII.GetBytes(strFit); // @.8바이트
 
-            byte[] pBuff = new byte[DSP_PACKET_LEN];
-            pBuff[0] = cDefApp.STX;                         // 0x02
-            pBuff[1] = (byte)(0x31 + nDisplayNo);           // display id
-            pBuff[2] = byColor;                             // color
-            Buffer.BlockCopy(byData, 0, pBuff, 3, DSP_DATA_LEN);
+            byte[] pBuff = new byte[DISP_PACKET_LEN];
+            pBuff[0] = cDefApp.STX;                         // @.0x02
+            pBuff[1] = (byte)(0x31 + nDisplayNo);           // @.전광판 번호
+            pBuff[2] = byColor;                             // @.색상
+            Buffer.BlockCopy(byData, 0, pBuff, 3, DISP_DATA_LEN);
 
-            // checksum = XOR over STX .. last product byte (index 0..10)
+            // @.체크섬 = STX 부터 품명 마지막 바이트까지(index 0~10) 전부 XOR
             byte byChk = 0;
-            for (int i = 0; i <= 2 + DSP_DATA_LEN; i++) byChk ^= pBuff[i];
+            for (int i = 0; i <= 2 + DISP_DATA_LEN; i++) byChk ^= pBuff[i];
 
-            pBuff[3 + DSP_DATA_LEN] = (byte)(((byChk >> 4) & 0x0F) | 0x30); // CHK_HI
-            pBuff[4 + DSP_DATA_LEN] = (byte)((byChk & 0x0F) | 0x30);        // CHK_LO
-            pBuff[5 + DSP_DATA_LEN] = cDefApp.ETX;                          // 0x03
+            pBuff[3 + DISP_DATA_LEN] = (byte)(((byChk >> 4) & 0x0F) | 0x30); // @.CHK_HI
+            pBuff[4 + DISP_DATA_LEN] = (byte)((byChk & 0x0F) | 0x30);        // @.CHK_LO
+            pBuff[5 + DISP_DATA_LEN] = cDefApp.ETX;                          // @.0x03
             return pBuff;
         }
 
-        // Build + send a display packet to the board.
+        // @@.전문을 만들어 전광판으로 전송한다.
         public bool SendDisplay(int nDisplayNo, byte byColor, string strData, ref string msg)
         {
             try

@@ -38,7 +38,7 @@ namespace TSK_HostCom
 		
 		private string m_strLog = "";	//로그
 		private string m_strSql;	//SQL 문장
-		private int m_iSelCnt;	//Return record cnt
+		private int m_iSelCnt;	//처리 건수 반환
 
 		private string m_strMsgType;	//메세지 구분
 		private string m_strMsgType2;
@@ -134,7 +134,7 @@ namespace TSK_HostCom
 				strLog = System.Text.Encoding.UTF8.GetString(m_bytRxHead);
 				modCmWork.ShowMsgServer(strLog, modDefApp.MSG_ERR);
 
-				// Nak Response
+				// NAK 응답
 				SendSock();
 				return false;
 			}
@@ -149,7 +149,7 @@ namespace TSK_HostCom
 				strLog = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, 0, modDefApp.MSG_HEAD_CNT + p_iBodyLen);
 				modCmWork.ShowMsgServer(strLog, modDefApp.MSG_ERR);
 
-				// Nak Response
+				// NAK 응답
 				SendSock();
 				return false;
 			}
@@ -261,7 +261,7 @@ namespace TSK_HostCom
 			{
 				if (iRemain == 0)
 				{
-					break; // TODO: might not be correct. Was : Exit For
+					break; // TODO: 원본은 Exit For 이었음. 동작이 다를 수 있으니 확인 필요
 				}
 				//Debug
 				//Console.WriteLine("Read fail. 회수[{0}]:ReadCnt[{1}]", i, nRxCnt)
@@ -608,7 +608,7 @@ namespace TSK_HostCom
             m_strMsgType = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + 1, 1);
             strMsg = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, 0, 77);//상위에서 내린 작업 메시지
 
-            #region Received Default Data Parsing
+            #region 수신 기본 데이터 파싱
             string strO_Priority = "";
             string strO_LotNo = "";
             string strO_Size = "";
@@ -644,7 +644,7 @@ namespace TSK_HostCom
 
             #endregion
 
-            #region Received Data Validation Check
+            #region 수신 데이터 검증
             // 작업번호가 올바른지 체크!(온라인 작업번호)
             int nLuggNum = Convert.ToInt32(strLuggNo);
             //if ((nLuggNum > 0) && (nLuggNum < 9000))
@@ -2134,7 +2134,7 @@ namespace TSK_HostCom
 		//최초작성자	: BASE(이길문)
 		//작성일		: 20160829
 		//설명		: 작업완료정보수신처리
-		// Job Complete  
+		// 작업 완료  
 		private void ParseComplete(int p_iBodyCnt)
 		{
 			int i = 0;

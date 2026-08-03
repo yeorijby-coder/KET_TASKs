@@ -22,7 +22,7 @@ namespace Utilities
   }
 
   /// <summary>
-  /// Abstract class for logging errors to different output devices, primarily for use in Windows Forms applications
+  /// 오류를 여러 출력 대상에 기록하기 위한 추상 클래스. 주로 Windows Forms 응용 프로그램에서 사용한다.
   /// </summary>
   public abstract class LoggerImplementation
   {
@@ -32,12 +32,12 @@ namespace Utilities
   }
 
   /// <summary>
-  /// Class to log unhandled exceptions
+  /// 처리되지 않은 예외를 기록하는 클래스
   /// </summary>
   public class ExceptionLogger
   {
     /// <summary>
-    /// Creates a new instance of the ExceptionLogger class
+    /// ExceptionLogger 인스턴스를 새로 만든다
     /// </summary>
     public ExceptionLogger()
     {
@@ -49,7 +49,7 @@ namespace Utilities
 
     private List<LoggerImplementation> loggers;
     /// <summary>
-    /// Adds a logger implementation to the list of used loggers.
+    /// 사용할 로거 구현을 목록에 추가한다.
     /// </summary>
     /// <param name="logger">The logger to add.</param>
     public void AddLogger(LoggerImplementation logger)
@@ -59,7 +59,7 @@ namespace Utilities
 
     private NotificationType notificationType = NotificationType.Ask;
     /// <summary>
-    /// Gets or sets the type of the notification shown to the end user.
+    /// 사용자에게 보여줄 알림 종류를 가져오거나 설정한다.
     /// </summary>
     public NotificationType NotificationType
     {
@@ -89,11 +89,11 @@ namespace Utilities
       logDelegate.BeginInvoke(e, new AsyncCallback(LogCallBack), null);
     }
 
-    // Event handler that will be called when an unhandled
-    // exception is caught
+    // 처리되지 않은 예외가 발생했을 때
+    // 호출될 이벤트 핸들러
     private void OnThreadException(object sender, ThreadExceptionEventArgs e)
     {
-      // Log the exception to a file
+      // 예외를 파일에 기록한다
       HandleException(e.Exception);
     }
 
@@ -165,7 +165,7 @@ namespace Utilities
       return TimeSpan.FromSeconds(upTime.NextValue());
     }
 
-    // use to get memory available
+    // 사용 가능한 메모리 조회용
     [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
     private class MEMORYSTATUSEX 
     { 

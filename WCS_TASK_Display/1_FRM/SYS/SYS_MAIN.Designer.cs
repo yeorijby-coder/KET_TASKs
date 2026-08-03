@@ -1,14 +1,14 @@
-namespace WCS_TASK_Display
+﻿namespace WCS_TASK_Display
 {
     partial class SYS_MAIN
     {
         /// <summary>
-        /// Required designer variable.
+        /// 필수 디자이너 변수입니다.
         /// </summary>
         private System.ComponentModel.IContainer components = null;
 
         /// <summary>
-        /// Clean up any resources being used.
+        /// 사용 중인 모든 리소스를 정리합니다.
         /// </summary>
         protected override void Dispose(bool disposing)
         {
@@ -19,7 +19,7 @@ namespace WCS_TASK_Display
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
+        #region Windows Form 디자이너에서 생성한 코드
 
         private void InitializeComponent()
         {
@@ -29,8 +29,8 @@ namespace WCS_TASK_Display
             this.pnlManual = new System.Windows.Forms.Panel();
             this.lblCtrl = new System.Windows.Forms.Label();
             this.cmbController = new System.Windows.Forms.ComboBox();
-            this.lblDsp = new System.Windows.Forms.Label();
-            this.cmbDspNo = new System.Windows.Forms.ComboBox();
+            this.lblDisp = new System.Windows.Forms.Label();
+            this.cmbDispNo = new System.Windows.Forms.ComboBox();
             this.lblColor = new System.Windows.Forms.Label();
             this.cmbColor = new System.Windows.Forms.ComboBox();
             this.lblData = new System.Windows.Forms.Label();
@@ -39,6 +39,10 @@ namespace WCS_TASK_Display
             this.btnClear = new System.Windows.Forms.Button();
             this.chkHex = new System.Windows.Forms.CheckBox();
             this.chkAscii = new System.Windows.Forms.CheckBox();
+            this.btnDisconnect = new System.Windows.Forms.Button();
+            this.chkLogStop = new System.Windows.Forms.CheckBox();
+            this.btnLogClear = new System.Windows.Forms.Button();
+            this.chkLatestFirst = new System.Windows.Forms.CheckBox();
             this.lvMsg = new System.Windows.Forms.ListView();
             this.colTime = new System.Windows.Forms.ColumnHeader();
             this.colType = new System.Windows.Forms.ColumnHeader();
@@ -72,8 +76,8 @@ namespace WCS_TASK_Display
             this.pnlManual.BorderStyle = System.Windows.Forms.BorderStyle.FixedSingle;
             this.pnlManual.Controls.Add(this.lblCtrl);
             this.pnlManual.Controls.Add(this.cmbController);
-            this.pnlManual.Controls.Add(this.lblDsp);
-            this.pnlManual.Controls.Add(this.cmbDspNo);
+            this.pnlManual.Controls.Add(this.lblDisp);
+            this.pnlManual.Controls.Add(this.cmbDispNo);
             this.pnlManual.Controls.Add(this.lblColor);
             this.pnlManual.Controls.Add(this.cmbColor);
             this.pnlManual.Controls.Add(this.lblData);
@@ -82,10 +86,14 @@ namespace WCS_TASK_Display
             this.pnlManual.Controls.Add(this.btnClear);
             this.pnlManual.Controls.Add(this.chkHex);
             this.pnlManual.Controls.Add(this.chkAscii);
+            this.pnlManual.Controls.Add(this.btnDisconnect);
+            this.pnlManual.Controls.Add(this.chkLogStop);
+            this.pnlManual.Controls.Add(this.btnLogClear);
+            this.pnlManual.Controls.Add(this.chkLatestFirst);
             this.pnlManual.Dock = System.Windows.Forms.DockStyle.Bottom;
-            this.pnlManual.Location = new System.Drawing.Point(0, 451);
+            this.pnlManual.Location = new System.Drawing.Point(0, 425);
             this.pnlManual.Name = "pnlManual";
-            this.pnlManual.Size = new System.Drawing.Size(764, 70);
+            this.pnlManual.Size = new System.Drawing.Size(764, 96);
             this.pnlManual.TabIndex = 2;
             //
             // lblCtrl
@@ -105,22 +113,22 @@ namespace WCS_TASK_Display
             this.cmbController.Size = new System.Drawing.Size(70, 20);
             this.cmbController.TabIndex = 1;
             //
-            // lblDsp
+            // lblDisp
             //
-            this.lblDsp.AutoSize = true;
-            this.lblDsp.Location = new System.Drawing.Point(155, 12);
-            this.lblDsp.Name = "lblDsp";
-            this.lblDsp.Size = new System.Drawing.Size(45, 12);
-            this.lblDsp.TabIndex = 2;
-            this.lblDsp.Text = "DSP No";
+            this.lblDisp.AutoSize = true;
+            this.lblDisp.Location = new System.Drawing.Point(155, 12);
+            this.lblDisp.Name = "lblDisp";
+            this.lblDisp.Size = new System.Drawing.Size(45, 12);
+            this.lblDisp.TabIndex = 2;
+            this.lblDisp.Text = "DISP No";
             //
-            // cmbDspNo
+            // cmbDispNo
             //
-            this.cmbDspNo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
-            this.cmbDspNo.Location = new System.Drawing.Point(205, 8);
-            this.cmbDspNo.Name = "cmbDspNo";
-            this.cmbDspNo.Size = new System.Drawing.Size(55, 20);
-            this.cmbDspNo.TabIndex = 3;
+            this.cmbDispNo.DropDownStyle = System.Windows.Forms.ComboBoxStyle.DropDownList;
+            this.cmbDispNo.Location = new System.Drawing.Point(205, 8);
+            this.cmbDispNo.Name = "cmbDispNo";
+            this.cmbDispNo.Size = new System.Drawing.Size(55, 20);
+            this.cmbDispNo.TabIndex = 3;
             //
             // lblColor
             //
@@ -200,6 +208,47 @@ namespace WCS_TASK_Display
             this.chkAscii.UseVisualStyleBackColor = true;
             this.chkAscii.CheckedChanged += new System.EventHandler(this.chkAscii_CheckedChanged);
             //
+            // btnDisconnect
+            //
+            this.btnDisconnect.Location = new System.Drawing.Point(8, 66);
+            this.btnDisconnect.Name = "btnDisconnect";
+            this.btnDisconnect.Size = new System.Drawing.Size(90, 24);
+            this.btnDisconnect.TabIndex = 12;
+            this.btnDisconnect.Text = "접속 끊기";
+            this.btnDisconnect.UseVisualStyleBackColor = true;
+            this.btnDisconnect.Click += new System.EventHandler(this.btnDisconnect_Click);
+            //
+            // chkLogStop
+            //
+            this.chkLogStop.AutoSize = true;
+            this.chkLogStop.Location = new System.Drawing.Point(108, 71);
+            this.chkLogStop.Name = "chkLogStop";
+            this.chkLogStop.Size = new System.Drawing.Size(71, 16);
+            this.chkLogStop.TabIndex = 13;
+            this.chkLogStop.Text = "로그 정지";
+            this.chkLogStop.UseVisualStyleBackColor = true;
+            //
+            // btnLogClear
+            //
+            this.btnLogClear.Location = new System.Drawing.Point(190, 66);
+            this.btnLogClear.Name = "btnLogClear";
+            this.btnLogClear.Size = new System.Drawing.Size(90, 24);
+            this.btnLogClear.TabIndex = 14;
+            this.btnLogClear.Text = "로그 지우기";
+            this.btnLogClear.UseVisualStyleBackColor = true;
+            this.btnLogClear.Click += new System.EventHandler(this.btnLogClear_Click);
+            //
+            // chkLatestFirst
+            //
+            this.chkLatestFirst.AutoSize = true;
+            this.chkLatestFirst.Location = new System.Drawing.Point(292, 71);
+            this.chkLatestFirst.Name = "chkLatestFirst";
+            this.chkLatestFirst.Size = new System.Drawing.Size(186, 16);
+            this.chkLatestFirst.TabIndex = 15;
+            this.chkLatestFirst.Text = "See the latest information first";
+            this.chkLatestFirst.UseVisualStyleBackColor = true;
+            this.chkLatestFirst.CheckedChanged += new System.EventHandler(this.chkLatestFirst_CheckedChanged);
+            //
             // lvMsg
             //
             this.lvMsg.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
@@ -265,8 +314,8 @@ namespace WCS_TASK_Display
         private System.Windows.Forms.Panel pnlManual;
         private System.Windows.Forms.Label lblCtrl;
         private System.Windows.Forms.ComboBox cmbController;
-        private System.Windows.Forms.Label lblDsp;
-        private System.Windows.Forms.ComboBox cmbDspNo;
+        private System.Windows.Forms.Label lblDisp;
+        private System.Windows.Forms.ComboBox cmbDispNo;
         private System.Windows.Forms.Label lblColor;
         private System.Windows.Forms.ComboBox cmbColor;
         private System.Windows.Forms.Label lblData;
@@ -275,6 +324,10 @@ namespace WCS_TASK_Display
         private System.Windows.Forms.Button btnClear;
         private System.Windows.Forms.CheckBox chkHex;
         private System.Windows.Forms.CheckBox chkAscii;
+        private System.Windows.Forms.Button btnDisconnect;
+        private System.Windows.Forms.CheckBox chkLogStop;
+        private System.Windows.Forms.Button btnLogClear;
+        private System.Windows.Forms.CheckBox chkLatestFirst;
         private System.Windows.Forms.ListView lvMsg;
         private System.Windows.Forms.ColumnHeader colTime;
         private System.Windows.Forms.ColumnHeader colType;

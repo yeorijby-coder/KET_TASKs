@@ -8,16 +8,16 @@
 --  WCS_TASK_Display task reads this table and pushes the content to the
 --  physical display board over TCP.
 --
---  Key (WH_TYP, PLC_NO, DSP_NO)
+--  Key (WH_TYP, PLC_NO, DISP_NO)
 --    WH_TYP : warehouse type            (matches CV_DATA / EQP_MST)
 --    PLC_NO : display controller id     (= [COMM*] PLC_NO in WCS_DB.INI)
---    DSP_NO : display number on the controller (1-based)
+--    DISP_NO : display number on the controller (1-based)
 -- =====================================================================
 CREATE TABLE IF NOT EXISTS DISPLAY_DATA
 (
     WH_TYP          VARCHAR(10)  NOT NULL,
     PLC_NO          VARCHAR(10)  NOT NULL,
-    DSP_NO          VARCHAR(10)  NOT NULL,
+    DISP_NO          VARCHAR(10)  NOT NULL,
     TRACK_NO        VARCHAR(20),                 -- mapped conveyor track (reference)
 
     -- AUTO display content (written by CV task / scheduler)
@@ -41,20 +41,20 @@ CREATE TABLE IF NOT EXISTS DISPLAY_DATA
     UPD_DT          TIMESTAMP    DEFAULT NOW(),
     SEND_DT         TIMESTAMP,
 
-    CONSTRAINT PK_DISPLAY_DATA PRIMARY KEY (WH_TYP, PLC_NO, DSP_NO)
+    CONSTRAINT PK_DISPLAY_DATA PRIMARY KEY (WH_TYP, PLC_NO, DISP_NO)
 );
 
 -- ---------------------------------------------------------------------
 -- Seed rows for controller 01 with two displays (matches WCS_DB.INI sample:
 --   CNT=2, FR_TRACK=2006, TO_TRACK=2012)
 -- ---------------------------------------------------------------------
-INSERT INTO DISPLAY_DATA (WH_TYP, PLC_NO, DSP_NO, TRACK_NO, DISP_DATA, LUGG_NO, COLOR, CMD_RQ_YN, SEND_YN)
+INSERT INTO DISPLAY_DATA (WH_TYP, PLC_NO, DISP_NO, TRACK_NO, DISP_DATA, LUGG_NO, COLOR, CMD_RQ_YN, SEND_YN)
 VALUES ('10','01','1','2006','',NULL,0,'N','N')
-ON CONFLICT (WH_TYP, PLC_NO, DSP_NO) DO NOTHING;
+ON CONFLICT (WH_TYP, PLC_NO, DISP_NO) DO NOTHING;
 
-INSERT INTO DISPLAY_DATA (WH_TYP, PLC_NO, DSP_NO, TRACK_NO, DISP_DATA, LUGG_NO, COLOR, CMD_RQ_YN, SEND_YN)
+INSERT INTO DISPLAY_DATA (WH_TYP, PLC_NO, DISP_NO, TRACK_NO, DISP_DATA, LUGG_NO, COLOR, CMD_RQ_YN, SEND_YN)
 VALUES ('10','01','2','2012','',NULL,0,'N','N')
-ON CONFLICT (WH_TYP, PLC_NO, DSP_NO) DO NOTHING;
+ON CONFLICT (WH_TYP, PLC_NO, DISP_NO) DO NOTHING;
 
 -- ---------------------------------------------------------------------
 -- EQP_MST registration so Communication() (CONNECTED_YN/PLC_PORT) has a row.

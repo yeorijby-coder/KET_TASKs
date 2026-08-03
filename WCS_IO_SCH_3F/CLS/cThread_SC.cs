@@ -19,7 +19,7 @@ namespace TSK_COMM_IOSCH
 {
     public class cThread_SC : IOSchDB
     {
-        #region variable define
+        #region 변수 선언
         private int m_nId = 0;
         public PsMsgView callPsMsgView = null;
         public Thread m_Thread;
@@ -35,7 +35,7 @@ namespace TSK_COMM_IOSCH
         public string m_strRtnMsg = "";
         public int m_nRetCd = 0;
         string strRTN_MSG = "";
-        #endregion variable define
+        #endregion 변수 선언
 
         #region IOSCHThread
         public cThread_SC(int Id)
@@ -2178,7 +2178,7 @@ namespace TSK_COMM_IOSCH
                 #region 실제 처리
                 if (bSuccess == true)
                 {
-                    #region Dead Lock Check
+                    #region 데드락 체크
                     if (cDefApi.CHECK_ENTER_DEAD_LOCK_ZONE(_pBdb, strWH_TYP, strCELL_SC_NO, strDEST_POS1, ref pRTN_MSG, ref dtDeadLock) == false)
                     {
                         _pBdb.Rollback();
@@ -5924,7 +5924,7 @@ namespace TSK_COMM_IOSCH
         }
         //*/
 
-        // write fire bit.
+        // Fire 비트 기록
         // UPDATE_SC_FIRE
         /*
         public bool UPDATE_SC_FIRE(string strWH_TYP

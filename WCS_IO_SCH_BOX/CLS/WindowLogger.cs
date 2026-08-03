@@ -3,12 +3,12 @@
 namespace Utilities
 {
   /// <summary>
-  /// Logs errors to a window shown on screen
+  /// 화면에 창을 띄워 오류를 표시한다
   /// </summary>
   public class WindowLogger : LoggerImplementation
   {
     /// <summary>
-    /// Logs the specified error.
+    /// 지정한 오류를 기록한다.
     /// </summary>
     /// <param name="error">The error to log.</param>
     public override void LogError(string error)

@@ -205,7 +205,7 @@ namespace TSK_COMM_IOSCH
         }
 #endif
 
-        // Common implementation used by DB-specific wrappers
+        // DB 종류별 래퍼가 공통으로 사용하는 구현
         private bool GetTrackNoImpl(object pBdbObj, int TrackNo, ref int nSelCnt)
         {
             try

@@ -26,7 +26,7 @@ namespace TSK_COMM_IOSCH
 
 
 
-            // run my application
+            // 응용 프로그램 실행
 
             Application.EnableVisualStyles();
 
