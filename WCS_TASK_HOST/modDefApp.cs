@@ -237,15 +237,22 @@ public static frmMain g_frmForm;
         };
 
         #region 작업대 번호 / 트랙 번호  (원본 Common/Include/Ecs/EcsDef.h 값 그대로)
+        //
+        //   작업대 번호  : WMS(HOST) 와 주고받는 전문에서 쓰는 번호. CV_DATA.HOST_STN_NO
+        //   트랙 번호    : WCS 내부 설비 식별 번호.                  CV_DATA.TRACK_NO
+        //   MC_NO        : 트랙번호(4자리)에서 가운데 0 을 뺀 3자리 표기
+        //
         // 작업대 번호 (ECS_STN_POS_*)
         public const int ECS_STN_POS_3F_PLT_207 = 207;   // 3층 Pallet Magazine
         public const int ECS_STN_POS_3F_BOX_221 = 221;   // 자동 입고 대기 #1
         public const int ECS_STN_POS_3F_BOX_222 = 222;   // 자동 입고 대기 #2
 
         // 트랙 번호 (CNV_STN_POS_*)
-        public const int CNV_STN_POS_3F_PLT_207 = 3001;
-        public const int CNV_STN_POS_3F_BOX_221 = 4019;
-        public const int CNV_STN_POS_3F_BOX_222 = 4020;
+        //   참고용으로만 둔다. 실제 조회는 CV_DATA.HOST_STN_NO 로 한다.
+        //   CV_DATA 는 TRACK_NO(4자리) 와 MC_NO(3자리, 가운데 0 을 뺀 표기) 를 함께 갖는다.
+        public const int CNV_STN_POS_3F_PLT_207 = 3001;   // MC_NO 301
+        public const int CNV_STN_POS_3F_BOX_221 = 4019;   // MC_NO 419
+        public const int CNV_STN_POS_3F_BOX_222 = 4020;   // MC_NO 420
         #endregion
 
         public enum EN_STN_KIND : int 

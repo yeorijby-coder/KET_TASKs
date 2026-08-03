@@ -1800,8 +1800,9 @@ namespace TSK_HostCom
          *     조건  IsPalletMagazine(트랙) && m_bStoStationReady && m_nLuggNum == 0
          *     전문  STX + 'N' + '1'(입고) + Station No(3) + User Data(0x20) + ETX
          *
-         *   원본의 CNV_STN_POS_3F_PLT_207 = 3001 (3층 Pallet Magazine)
-         *   현장 트랙번호 체계가 다르면 아래 조회가 0건이 되어 전문을 보내지 않는다.
+         *   대상 작업대는 CV_DATA.HOST_STN_NO 로 찾는다.
+         *   (WMS 전문은 작업대 번호를 쓰고, WCS 내부는 트랙번호를 쓰므로
+         *    그 매칭을 CV_DATA.HOST_STN_NO 한곳에 모아 두었다)
          */
         private void GetPmStoRequest()
         {
@@ -1810,10 +1811,10 @@ namespace TSK_HostCom
             if (!m_blSockConnected) return;
 
             m_BDb.ParamsClear();
-            m_strSql = modDefApp.CRLF + "  SELECT TRACK_NO                                                    ";
+            m_strSql = modDefApp.CRLF + "  SELECT HOST_STN_NO                                                 ";
             m_strSql += modDefApp.CRLF + "    FROM CV_DATA                                                    ";
             m_strSql += modDefApp.CRLF + "   WHERE WH_TYP        = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
-            m_strSql += modDefApp.CRLF + "     AND TRACK_NO      = " + m_BDb.ParamsAdd("TRACK_NO", modDefApp.CNV_STN_POS_3F_PLT_207.ToString());
+            m_strSql += modDefApp.CRLF + "     AND HOST_STN_NO   = " + m_BDb.ParamsAdd("HOST_STN_NO", modDefApp.ECS_STN_POS_3F_PLT_207.ToString());
             m_strSql += modDefApp.CRLF + "     AND STO_READY_RD  = '1'                                        ";   // @.입고대 준비완료
             m_strSql += modDefApp.CRLF + "     AND COALESCE(LUGG_NO_RD,'0')::INTEGER = 0                       ";   // @.적재물 없음
 
@@ -1868,7 +1869,7 @@ namespace TSK_HostCom
          *   ※ 원본은 Fork2 를 먼저 싣고 스테이션 221 플래그와 짝지운다.
          *      (221 이 자동입고대기 #1 이므로 짝이 어긋나 보이지만 원본을 그대로 따랐다)
          *
-         *   원본 상수 CNV_STN_POS_3F_BOX_221 = 4019, _222 = 4020
+         *   대상 작업대(221 / 222)는 CV_DATA.HOST_STN_NO 로 찾는다.
          */
         private void GetBoxStoRequest()
         {
@@ -1876,8 +1877,8 @@ namespace TSK_HostCom
 
             if (!m_blSockConnected) return;
 
-            int nFork1 = GfGetTrackLuggNo(modDefApp.CNV_STN_POS_3F_BOX_221);
-            int nFork2 = GfGetTrackLuggNo(modDefApp.CNV_STN_POS_3F_BOX_222);
+            int nFork1 = GfGetStnLuggNo(modDefApp.ECS_STN_POS_3F_BOX_221);
+            int nFork2 = GfGetStnLuggNo(modDefApp.ECS_STN_POS_3F_BOX_222);
 
             // @.두 대기대 모두 비어 있으면 요구하지 않는다
             if (nFork1 <= 0 && nFork2 <= 0) return;
@@ -1916,14 +1917,14 @@ namespace TSK_HostCom
             return true;
         }
 
-        // @@.해당 트랙에 올라와 있는 적재물번호. 없으면 0.
-        private int GfGetTrackLuggNo(int nTrackNo)
+        // @@.해당 작업대에 올라와 있는 적재물번호. 없으면 0.
+        private int GfGetStnLuggNo(int nStation)
         {
             m_BDb.ParamsClear();
             m_strSql = modDefApp.CRLF + "  SELECT COALESCE(LUGG_NO_RD,'0') AS LUGG_NO_RD ";
             m_strSql += modDefApp.CRLF + "    FROM CV_DATA                                ";
-            m_strSql += modDefApp.CRLF + "   WHERE WH_TYP   = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
-            m_strSql += modDefApp.CRLF + "     AND TRACK_NO = " + m_BDb.ParamsAdd("TRACK_NO", nTrackNo.ToString());
+            m_strSql += modDefApp.CRLF + "   WHERE WH_TYP      = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            m_strSql += modDefApp.CRLF + "     AND HOST_STN_NO = " + m_BDb.ParamsAdd("HOST_STN_NO", nStation.ToString());
 
             int iCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
             if (iCnt <= 0) return 0;
