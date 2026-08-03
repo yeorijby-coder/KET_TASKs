@@ -91,6 +91,13 @@ namespace WCS_TASK_CV
                 msg = ex.Message;
                 return false;
             }
+            finally
+            {
+                // @.Shutdown/Close 에서 예외가 나도 접속 상태는 반드시 내려야 한다.
+                //   여기서 true 로 남으면 Connect() 가 이미 접속된 것으로 보고 건너뛰고,
+                //   작업 스레드도 접속 시도와 폴링을 모두 건너뛰어 재접속하지 못한다.
+                this.m_bSocCon = false;
+            }
         }
         private void DoShedule()
         {
