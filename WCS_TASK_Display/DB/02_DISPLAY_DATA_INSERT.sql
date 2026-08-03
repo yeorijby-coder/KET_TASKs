@@ -64,9 +64,27 @@ WHERE NOT EXISTS (SELECT 1
                      AND PLC_NO  = '01');
 
 
+-- ---------------------------------------------------------------------
+-- 3) DISPLAY_CTRL : 컨트롤러 접속 제어 행
+--    없으면 태스크가 기동시 기본값으로 만들지만, 미리 넣어두면 Client 가 바로 쓸 수 있다.
+-- ---------------------------------------------------------------------
+INSERT INTO DISPLAY_CTRL (WH_TYP, PLC_NO, DISCONNECT_YN, AUTO_RECONN_YN, CONNECTED_YN, RQ_USER_ID, RQ_DT)
+VALUES ('10', '01', 'N', 'Y', 'N', 'INIT', NOW())
+ON CONFLICT (WH_TYP, PLC_NO) DO NOTHING;
+
+
 -- =====================================================================
 --  아래는 동작 확인용 참고 쿼리 / 지령 예시  (필요할 때 주석 해제)
 -- =====================================================================
+
+-- [확인] 접속 제어 상태
+-- SELECT WH_TYP, PLC_NO, DISCONNECT_YN, AUTO_RECONN_YN, CONNECTED_YN, RQ_USER_ID, RQ_DT
+--   FROM DISPLAY_CTRL ORDER BY WH_TYP, PLC_NO;
+
+-- [Client] 접속 끊기 / 다시 접속 / 자동 재접속 끄기
+-- UPDATE DISPLAY_CTRL SET DISCONNECT_YN='Y',  RQ_USER_ID='CLIENT', RQ_DT=NOW(), UPD_DT=NOW() WHERE WH_TYP='10' AND PLC_NO='01';
+-- UPDATE DISPLAY_CTRL SET DISCONNECT_YN='N',  RQ_USER_ID='CLIENT', RQ_DT=NOW(), UPD_DT=NOW() WHERE WH_TYP='10' AND PLC_NO='01';
+-- UPDATE DISPLAY_CTRL SET AUTO_RECONN_YN='N', RQ_USER_ID='CLIENT', RQ_DT=NOW(), UPD_DT=NOW() WHERE WH_TYP='10' AND PLC_NO='01';
 
 -- [확인] 등록 상태
 -- SELECT WH_TYP, PLC_NO, DISP_NO, TRACK_NO, DISP_DATA, LUGG_NO, COLOR,

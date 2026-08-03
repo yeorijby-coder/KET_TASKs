@@ -7,6 +7,7 @@ using System.Reflection;
 using System.Threading;
 using System.Windows.Forms;
 using Npgsql;
+using NpgsqlTypes;
 
 namespace WCS_TASK_Display
 {
@@ -79,8 +80,13 @@ namespace WCS_TASK_Display
 
         private const int MSG_MAX = 500;
 
-        // @@.[접속 끊기] 상태. true 면 스레드를 다시 띄우지 않는다.
-        private bool m_bDisconnected = false;
+        // @@.접속 제어 상태. 원본은 DISPLAY_CTRL 테이블이며 화면과 WCS Client 가 같이 쓴다.
+        //    화면 버튼/체크박스도 테이블에 기록만 하고, 실제 적용은 Thread_Tick 의 동기화에서 한다.
+        private bool[] m_bDisconnect  = new bool[200];   // @.접속 끊기 지시 (DISCONNECT_YN)
+        private bool[] m_bAutoReconn  = new bool[200];   // @.자동 재접속 여부 (AUTO_RECONN_YN)
+        private bool[] m_bConnReq     = new bool[200];   // @.접속 요청. 최초 기동과 끊기->접속 전환때 선다.
+        private string[] m_strLastConnYn = new string[200];  // @.CONNECTED_YN 을 바뀔 때만 기록하기 위한 직전값
+        private bool m_bCtrlSyncing = false;             // @.테이블->화면 반영중 이벤트 되먹임 방지
         #endregion
 
         public SYS_MAIN()
@@ -283,7 +289,14 @@ namespace WCS_TASK_Display
                                                     m_nToTrackNo[ii],
                                                     m_strConnectString,
                                                     m_strLogFileNm[ii]);
+
+                // @.최초 기동은 자동 재접속 설정과 무관하게 한 번 접속한다
+                m_bConnReq[ii] = true;
+                m_bAutoReconn[ii] = true;
+                m_strLastConnYn[ii] = "";
             }
+
+            PsCtrlSync();   // @.DISPLAY_CTRL 초기 상태를 읽어 화면에 반영
         }
 
         private void Thread_Tick(object sender, EventArgs e)
@@ -292,15 +305,29 @@ namespace WCS_TASK_Display
             {
                 Thread_Timer.Enabled = false;
 
+                PsCtrlSync();   // @.DISPLAY_CTRL 지시를 읽어 화면/스레드에 반영
+
                 for (int ii = 0; ii < m_nProcessCnt; ii++)
                 {
                     if (m_thDisplay[ii] == null) continue;
 
-                    // @.[접속 끊기] 상태에서는 재접속하지 않는다
-                    if (m_bDisconnected)
+                    // @.접속 끊기 지시 상태에서는 재접속하지 않는다
+                    if (m_bDisconnect[ii])
+                    {
+                        m_bConnReq[ii] = false;
+                        SetDisplay("picDispSkt" + ii, "D", "E");
+                        SetDisplay("picDispDbCn" + ii, "D");
+                        PsCtrlWriteConnected(ii, "N");
+                        continue;
+                    }
+
+                    // @.자동 재접속이 꺼져 있으면 통신이 끊긴 뒤 스스로 다시 붙지 않는다.
+                    //   화면의 [접속] 이나 Client 의 DISCONNECT_YN='N' 지시가 있어야 다시 시도한다.
+                    if (m_thDisplay[ii].m_thThread == null && !m_bAutoReconn[ii] && !m_bConnReq[ii])
                     {
                         SetDisplay("picDispSkt" + ii, "D", "E");
                         SetDisplay("picDispDbCn" + ii, "D");
+                        PsCtrlWriteConnected(ii, "N");
                         continue;
                     }
 
@@ -314,6 +341,7 @@ namespace WCS_TASK_Display
                         m_thDisplay[ii].m_thThread.IsBackground = true;
                         m_thDisplay[ii].m_frmMain = this;
                         m_thDisplay[ii].m_thThread.Start(ii);
+                        m_bConnReq[ii] = false;     // @.접속 요청 소비
 
                         if (m_thLogging[ii] != null && m_thLogging[ii].m_thThread == null)
                         {
@@ -331,6 +359,7 @@ namespace WCS_TASK_Display
                         {
                             SetDisplay("picDispSkt" + ii, "C");
                             SetDisplay("picDispDbCn" + ii, "C");
+                            PsCtrlWriteConnected(ii, "Y");
                         }
                     }
                 }
@@ -488,32 +517,215 @@ namespace WCS_TASK_Display
 
         #region 접속 제어 / 로그 표시 제어
         /*
+         * 접속 제어는 DISPLAY_CTRL 테이블 하나로 통일한다.
+         *   DISCONNECT_YN   'Y' = 접속 끊기,  'N' = 접속
+         *   AUTO_RECONN_YN  'Y' = 통신이 끊기면 자동으로 다시 붙는다
+         *   CONNECTED_YN    태스크가 기록하는 현재 접속상태
+         *
+         * 화면의 버튼/체크박스도 이 테이블에 기록만 하고, 실제 반영은 Thread_Tick 의
+         * PsCtrlSync 에서 한다. 그래서 WCS Client 가 같은 테이블을 고쳐도 똑같이 동작한다.
+         */
+
+        // @@.DISPLAY_CTRL 을 읽어 화면과 스레드에 반영한다. 행이 없으면 기본값으로 만든다.
+        private void PsCtrlSync()
+        {
+#if POSTGRESQL
+            NpgsqlConnection cn = null;
+            try
+            {
+                cn = new NpgsqlConnection(m_strConnectString);
+                cn.Open();
+
+                for (int ii = 0; ii < m_nProcessCnt; ii++)
+                {
+                    if (m_strPLC_NO[ii] == null) continue;
+
+                    string strDisc = null;
+                    string strAuto = null;
+
+                    using (NpgsqlCommand cmd = new NpgsqlCommand(
+                        "SELECT COALESCE(DISCONNECT_YN,'N'), COALESCE(AUTO_RECONN_YN,'Y') " +
+                        "FROM DISPLAY_CTRL WHERE WH_TYP = :WH_TYP AND PLC_NO = :PLC_NO", cn))
+                    {
+                        cmd.Parameters.Add("WH_TYP", NpgsqlDbType.Varchar).Value = cDefApp.GM_WH_TYP;
+                        cmd.Parameters.Add("PLC_NO", NpgsqlDbType.Varchar).Value = m_strPLC_NO[ii];
+                        using (NpgsqlDataReader rd = cmd.ExecuteReader())
+                        {
+                            if (rd.Read())
+                            {
+                                strDisc = rd.GetString(0);
+                                strAuto = rd.GetString(1);
+                            }
+                        }
+                    }
+
+                    if (strDisc == null)
+                    {
+                        // @.제어행이 없으면 기본값(접속, 자동 재접속 사용)으로 만들어 둔다
+                        using (NpgsqlCommand ins = new NpgsqlCommand(
+                            "INSERT INTO DISPLAY_CTRL (WH_TYP, PLC_NO, DISCONNECT_YN, AUTO_RECONN_YN, CONNECTED_YN, RQ_USER_ID, RQ_DT, UPD_DT) " +
+                            "VALUES (:WH_TYP, :PLC_NO, 'N', 'Y', 'N', :RQ_USER_ID, NOW(), NOW()) " +
+                            "ON CONFLICT (WH_TYP, PLC_NO) DO NOTHING", cn))
+                        {
+                            ins.Parameters.Add("WH_TYP", NpgsqlDbType.Varchar).Value = cDefApp.GM_WH_TYP;
+                            ins.Parameters.Add("PLC_NO", NpgsqlDbType.Varchar).Value = m_strPLC_NO[ii];
+                            ins.Parameters.Add("RQ_USER_ID", NpgsqlDbType.Varchar).Value = cDefApp.GM_USERID;
+                            ins.ExecuteNonQuery();
+                        }
+                        strDisc = "N";
+                        strAuto = "Y";
+                    }
+
+                    bool bDisc = (strDisc.Trim().ToUpper() == "Y");
+                    bool bAuto = (strAuto.Trim().ToUpper() == "Y");
+
+                    // @.끊김 -> 접속 으로 바뀌면 자동 재접속이 꺼져 있어도 한 번은 붙는다
+                    if (m_bDisconnect[ii] && !bDisc) m_bConnReq[ii] = true;
+
+                    m_bDisconnect[ii] = bDisc;
+                    m_bAutoReconn[ii] = bAuto;
+
+                    if (m_thDisplay[ii] != null) m_thDisplay[ii].m_bStopReq = bDisc;
+                }
+
+                PsCtrlToScreen();
+            }
+            catch (Exception ex)
+            {
+                AddMsg("ERR", "", "DISPLAY_CTRL 조회 실패 : " + ex.Message);
+            }
+            finally
+            {
+                if (cn != null) { try { cn.Close(); } catch { } }
+            }
+#endif
+        }
+
+        // @@.테이블 값을 버튼/체크박스에 반영한다.(되먹임 방지를 위해 플래그를 세운다)
+        private void PsCtrlToScreen()
+        {
+            bool bAnyDisc = false;
+            bool bAuto = true;
+            for (int ii = 0; ii < m_nProcessCnt; ii++)
+            {
+                if (m_strPLC_NO[ii] == null) continue;
+                if (m_bDisconnect[ii]) bAnyDisc = true;
+                bAuto = m_bAutoReconn[ii];
+            }
+
+            m_bCtrlSyncing = true;
+            try
+            {
+                btnDisconnect.Text = bAnyDisc ? "접속" : "접속 끊기";
+                if (chkAutoReconn.Checked != bAuto) chkAutoReconn.Checked = bAuto;
+            }
+            finally { m_bCtrlSyncing = false; }
+        }
+
+        // @@.DISPLAY_CTRL 의 지시 컬럼을 이 태스크가 담당하는 모든 컨트롤러에 기록한다.
+        private void PsCtrlSet(string strCol, string strVal)
+        {
+#if POSTGRESQL
+            NpgsqlConnection cn = null;
+            try
+            {
+                cn = new NpgsqlConnection(m_strConnectString);
+                cn.Open();
+
+                for (int ii = 0; ii < m_nProcessCnt; ii++)
+                {
+                    if (m_strPLC_NO[ii] == null) continue;
+
+                    using (NpgsqlCommand cmd = new NpgsqlCommand(
+                        "UPDATE DISPLAY_CTRL SET " + strCol + " = :VAL, RQ_USER_ID = :RQ_USER_ID, " +
+                        "RQ_DT = NOW(), UPD_DT = NOW() " +
+                        "WHERE WH_TYP = :WH_TYP AND PLC_NO = :PLC_NO", cn))
+                    {
+                        cmd.Parameters.Add("VAL", NpgsqlDbType.Varchar).Value = strVal;
+                        cmd.Parameters.Add("RQ_USER_ID", NpgsqlDbType.Varchar).Value = cDefApp.GM_USERID;
+                        cmd.Parameters.Add("WH_TYP", NpgsqlDbType.Varchar).Value = cDefApp.GM_WH_TYP;
+                        cmd.Parameters.Add("PLC_NO", NpgsqlDbType.Varchar).Value = m_strPLC_NO[ii];
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception ex)
+            {
+                AddMsg("ERR", "", "DISPLAY_CTRL 기록 실패 [" + strCol + "] : " + ex.Message);
+            }
+            finally
+            {
+                if (cn != null) { try { cn.Close(); } catch { } }
+            }
+#endif
+        }
+
+        // @@.현재 접속상태를 기록한다. 값이 바뀔 때만 쓴다.
+        private void PsCtrlWriteConnected(int ii, string strYn)
+        {
+#if POSTGRESQL
+            if (m_strPLC_NO[ii] == null) return;
+            if (m_strLastConnYn[ii] == strYn) return;
+
+            NpgsqlConnection cn = null;
+            try
+            {
+                cn = new NpgsqlConnection(m_strConnectString);
+                cn.Open();
+                using (NpgsqlCommand cmd = new NpgsqlCommand(
+                    "UPDATE DISPLAY_CTRL SET CONNECTED_YN = :VAL, UPD_DT = NOW() " +
+                    "WHERE WH_TYP = :WH_TYP AND PLC_NO = :PLC_NO", cn))
+                {
+                    cmd.Parameters.Add("VAL", NpgsqlDbType.Varchar).Value = strYn;
+                    cmd.Parameters.Add("WH_TYP", NpgsqlDbType.Varchar).Value = cDefApp.GM_WH_TYP;
+                    cmd.Parameters.Add("PLC_NO", NpgsqlDbType.Varchar).Value = m_strPLC_NO[ii];
+                    cmd.ExecuteNonQuery();
+                }
+                m_strLastConnYn[ii] = strYn;
+            }
+            catch { }
+            finally
+            {
+                if (cn != null) { try { cn.Close(); } catch { } }
+            }
+#endif
+        }
+
+        /*
          * btnDisconnect_Click
-         *   [접속 끊기] : 모든 컨트롤러의 작업 스레드에 중단을 요청한다.
-         *                 스레드는 소켓/DB 를 닫고 EQP_MST 접속상태를 'N' 으로 기록한 뒤 끝난다.
-         *                 끊긴 상태에서는 Thread_Tick 이 스레드를 다시 띄우지 않는다.
-         *   [접속]     : 중단 요청을 풀면 Thread_Tick 이 다음 주기에 다시 접속한다.
+         *   DISPLAY_CTRL.DISCONNECT_YN 을 뒤집어 기록한다.
+         *   실제 절체/재접속은 다음 Thread_Tick 의 PsCtrlSync 에서 일어난다.
+         *   WCS Client 가 같은 컬럼을 고쳐도 결과는 동일하다.
          */
         private void btnDisconnect_Click(object sender, EventArgs e)
         {
-            m_bDisconnected = !m_bDisconnected;
-
+            bool bAnyDisc = false;
             for (int ii = 0; ii < m_nProcessCnt; ii++)
             {
-                if (m_thDisplay[ii] == null) continue;
-                m_thDisplay[ii].m_bStopReq = m_bDisconnected;
+                if (m_strPLC_NO[ii] == null) continue;
+                if (m_bDisconnect[ii]) bAnyDisc = true;
             }
 
-            if (m_bDisconnected)
-            {
-                btnDisconnect.Text = "접속";
-                AddMsg("IMP", "", "[접속 끊기] 요청 - 모든 컨트롤러 접속을 끊습니다.");
-            }
-            else
-            {
-                btnDisconnect.Text = "접속 끊기";
-                AddMsg("IMP", "", "[접속] 요청 - 재접속을 시작합니다.");
-            }
+            string strNew = bAnyDisc ? "N" : "Y";
+            PsCtrlSet("DISCONNECT_YN", strNew);
+
+            AddMsg("IMP", "", strNew == "Y"
+                   ? "[접속 끊기] 지시 - 모든 컨트롤러 접속을 끊습니다."
+                   : "[접속] 지시 - 재접속을 시작합니다.");
+
+            PsCtrlSync();   // @.버튼 라벨을 바로 바꾸기 위해 즉시 반영
+        }
+
+        // @@.자동 재접속 여부를 DISPLAY_CTRL 에 기록한다.
+        private void chkAutoReconn_CheckedChanged(object sender, EventArgs e)
+        {
+            if (m_bCtrlSyncing) return;     // @.테이블->화면 반영중이면 기록하지 않는다
+
+            string strNew = chkAutoReconn.Checked ? "Y" : "N";
+            PsCtrlSet("AUTO_RECONN_YN", strNew);
+            AddMsg("IMP", "", "[자동 재접속] " + (chkAutoReconn.Checked ? "사용" : "사용 안 함"));
+
+            for (int ii = 0; ii < m_nProcessCnt; ii++) m_bAutoReconn[ii] = chkAutoReconn.Checked;
         }
 
         // @@.화면 로그 지우기

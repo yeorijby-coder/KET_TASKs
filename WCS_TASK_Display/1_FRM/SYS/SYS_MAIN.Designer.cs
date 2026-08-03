@@ -43,6 +43,7 @@
             this.chkLogStop = new System.Windows.Forms.CheckBox();
             this.btnLogClear = new System.Windows.Forms.Button();
             this.chkLatestFirst = new System.Windows.Forms.CheckBox();
+            this.chkAutoReconn = new System.Windows.Forms.CheckBox();
             this.lvMsg = new System.Windows.Forms.ListView();
             this.colTime = new System.Windows.Forms.ColumnHeader();
             this.colType = new System.Windows.Forms.ColumnHeader();
@@ -90,6 +91,7 @@
             this.pnlManual.Controls.Add(this.chkLogStop);
             this.pnlManual.Controls.Add(this.btnLogClear);
             this.pnlManual.Controls.Add(this.chkLatestFirst);
+            this.pnlManual.Controls.Add(this.chkAutoReconn);
             this.pnlManual.Dock = System.Windows.Forms.DockStyle.Bottom;
             this.pnlManual.Location = new System.Drawing.Point(0, 425);
             this.pnlManual.Name = "pnlManual";
@@ -218,10 +220,23 @@
             this.btnDisconnect.UseVisualStyleBackColor = true;
             this.btnDisconnect.Click += new System.EventHandler(this.btnDisconnect_Click);
             //
+            // chkAutoReconn
+            //
+            this.chkAutoReconn.AutoSize = true;
+            this.chkAutoReconn.Checked = true;
+            this.chkAutoReconn.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkAutoReconn.Location = new System.Drawing.Point(104, 71);
+            this.chkAutoReconn.Name = "chkAutoReconn";
+            this.chkAutoReconn.Size = new System.Drawing.Size(83, 16);
+            this.chkAutoReconn.TabIndex = 16;
+            this.chkAutoReconn.Text = "자동 재접속";
+            this.chkAutoReconn.UseVisualStyleBackColor = true;
+            this.chkAutoReconn.CheckedChanged += new System.EventHandler(this.chkAutoReconn_CheckedChanged);
+            //
             // chkLogStop
             //
             this.chkLogStop.AutoSize = true;
-            this.chkLogStop.Location = new System.Drawing.Point(108, 71);
+            this.chkLogStop.Location = new System.Drawing.Point(205, 71);
             this.chkLogStop.Name = "chkLogStop";
             this.chkLogStop.Size = new System.Drawing.Size(71, 16);
             this.chkLogStop.TabIndex = 13;
@@ -230,7 +245,7 @@
             //
             // btnLogClear
             //
-            this.btnLogClear.Location = new System.Drawing.Point(190, 66);
+            this.btnLogClear.Location = new System.Drawing.Point(288, 66);
             this.btnLogClear.Name = "btnLogClear";
             this.btnLogClear.Size = new System.Drawing.Size(90, 24);
             this.btnLogClear.TabIndex = 14;
@@ -241,7 +256,7 @@
             // chkLatestFirst
             //
             this.chkLatestFirst.AutoSize = true;
-            this.chkLatestFirst.Location = new System.Drawing.Point(292, 71);
+            this.chkLatestFirst.Location = new System.Drawing.Point(388, 71);
             this.chkLatestFirst.Name = "chkLatestFirst";
             this.chkLatestFirst.Size = new System.Drawing.Size(186, 16);
             this.chkLatestFirst.TabIndex = 15;
@@ -328,6 +343,7 @@
         private System.Windows.Forms.CheckBox chkLogStop;
         private System.Windows.Forms.Button btnLogClear;
         private System.Windows.Forms.CheckBox chkLatestFirst;
+        private System.Windows.Forms.CheckBox chkAutoReconn;
         private System.Windows.Forms.ListView lvMsg;
         private System.Windows.Forms.ColumnHeader colTime;
         private System.Windows.Forms.ColumnHeader colType;

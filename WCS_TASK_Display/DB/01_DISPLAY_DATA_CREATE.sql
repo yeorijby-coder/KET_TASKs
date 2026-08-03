@@ -4,10 +4,13 @@
 --  실행 : psql -h localhost -p 5432 -U KET_WCS -d KET_WCS -f 01_DISPLAY_DATA_CREATE.sql
 --
 --  이 스크립트는 WCS_TASK_Display 가 구동되기 위해 필요한 오브젝트를 만든다.
---    1) DISPLAY_DATA   : 전광판 표시내용 테이블 (이 태스크의 주 테이블)
---    2) EQP_MST        : 설비 마스터            (통신상태 기록용, 이미 있으면 그대로 둠)
---    3) WCS_LOG_PGR    : 프로그램 로그          (감사 로그용,     이미 있으면 그대로 둠)
---    4) LOG_SEQ        : WCS_LOG_PGR.LOG_SEQ 채번 시퀀스
+--    1) DISPLAY_DATA   : 전광판별 설정 + 수동 지령 + 표시 기록
+--    2) DISPLAY_CTRL   : 컨트롤러별 접속 제어 (화면 / WCS Client 공용)
+--    3) EQP_MST        : 설비 마스터            (통신상태 기록용, 이미 있으면 그대로 둠)
+--    4) WCS_LOG_PGR    : 프로그램 로그          (감사 로그용,     이미 있으면 그대로 둠)
+--    5) LOG_SEQ        : WCS_LOG_PGR.LOG_SEQ 채번 시퀀스
+--
+--  테이블을 통째로 다시 만들려면 00_DISPLAY_RESET.sql 을 쓴다.(기존 데이터 삭제됨)
 --
 --  모두 IF NOT EXISTS 라서 기존 운영 DB 에 실행해도 기존 데이터는 건드리지 않는다.
 --  데이터 입력은 02_DISPLAY_DATA_INSERT.sql 참조.
@@ -73,7 +76,37 @@ CREATE INDEX IF NOT EXISTS IX_DISPLAY_DATA_CMD
 
 
 -- ---------------------------------------------------------------------
--- 2) EQP_MST : 설비 마스터
+-- 2) DISPLAY_CTRL : 컨트롤러별 접속 제어
+--
+--    화면의 [접속 끊기] 버튼과 [자동 재접속] 체크박스가 이 테이블에 기록하고,
+--    WCS_TASK_Display 가 1초 주기로 읽어 반영한다.
+--    WCS Client 가 같은 컬럼을 고쳐도 동일하게 동작한다.
+--
+--      DISCONNECT_YN  'Y' = 접속 끊기 지시, 'N' = 접속
+--      AUTO_RECONN_YN 'Y' = 통신이 끊기면 자동 재접속
+--                     'N' = 끊긴 채로 두고 DISCONNECT_YN='N' 재지시를 기다린다
+--      CONNECTED_YN   태스크가 기록하는 현재 접속상태
+-- ---------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS DISPLAY_CTRL
+(
+    WH_TYP          VARCHAR(4)   NOT NULL,
+    PLC_NO          VARCHAR(5)   NOT NULL,
+
+    DISCONNECT_YN   VARCHAR(1)   DEFAULT 'N',
+    AUTO_RECONN_YN  VARCHAR(1)   DEFAULT 'Y',
+    CONNECTED_YN    VARCHAR(1)   DEFAULT 'N',
+
+    RQ_USER_ID      VARCHAR(20),
+    RQ_DT           TIMESTAMP,
+    REG_DT          TIMESTAMP    DEFAULT NOW(),
+    UPD_DT          TIMESTAMP    DEFAULT NOW(),
+
+    CONSTRAINT PK_DISPLAY_CTRL PRIMARY KEY (WH_TYP, PLC_NO)
+);
+
+
+-- ---------------------------------------------------------------------
+-- 3) EQP_MST : 설비 마스터
 --
 --    DisplayThread.Communication() 이 접속/단절 시점에 아래를 UPDATE 한다.
 --      UPDATE EQP_MST SET CONNECTED_YN=..., UPD_DT=NOW(), PLC_PORT=...
@@ -106,7 +139,7 @@ CREATE TABLE IF NOT EXISTS EQP_MST
 
 
 -- ---------------------------------------------------------------------
--- 3) WCS_LOG_PGR : 프로그램 감사 로그
+-- 4) WCS_LOG_PGR : 프로그램 감사 로그
 --    DisplayThread.InsertWcsLogPgr() 가 INSERT 한다.
 -- ---------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS WCS_LOG_PGR
@@ -129,7 +162,7 @@ CREATE TABLE IF NOT EXISTS WCS_LOG_PGR
 
 
 -- ---------------------------------------------------------------------
--- 4) LOG_SEQ : WCS_LOG_PGR.LOG_SEQ 채번 시퀀스
+-- 5) LOG_SEQ : WCS_LOG_PGR.LOG_SEQ 채번 시퀀스
 --    INSERT 문에서 NEXTVAL('LOG_SEQ') 로 직접 참조한다.
 -- ---------------------------------------------------------------------
 CREATE SEQUENCE IF NOT EXISTS LOG_SEQ START 1;
