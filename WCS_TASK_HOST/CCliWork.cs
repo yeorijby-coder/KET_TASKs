@@ -695,10 +695,14 @@ namespace TSK_HostCom
 
             if (modDefApp.g_frmForm.chkSimMode.Checked == false)
             {
-                //GetStatusReport();
+                // @.상태 보고(S). 안에서 30초 경과 여부를 보고 정기보고/변경보고를 가른다.
+                //   원본 문서 : "상태가 변경되면 즉시 + 정기적으로 30초에 1회"
+                GetStatusReport();
                 GetErrorReport();
                 GetWeightReport();
                 GetEmptyPltRequest();
+                GetPmStoRequest();      // @.공파렛트 입고 요구(N)
+                GetBoxStoRequest();     // @.P-BOX 입고 요구(L)
             }
             GetJobCompleteReport();
             GetLoadArrivalReport();
@@ -1789,6 +1793,164 @@ namespace TSK_HostCom
         //최초작성자	: BASE(정복열)
         //작성일		: 20200515
         //설명		    : 공파레트 입출고 요청 
+        /*
+         * GetPmStoRequest :: 공파렛트 입고 요구 (Message Type 'N')
+         *
+         *   원본 : CCvTrackInfo::SendPMStoRequest / GetPalletMagazineStoRequest
+         *     조건  IsPalletMagazine(트랙) && m_bStoStationReady && m_nLuggNum == 0
+         *     전문  STX + 'N' + '1'(입고) + Station No(3) + User Data(0x20) + ETX
+         *
+         *   원본의 CNV_STN_POS_3F_PLT_207 = 3001 (3층 Pallet Magazine)
+         *   현장 트랙번호 체계가 다르면 아래 조회가 0건이 되어 전문을 보내지 않는다.
+         */
+        private void GetPmStoRequest()
+        {
+            string strTitle = "[GetPmStoRequest] .. ";
+
+            if (!m_blSockConnected) return;
+
+            m_BDb.ParamsClear();
+            m_strSql = modDefApp.CRLF + "  SELECT TRACK_NO                                                    ";
+            m_strSql += modDefApp.CRLF + "    FROM CV_DATA                                                    ";
+            m_strSql += modDefApp.CRLF + "   WHERE WH_TYP        = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            m_strSql += modDefApp.CRLF + "     AND TRACK_NO      = " + m_BDb.ParamsAdd("TRACK_NO", modDefApp.CNV_STN_POS_3F_PLT_207.ToString());
+            m_strSql += modDefApp.CRLF + "     AND STO_READY_RD  = '1'                                        ";   // @.입고대 준비완료
+            m_strSql += modDefApp.CRLF + "     AND COALESCE(LUGG_NO_RD,'0')::INTEGER = 0                       ";   // @.적재물 없음
+
+            int iCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
+            if (iCnt < 0)
+            {
+                m_strLog = m_BDb.ErrMsg + m_strSql;
+                modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
+                return;
+            }
+            if (iCnt == 0) return;      // @.요구 조건이 아님
+
+            GetPmStoRequest(1, modDefApp.ECS_STN_POS_3F_PLT_207);
+        }
+
+        private bool GetPmStoRequest(int nKind, int nStation)
+        {
+            string strTitle = "[GetPmStoRequest] .. ";
+            m_strHostCmd = "N";
+
+            if (!m_blSockConnected) return false;
+
+            // @.전문 : 'N' + 작업구분(1) + 스테이션(3) + User Data(0x20)
+            string strTemp = string.Format("N{0}{1:000}{2}", nKind, nStation, (char)0x20);
+
+            int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
+            m_bytTxBuff = new byte[iTxCnt];
+
+            MakeHeader(strTemp.Length);
+
+            m_bytTxBuff[modDefApp.MSG_HEAD_CNT] = modDefApp.STX;
+            byte[] bytTempByte = System.Text.Encoding.Default.GetBytes(strTemp);
+            Array.Copy(bytTempByte, 0, m_bytTxBuff, modDefApp.MSG_HEAD_CNT + 1, strTemp.Length);
+            m_bytTxBuff[iTxCnt - 1] = modDefApp.ETX;
+
+            if (!RequestSrv(iTxCnt.ToString())) return false;
+
+            m_strLog = string.Format("공파렛트 입고 요구.. 스테이션=[{0}]", nStation);
+            modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_NOR);
+            return true;
+        }
+
+        /*
+         * GetBoxStoRequest :: P-BOX 입고 요구 (Message Type 'L')
+         *
+         *   원본 : CHostCl::RequestBoxStore(nFork1LuggNum, nFork2LuggNum)
+         *     전문  STX + 'L'
+         *           + Fork2 작업번호(4) + 스테이션221 미실행작업 유무(1)
+         *           + Fork1 작업번호(4) + 스테이션222 미실행작업 유무(1)
+         *           + ETX
+         *
+         *   ※ 원본은 Fork2 를 먼저 싣고 스테이션 221 플래그와 짝지운다.
+         *      (221 이 자동입고대기 #1 이므로 짝이 어긋나 보이지만 원본을 그대로 따랐다)
+         *
+         *   원본 상수 CNV_STN_POS_3F_BOX_221 = 4019, _222 = 4020
+         */
+        private void GetBoxStoRequest()
+        {
+            string strTitle = "[GetBoxStoRequest] .. ";
+
+            if (!m_blSockConnected) return;
+
+            int nFork1 = GfGetTrackLuggNo(modDefApp.CNV_STN_POS_3F_BOX_221);
+            int nFork2 = GfGetTrackLuggNo(modDefApp.CNV_STN_POS_3F_BOX_222);
+
+            // @.두 대기대 모두 비어 있으면 요구하지 않는다
+            if (nFork1 <= 0 && nFork2 <= 0) return;
+
+            int nUnExec221 = GfHasUnExcutedJob(modDefApp.ECS_STN_POS_3F_BOX_221) ? 1 : 0;
+            int nUnExec222 = GfHasUnExcutedJob(modDefApp.ECS_STN_POS_3F_BOX_222) ? 1 : 0;
+
+            GetBoxStoRequest(nFork1, nFork2, nUnExec221, nUnExec222);
+        }
+
+        private bool GetBoxStoRequest(int nFork1LuggNum, int nFork2LuggNum, int nUnExec221, int nUnExec222)
+        {
+            string strTitle = "[GetBoxStoRequest] .. ";
+            m_strHostCmd = "L";
+
+            if (!m_blSockConnected) return false;
+
+            // @.원본 순서 그대로 : Fork2 + 221플래그, Fork1 + 222플래그
+            string strTemp = string.Format("L{0:0000}{1}{2:0000}{3}",
+                                           nFork2LuggNum, nUnExec221, nFork1LuggNum, nUnExec222);
+
+            int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
+            m_bytTxBuff = new byte[iTxCnt];
+
+            MakeHeader(strTemp.Length);
+
+            m_bytTxBuff[modDefApp.MSG_HEAD_CNT] = modDefApp.STX;
+            byte[] bytTempByte = System.Text.Encoding.Default.GetBytes(strTemp);
+            Array.Copy(bytTempByte, 0, m_bytTxBuff, modDefApp.MSG_HEAD_CNT + 1, strTemp.Length);
+            m_bytTxBuff[iTxCnt - 1] = modDefApp.ETX;
+
+            if (!RequestSrv(iTxCnt.ToString())) return false;
+
+            m_strLog = string.Format("P-BOX 입고 요구.. Fork1=[{0}] Fork2=[{1}]", nFork1LuggNum, nFork2LuggNum);
+            modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_NOR);
+            return true;
+        }
+
+        // @@.해당 트랙에 올라와 있는 적재물번호. 없으면 0.
+        private int GfGetTrackLuggNo(int nTrackNo)
+        {
+            m_BDb.ParamsClear();
+            m_strSql = modDefApp.CRLF + "  SELECT COALESCE(LUGG_NO_RD,'0') AS LUGG_NO_RD ";
+            m_strSql += modDefApp.CRLF + "    FROM CV_DATA                                ";
+            m_strSql += modDefApp.CRLF + "   WHERE WH_TYP   = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            m_strSql += modDefApp.CRLF + "     AND TRACK_NO = " + m_BDb.ParamsAdd("TRACK_NO", nTrackNo.ToString());
+
+            int iCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
+            if (iCnt <= 0) return 0;
+
+            int nLugg = 0;
+            int.TryParse(m_BDb.dtMain.Rows[0]["LUGG_NO_RD"].ToString().Trim(), out nLugg);
+            return nLugg;
+        }
+
+        // @@.해당 출발 작업대에 아직 실행되지 않은 작업이 있는지.(원본 GetUnExcutedJob 에 해당)
+        private bool GfHasUnExcutedJob(int nStation)
+        {
+            m_BDb.ParamsClear();
+            m_strSql = modDefApp.CRLF + "  SELECT COUNT(*) AS CNT                          ";
+            m_strSql += modDefApp.CRLF + "    FROM JOB_MST                                 ";
+            m_strSql += modDefApp.CRLF + "   WHERE WH_TYP    = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            m_strSql += modDefApp.CRLF + "     AND START_POS = " + m_BDb.ParamsAdd("START_POS", nStation.ToString());
+            m_strSql += modDefApp.CRLF + "     AND COALESCE(JOB_STATUS,'0')::INTEGER < " + ((int)modDefApp.EN_JOB_STATUS.enJobStatusComplete).ToString();
+
+            int iCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
+            if (iCnt <= 0) return false;
+
+            int nCnt = 0;
+            int.TryParse(m_BDb.dtMain.Rows[0]["CNT"].ToString().Trim(), out nCnt);
+            return (nCnt > 0);
+        }
+
         private bool GetEmptyPltRequest(int nKind, int nStation)
         {
             string strTitle = "[GetEmptyPltRequest] .. ";

@@ -236,6 +236,18 @@ public static frmMain g_frmForm;
             enLengthControlID = 10
         };
 
+        #region 작업대 번호 / 트랙 번호  (원본 Common/Include/Ecs/EcsDef.h 값 그대로)
+        // 작업대 번호 (ECS_STN_POS_*)
+        public const int ECS_STN_POS_3F_PLT_207 = 207;   // 3층 Pallet Magazine
+        public const int ECS_STN_POS_3F_BOX_221 = 221;   // 자동 입고 대기 #1
+        public const int ECS_STN_POS_3F_BOX_222 = 222;   // 자동 입고 대기 #2
+
+        // 트랙 번호 (CNV_STN_POS_*)
+        public const int CNV_STN_POS_3F_PLT_207 = 3001;
+        public const int CNV_STN_POS_3F_BOX_221 = 4019;
+        public const int CNV_STN_POS_3F_BOX_222 = 4020;
+        #endregion
+
         public enum EN_STN_KIND : int 
         { 
             enScStation, enStoStation, enRetStation, enArvStation 
