@@ -335,6 +335,11 @@ namespace TSK_HostCom
             if (string.IsNullOrEmpty(sb.ToString().Trim()) == false)
                 modDefApp.WH_TYP = sb.ToString().Trim();
 
+            // @.전문에 실리는 창고구분(A:PalletRack, B:P-BoxRack). 위의 WH_TYP 과 다른 항목이다.
+            modDefAPI.GetPrivateProfileString("DB", "WH_DEF", "", sb, sb.Capacity, modDefApp.MAIN_INI);
+            if (string.IsNullOrEmpty(sb.ToString().Trim()) == false)
+                modDefApp.WH_DEF = sb.ToString().Trim().Substring(0, 1);
+
             modDefAPI.GetPrivateProfileString("Network", "LocalPort", "", sb, sb.Capacity, modDefApp.MAIN_INI);
             modDefApp.g_iListenPort = int.Parse(sb.ToString());
 

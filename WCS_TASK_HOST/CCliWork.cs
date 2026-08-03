@@ -826,6 +826,11 @@ namespace TSK_HostCom
 
             string strTemp1 = "";
 
+            // @.설비별로 만들어질 전문 본문들. 문서 IV.3 상태 보고 참고.
+            System.Collections.Generic.List<string> lstStatusFrame = new System.Collections.Generic.List<string>();
+            // @.C/V 는 작업유무 조회 때문에 값만 모았다가 루프 뒤에서 본문을 만든다.
+            System.Collections.Generic.List<int[]> lstCvPending = new System.Collections.Generic.List<int[]>();
+
             int nScStatus = modDefApp.SC_STATUS_NORMAL_WAIT;
 
             string strONLINE_MODE_RD = "";
@@ -883,6 +888,21 @@ namespace TSK_HostCom
                 {
                     nScStatus = modDefApp.SC_STATUS_ERROR;
                 }
+
+                // @.S/C 는 장비분류 1, 장비번호는 호기번호.
+                string strScNo = m_BDb.dtMain.Rows[ii]["SC_NO"].ToString().Trim();
+                if (strScNo.Length == 0) strScNo = strPLC_NO;
+
+                int nScNo = 0;   int.TryParse(strScNo, out nScNo);
+                // @.크레인 번호는 DB 안에서 9xx 로 저장한다(CSrvWork 의 변환과 짝).
+                //   문서 IV.3 의 장비번호는 호기번호이므로 900 을 뺀다.
+                if (nScNo > 900) nScNo -= 900;
+                int nScLugg = 0; int.TryParse(strITN_LUGG_FK1.Trim(), out nScLugg);
+
+                lstStatusFrame.Add(GfMakeStatusBody(modDefApp.DEV_CLASS_SC, nScNo, nScStatus,
+                                                    nScLugg,
+                                                    0,                          // @.사이즈체크는 S/C 에 해당 없음
+                                                    (nScLugg > 0) ? 1 : 0));
 
                 strTempFrame = string.Format("{0:00}{1:0}{2:0000}", Convert.ToInt32(strPLC_NO), nScStatus, Convert.ToInt32(strITN_LUGG_FK1));
 
@@ -1010,44 +1030,51 @@ namespace TSK_HostCom
                     nCvStatus = 1;
                 }
 
+                /*
+                 * @.C/V 는 장비분류 2, 장비번호는 작업대 번호.
+                 *   원본은 ConvertPositionToCustom(트랙번호) 로 작업대 번호를 구한다.
+                 *   여기서는 그 매칭을 CV_DATA.HOST_STN_NO 에 두었으므로 그것을 쓰고,
+                 *   아직 매칭이 없으면 예전처럼 MC_NO 로 대신한다.
+                 */
+                string strHostStn = m_BDb.dtMain.Rows[iii]["HOST_STN_NO"].ToString().Trim();
+                if (strHostStn.Length == 0) strHostStn = strMC_NO;
+
+                int nCvStn = 0;  int.TryParse(strHostStn, out nCvStn);
+                int nCvLugg = 0; int.TryParse(m_BDb.dtMain.Rows[iii]["LUGG_NO_RD"].ToString().Trim(), out nCvLugg);
+
+                // @.여기서 DB 를 다시 조회하면 m_BDb.dtMain 이 교체되어
+                //   다음 회차의 Rows[iii] 가 사라진다. 값만 모아 두고 루프 뒤에서 만든다.
+                lstCvPending.Add(new int[] { nCvStn, nCvStatus, nCvLugg });
+
                 strTempFrame = string.Format("{0:0}", nCvStatus);
 
                 strTemp2 += strTempFrame;
             }
             #endregion
 
-            #region 상위에 보낼 메세지 부분 구성
-            //전문 작성
-            string strTemp = null;
-            byte[] bytTempByte = null;
-
-            strTemp = string.Format("S{0:0000000000000000000000000000}{1:000000}{2:0}{3:0}{4:0000000}{5:0}",
-                strTemp1, Convert.ToInt32(strTemp2), Convert.ToInt32(strMODE), Convert.ToInt32(strROLL_MODE), Convert.ToInt32(strWEIGHT_RCV_VAL), Convert.ToInt32(strREMOTE_CONTROL));
-
-            int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
-            //MSG_ORDER_CNT
-
-            m_bytTxBuff = new byte[iTxCnt];
-
-            //### Header ###
-            MakeHeader(strTemp.Length);
-            //MSG_ORDER_CNT
-
-
-            //### Body ###
-            m_bytTxBuff[modDefApp.MSG_HEAD_CNT] = modDefApp.STX;
-
-
-            bytTempByte = System.Text.Encoding.Default.GetBytes(strTemp);
-            Array.Copy(bytTempByte, 0, m_bytTxBuff, modDefApp.MSG_HEAD_CNT + 1, strTemp.Length);
-
-            m_bytTxBuff[iTxCnt - 1] = modDefApp.ETX;
-
-            #endregion
-            #region 메세지 보내기
-            if (!RequestSrv(iTxCnt.ToString()))
+            #region C/V 본문 만들기 (조회가 dtMain 을 건드리므로 루프 밖에서)
+            for (int nCv = 0; nCv < lstCvPending.Count; nCv++)
             {
-                return false;
+                int[] arrCv = lstCvPending[nCv];
+                lstStatusFrame.Add(GfMakeStatusBody(modDefApp.DEV_CLASS_CV,
+                                                    arrCv[0], arrCv[1], arrCv[2],
+                                                    0,                          // @.사이즈체크 센서값은 DB 에 없다
+                                                    GfHasUnExcutedJob(arrCv[0]) ? 1 : 0));
+            }
+            #endregion
+
+            #region 상위에 보낼 메세지 부분 구성 / 보내기
+            /*
+             * 문서 IV.3 상태 보고 : 설비 1대당 전문 1건이다.
+             *   STX + 'S' + 창고구분 + 장비분류 + 장비번호(3) + 상태 + 작업번호(4)
+             *       + 사이즈체크 + ECS작업유무 + ETX      (본문 13자)
+             *
+             * 예전에는 모든 설비를 한 전문(94자)에 몰아 담았는데
+             * 그런 형식은 문서에도 원본(CCvTrackInfo::StatusReport)에도 없다.
+             */
+            for (int nFrame = 0; nFrame < lstStatusFrame.Count; nFrame++)
+            {
+                if (!SendBody(lstStatusFrame[nFrame])) return false;
             }
             #endregion
 
@@ -1385,7 +1412,14 @@ namespace TSK_HostCom
             string strTemp = null;
             byte[] bytTempByte = null;
 
-            strTemp = string.Format("E{0:0}{1:000}{2:0}{3:0000}{4:0000}{5:00}{6:000}{7:00}",
+            /*
+             * 문서 IV.4 에러 상태 보고
+             *   STX + 'E' + 창고구분 + 장비분류 + 장비번호(3) + 에러종류 + 에러코드(4)
+             *       + 작업번호(4) + Bank(2) + Bay(3) + Level(2) + ETX      (본문 22자)
+             *   예전 코드는 창고구분이 빠져 뒤 항목이 전부 한 칸씩 밀려 있었다.
+             */
+            strTemp = string.Format("E{0}{1:0}{2:000}{3:0}{4:0000}{5:0000}{6:00}{7:000}{8:00}",
+                modDefApp.WH_DEF,
                 Convert.ToInt32(strDeviceClass), Convert.ToInt32(strDeviceNo), Convert.ToInt32(strErrorKind), 
                 Convert.ToInt32(strErrorCode), Convert.ToInt32(strLuggNo), 
                 Convert.ToInt32(strBank), Convert.ToInt32(strBay), Convert.ToInt32(strLevel));
@@ -1542,7 +1576,16 @@ namespace TSK_HostCom
 
 
 
-            strTemp = string.Format("F{0:0}{1:0000}{2:0}1", nJobType, nLuggNum, nClass);
+            /*
+             * 문서 IV.5 작업 완료 보고
+             *   STX + 'F' + 작업구분 + 창고구분 + 작업번호(4) + 완료구분 + 완료차수
+             *       + 도착작업대(3) + ETX      (본문 12자)
+             *   예전 코드는 창고구분과 도착작업대가 빠지고 완료차수 자리에 '1' 을
+             *   그냥 붙여 두어, 받는 쪽이 작업번호부터 어긋나게 읽었다.
+             */
+            strTemp = string.Format("F{0:0}{1}{2:0000}{3:0}{4:0}{5:000}",
+                                    nJobType, modDefApp.WH_DEF, nLuggNum, nClass,
+                                    modDefApp.STEP_FIRST, nStation);
 
             int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
             //MSG_ORDER_CNT
@@ -1821,8 +1864,14 @@ namespace TSK_HostCom
         //설명		    : 공파레트 입출고 요청 
         private void GetEmptyPltRequest()
         {
-            int[] nKind = new int[] { 1, 1, 2, 2 };
-            int[] nStation = new int[] { 108, 149, 108, 149 };
+            /*
+             * 문서 IV.8 공파렛트 입고 요구(N) 는 Job Define 이 1(입고) 뿐이다.
+             * 예전 코드는 여기에 2(출고)까지 넣고 문서에 없는 'P' 전문으로 보냈다.
+             * 'P' 는 받는 쪽이 알 수 없는 타입이라 응답이 없어 통신이 끊기고
+             * 재접속을 반복했다. 문서에 있는 입고 요구만 남긴다.
+             */
+            int[] nKind = new int[] { 1, 1 };
+            int[] nStation = new int[] { 108, 149 };
 
             //bool bResult = false;
             int nCount = nKind.Length;
@@ -1835,6 +1884,39 @@ namespace TSK_HostCom
         //최초작성자	: BASE(정복열)
         //작성일		: 20200515
         //설명		    : 공파레트 입출고 요청 
+        /*
+         * GfMakeStatusBody :: 상태 보고(S) 전문 본문 1건
+         *
+         *   문서 IV.3 : 창고구분 + 장비분류 + 장비번호(3) + 상태 + 작업번호(4)
+         *               + 사이즈체크 + ECS작업유무      (본문 13자)
+         */
+        private string GfMakeStatusBody(int nDevClass, int nDevNo, int nStatus,
+                                        int nLuggNum, int nSizeChk, int nJobExist)
+        {
+            return string.Format("S{0}{1:0}{2:000}{3:0}{4:0000}{5:0}{6:0}",
+                                 modDefApp.WH_DEF, nDevClass, nDevNo, nStatus,
+                                 nLuggNum, nSizeChk, nJobExist);
+        }
+
+        /*
+         * SendBody :: 본문을 헤더 + STX + 본문 + ETX 로 감싸 보낸다.
+         *   전문마다 똑같이 반복되던 부분이라 한곳으로 모았다.
+         */
+        private bool SendBody(string p_strBody)
+        {
+            int iTxCnt = modDefApp.MSG_HEAD_CNT + p_strBody.Length + 2;
+            m_bytTxBuff = new byte[iTxCnt];
+
+            MakeHeader(p_strBody.Length);
+
+            m_bytTxBuff[modDefApp.MSG_HEAD_CNT] = modDefApp.STX;
+            byte[] bytBody = System.Text.Encoding.Default.GetBytes(p_strBody);
+            Array.Copy(bytBody, 0, m_bytTxBuff, modDefApp.MSG_HEAD_CNT + 1, p_strBody.Length);
+            m_bytTxBuff[iTxCnt - 1] = modDefApp.ETX;
+
+            return RequestSrv(iTxCnt.ToString());
+        }
+
         /*
          * GetPmStoRequest :: 공파렛트 입고 요구 (Message Type 'N')
          *
@@ -1925,13 +2007,10 @@ namespace TSK_HostCom
             // @.두 대기대 모두 비어 있으면 요구하지 않는다
             if (nFork1 <= 0 && nFork2 <= 0) return;
 
-            int nUnExec221 = GfHasUnExcutedJob(modDefApp.ECS_STN_POS_3F_BOX_221) ? 1 : 0;
-            int nUnExec222 = GfHasUnExcutedJob(modDefApp.ECS_STN_POS_3F_BOX_222) ? 1 : 0;
-
-            GetBoxStoRequest(nFork1, nFork2, nUnExec221, nUnExec222);
+            GetBoxStoRequest(nFork1, nFork2);
         }
 
-        private bool GetBoxStoRequest(int nFork1LuggNum, int nFork2LuggNum, int nUnExec221, int nUnExec222)
+        private bool GetBoxStoRequest(int nFork1LuggNum, int nFork2LuggNum)
         {
             string strTitle = "[GetBoxStoRequest] .. ";
             m_strHostCmd = "L";
@@ -1939,8 +2018,16 @@ namespace TSK_HostCom
             if (!m_blSockConnected) return false;
 
             // @.원본 순서 그대로 : Fork2 + 221플래그, Fork1 + 222플래그
-            string strTemp = string.Format("L{0:0000}{1}{2:0000}{3}",
-                                           nFork2LuggNum, nUnExec221, nFork1LuggNum, nUnExec222);
+            /*
+             * 문서 IV.9 P-BoxRack 입고 요구
+             *   STX + 'L' + 작업번호#1(4) + 작업번호#2(4) + ETX      (본문 9자)
+             *   #1 은 자동입고대기#1(221), #2 는 자동입고대기#2(222) 의 작업번호.
+             *
+             *   ※ 원본 CHostCl::RequestBoxStore 는 각 작업번호 뒤에 미실행작업 유무
+             *     1자리를 더 붙여 11자로 보낸다. 문서에 그 항목이 없어 문서를 따랐다.
+             *     (미실행 유무는 상태보고 S 의 ECS작업유무로도 전달된다)
+             */
+            string strTemp = string.Format("L{0:0000}{1:0000}", nFork1LuggNum, nFork2LuggNum);
 
             int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
             m_bytTxBuff = new byte[iTxCnt];
@@ -1997,7 +2084,7 @@ namespace TSK_HostCom
         private bool GetEmptyPltRequest(int nKind, int nStation)
         {
             string strTitle = "[GetEmptyPltRequest] .. ";
-            m_strHostCmd = "P";
+            m_strHostCmd = "N";
 
             if (!m_blSockConnected)
             {
@@ -2109,7 +2196,12 @@ namespace TSK_HostCom
             string strTemp = null;
             byte[] bytTempByte = null;
 
-            strTemp = string.Format("P{0}{1:000}", nKind, nStation);
+            /*
+             * 문서 IV.8 공파렛트 입고 요구
+             *   STX + 'N' + 작업구분(1:입고) + P/M 스테이션(3) + User Data(0x20) + ETX
+             *   (본문 6자)
+             */
+            strTemp = string.Format("N{0}{1:000}{2}", nKind, nStation, (char)0x20);
 
             int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
             //MSG_ORDER_CNT

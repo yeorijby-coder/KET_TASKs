@@ -44,7 +44,35 @@ namespace TSK_HostCom
         public static string SYS_GRP = "G1";
         public static string WH_CD = "AA06";
         // 창고 타입. EcsComA.ini 의 [DB] WH_TYP 로 덮어쓴다.(없으면 이 기본값)
+        //   이것은 DB 안에서 창고를 구분하는 값이다. 전문에 실리는 값이 아니다.
         public static string WH_TYP = "10";
+
+        /*
+         * WH_DEF :: 전문의 창고구분 (WareHouse Define)
+         *
+         *   [09]Interface목록서[ECS-자동창고] 의 모든 전문에 들어가는 1바이트 항목.
+         *     A : PalletRack 자동창고
+         *     B : P-BoxRack  자동창고
+         *   위의 WH_TYP(DB 창고타입)과는 전혀 다른 항목이니 섞지 말 것.
+         *   EcsComA.ini 의 [DB] WH_DEF 로 덮어쓴다.
+         */
+        public static string WH_DEF = "A";
+
+        /*
+         * 전문의 장비분류 (Device Class) - 문서 IV.3 / IV.4
+         */
+        public const int DEV_CLASS_SC = 1;      // S/C
+        public const int DEV_CLASS_CV = 2;      // C/V
+        public const int DEV_CLASS_LGV = 3;     // LGV
+        public const int DEV_CLASS_RGV = 4;     // RGV
+        public const int DEV_CLASS_BCR = 6;     // BCR
+
+        /*
+         * 완료 차수 (Step Count) - 문서 IV.5
+         *   1 : 1차완료,  2 : 최종완료
+         */
+        public const int STEP_FIRST = 1;
+        public const int STEP_FINAL = 2;
         public const string PRS_ID = "TSK_ECSCOM";
 		public static string g_strRE_DRCT_CNT;
 		public static string[] g_strWH_CD;

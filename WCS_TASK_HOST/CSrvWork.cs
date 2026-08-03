@@ -314,7 +314,10 @@ namespace TSK_HostCom
 			string strAckNak1 = null;
 			int iRspsLen = 0;
 
-			iRspsLen = 10;
+			// @.문서 III.A 응답 메시지
+			//   STX + 타입(소문자) + ACK/NAK + Reason(2) + 작업번호(4) + 장비번호(3) + ETX
+			//   = 12바이트. 예전에는 장비번호 3자리가 빠져 10바이트로 보냈다.
+			iRspsLen = 13;
 			iTxCnt = modDefApp.MSG_HEAD_CNT + iRspsLen;
 
 			m_bytTxBuff = new byte[iTxCnt];
@@ -339,6 +342,7 @@ namespace TSK_HostCom
 
 			strTemp = string.Format("{0,1}{1,1}{2:00}", p_strMsgType.ToLower(), strAckNak1, p_bytReasonCode1); // ACK/NAK #1, RIMSon Code #1
 			strTemp += p_LuggNo.PadLeft(4, char.Parse("0")); //Luggage No #1.
+			strTemp += "000";                                //Device No. (해당 없음)
 			
 			bytTempByte = System.Text.Encoding.UTF8.GetBytes(strTemp);
 			Array.Copy(bytTempByte, 0, m_bytTxBuff, modDefApp.MSG_HEAD_CNT + 1, iTxCnt - modDefApp.MSG_HEAD_CNT - 2);
@@ -597,6 +601,25 @@ namespace TSK_HostCom
         }
         #endregion
 
+        /*
+         * GfField :: 수신 버퍼에서 전문 항목 하나를 꺼낸다.
+         *
+         *   p_nOffset 은 STX 를 0 으로 볼 때의 자리이다.
+         *   ([09]Interface목록서 의 Offset 은 헤더를 0 으로 보므로 15 를 뺀 값)
+         *   짧게 들어온 전문에서도 예외가 나지 않도록 버퍼 범위를 넘지 않게 자른다.
+         */
+        private string GfField(int p_nOffset, int p_nSize)
+        {
+            int nStart = modDefApp.MSG_HEAD_CNT + p_nOffset;
+            if (nStart >= m_bytRxBuff.Length) return "";
+
+            int nSize = p_nSize;
+            if (nStart + nSize > m_bytRxBuff.Length) nSize = m_bytRxBuff.Length - nStart;
+            if (nSize <= 0) return "";
+
+            return System.Text.Encoding.Default.GetString(m_bytRxBuff, nStart, nSize);
+        }
+
         //최초작성자	: BASE(정복열)
         //작성일		: 20200508
         //설명		    : 상위로부터 작업지시 받기
@@ -606,7 +629,10 @@ namespace TSK_HostCom
             string strTitle = "[ParseOorR] .. ";
             string strMsg = "";
             m_strMsgType = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + 1, 1);
-            strMsg = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, 0, 77);//상위에서 내린 작업 메시지
+            // @.수신한 만큼만 읽는다. (예전에는 77바이트로 고정돼 있었다)
+            int nMsgLen = modDefApp.MSG_HEAD_CNT + p_iBodyCnt;
+            if (nMsgLen > m_bytRxBuff.Length) nMsgLen = m_bytRxBuff.Length;
+            strMsg = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, 0, nMsgLen);//상위에서 내린 작업 메시지
 
             #region 수신 기본 데이터 파싱
             string strO_Priority = "";
@@ -615,17 +641,56 @@ namespace TSK_HostCom
             string strR_Kind = "";
             string strR_ScNum = "";
 
-            int nOffSet = 0; int nSize = 2;
-            nOffSet += nSize; nSize = 1; string strJob_Define = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + nOffSet, nSize);
-            nOffSet += nSize; nSize = 4; string strLuggNo = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + nOffSet, nSize);
-            nOffSet += nSize; nSize = 3; string strStartPos = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + nOffSet, nSize);
-            nOffSet += nSize; nSize = 2; string strStartBank = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + nOffSet, nSize);
-            nOffSet += nSize; nSize = 3; string strStartBay = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + nOffSet, nSize);
-            nOffSet += nSize; nSize = 2; string strStartLevel = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + nOffSet, nSize);
-            nOffSet += nSize; nSize = 3; string strDestPos = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + nOffSet, nSize);
-            nOffSet += nSize; nSize = 2; string strDestBank = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + nOffSet, nSize);
-            nOffSet += nSize; nSize = 3; string strDestBay = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + nOffSet, nSize);
-            nOffSet += nSize; nSize = 2; string strDestLevel = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + nOffSet, nSize);
+            /*
+             * 문서 IV.1 작업지시 / IV.2 재작업지시
+             *   STX 를 0 으로 볼 때의 자리
+             *     +1  (1) Message Type
+             *     +2  (1) Job Define
+             *     +3  (1) WareHouse Define      <-- 예전 코드에 이 항목이 없어
+             *     +4  (4) Luggage No.               뒤 항목이 전부 한 칸씩 밀려 있었다
+             *   이후는 O 와 R 이 서로 다르다.
+             *     O : +8 (4) Seq  +12(20) PalletNo  +32(3) SourceStn ...
+             *     R : +8 (3) SourceStn ...
+             */
+            string strWhDef = GfField(1, 1);
+            string strJob_Define = GfField(2, 1);
+            string strLuggNo = GfField(4, 4);
+
+            string strStartPos, strStartBank, strStartBay, strStartLevel;
+            string strDestPos, strDestBank, strDestBay, strDestLevel;
+            string strRouteStn = "";
+
+            if (m_strMsgType == "O")
+            {
+                #region 작업지시(O) 자리
+                strStartPos   = GfField(32, 3);
+                strStartBank  = GfField(35, 2);
+                strStartBay   = GfField(37, 3);
+                strStartLevel = GfField(40, 2);
+                strRouteStn   = GfField(42, 3);
+                strDestPos    = GfField(45, 3);
+                strDestBank   = GfField(48, 2);
+                strDestBay    = GfField(50, 3);
+                strDestLevel  = GfField(53, 2);
+                #endregion
+            }
+            else
+            {
+                #region 재작업지시(R) 자리
+                strStartPos   = GfField(8, 3);
+                strStartBank  = GfField(11, 2);
+                strStartBay   = GfField(13, 3);
+                strStartLevel = GfField(16, 2);
+                strDestPos    = GfField(18, 3);
+                strDestBank   = GfField(21, 2);
+                strDestBay    = GfField(23, 3);
+                strDestLevel  = GfField(26, 2);
+                #endregion
+            }
+
+            // @.창고구분은 지금 로직에서 쓰지 않지만 자리를 맞추기 위해 읽어 둔다.
+            if (strWhDef.Length == 0) strWhDef = modDefApp.WH_DEF;
+            if (strRouteStn.Length == 0) strRouteStn = "000";
 
             string strStartLoc = strStartBank + "-" + strStartBay + "-" + strStartLevel;
             string strDestLoc = strDestBank + "-" + strDestBay + "-" + strDestLevel;
@@ -713,9 +778,18 @@ namespace TSK_HostCom
             switch (m_strMsgType)
             { 
             case "O":
-                nOffSet += nSize; nSize = 3;  strO_Priority = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + nOffSet, nSize);
-                nOffSet += nSize; nSize = 30;    strO_LotNo = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + nOffSet, nSize);
-                nOffSet += nSize; nSize = 1;      strO_Size = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + nOffSet, nSize);
+                /*
+                 * 문서 IV.1 의 뒷부분
+                 *   +55(4) Pair Luggage No.  +59(3) Priority  +62(1) Job Routing
+                 *   +63(20) Product ID       +83(20) User Data
+                 *
+                 *   ※ 예전 C# 은 우선순위(3) 다음에 LOT(30) / 사이즈(1) 를 읽었는데
+                 *     문서에는 그 두 항목이 없다. 성격이 가장 가까운
+                 *     Product ID 를 LOT_NO 자리에, Job Routing 을 사이즈 자리에 쓴다.
+                 */
+                strO_Priority = GfField(59, 3);
+                strO_Size     = GfField(62, 1);
+                strO_LotNo    = GfField(63, 20).TrimEnd();
 
                 #region 존재하는 작업인지 체크
                 #region 작업번호가 존재하는 경우 에러 로깅
@@ -1158,8 +1232,9 @@ namespace TSK_HostCom
                 #endregion
                 break;
             case "R":
-                nOffSet += nSize; nSize = 1;  strR_Kind = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + nOffSet, nSize);
-                nOffSet += nSize; nSize = 2; strR_ScNum = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + nOffSet, nSize);
+                // @.문서 IV.2 : +28(1) Kind, +29(2) Stacker Number
+                strR_Kind  = GfField(28, 1);
+                strR_ScNum = GfField(29, 2);
 
                 #region 존재하는 작업인지 체크
                 #region 이중입고 작업번호가 존재하지 않을경우 에러로깅
