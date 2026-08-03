@@ -231,6 +231,15 @@ namespace WCS_TASK_SC
                 strRtnMsg = "[Close] DB, Socket Close중 Socket Exception Message [" + ex.ToString() + "]"; 
                 return;
             }
+            finally
+            {
+                // @.닫는 도중 예외가 나도 상태는 반드시 초기화한다.
+                //   이미 끊긴 소켓을 닫으면 Shutdown 에서 예외가 나는데,
+                //   그때 m_bSocCon 이 true 로 남으면 Thread_Doing 이
+                //   접속 시도와 폴링 루프를 모두 건너뛰어 영영 재접속하지 못한다.
+                m_bSocCon = false;
+                m_bDBOpen = false;
+            }
         }
         #endregion Close()
         #region READ,WRITE
