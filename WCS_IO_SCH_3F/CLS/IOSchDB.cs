@@ -2122,11 +2122,13 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "           , IF_STATUS                                ";
                 strSql += CRLF + "           , UPD_DT                                   ";
                 strSql += CRLF + "           , UPD_USER_ID                              ";
+                strSql += CRLF + "           , WH_TYP )                                 ";
                 strSql += CRLF + " SELECT TO_CHAR(" + DbLang.SYSDATE + ", 'YYYYMMDD')   ";
                 strSql += CRLF + "      , TO_CHAR(" + DbLang.SYSDATE + ", 'HH24MISS')   ";
                 strSql += CRLF + "      , MSG_TYP, LUGG_NO1, LUGG_NO2, JOB_KIND, STN_NO ";
                 strSql += CRLF + "      , IF_STATUS, " + DbLang.SYSDATE + ", 'IO_TASK'  ";
-                strSql += CRLF + "   FROM IF_LUGG_STA                                   ";
+                strSql += CRLF + "      , WH_TYP                                        ";
+                strSql += CRLF + "   FROM IF_REQ_MST                                    ";
                 strSql += CRLF + "  WHERE WH_TYP = :WH_TYP                              ";
                 if (strMSG_TYP == "L")
                 {

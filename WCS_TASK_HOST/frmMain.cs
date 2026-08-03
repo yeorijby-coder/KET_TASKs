@@ -441,6 +441,33 @@ namespace TSK_HostCom
             #endregion
             return true;
         }
+        /*
+         * GfMakeIfLogMsg
+         *   소켓 전문을 HOST_IF_LOG.MESSAGE 에 넣을 수 있는 형태로 정리한다.
+         *   - NUL(0x00) 뒤는 버퍼 여백이므로 잘라낸다.
+         *     (PostgreSQL 은 텍스트에 NUL 을 허용하지 않아 INSERT 자체가 실패한다)
+         *   - STX/ETX 는 전문 경계라 눈에 보이게 <STX> <ETX> 로 바꾼다.
+         *   - 그 외 제어문자는 점으로 바꾼다.
+         */
+        public static string GfMakeIfLogMsg(string strMsg)
+        {
+            if (string.IsNullOrEmpty(strMsg)) return "";
+
+            int nNul = strMsg.IndexOf('\0');
+            if (nNul >= 0) strMsg = strMsg.Substring(0, nNul);
+
+            System.Text.StringBuilder sb = new System.Text.StringBuilder(strMsg.Length + 16);
+            foreach (char c in strMsg)
+            {
+                if (c == (char)0x02) sb.Append("<STX>");
+                else if (c == (char)0x03) sb.Append("<ETX>");
+                else if (c < 0x20 || c == 0x7F) sb.Append('.');
+                else sb.Append(c);
+            }
+            return sb.ToString().TrimEnd();
+        }
+
+
         //---------------------------------------------
         // 함수
         //---------------------------------------------
@@ -461,6 +488,12 @@ namespace TSK_HostCom
             string strSql1 = "";
             string strSql2 = "";
 
+            // @.전문을 그대로 이어붙이면 안 된다.
+            //   전문에 작은따옴표가 하나만 있어도 SQL 이 깨지고,
+            //   NUL(0x00) 이 섞이면 PostgreSQL 이 통째로 거부한다.
+            //   그래서 읽을 수 있게 정리한 뒤 파라미터로 바인딩한다.
+            string strSafeMsg = GfMakeIfLogMsg(strMsg);
+
             strSql = "INSERT INTO HOST_IF_LOG       ";
             strSql += modDefApp.CRLF + "(  WH_TYP	";
             strSql += modDefApp.CRLF + " , LOG_DATE	";
@@ -474,12 +507,12 @@ namespace TSK_HostCom
             strSql += modDefApp.CRLF + " , INS_DT   ";
             strSql += modDefApp.CRLF + " , INS_USER_ID)";
             strSql += modDefApp.CRLF + "VALUES (";
-            strSql += modDefApp.CRLF + "  '" + modDefApp.WH_TYP + "'";
+            strSql += modDefApp.CRLF + "  " + bDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
             strSql += modDefApp.CRLF + ",  " + modDateTime.SYSDATE_TO_CDT;
             strSql += modDefApp.CRLF + ",  " + modDateTime.SYSDATE_TO_CTM;
-            strSql += modDefApp.CRLF + ", '" + strHostCmd + "'";
-            strSql += modDefApp.CRLF + ", '" + strDirection + "'"; //strSql1 = strSql;
-            strSql += modDefApp.CRLF + ", '" + strMsg + "'";     
+            strSql += modDefApp.CRLF + ", " + bDb.ParamsAdd("HOST_CMD", strHostCmd);
+            strSql += modDefApp.CRLF + ", " + bDb.ParamsAdd("DIRECTION", strDirection);
+            strSql += modDefApp.CRLF + ", " + bDb.ParamsAdd("MESSAGE", strSafeMsg);
             strSql += modDefApp.CRLF + ", ''";               // 작업번호 사용안함!
             strSql += modDefApp.CRLF + ", ''";               // 바코드 하단 사용안함
             strSql += modDefApp.CRLF + ", ''";               // 바코드 상단 사용안함
@@ -498,7 +531,7 @@ namespace TSK_HostCom
                 }
                 else //if (iSelCnt == 0)
                 {
-                    strTemp = string.Format("[HOST_CMD:{0}][MSG:{1}]", strHostCmd, strMsg);
+                    strTemp = string.Format("[HOST_CMD:{0}][MSG:{1}]", strHostCmd, GfMakeIfLogMsg(strMsg));
                 }
 
                 strLog = string.Format("HOST 인터페이스 정보 입력에 실패하였습니다. {0}", strTemp);
