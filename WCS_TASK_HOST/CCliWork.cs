@@ -900,9 +900,24 @@ namespace TSK_HostCom
             m_strSql += modDefApp.CRLF + "      FROM  CV_DATA CD                    ";
             m_strSql += modDefApp.CRLF + "      LEFT  OUTER    JOIN      WC_DATA WD ";
             m_strSql += modDefApp.CRLF + "        ON  CD.MC_NO        =  WD.WC_MC_NO";
+            /*
+             * 보고 대상 작업대 고르기 (원본 CCvTrackInfo::StatusReport)
+             *
+             *   원본은 m_bReportTrack 이 TRUE 인 트랙만 보고한다.
+             *   그 값은 InitTrackInfo 에서 입고대(GetBeStoStn) 또는 출고대(GetBeRetStn)
+             *   일 때 TRUE 가 되고, 이어서 스테이션 221 / 222 는 따로 제외한다.
+             *
+             *   STN_KIND 비트는 IO_SCH 와 같다.  0x01 입고대, 0x02 출고대
+             *   따라서 (STN_KIND & 3) <> 0 이 원본의 m_bReportTrack 에 해당한다.
+             *
+             *   ※ 예전에는 여기에 CD.COMP_VR = 'Y' 조건이 있었는데
+             *     COMP_VR 컬럼은 어느 DB 에도 없고 코드 어디에서도 넣지 않는다.
+             *     이 조건 때문에 상태보고 조회가 매번 42703 오류로 실패했다.
+             */
             m_strSql += modDefApp.CRLF + "     WHERE  CD.WH_TYP       =  " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
-            m_strSql += modDefApp.CRLF + "       AND (CD.STN_KIND::INTEGER & 1 = 1) ";
-            m_strSql += modDefApp.CRLF + "       AND  CD.COMP_VR      = 'Y'         ";
+            m_strSql += modDefApp.CRLF + "       AND (COALESCE(NULLIF(TRIM(CD.STN_KIND),''),'0')::INTEGER & 3) <> 0 ";
+            m_strSql += modDefApp.CRLF + "       AND (CD.HOST_STN_NO IS NULL                                        ";
+            m_strSql += modDefApp.CRLF + "            OR CD.HOST_STN_NO NOT IN ('221','222'))                       ";
             m_strSql += modDefApp.CRLF + "  ORDER BY  CD.PLC_NO,     CD.MC_NO       ";
 
             iCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
