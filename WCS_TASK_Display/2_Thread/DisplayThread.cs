@@ -6,12 +6,12 @@ using System.Data;
 
 namespace WCS_TASK_Display
 {
-    // 전광판 한 대의 메모리 상태(변경감지 + 색상 순환).
-    // 레거시 CDisplayInfo(마지막으로 표시한 적재물을 캐시하던 클래스)에 해당한다.
+    // 전광판 한 대의 메모리 상태(변경감지).
+    // 레거시 CDisplayInfo 의 m_mapDspTrackLuggNum(마지막으로 표시한 적재물 캐시)에 해당한다.
+    // 색상은 전광판별이 아니라 컨트롤러 단위로 하나만 두므로 여기에 두지 않는다.
     public class DispState
     {
         public string LAST_LUGG = "";   // @.마지막으로 전송한 적재물 번호
-        public int COLOR_IDX = 2;       // @.0:빨강, 1:초록, 2:노랑  (레거시와 같이 노랑에서 시작)
     }
 
     // 전광판 컨트롤러 한 대를 담당하는 작업 스레드. 구조는 CvThread 와 동일하다.
@@ -50,6 +50,11 @@ namespace WCS_TASK_Display
 
         // @.DISP_NO 를 키로 하는 전광판별 상태
         private Dictionary<int, DispState> DispDic = new Dictionary<int, DispState>();
+
+        // @.표시 색상. 원본 CDisplay 는 m_DisplayMsg.m_nColor 하나를 컨트롤러 단위로 쓰고
+        //   생성자에서 0x06(노랑)으로 시작한다. 수동 지령도 같은 값을 갱신하므로
+        //   전광판별로 나누지 않고 여기 하나만 둔다.
+        private int m_nColor = DisplayProtocol.COLOR_YELLOW;
 
         string strSql = "";
         string CRLF = "\r\n";
@@ -212,10 +217,16 @@ namespace WCS_TASK_Display
         #endregion
 
         #region 색상 순환
-        private byte NextColor(DispState st)
+        /*
+         * NextColor
+         *   원본 CDisplay::DisplayNewArrivedLugg 와 같은 식이다.
+         *     m_nColor = ((m_nColor + 1) % 3) + 0x04
+         *   0x06(노랑)에서 시작하므로 실제 순서는 노랑 -> 초록 -> 빨강 -> 노랑 ... 이다.
+         */
+        private byte NextColor()
         {
-            st.COLOR_IDX = (st.COLOR_IDX + 1) % 3;          // @.빨강 -> 초록 -> 노랑 -> ...
-            return (byte)(DisplayProtocol.COLOR_RED + st.COLOR_IDX);
+            m_nColor = ((m_nColor + 1) % 3) + DisplayProtocol.COLOR_RED;
+            return (byte)m_nColor;
         }
         private DispState GetState(int nDispNo)
         {
@@ -224,22 +235,44 @@ namespace WCS_TASK_Display
         }
         #endregion
 
-        #region DispAuto :: DISPLAY_DATA 를 읽어 적재물이 바뀌면 전송
+        #region DispAuto :: 컨베이어 트랙을 읽어 적재물이 바뀌면 전송
+        /*
+         * DispAuto
+         *   원본 CDisplay::DisplayNewArrivedLugg 와 같은 동작이다.
+         *
+         *   원본은 전광판에 매핑된 CCvTrackInfo 의 적재물번호를 보고,
+         *   바뀌었으면 그 트랙의 ProductInfo(= JobItem.GetUserData())를 표시했다.
+         *
+         *   신규 구조에서는 그 두 값이 아래 테이블에 있으므로 직접 조인해서 읽는다.
+         *     DISPLAY_DATA.TRACK_NO -> CV_DATA.TRACK_NO       (전광판이 감시할 트랙)
+         *     CV_DATA.LUGG_NO_RD                              (PLC 가 읽은 적재물번호)
+         *     JOB_MST.PRODUCT_ID                              (원본 UserData 에 해당하는 표시내용)
+         *
+         *   DISPLAY_DATA 의 DISP_DATA / LUGG_NO / COLOR 는 입력이 아니라
+         *   "무엇을 표시했는지" 기록용이며 전송 성공 후 갱신한다.
+         */
         private bool DispAuto()
         {
             string strTitle = "[DispAuto]";
             try
             {
                 strSql = "";
-                strSql += CRLF + "SELECT DISP_NO                          ";
-                strSql += CRLF + "      ,COALESCE(DISP_DATA,'') AS DISP_DATA ";
-                strSql += CRLF + "      ,COALESCE(LUGG_NO,'')   AS LUGG_NO   ";
-                strSql += CRLF + "      ,COALESCE(COLOR,0)      AS COLOR     ";
-                strSql += CRLF + "FROM   DISPLAY_DATA                    ";
-                strSql += CRLF + "WHERE  WH_TYP = :WH_TYP                ";
-                strSql += CRLF + "AND    PLC_NO = :PLC_NO                ";
-                strSql += CRLF + "AND    COALESCE(CMD_RQ_YN,'N') <> 'Y'  ";
-                strSql += CRLF + "ORDER  BY DISP_NO                       ";
+                strSql += CRLF + "SELECT D.DISP_NO                                        ";
+                strSql += CRLF + "      ,COALESCE(J.PRODUCT_ID,'') AS DISP_DATA           ";
+                strSql += CRLF + "      ,COALESCE(C.LUGG_NO_RD,'') AS LUGG_NO             ";
+                strSql += CRLF + "FROM   DISPLAY_DATA D                                   ";
+                strSql += CRLF + "LEFT   JOIN CV_DATA C                                   ";
+                strSql += CRLF + "         ON C.WH_TYP   = D.WH_TYP                       ";
+                strSql += CRLF + "        AND TRIM(C.TRACK_NO) = TRIM(D.TRACK_NO)         ";
+                // @.원본은 m_pJob->Find(nLuggNum) 으로 적재물번호만 가지고 작업을 찾는다.
+                //   JOB_MST.LUGG_NO 도 유일하므로 창고구분 없이 번호로만 잇는다.
+                //   (JOB_MST.WH_TYP 와 CV_DATA.WH_TYP 는 값 체계가 달라 조인 조건으로 쓸 수 없다)
+                strSql += CRLF + "LEFT   JOIN JOB_MST J                                   ";
+                strSql += CRLF + "         ON TRIM(J.LUGG_NO) = TRIM(C.LUGG_NO_RD)        ";
+                strSql += CRLF + "WHERE  D.WH_TYP = :WH_TYP                               ";
+                strSql += CRLF + "AND    D.PLC_NO = :PLC_NO                               ";
+                strSql += CRLF + "AND    COALESCE(D.CMD_RQ_YN,'N') <> 'Y'                 ";
+                strSql += CRLF + "ORDER  BY D.DISP_NO                                     ";
 
                 m_disp._pBdb.mComMain.CommandType = CommandType.Text;
                 m_disp._pBdb.mComMain.Parameters.Clear();
@@ -249,7 +282,7 @@ namespace WCS_TASK_Display
 
                 if (nSelCnt < 0)
                 {
-                    MakeMsg_Error(strTitle + " DISPLAY_DATA select error [" + m_disp._pBdb.ErrMsg + "]", m_nthNo);
+                    MakeMsg_Error(strTitle + " CV_DATA 조인 조회 실패 [" + m_disp._pBdb.ErrMsg + "]", m_nthNo);
                     return false;
                 }
                 if (nSelCnt == 0) return true; // @.이 컨트롤러에 등록된 전광판이 없음
@@ -258,37 +291,38 @@ namespace WCS_TASK_Display
                 for (int r = 0; r < dt.Rows.Count; r++)
                 {
                     int nDispNo = Convert.ToInt32("0" + dt.Rows[r]["DISP_NO"].ToString());
-                    string strData = dt.Rows[r]["DISP_DATA"].ToString();
-                    string strLugg = dt.Rows[r]["LUGG_NO"].ToString();
-                    int nColor = Convert.ToInt32("0" + dt.Rows[r]["COLOR"].ToString());
+                    string strData = dt.Rows[r]["DISP_DATA"].ToString().Trim();
+                    string strLugg = dt.Rows[r]["LUGG_NO"].ToString().Trim();
 
                     DispState st = GetState(nDispNo);
                     if (st.LAST_LUGG == strLugg) continue; // @.변경 없으면 건너뜀
 
                     byte byColor;
                     string strSend;
-                    if (strLugg == "" || strLugg == "0")
+                    if (GfIsEmptyLugg(strLugg))
                     {
-                        strSend = "";                 // @.빈 트랙 -> 공백 8자리
-                        byColor = DisplayProtocol.COLOR_YELLOW;
+                        // @.빈 트랙 -> 공백 8자리. 원본은 이때 색상을 바꾸지 않고 직전 색을 그대로 쓴다.
+                        strSend = "";
+                        byColor = (byte)m_nColor;
                     }
                     else
                     {
+                        // @.적재물 도착 -> 색상 순환 후 표시
                         strSend = strData;
-                        byColor = (nColor >= DisplayProtocol.COLOR_RED && nColor <= DisplayProtocol.COLOR_YELLOW)
-                                  ? (byte)nColor : NextColor(st);
+                        byColor = NextColor();
                     }
 
                     string msg = "";
                     if (m_disp.SendDisplay(nDispNo - 1, byColor, strSend, ref msg))
                     {
                         st.LAST_LUGG = strLugg;
-                        UpdateSentStatus(nDispNo, DisplayProtocol.FitProduct(strSend), strLugg);
-                        MakeMsg_Imp(string.Format("DISP[{0}] LUGG[{1}] DATA[{2}] sent", nDispNo, strLugg, strSend), m_nthNo);
+                        UpdateSentStatus(nDispNo, DisplayProtocol.FitProduct(strSend), strLugg, byColor);
+                        MakeMsg_Imp(string.Format("DISP[{0}] LUGG[{1}] DATA[{2}] COLOR[{3}] 표시",
+                                    nDispNo, strLugg, strSend, byColor), m_nthNo);
                     }
                     else
                     {
-                        MakeMsg_Error(string.Format("DISP[{0}] send fail [{1}]", nDispNo, msg), m_nthNo);
+                        MakeMsg_Error(string.Format("DISP[{0}] 표시 실패 [{1}]", nDispNo, msg), m_nthNo);
                         return false; // @.통신 끊김 -> 재접속
                     }
                 }
@@ -299,6 +333,18 @@ namespace WCS_TASK_Display
                 MakeMsg_Error(strTitle + " Exception [" + ex.Message + "]", m_nthNo);
                 return false;
             }
+        }
+
+        // @@.적재물 없음 판정. 원본의 GetLuggNum() == 0 에 해당한다.('', '0', '0000' 모두 없음)
+        private static bool GfIsEmptyLugg(string strLugg)
+        {
+            if (strLugg == null) return true;
+            strLugg = strLugg.Trim();
+            if (strLugg.Length == 0) return true;
+
+            int nLugg;
+            if (int.TryParse(strLugg, out nLugg)) return (nLugg == 0);
+            return false;
         }
         #endregion
 
@@ -342,11 +388,15 @@ namespace WCS_TASK_Display
 
                     if (strCmd == "CLEAR") strData = "";
                     byte byColor = (nColor >= DisplayProtocol.COLOR_RED && nColor <= DisplayProtocol.COLOR_YELLOW)
-                                   ? (byte)nColor : DisplayProtocol.COLOR_YELLOW;
+                                   ? (byte)nColor : (byte)m_nColor;
 
                     string msg = "";
                     if (m_disp.SendDisplay(nDispNo - 1, byColor, strData, ref msg))
                     {
+                        // @.원본은 수동 지령도 자동 순환과 같은 색상 변수를 쓰므로,
+                        //   수동으로 지정한 색이 다음 순환의 시작점이 된다.
+                        m_nColor = byColor;
+
                         ClearManualCmd(nDispNo, DisplayProtocol.FitProduct(strData), byColor);
                         GetState(nDispNo); // @.상태 객체가 없으면 만들어 둔다
                         MakeMsg_Imp(string.Format("DISP[{0}] MANUAL[{1}] DATA[{2}] sent", nDispNo, strCmd, strData), m_nthNo);
@@ -368,7 +418,7 @@ namespace WCS_TASK_Display
         #endregion
 
         #region DB 갱신
-        private bool UpdateSentStatus(int nDispNo, string strSentData, string strLugg)
+        private bool UpdateSentStatus(int nDispNo, string strSentData, string strLugg, byte byColor)
         {
             try
             {
@@ -376,6 +426,9 @@ namespace WCS_TASK_Display
                 strSql = "";
                 strSql += CRLF + "UPDATE DISPLAY_DATA                          ";
                 strSql += CRLF + "   SET SEND_YN        = 'Y'                   ";
+                strSql += CRLF + "      ,DISP_DATA      = :LAST_SENT_DATA       ";
+                strSql += CRLF + "      ,LUGG_NO        = :LAST_SENT_LUGG       ";
+                strSql += CRLF + "      ,COLOR          = :COLOR                ";
                 strSql += CRLF + "      ,LAST_SENT_DATA = :LAST_SENT_DATA       ";
                 strSql += CRLF + "      ,LAST_SENT_LUGG = :LAST_SENT_LUGG       ";
                 strSql += CRLF + "      ,SEND_DT        = " + DbLang.SYSDATE + "";
@@ -388,6 +441,7 @@ namespace WCS_TASK_Display
                 m_disp._pBdb.mComMain.Parameters.Clear();
                 m_disp._pBdb.mComMain.Parameters.Add("LAST_SENT_DATA", DbLang.VARCHAR, 255).Value = strSentData;
                 m_disp._pBdb.mComMain.Parameters.Add("LAST_SENT_LUGG", DbLang.VARCHAR, 255).Value = strLugg;
+                m_disp._pBdb.mComMain.Parameters.Add("COLOR", DbLang.INT).Value = (int)byColor;
                 m_disp._pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR, 255).Value = m_strWh_typ;
                 m_disp._pBdb.mComMain.Parameters.Add("PLC_NO", DbLang.VARCHAR, 255).Value = m_strPlc_No;
                 m_disp._pBdb.mComMain.Parameters.Add("DISP_NO", DbLang.VARCHAR, 255).Value = nDispNo.ToString();

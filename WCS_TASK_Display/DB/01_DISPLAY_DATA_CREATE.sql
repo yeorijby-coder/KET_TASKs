@@ -17,9 +17,18 @@
 -- ---------------------------------------------------------------------
 -- 1) DISPLAY_DATA
 --
---    레거시 MFC 에서는 전광판 표시내용을 메모리(CCvTrackInfo)에서 가져왔으나,
---    신규 구조에서는 이 테이블에 담아두고 CV 태스크 / 스케줄러 / Client 가 쓰고
---    WCS_TASK_Display 가 읽어서 TCP 로 전광판에 내려보낸다.
+--    레거시 MFC 는 전광판에 매핑된 CCvTrackInfo 에서 적재물번호와 표시내용을 읽었다.
+--    신규 구조에서도 표시내용의 출처는 컨베이어 테이블이며,
+--    WCS_TASK_Display 가 아래처럼 직접 조인해서 읽는다.
+--
+--      DISPLAY_DATA.TRACK_NO -> CV_DATA.TRACK_NO    (전광판이 감시할 트랙)
+--      CV_DATA.LUGG_NO_RD                           (PLC 가 읽은 적재물번호)
+--      JOB_MST.PRODUCT_ID                           (레거시 UserData 에 해당하는 표시내용)
+--
+--    따라서 이 테이블은 "설정 + 기록" 용도다.
+--      설정 : WH_TYP, PLC_NO, DISP_NO, TRACK_NO
+--      지령 : CMD_RQ_YN, CMD_RQ_ID, CMD_DATA, CMD_COLOR   (Client 수동 지령)
+--      기록 : DISP_DATA, LUGG_NO, COLOR, SEND_YN, LAST_SENT_*  (무엇을 표시했는지)
 --
 --    KEY (WH_TYP, PLC_NO, DISP_NO)
 --      WH_TYP : 창고구분        - WCS_DB.INI [CNF] WH_TYP        (예: 10)
@@ -31,12 +40,12 @@ CREATE TABLE IF NOT EXISTS DISPLAY_DATA
     WH_TYP          VARCHAR(4)   NOT NULL,        -- 창고구분
     PLC_NO          VARCHAR(5)   NOT NULL,        -- 전광판 컨트롤러 번호
     DISP_NO          VARCHAR(5)   NOT NULL,        -- 컨트롤러 내 전광판 번호(1-base)
-    TRACK_NO        VARCHAR(20),                  -- 매핑된 컨베이어 트랙(참조용)
+    TRACK_NO        VARCHAR(20)  NOT NULL,       -- 감시할 컨베이어 트랙. CV_DATA.TRACK_NO 와 같아야 한다.
 
-    -- AUTO 표시내용 : CV 태스크 / 스케줄러가 기록
-    DISP_DATA       VARCHAR(20),                  -- 표시할 품명 (앞 8자리만 전송)
-    LUGG_NO         VARCHAR(20),                  -- 현재 적재물 번호(변경감지 키)
-    COLOR           INTEGER      DEFAULT 0,       -- 4:Red, 5:Green, 6:Yellow, 0:자동순환
+    -- AUTO 표시 기록 : 전송 성공 후 WCS_TASK_Display 가 기록한다.(입력이 아님)
+    DISP_DATA       VARCHAR(20),                  -- 실제 표시한 품명 (앞 8자리만 전송)
+    LUGG_NO         VARCHAR(20),                  -- 그때의 적재물 번호
+    COLOR           INTEGER      DEFAULT 0,       -- 4:빨강, 5:초록, 6:노랑
 
     -- MANUAL 지령 : Client UI / Display 태스크 수동 패널이 기록
     CMD_RQ_YN       VARCHAR(1)   DEFAULT 'N',     -- 'Y' = 수동지령 대기중

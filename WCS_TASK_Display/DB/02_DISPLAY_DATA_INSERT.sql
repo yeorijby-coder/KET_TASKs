@@ -22,24 +22,26 @@
 -- ---------------------------------------------------------------------
 -- 1) DISPLAY_DATA : 전광판 2대 등록
 --
---    DISP_DATA 는 앞 8자리만 전광판으로 전송된다(DISP_DATA_LEN = 8).
---    COLOR : 4=Red, 5=Green, 6=Yellow, 0=자동순환
+--    ★ 여기서 중요한 값은 TRACK_NO 다.
+--      전광판이 표시할 내용은 CV_DATA / JOB_MST 를 직접 조인해서 읽으므로,
+--      TRACK_NO 가 CV_DATA.TRACK_NO 와 일치해야 자동 표시가 동작한다.
+--      DISP_DATA / LUGG_NO / COLOR 는 전송 후 기록되는 값이라 초기값은 비워 둔다.
 --
---    DispAuto() 는 LUGG_NO 가 "바뀌었을 때만" 전송한다.
---    LUGG_NO 가 '' 또는 '0' 이면 빈 화면(노란색)을 보낸다.
---    아래처럼 LUGG_NO 를 채워두면 태스크 기동 직후 1회 전송이 일어나 동작확인이 된다.
+--    DispAuto() 는 CV_DATA.LUGG_NO_RD 가 "바뀌었을 때만" 전송한다.
+--    적재물이 없으면(0, 0000, 공백) 빈 화면을 보내며, 이때 색상은 직전 색을 유지한다.
+--    적재물이 도착하면 색상을 순환시킨다. (노랑 -> 초록 -> 빨강 -> 노랑 ...)
 -- ---------------------------------------------------------------------
 INSERT INTO DISPLAY_DATA
        (WH_TYP, PLC_NO, DISP_NO, TRACK_NO, DISP_DATA, LUGG_NO, COLOR,
         CMD_RQ_YN, CMD_RQ_ID, CMD_COLOR, SEND_YN, CONNECTED_YN, REG_DT, UPD_DT)
-VALUES ('10', '01', '1', '2006', 'KET-1001', 'L0000001', 4,
+VALUES ('10', '01', '1', '2006', NULL, NULL, 0,
         'N', 'DATA', 6, 'N', 'N', NOW(), NOW())
 ON CONFLICT (WH_TYP, PLC_NO, DISP_NO) DO NOTHING;
 
 INSERT INTO DISPLAY_DATA
        (WH_TYP, PLC_NO, DISP_NO, TRACK_NO, DISP_DATA, LUGG_NO, COLOR,
         CMD_RQ_YN, CMD_RQ_ID, CMD_COLOR, SEND_YN, CONNECTED_YN, REG_DT, UPD_DT)
-VALUES ('10', '01', '2', '2012', 'KET-1002', 'L0000002', 5,
+VALUES ('10', '01', '2', '2012', NULL, NULL, 0,
         'N', 'DATA', 6, 'N', 'N', NOW(), NOW())
 ON CONFLICT (WH_TYP, PLC_NO, DISP_NO) DO NOTHING;
 
@@ -76,10 +78,21 @@ WHERE NOT EXISTS (SELECT 1
 -- SELECT WH_TYP, EQP_TYP, PLC_NO, CONNECTED_YN, PLC_PORT, UPD_DT
 --   FROM EQP_MST WHERE EQP_TYP = 'DISPLAY';
 
--- [AUTO 테스트] LUGG_NO 를 바꾸면 다음 폴링에서 전광판으로 전송된다.
--- UPDATE DISPLAY_DATA
---    SET DISP_DATA = 'KET-2001', LUGG_NO = 'L0000009', COLOR = 5, UPD_DT = NOW()
---  WHERE WH_TYP = '10' AND PLC_NO = '01' AND DISP_NO = '1';
+-- [AUTO 테스트] 컨베이어 트랙에 적재물을 올린 것처럼 만들면 다음 폴링에서 전송된다.
+--   (표시내용은 JOB_MST.PRODUCT_ID 에서 온다)
+-- UPDATE CV_DATA SET LUGG_NO_RD = '1467' WHERE WH_TYP = '10' AND TRACK_NO = '2006';
+-- [AUTO 테스트] 적재물이 빠진 상태
+-- UPDATE CV_DATA SET LUGG_NO_RD = '0000' WHERE WH_TYP = '10' AND TRACK_NO = '2006';
+
+-- [확인] 전광판이 실제로 무엇을 읽는지 (태스크의 DispAuto 와 동일한 조회)
+-- SELECT D.DISP_NO, D.TRACK_NO
+--      , COALESCE(C.LUGG_NO_RD,'') AS LUGG_NO
+--      , COALESCE(J.PRODUCT_ID,'') AS DISP_DATA
+--   FROM DISPLAY_DATA D
+--   LEFT JOIN CV_DATA C ON C.WH_TYP = D.WH_TYP AND TRIM(C.TRACK_NO) = TRIM(D.TRACK_NO)
+--   LEFT JOIN JOB_MST J ON TRIM(J.LUGG_NO) = TRIM(C.LUGG_NO_RD)
+--  WHERE D.WH_TYP = '10' AND D.PLC_NO = '01'
+--  ORDER BY D.DISP_NO;
 
 -- [MANUAL 테스트] 수동 표시 지령 (화면의 Manual 패널과 동일한 동작)
 -- UPDATE DISPLAY_DATA
