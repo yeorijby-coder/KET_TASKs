@@ -443,16 +443,44 @@ namespace TSK_HostCom
 		}
 
 		//*** 응용 프로그램의 이전 인스턴스가 실행 중인지 여부를 확인 ***
+		/*
+		 * PrevInstance :: 같은 프로그램이 이미 실행 중인지
+		 *
+		 *   예전에는 프로세스 "이름"만 봤다. 그런데 이 exe 이름(TASK_LFC10_G1_ECSCOM)은
+		 *   다른 현장 프로젝트에서도 그대로 쓰기 때문에, 한 PC 에서 다른 폴더의
+		 *   동명 프로그램이 떠 있으면 우리 것으로 착각해 시작하지 못했다.
+		 *   그래서 실행 파일 경로까지 같은 것만 "이전 인스턴스"로 본다.
+		 */
 		public static bool PrevInstance()
 		{
-			if (Information.UBound(System.Diagnostics.Process.GetProcessesByName(System.Diagnostics.Process.GetCurrentProcess().ProcessName)) > 0)
+			System.Diagnostics.Process prcMe = System.Diagnostics.Process.GetCurrentProcess();
+
+			// @.디버거로 띄운 vshost 는 검사하지 않는다.
+			if (prcMe.ProcessName.IndexOf(".vshost") > 0) return false;
+
+			string strMyPath = "";
+			try { strMyPath = prcMe.MainModule.FileName; }
+			catch { strMyPath = ""; }
+
+			// @.내 경로를 못 얻으면 예전처럼 이름만으로 판단한다.
+			if (string.IsNullOrEmpty(strMyPath))
 			{
-				return true;
+				return (Information.UBound(System.Diagnostics.Process.GetProcessesByName(prcMe.ProcessName)) > 0);
 			}
-			else
+
+			foreach (System.Diagnostics.Process prc in System.Diagnostics.Process.GetProcessesByName(prcMe.ProcessName))
 			{
-				return false;
+				if (prc.Id == prcMe.Id) continue;
+
+				string strPath = "";
+				// @.경로를 못 읽는 프로세스(권한/비트수 차이)는 남의 것으로 본다.
+				try { strPath = prc.MainModule.FileName; }
+				catch { continue; }
+
+				if (string.Compare(strPath, strMyPath, true) == 0) return true;
 			}
+
+			return false;
 		}
 
 		//*** ECS 응답 에러 정보 ***
