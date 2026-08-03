@@ -460,6 +460,21 @@ namespace TSK_HostCom
                         strSScNum = m_BDb.dtMain.Rows[0]["START_POS"].ToString();
                         break;
 
+                    // 피킹
+                    //   원본 CLib::ConvertJobTypeToPattern(EcsCL/Lib.cpp) 에서
+                    //   PICKING(3) 은 UNIT_RET(2) 와 같은 JOB_PATTERN_RET 로 묶여 있다.
+                    //   원본 CJobItem::GetLog 의 RET 패턴도 출발=[창고][위치][로케이션] 도착=[창고][위치] 이므로
+                    //   출고(case 2)와 똑같이 출발은 로케이션, 도착은 스테이션을 쓴다.
+                    case 3:
+                        strSPosition = m_BDb.dtMain.Rows[0]["START_LOCATION"].ToString();
+                        strDPosition = m_BDb.dtMain.Rows[0]["DEST_POS"].ToString();
+                        if (nJobStatus == 22)
+                        {
+                            strDPosition = m_BDb.dtMain.Rows[0]["HS_TRACK_NO"].ToString();
+                        }
+                        strSScNum = m_BDb.dtMain.Rows[0]["START_POS"].ToString();
+                        break;
+
                     // RACK TO RACK (호기내)
                     case 4:
                         strSPosition = m_BDb.dtMain.Rows[0]["START_LOCATION"].ToString();
@@ -1483,13 +1498,25 @@ namespace TSK_HostCom
                 return true;                
             }
             //string strLuggNum = "" + m_BDb.dtMain.Rows[0]["LUGG_NO"];
+            /*
+             * 작업타입(nJobType) -> 작업구분(nClass) / 스테이션(nStation)
+             *
+             *   원본 Common/Include/Ecs/EcsEnv.h 의 JOB_TYPE_*
+             *     1 UNIT_STO  2 UNIT_RET  3 PICKING  4 RACK_TO_RACK  5 AISLE_TO_AISLE  6 SITE_TO_SITE
+             *
+             *   작업구분은 원본 CHostCl::CompleteReport 가
+             *     GetPattern() == JOB_PATTERN_RET ? 2 : 3
+             *   으로 정하고, GetPattern() 은 CLib::ConvertJobTypeToPattern(EcsCL/Lib.cpp) 이다.
+             *   거기서 PICKING(3) 은 UNIT_RET 와 같은 JOB_PATTERN_RET 로 묶여 있다.
+             *   즉 피킹은 출고와 같은 취급이므로 작업구분 2, 스테이션은 도착지를 쓴다.
+             */
             switch (nJobType)
             {
                 case 1: nStation = Convert.ToInt16(strSPosition); nClass = 1;  break;
                 case 2: nStation = Convert.ToInt16(strDPosition); nClass = 2;  break;
-                //case 3: nStation = Convert.ToInt16(strDPosition); break;
+                case 3: nStation = Convert.ToInt16(strDPosition); nClass = 2;  break; // @.피킹. 원본에서 출고(JOB_PATTERN_RET)와 동일
                 case 4: nStation = 0;                             nClass = 3; break; //랙투랙 부분 조한성 수정 0608
-                case 5: nStation = 0;                             nClass = 3; break; 
+                case 5: nStation = 0;                             nClass = 3; break;
                 case 6: nStation = Convert.ToInt32(strDPosition); nClass = 3; break;
                 default:
                     m_strLog = "작업정보는 존재하지만 잘못된 작업 정보입니다.[작업 타입:" + nJobType.ToString() + "]";
