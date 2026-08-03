@@ -14,8 +14,7 @@
 --    Common/Include/Ecs/EcsDef.h 의 ECS_STN_POS_* (작업대) 와
 --    CNV_STN_POS_* (트랙) 짝을 그대로 옮겼다.
 --
---  실행 : psql -h 127.0.0.1 -p 5432 -U HUONS -d HUONS -f 02_CV_DATA_HOST_STN_NO.sql
---         (WCS 쪽 DB 에도 같이 적용하려면 접속정보만 바꿔 한 번 더 실행)
+--  실행 : psql -h 127.0.0.1 -p 5432 -U KET_WCS -d KET_WCS -f 02_CV_DATA_HOST_STN_NO.sql
 --
 --  ※ H/S(크레인 홈스테이션 1~11, 트랙 201~211) 는 작업대가 아니라 제외했다.
 --    필요하면 맨 아래 주석 블록을 참고할 것.

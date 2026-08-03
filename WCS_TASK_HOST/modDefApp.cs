@@ -43,6 +43,7 @@ namespace TSK_HostCom
         public static string AREA_CD = "F101";
         public static string SYS_GRP = "G1";
         public static string WH_CD = "AA06";
+        // 창고 타입. EcsComA.ini 의 [DB] WH_TYP 로 덮어쓴다.(없으면 이 기본값)
         public static string WH_TYP = "10";
         public const string PRS_ID = "TSK_ECSCOM";
 		public static string g_strRE_DRCT_CNT;

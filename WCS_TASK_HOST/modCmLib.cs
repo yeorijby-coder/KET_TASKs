@@ -329,6 +329,12 @@ namespace TSK_HostCom
             modDefAPI.GetPrivateProfileString("DB", "PORT", "", sb, sb.Capacity, modDefApp.MAIN_INI);
             modDefApp.g_User.g_strDbPort = sb.ToString();
 
+            // @.창고 타입. 다른 태스크(WCS_DB.INI 의 WH_TYP)와 같은 값이어야 조회가 맞물린다.
+            //   ini 에 없으면 기존 기본값을 그대로 쓴다.
+            modDefAPI.GetPrivateProfileString("DB", "WH_TYP", "", sb, sb.Capacity, modDefApp.MAIN_INI);
+            if (string.IsNullOrEmpty(sb.ToString().Trim()) == false)
+                modDefApp.WH_TYP = sb.ToString().Trim();
+
             modDefAPI.GetPrivateProfileString("Network", "LocalPort", "", sb, sb.Capacity, modDefApp.MAIN_INI);
             modDefApp.g_iListenPort = int.Parse(sb.ToString());
 
