@@ -311,13 +311,28 @@ namespace WCS_TASK_Display
                 {
                     if (m_thDisplay[ii] == null) continue;
 
-                    // @.접속 끊기 지시 상태에서는 재접속하지 않는다
+                    // @.접속 끊기 지시 상태
                     if (m_bDisconnect[ii])
                     {
-                        m_bConnReq[ii] = false;
                         SetDisplay("picDispSkt" + ii, "D", "E");
                         SetDisplay("picDispDbCn" + ii, "D");
                         PsCtrlWriteConnected(ii, "N");
+
+                        // @.자동 재접속이 켜져 있으면 실제로 끊긴 것을 확인한 뒤 접속 지시로 되돌린다.
+                        //   즉 [접속 끊기] 는 "끊었다가 다시 붙이는" 리셋 동작이 된다.
+                        //   자동 재접속이 꺼져 있으면 끊긴 채로 둔다.
+                        if (m_bAutoReconn[ii] && m_thDisplay[ii].m_thThread == null)
+                        {
+                            PsCtrlSetOne(ii, "DISCONNECT_YN", "N");
+                            m_bDisconnect[ii] = false;
+                            m_bConnReq[ii] = true;
+                            m_thDisplay[ii].m_bStopReq = false;
+                            AddMsg("IMP", m_strPLC_NO[ii], "[자동 재접속] 접속을 끊었으므로 다시 접속합니다.");
+                        }
+                        else
+                        {
+                            m_bConnReq[ii] = false;
+                        }
                         continue;
                     }
 
@@ -625,28 +640,35 @@ namespace WCS_TASK_Display
         // @@.DISPLAY_CTRL 의 지시 컬럼을 이 태스크가 담당하는 모든 컨트롤러에 기록한다.
         private void PsCtrlSet(string strCol, string strVal)
         {
+            for (int ii = 0; ii < m_nProcessCnt; ii++)
+            {
+                if (m_strPLC_NO[ii] == null) continue;
+                PsCtrlSetOne(ii, strCol, strVal);
+            }
+        }
+
+        // @@.DISPLAY_CTRL 의 지시 컬럼을 컨트롤러 한 대에만 기록한다.
+        private void PsCtrlSetOne(int ii, string strCol, string strVal)
+        {
 #if POSTGRESQL
+            if (m_strPLC_NO[ii] == null) return;
+
             NpgsqlConnection cn = null;
             try
             {
                 cn = new NpgsqlConnection(m_strConnectString);
                 cn.Open();
 
-                for (int ii = 0; ii < m_nProcessCnt; ii++)
+                using (NpgsqlCommand cmd = new NpgsqlCommand(
+                    "UPDATE DISPLAY_CTRL SET " + strCol + " = :VAL, RQ_USER_ID = :RQ_USER_ID, " +
+                    "RQ_DT = NOW(), UPD_DT = NOW() " +
+                    "WHERE WH_TYP = :WH_TYP AND PLC_NO = :PLC_NO", cn))
                 {
-                    if (m_strPLC_NO[ii] == null) continue;
-
-                    using (NpgsqlCommand cmd = new NpgsqlCommand(
-                        "UPDATE DISPLAY_CTRL SET " + strCol + " = :VAL, RQ_USER_ID = :RQ_USER_ID, " +
-                        "RQ_DT = NOW(), UPD_DT = NOW() " +
-                        "WHERE WH_TYP = :WH_TYP AND PLC_NO = :PLC_NO", cn))
-                    {
-                        cmd.Parameters.Add("VAL", NpgsqlDbType.Varchar).Value = strVal;
-                        cmd.Parameters.Add("RQ_USER_ID", NpgsqlDbType.Varchar).Value = cDefApp.GM_USERID;
-                        cmd.Parameters.Add("WH_TYP", NpgsqlDbType.Varchar).Value = cDefApp.GM_WH_TYP;
-                        cmd.Parameters.Add("PLC_NO", NpgsqlDbType.Varchar).Value = m_strPLC_NO[ii];
-                        cmd.ExecuteNonQuery();
-                    }
+                    cmd.Parameters.Add("VAL", NpgsqlDbType.Varchar).Value = strVal;
+                    cmd.Parameters.Add("RQ_USER_ID", NpgsqlDbType.Varchar).Value = cDefApp.GM_USERID;
+                    cmd.Parameters.Add("WH_TYP", NpgsqlDbType.Varchar).Value = cDefApp.GM_WH_TYP;
+                    cmd.Parameters.Add("PLC_NO", NpgsqlDbType.Varchar).Value = m_strPLC_NO[ii];
+                    cmd.ExecuteNonQuery();
                 }
             }
             catch (Exception ex)
@@ -711,6 +733,7 @@ namespace WCS_TASK_Display
 
             AddMsg("IMP", "", strNew == "Y"
                    ? "[접속 끊기] 지시 - 모든 컨트롤러 접속을 끊습니다."
+                     + (chkAutoReconn.Checked ? " (자동 재접속이 켜져 있어 곧 다시 접속합니다)" : "")
                    : "[접속] 지시 - 재접속을 시작합니다.");
 
             PsCtrlSync();   // @.버튼 라벨을 바로 바꾸기 위해 즉시 반영
