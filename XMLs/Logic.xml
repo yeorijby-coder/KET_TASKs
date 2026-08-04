@@ -1,0 +1,456 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<LogicDatas>
+	<LogicGroup name="ForkLift">
+		<Logic id="1" desc="지게차가 화물을 올려놓은 경우">
+			<conditions desc="NoLugg, NoDest, 화물 OFF, 입고대 OFF">
+				<condition CNum="3"  CKeyWord="LuggNum"/>
+				<condition CNum="3"  CKeyWord="DestPos"/>
+				<condition CNum="0"  CKeyWord="StoStation"/>
+				<condition CNum="6"  CKeyWord="StoStation"/>
+				<condition CNum="1"  CKeyWord="Auto"/>
+				<condition CNum="0"  CKeyWord="ProductSensor"/>
+			</conditions>
+			<actions desc ="화물감지 ON, StartFlagOn">
+				<action ANum="51" AKeyWord="ProductSensor"/>
+				<action ANum="54" AKeyWord="StartFlag"/>
+			</actions>
+		</Logic>
+		<Logic id="2" desc="지게차가 화물을 올려놓고 특정시간 지난 경우">
+			<conditions desc="NoLugg, NoDest, 화물 ON, 입고대 OFF">
+				<condition CNum="3"  CKeyWord="LuggNum"/>
+				<condition CNum="3"  CKeyWord="DestPos"/>
+				<condition CNum="0"  CKeyWord="StoStation"/>
+				<condition CNum="6"  CKeyWord="StoStation"/>
+				<condition CNum="1"  CKeyWord="ProductSensor"/>
+				<condition CNum="1"  CKeyWord="Auto"/>
+				<condition CNum="15" CKeyWord="5"/>
+			</conditions>
+			<actions desc ="입고대 ON, StartFlag Off">
+				<action ANum="51" AKeyWord="StoStation"/>
+				<action ANum="55" AKeyWord="StartFlag"/>
+			</actions>
+		</Logic>
+		
+		<Logic id="4" desc="지게차가 화물 들어낸 경우(출고대)">
+			<conditions desc="목적지 자기자신, 시간경과">
+				<condition CNum="11" CKeyWord="DestPos"/>
+				<condition CNum="1"  CKeyWord="ProductSensor"/>
+				<condition CNum="1"  CKeyWord="RetStation"/>
+				<condition CNum="6"  CKeyWord="RetStation"/>
+			</conditions>
+			<actions desc ="화물 OFF, StartFlagOn">
+				<action ANum="58" AKeyWord="ProductSensor"/>
+				<action ANum="54" AKeyWord="StartFlag"/>
+			</actions>
+		</Logic>
+		<Logic id="5" desc="지게차가 화물을 떠가고 난후">
+			<conditions desc="작번 有, Dest Self, 화물 OFF">
+				<condition CNum="2"  CKeyWord="LuggNum"/>
+				<condition CNum="11" CKeyWord="DestPos"/>
+				<condition CNum="0"  CKeyWord="ProductSensor"/>
+				<condition CNum="6"  CKeyWord="RetStation"/>
+				<condition CNum="15" CKeyWord="5"/>
+			</conditions>
+			<actions desc ="Track Data 삭제, StartFlagOff">
+				<action ANum="52" AKeyWord="Auto"/>
+				<action ANum="57" AKeyWord="LuggNum"/>
+				<action ANum="57" AKeyWord="DestPos"/>
+				<action ANum="57" AKeyWord="D10n+2"/>
+				<action ANum="57" AKeyWord="D10n+3"/>
+				<action ANum="57" AKeyWord="D10n+4"/>
+				<action ANum="57" AKeyWord="D2n+1"/>
+				<action ANum="55" AKeyWord="StartFlag"/>
+			</actions>
+		</Logic>
+	</LogicGroup>
+	
+	<LogicGroup name="StoStation">
+		<Logic id="1" desc="입고대에서 작업번호 기록될때">
+			<conditions desc="작업번호있고, 입고대 ON">
+				<condition CNum="2" CKeyWord="LuggNum"/>
+				<condition CNum="1" CKeyWord="StoStation"/>
+				<condition CNum="6" CKeyWord="StoStation"/>
+			</conditions>
+			<actions desc ="입고대 강제 OFF">
+				<action ANum="58" AKeyWord="StoStation"/>
+			</actions>
+		</Logic>
+		<Logic id="2" desc="입고대에서 목적지 기록될때">
+			<conditions desc="작업번호있고, 입고대 ON">
+				<condition CNum="2" CKeyWord="DestPos"/>
+				<condition CNum="1" CKeyWord="StoStation"/>
+				<condition CNum="6" CKeyWord="StoStation"/>
+			</conditions>
+			<actions desc ="입고대 강제 OFF">
+				<action ANum="58" AKeyWord="StoStation"/>
+			</actions>
+		</Logic>
+		<Logic id="3" desc="목적지 도착(입출고대 N 피킹대)">
+			<conditions desc="(입고대이면서) 출고대인경우, 목적지 자기자신">
+				<condition CNum="6"  CKeyWord="ArvStation"/>
+				<condition CNum="11" CKeyWord="DestPos"/>
+				<condition CNum="1"  CKeyWord="ProductSensor"/>
+			</conditions>
+			<actions desc ="입고대ON, 화물 감지ON, StartFlag">
+				<action ANum="51" AKeyWord="StoStation"/>
+				<action ANum="54" AKeyWord="StartFlag"/>
+			</actions>
+		</Logic>
+	</LogicGroup>
+	<LogicGroup name="RetStation">
+		<Logic id="1" desc="출고대 ON 되는 상황">
+			<conditions desc="Dest Self, 화물 ON, 출고대 OFF">
+				<condition CNum="11" CKeyWord="DestPos"/>
+				<condition CNum="0"  CKeyWord="RetStation"/>
+				<condition CNum="6"  CKeyWord="RetStation"/>
+				<condition CNum="1"  CKeyWord="ProductSensor"/>
+			</conditions>
+			<actions desc ="출고대ON, 화물 감지ON, StartFlag">
+				<action ANum="51" AKeyWord="RetStation"/>
+				<action ANum="51" AKeyWord="ProductSensor"/>
+				<action ANum="54" AKeyWord="StartFlag"/>
+			</actions>
+		</Logic>
+		<Logic id="2" desc="목적지가 바뀌었을때">
+			<conditions desc="Dest Not Self, 출고대 ON">
+				<condition CNum="1"  CKeyWord="RetStation"/>
+				<condition CNum="12" CKeyWord="DestPos"/>
+				<condition CNum="6"  CKeyWord="RetStation"/>
+			</conditions>
+			<actions desc ="출고대 강제 OFF">
+				<action ANum="58" AKeyWord="RetStation"/>
+			</actions>
+		</Logic>
+	</LogicGroup>
+	<LogicGroup name="ArvStation">
+		<Logic id="1" desc="시뮬레이터이니까 ??? - SC 입고 H/S 조건이지만 함께 출고대를 ON해줌">
+			<conditions desc="작번 有, IsScDest, Auto, 화물 ON">
+				<condition CNum="2"  CKeyWord="LuggNum"/>
+				<condition CNum="13" CKeyWord="DestPos"/>
+				<condition CNum="1"  CKeyWord="Auto"/>
+				<condition CNum="1"  CKeyWord="ProductSensor"/>
+				<condition CNum="6"  CKeyWord="ArvStation"/>
+				<condition CNum="0"  CKeyWord="RetStation"/>
+			</conditions>
+			<actions desc ="출고대 ON">
+				<action ANum="51" AKeyWord="RetStation"/>
+			</actions>
+		</Logic>
+		<Logic id="2" desc="OR 조건으로 들어가야 하는거 아닌가?">
+			<conditions desc="작번 無, 목적지 無, 수동, 화물 OFF, 출고대 ON">
+				<condition CNum="3" CKeyWord="LuggNum"/>
+				<condition CNum="3" CKeyWord="DestPos"/>
+				<condition CNum="0" CKeyWord="Auto"/>
+				<condition CNum="0" CKeyWord="ProductSensor"/>
+				<condition CNum="1" CKeyWord="RetStation"/>
+				<condition CNum="6" CKeyWord="ArvStation"/>
+			</conditions>
+			<actions desc ="출고대 강제 OFF">
+				<action ANum="58" AKeyWord="RetStation"/>
+			</actions>
+		</Logic>
+		<Logic id="3" desc="가장 정상적인 도착대의 조건">
+			<conditions desc="작번 有, Dest Self, Auto, 화물 ON">
+				<condition CNum="2"  CKeyWord="LuggNum"/>
+				<condition CNum="11" CKeyWord="DestPos"/>
+				<condition CNum="1"  CKeyWord="Auto"/>
+				<condition CNum="1"  CKeyWord="ProductSensor"/>
+				<condition CNum="0"  CKeyWord="RetStation"/>
+				<condition CNum="6"  CKeyWord="ArvStation"/>
+			</conditions>
+			<actions desc ="출고대 ON">
+				<action ANum="51" AKeyWord="RetStation"/>
+			</actions>
+		</Logic>
+	</LogicGroup>
+
+	<LogicGroup name="ScStoHS">
+		<Logic id="1" desc="[OR 조건] NoLugg 반전">
+			<conditions desc="[OR 조건임(1) : NoLugg, NotScDest, NoAuto, No화물], ScStoHS ON">
+				<condition CNum="3"  CKeyWord="LuggNum"/>
+				<condition CNum="1"  CKeyWord="ScStoHS"/>
+				<condition CNum="6"  CKeyWord="ScStoHS"/>
+			</conditions>
+			<actions desc ="입고HS 강제 OFF">
+				<action ANum="58" AKeyWord="ScStoHS"/>
+			</actions>
+		</Logic>
+		<Logic id="2" desc="[OR 조건] NotScDest 반전">
+			<conditions desc="[OR 조건임(2) : NoLugg, NotScDest, NoAuto, No화물], ScStoHS ON">
+				<condition CNum="16" CKeyWord="DestPos"/>
+				<condition CNum="1"  CKeyWord="ScStoHS"/>
+				<condition CNum="6"  CKeyWord="ScStoHS"/>
+			</conditions>
+			<actions desc ="입고HS 강제 OFF">
+				<action ANum="58" AKeyWord="ScStoHS"/>
+			</actions>
+		</Logic>
+		<Logic id="3" desc="[OR 조건] NoAuto 반전">
+			<conditions desc="[OR 조건임(3) : NoLugg, NotScDest, NoAuto, No화물], ScStoHS ON">
+				<condition CNum="0"  CKeyWord="Auto"/>
+				<condition CNum="1"  CKeyWord="ScStoHS"/>
+				<condition CNum="6"  CKeyWord="ScStoHS"/>
+			</conditions>
+			<actions desc ="입고HS 강제 OFF">
+				<action ANum="58" AKeyWord="ScStoHS"/>
+			</actions>
+		</Logic>
+		<Logic id="4" desc="[OR 조건] No화물 반전">
+			<conditions desc="[OR 조건임(4) : NoLugg, NotScDest, NoAuto, No화물], ScStoHS ON">
+				<condition CNum="0"  CKeyWord="ProductSensor"/>
+				<condition CNum="1"  CKeyWord="ScStoHS"/>
+				<condition CNum="6"  CKeyWord="ScStoHS"/>
+			</conditions>
+			<actions desc ="입고HS 강제 OFF">
+				<action ANum="58" AKeyWord="ScStoHS"/>
+			</actions>
+		</Logic>
+
+		<Logic id="5" desc="정상적으로 입고 HS ON 하는 로직">
+			<conditions desc="작번 有, IsScDest, Auto, 화물 ON">
+				<condition CNum="2"  CKeyWord="LuggNum"/>
+				<condition CNum="2"  CKeyWord="DestPos"/>
+				<condition CNum="1"  CKeyWord="Auto"/>
+				<condition CNum="6"  CKeyWord="ScStoHS"/>
+				<condition CNum="1"  CKeyWord="ProductSensor"/>
+			</conditions>
+			<actions desc ="입고HS ON">
+				<action ANum="51" AKeyWord="ScStoHS"/>
+			</actions>
+		</Logic>
+		<Logic id="6" desc="출고대 이면서 입고 HS일때 Data만 지워졌을때">
+			<conditions desc="NoLugg, NoDest, Auto, 출고대 ON, 화물 ON">
+				<condition CNum="2"  CKeyWord="LuggNum"/>
+				<condition CNum="13" CKeyWord="DestPos"/>
+				<condition CNum="1"  CKeyWord="Auto"/>
+				<condition CNum="1"  CKeyWord="ProductSensor"/>
+				<condition CNum="1"  CKeyWord="RetStation"/>
+				<condition CNum="6"  CKeyWord="RetStation"/>
+				<condition CNum="6"  CKeyWord="ScStoHS"/>
+			</conditions>
+			<actions desc ="출고대 강제 OFF, 화물 강제 OFF">
+				<action ANum="58" AKeyWord="RetStation"/>
+				<action ANum="58" AKeyWord="ProductSensor"/>
+			</actions>
+		</Logic>
+		<Logic id="7" desc="SC 시뮬레이터 연결시 ?? 데이터만 지우고 화물을 지우지 못했을때">
+			<conditions desc="NoLugg, NoDest, 입고HS ON, 화물 ON">
+				<condition CNum="3"  CKeyWord="LuggNum"/>
+				<condition CNum="3"  CKeyWord="DestPos"/>
+				<condition CNum="1"  CKeyWord="Auto"/>
+				<condition CNum="1"  CKeyWord="ProductSensor"/>
+				<condition CNum="1"  CKeyWord="ScStoHS"/>
+				<condition CNum="6"  CKeyWord="ScStoHS"/>
+			</conditions>
+			<actions desc ="화물 강제 OFF">
+				<action ANum="58" AKeyWord="ProductSensor"/>
+			</actions>
+		</Logic>
+	</LogicGroup>
+	<LogicGroup name="ScRetHS">
+		<Logic id="1" desc="[OR 조건] NoLugg 반전">
+			<conditions desc="[OR 조건임 : NoLugg, 화물 有, NoAuto, NoDest], ScRetHS ON">
+				<condition CNum="2"  CKeyWord="LuggNum"/>
+				<condition CNum="1"  CKeyWord="ScRetHS"/>
+				<condition CNum="6"  CKeyWord="ScRetHS"/>
+			</conditions>
+			<actions desc ="출고HS 강제 OFF">
+				<action ANum="58" AKeyWord="ScRetHS"/>
+			</actions>
+		</Logic>
+		<Logic id="2" desc="[OR 조건] 화물 無 반전">
+			<conditions desc="[OR 조건임 : NoLugg, 화물 無, NoAuto, NoDest], ScRetHS ON">
+				<condition CNum="1"  CKeyWord="ProductSensor"/>
+				<condition CNum="1"  CKeyWord="ScRetHS"/>
+				<condition CNum="6"  CKeyWord="ScRetHS"/>
+			</conditions>
+			<actions desc ="출고HS 강제 OFF">
+				<action ANum="58" AKeyWord="ScRetHS"/>
+			</actions>
+		</Logic>
+		<Logic id="3" desc="[OR 조건] NoAuto 반전">
+			<conditions desc="[OR 조건임 : NoLugg, 화물 有, NoAuto, NoDest], ScRetHS ON">
+				<condition CNum="0"  CKeyWord="Auto"/>
+				<condition CNum="1"  CKeyWord="ScRetHS"/>
+				<condition CNum="6"  CKeyWord="ScRetHS"/>
+			</conditions>
+			<actions desc ="출고HS 강제 OFF">
+				<action ANum="58" AKeyWord="ScRetHS"/>
+			</actions>
+		</Logic>
+		<Logic id="4" desc="[OR 조건] NoDest 반전">
+			<conditions desc="[OR 조건임 : NoLugg, 화물 有, NoAuto, NoDest], ScRetHS ON">
+				<condition CNum="2"  CKeyWord="DestPos"/>
+				<condition CNum="1"  CKeyWord="ScRetHS"/>
+				<condition CNum="6"  CKeyWord="ScRetHS"/>
+			</conditions>
+			<actions desc ="출고HS 강제 OFF">
+				<action ANum="58" AKeyWord="ScRetHS"/>
+			</actions>
+		</Logic>
+		<Logic id="5" desc="출고 H/S 정상 ON 하는 조건">
+			<conditions desc="NoLugg, NoDest, Auto, ScRetHS OFF, 화물 OFF">
+				<condition CNum="3"  CKeyWord="LuggNum"/>
+				<condition CNum="1"  CKeyWord="Auto"/>
+				<condition CNum="0"  CKeyWord="ScRetHS"/>
+				<condition CNum="3"  CKeyWord="DestPos"/>
+				<condition CNum="0"  CKeyWord="ProductSensor"/>
+				<condition CNum="6"  CKeyWord="ScRetHS"/>
+			</conditions>
+			<actions desc ="출고HS ON">
+				<action ANum="51" AKeyWord="ScRetHS"/>
+			</actions>
+		</Logic>
+	</LogicGroup>
+
+	<LogicGroup name="RtvDepartHS">
+		<Logic id="1" desc="RtvDepartHS ON">
+			<conditions desc="작번 有, NotEqualSelf, Auto, 화물 ON">
+				<condition CNum="2"  CKeyWord="LuggNum"/>
+				<condition CNum="12" CKeyWord="DestPos"/>
+				<condition CNum="1"  CKeyWord="Auto"/>
+				<condition CNum="1"  CKeyWord="ProductSensor"/>
+				<condition CNum="6"  CKeyWord="RtvDepartHS"/>
+				<condition CNum="0"  CKeyWord="RtvDepartHS"/>
+			</conditions>
+			<actions desc ="RtvDepartHS ON">
+				<action ANum="51" AKeyWord="RtvDepartHS"/>
+			</actions>
+		</Logic>
+		<Logic id="2" desc="OR 조건으로 들어가야 하는거 아닌가?">
+			<conditions desc="[OR 조건 : 작번 無, 목적지 無, 수동, 화물 OFF, RtvDepartHS OFF] 작번 無">
+				<condition CNum="3"  CKeyWord="LuggNum"/>
+				<condition CNum="6"  CKeyWord="RtvDepartHS"/>
+				<condition CNum="1"  CKeyWord="RtvDepartHS"/>
+			</conditions>
+			<actions desc ="RtvDepartHS 강제 OFF">
+				<action ANum="58" AKeyWord="RtvDepartHS"/>
+			</actions>
+		</Logic>
+		<Logic id="3" desc="OR 조건으로 들어가야 하는거 아닌가?">
+			<conditions desc="[OR 조건 : 작번 無, 목적지 無, 수동, 화물 OFF, RtvDepartHS OFF] 목적지 無">
+				<condition CNum="3" CKeyWord="DestPos"/>
+				<condition CNum="6"  CKeyWord="RtvDepartHS"/>
+				<condition CNum="1"  CKeyWord="RtvDepartHS"/>
+			</conditions>
+			<actions desc ="RtvDepartHS 강제 OFF">
+				<action ANum="58" AKeyWord="RtvDepartHS"/>
+			</actions>
+		</Logic>
+		<Logic id="4" desc="OR 조건으로 들어가야 하는거 아닌가?">
+			<conditions desc="[OR 조건 : 작번 無, 목적지 無, 수동, 화물 OFF, RtvDepartHS OFF] 수동">
+				<condition CNum="0" CKeyWord="Auto"/>
+				<condition CNum="6"  CKeyWord="RtvDepartHS"/>
+				<condition CNum="1"  CKeyWord="RtvDepartHS"/>
+			</conditions>
+			<actions desc ="RtvDepartHS 강제 OFF">
+				<action ANum="58" AKeyWord="RtvDepartHS"/>
+			</actions>
+		</Logic>
+		<Logic id="5" desc="OR 조건으로 들어가야 하는거 아닌가?">
+			<conditions desc="[OR 조건 : 작번 無, 목적지 無, 수동, 화물 OFF, RtvDepartHS OFF] 화물 OFF">
+				<condition CNum="0" CKeyWord="ProductSensor"/>
+				<condition CNum="6"  CKeyWord="RtvDepartHS"/>
+				<condition CNum="1"  CKeyWord="RtvDepartHS"/>
+			</conditions>
+			<actions desc ="RtvDepartHS 강제 OFF">
+				<action ANum="58" AKeyWord="RtvDepartHS"/>
+			</actions>
+		</Logic>
+	</LogicGroup>
+	<LogicGroup name="RtvArriveHS">
+		<Logic id="1" desc="[OR 조건] NoLugg 반전">
+			<conditions desc="[OR 조건임 : NoLugg, 화물 有, NoAuto, NoDest], RtvArriveHS ON">
+				<condition CNum="2"  CKeyWord="LuggNum"/>
+				<condition CNum="1"  CKeyWord="RtvArriveHS"/>
+				<condition CNum="6"  CKeyWord="RtvArriveHS"/>
+			</conditions>
+			<actions desc ="RtvArriveHS 강제 OFF">
+				<action ANum="58" AKeyWord="RtvArriveHS"/>
+			</actions>
+		</Logic>
+		<Logic id="2" desc="[OR 조건] 화물 無 반전">
+			<conditions desc="[OR 조건임 : NoLugg, 화물 無, NoAuto, NoDest], RtvArriveHS ON">
+				<condition CNum="1"  CKeyWord="ProductSensor"/>
+				<condition CNum="1"  CKeyWord="RtvArriveHS"/>
+				<condition CNum="6"  CKeyWord="RtvArriveHS"/>
+			</conditions>
+			<actions desc ="RtvArriveHS 강제 OFF">
+				<action ANum="58" AKeyWord="RtvArriveHS"/>
+			</actions>
+		</Logic>
+		<Logic id="3" desc="[OR 조건] NoAuto 반전">
+			<conditions desc="[OR 조건임 : NoLugg, 화물 有, NoAuto, NoDest], RtvArriveHS ON">
+				<condition CNum="0"  CKeyWord="Auto"/>
+				<condition CNum="1"  CKeyWord="RtvArriveHS"/>
+				<condition CNum="6"  CKeyWord="RtvArriveHS"/>
+			</conditions>
+			<actions desc ="RtvArriveHS 강제 OFF">
+				<action ANum="58" AKeyWord="RtvArriveHS"/>
+			</actions>
+		</Logic>
+		<Logic id="4" desc="[OR 조건] NoDest 반전">
+			<conditions desc="[OR 조건임 : NoLugg, 화물 有, NoAuto, NoDest], RtvArriveHS ON">
+				<condition CNum="2"  CKeyWord="DestPos"/>
+				<condition CNum="1"  CKeyWord="RtvArriveHS"/>
+				<condition CNum="6"  CKeyWord="RtvArriveHS"/>
+			</conditions>
+			<actions desc ="RtvArriveHS 강제 OFF">
+				<action ANum="58" AKeyWord="RtvArriveHS"/>
+			</actions>
+		</Logic>
+		<Logic id="5" desc="RtvArriveHS 정상 ON 하는 조건">
+			<conditions desc="NoLugg, NoDest, Auto, RtvArriveHS OFF, 화물 OFF">
+				<condition CNum="3"  CKeyWord="LuggNum"/>
+				<condition CNum="1"  CKeyWord="Auto"/>
+				<condition CNum="0"  CKeyWord="RtvArriveHS"/>
+				<condition CNum="3"  CKeyWord="DestPos"/>
+				<condition CNum="0"  CKeyWord="ProductSensor"/>
+				<condition CNum="6"  CKeyWord="RtvArriveHS"/>
+			</conditions>
+			<actions desc ="RtvArriveHS ON">
+				<action ANum="51" AKeyWord="RtvArriveHS"/>
+			</actions>
+		</Logic>
+	</LogicGroup>
+	<LogicGroup name="LgvDepartHS"/>
+	<LogicGroup name="LgvArriveHS"/>
+	<LogicGroup name="LifterDepartHS"/>
+	<LogicGroup name="LifterArriveHS"/>
+
+	<LogicGroup name="Magazine"/>
+	<LogicGroup name="Dispenser"/>
+
+</LogicDatas>
+<!--
+	<ConditionContent desc="참고(설명하기 위해서.. 실제 소스에서는 읽지 않음!)">
+		<BIT_OFF>0</BIT_OFF>
+		<BIT_ON>1</BIT_ON>
+		<NOT_0>2</NOT_0>
+		<IS_0>3</IS_0>
+		<無>4</無>
+		<有>5</有>
+		<IsStation>6</IsStation>
+		<小 desc="Less,{">7</小>
+		<大 desc="Greater,}">8</大>
+		<小同 desc="Less Then Or Equal,{=">9</小同>
+		<大同 desc="Greater Then Or Equal,}=">10</大同>
+		<EqualSelf>11</EqualSelf>
+		<NotEqualSelf>12</NotEqualSelf>
+		<IsScDestNum>13</IsScDestNum>
+		<except>14</except>
+		<TimeElapse>15</TimeElapse>
+		<NotScDestNum>16</NotScDestNum>
+		
+		<BitOn>51</BitOn>
+		<BitOff desc="특정비트만 남기고 다머지는 다 OFF">52</BitOff>
+		<Inverse>53</Inverse>
+		<StartFlagOn>54</StartFlagOn>
+		<StartFlagOff>55</StartFlagOff>
+		<TimeReset>56</TimeReset>
+		<WORD_Reset>57</WORD_Reset>
+		<BitForceOff desc="특정 비트 강제 OFF">58</BitForceOff>
+	</ConditionContent>
+	-->
+
+

@@ -1,0 +1,325 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<ECS>
+	<Equipment class="CCv" thread="01" number="1" device="CV_E01"/>
+	<Equipment class="CCv" thread="02" number="2" device="CV_E02">
+		<Tracks plcno="02" cid="17110200" FirstTrack="201">
+			<Track	number="201" tabnumber="1"/>
+			<Track	number="202" tabnumber="1">
+				<Status>
+					<ScStoHS/>
+				</Status>
+			</Track>
+			<Track	number="203" tabnumber="1">
+				<Status>
+					<ScRetHS/>
+				</Status>
+			</Track>
+			<Track	number="204" tabnumber="1">
+				<Status>
+					<ArvStation name="1F 중간 도착대#1" DestCode="151"/>
+				</Status>
+			</Track>
+			<Track	number="205" tabnumber="1"/>
+			<Track	number="206" tabnumber="1">
+				<ForkLift desc="화물이 자동으로 생성되고 자동으로 없어지는 경우(대부분의 경우 입고대 or 출고대) 해당 태크 사용하면됨"/>
+				<Status>
+					<RetStation name="1F 출고대 #1" DestCode="103"/>
+				</Status>
+			</Track>
+			<Track	number="207" tabnumber="1">
+				<Status>
+					<ScRetHS/>
+				</Status>
+			</Track>
+			<Track	number="208" tabnumber="1">
+				<Status>
+					<ArvStation name="1F 중간 도착대#2" DestCode="152"/>
+				</Status>
+			</Track>
+			<Track	number="209" tabnumber="1"/>
+			<Track	number="210" tabnumber="1">
+				<Status>
+					<ScStoHS/>
+				</Status>
+			</Track>
+			<Track	number="211" tabnumber="1"/>
+			<Track	number="212" tabnumber="1">
+				<ForkLift desc="화물이 자동으로 생성되고 자동으로 없어지는 경우(대부분의 경우 입고대 or 출고대) 해당 태크 사용하면됨"/>
+				<Status>
+					<RetStation name="1F 출고대 #2" DestCode="104"/>
+				</Status>
+			</Track>
+			<Track	number="213" tabnumber="1"/>
+			<Track	number="214" tabnumber="1">
+				<Status>
+					<ScStoHS/>
+				</Status>
+			</Track>
+			<Track	number="215" tabnumber="1">
+				<Status>
+					<ScRetHS/>
+				</Status>
+			</Track>
+			<Track	number="216" tabnumber="1">
+				<Status>
+					<ArvStation name="1F 중간 도착대 #3" DestCode="153"/>
+				</Status>
+			</Track>
+			<Track	number="217" tabnumber="1">
+				<ForkLift desc="화물이 자동으로 생성되고 자동으로 없어지는 경우(대부분의 경우 입고대 or 출고대) 해당 태크 사용하면됨"/>
+				<Status>
+					<StoStation name="1F 입고대 #1" DestCode="101"/>
+				</Status>
+			</Track>
+			<Track	number="218" tabnumber="1">
+				<Status>
+					<ArvStation name="1F SizeChecker #1" DestCode="107"/>
+				</Status>
+			</Track>
+			<Track	number="219" tabnumber="1"/>
+			<Track	number="220" tabnumber="1">
+				<Status>
+					<ArvStation name="1F 중간 도착대 #4" DestCode="154"/>
+				</Status>
+			</Track>
+			<Track	number="221" tabnumber="1">
+				<Status>
+					<ScRetHS/>
+				</Status>
+			</Track>
+			<Track	number="222" tabnumber="1">
+				<Status>
+					<ScStoHS/>
+				</Status>
+			</Track>
+			<Track	number="223" tabnumber="1"/>
+			<Track	number="224" tabnumber="1">
+				<ForkLift desc="화물이 자동으로 생성되고 자동으로 없어지는 경우(대부분의 경우 입고대 or 출고대) 해당 태크 사용하면됨"/>
+				<Status>
+					<StoStation name="1F 입고대 #2" DestCode="102"/>
+				</Status>
+			</Track>
+			<Track	number="225" tabnumber="1">
+				<Status>
+					<ArvStation name="1F SizeChecker #2" DestCode="108"/>
+				</Status>
+			</Track>
+			<Track	number="226" tabnumber="1"/>
+			<Track	number="227" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="228" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="229" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="230" tabnumber="1"/>
+			<Track	number="231" tabnumber="1"/>
+			<Track	number="232" tabnumber="1">
+				<Status>
+					<ArvStation name="1F 출고 위치 결정대" DestCode="171"/>
+				</Status>
+			</Track>
+			<Track	number="233" tabnumber="1"/>
+			<Track	number="234" tabnumber="1"/>
+			<Track	number="235" tabnumber="1"/>
+			<Track	number="236" tabnumber="1"/>
+			<Track	number="237" tabnumber="1"/>
+			<Track	number="238" tabnumber="1"/>
+			<Track	number="239" tabnumber="1"/>
+			<Track	number="240" tabnumber="1"/>
+			<Track	number="241" tabnumber="1"/>
+			<Track	number="242" tabnumber="1"/>
+			<Track	number="243" tabnumber="1"/>
+			<Track	number="244" tabnumber="1"/>
+			<Track	number="245" tabnumber="1"/>
+			<Track	number="246" tabnumber="1"/>
+			<Track	number="247" tabnumber="1"/>
+			<Track	number="248" tabnumber="1">
+				<Status>
+					<ScRetHS/>
+				</Status>
+			</Track>
+			<Track	number="249" tabnumber="1">
+				<Status>
+					<ArvStation name="1F 중간 도착대 #6" DestCode="156"/>
+				</Status>
+			</Track>
+			<Track	number="250" tabnumber="1"/>
+			<Track	number="251" tabnumber="1"/>
+			<Track	number="252" tabnumber="1"/>
+			<Track	number="253" tabnumber="1"/>
+			<Track	number="254" tabnumber="1">
+				<Status>
+					<ScStoHS/>
+				</Status>
+			</Track>
+			<Track	number="255" tabnumber="1"/>
+			<Track	number="256" tabnumber="1"/>
+			<Track	number="257" tabnumber="1">
+				<Status>
+					<ScStoHS/>
+				</Status>
+			</Track>
+			<Track	number="258" tabnumber="1">
+				<Status>
+					<ScRetHS/>
+				</Status>
+			</Track>
+			<Track	number="259" tabnumber="1">
+				<Status>
+					<ArvStation name="1F 중간 도착대 #5" DestCode="155"/>
+				</Status>
+			</Track>
+			<Track	number="260" tabnumber="1"/>
+			<Track	number="261" tabnumber="1"/>
+			<Track	number="262" tabnumber="1"/>
+			<Track	number="263" tabnumber="1"/>
+			<Track	number="264" tabnumber="1"/>	
+			<Track	number="265" tabnumber="1"/>
+			<Track	number="266" tabnumber="1"/>	
+		</Tracks>
+	</Equipment>
+	<Equipment class="CCv" thread="03" number="3" device="CV_E03"/>
+	<Equipment class="CCv" thread="04" number="4" device="CV_E04"/>
+	<Equipment class="CCv" thread="05" number="5" device="CV_E05">
+		<Tracks plcno="05" cid="17110500" FirstTrack="501">
+			<Track	number="501" tabnumber="1"/>
+			<Track	number="502" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="503" tabnumber="1">
+				<Status>
+					<ScStoHS/>
+				</Status>
+			</Track>
+			<Track	number="504" tabnumber="1">
+				<Status>
+					<ScRetHS/>
+				</Status>
+			</Track>
+			<Track	number="505" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="506" tabnumber="1">
+				<Status>
+					<ArvStation name="1F 중간 도착대 #7" DestCode="157"/>
+				</Status>
+			</Track>
+			<Track	number="507" tabnumber="1"/>
+			<Track	number="508" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="509" tabnumber="1">
+				<Status>
+					<ScStoHS/>
+				</Status>
+			</Track>
+			<Track	number="510" tabnumber="1">
+				<Status>
+					<ScRetHS/>
+				</Status>
+			</Track>
+			<Track	number="511" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="512" tabnumber="1">
+				<Status>
+					<ArvStation name="1F 중간 도착대 #8" DestCode="158"/>
+				</Status>
+			</Track>
+			<Track	number="513" tabnumber="1"/>
+			<Track	number="514" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="515" tabnumber="1">
+				<Status>
+					<ScStoHS/>
+				</Status>
+			</Track>
+			<Track	number="516" tabnumber="1">
+				<Status>
+					<ScRetHS/>
+				</Status>
+			</Track>
+			<Track	number="517" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="518" tabnumber="1">
+				<Status>
+					<ArvStation name="1F 중간 도착대 #9" DestCode="159"/>
+				</Status>
+			</Track>
+			<Track	number="519" tabnumber="1"/>
+			<Track	number="520" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="521" tabnumber="1">
+				<Status>
+					<ScStoHS/>
+				</Status>
+			</Track>
+			<Track	number="522" tabnumber="1">
+				<Status>
+					<ScRetHS/>
+				</Status>
+			</Track>
+			<Track	number="523" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="524" tabnumber="1">
+				<Status>
+					<ArvStation name="1F 중간 도착대 #10" DestCode="160"/>
+				</Status>
+			</Track>
+			<Track	number="525" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="526" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="527" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="528" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="529" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="530" tabnumber="0" desc="실제트랙없음!"/>
+			<Track	number="531" tabnumber="1"/>
+			<Track	number="532" tabnumber="1"/>
+			<Track	number="533" tabnumber="1"/>
+			<Track	number="534" tabnumber="1"/>
+			<Track	number="535" tabnumber="1"/>
+			<Track	number="536" tabnumber="1"/>
+			<Track	number="537" tabnumber="1"/>
+			<Track	number="538" tabnumber="1"/>
+			<Track	number="539" tabnumber="1"/>
+			<Track	number="540" tabnumber="1"/>
+			<Track	number="541" tabnumber="1"/>
+			<Track	number="542" tabnumber="1"/>
+			<Track	number="543" tabnumber="1"/>
+			<Track	number="544" tabnumber="1"/>
+			<Track	number="545" tabnumber="1"/>
+			<Track	number="546" tabnumber="1"/>
+			<Track	number="547" tabnumber="1"/>
+			<Track	number="548" tabnumber="1"/>
+			<Track	number="549" tabnumber="1"/>
+			<Track	number="550" tabnumber="1"/>
+			<Track	number="551" tabnumber="1"/>
+			<Track	number="552" tabnumber="1"/>
+			<Track	number="553" tabnumber="1"/>
+			<Track	number="554" tabnumber="1"/>
+			<Track	number="555" tabnumber="1"/>
+			<Track	number="556" tabnumber="1"/>
+		</Tracks>
+	</Equipment>
+	<Equipment class="CSc" number="11" device="SC" thread="01">
+		<Scs>
+			<Sc plcno="01" number="001">
+				<ScStation name="S/C#1" bankpos="1" bank="2" bay="36" level="20"/>
+			</Sc>
+			<Sc plcno="02" number="002">
+				<ScStation name="S/C#2" bankpos="1" bank="2" bay="36" level="20"/>
+			</Sc>
+			<Sc plcno="03" number="003">
+				<ScStation name="S/C#3" bankpos="1" bank="2" bay="36" level="20"/>
+			</Sc>
+			<Sc plcno="04" number="004">
+				<ScStation name="S/C#4" bankpos="1" bank="2" bay="36" level="20"/>
+			</Sc>
+			<Sc plcno="05" number="005">
+				<ScStation name="S/C#5" bankpos="1" bank="2" bay="36" level="20"/>
+			</Sc>
+			<Sc plcno="06" number="006">
+				<ScStation name="S/C#6" bankpos="1" bank="2" bay="36" level="20"/>
+			</Sc>
+			<Sc plcno="07" number="007">
+				<ScStation name="S/C#7" bankpos="1" bank="2" bay="36" level="20"/>
+			</Sc>
+			<Sc plcno="08" number="008">
+				<ScStation name="S/C#8" bankpos="1" bank="2" bay="36" level="20"/>
+			</Sc>
+			<Sc plcno="09" number="009">
+				<ScStation name="S/C#9" bankpos="1" bank="2" bay="36" level="20"/>
+			</Sc>
+			<Sc plcno="10" number="010">
+				<ScStation name="S/C#10" bankpos="1" bank="2" bay="36" level="20"/>
+			</Sc>
+			<Sc plcno="11" number="011">
+				<ScStation name="S/C#11" bankpos="1" bank="2" bay="36" level="20"/>
+			</Sc>
+		</Scs>
+	</Equipment>
+</ECS>

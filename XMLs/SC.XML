@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="euc-kr"?>
+<SC TYPE="0" class="CSc" number="1" device="SC01_W1" cid="111200001">
+	<CV>
+		<CV_GROUP>
+			<CV_PLC class="CCv" number="1" device="CV01_W1_1F" cid="111101000">
+				<Tracks cid="111101000">
+					<Track number="001"/>
+					<Track number="002"/>
+					<Track number="003"/>
+					<Track number="004"/>
+					<Track number="005"/>
+					<Track number="006">
+						<Status>
+							<ScStoHS/>
+						</Status>
+					</Track>							
+					<Track number="007"/>
+					<Track number="008">
+						<Status>
+							<ScStoHS/>
+						</Status>
+					</Track>						
+					<Track number="009">
+						<Status>
+							<ScRetHS/>
+						</Status>
+					</Track>							
+					<Track number="010"/>
+					<Track number="011"/>
+					<Track number="012"/>
+					<Track number="013"/>
+					<Track number="014"/>
+					<Track number="015"/>										
+					<Track number="016"/>
+					<Track number="017"/>
+					<Track number="018"/>
+					<Track number="019"/>
+					<Track number="020"/>
+					<Track number="021"/>
+					<Track number="022"/>
+					<Track number="023"/>
+					<Track number="024"/>
+					<Track number="025">
+						<Status>
+							<ScStoHS/>
+						</Status>
+					</Track>								
+					<Track number="026">
+						<Status>
+							<ScRetHS/>
+						</Status>
+					</Track>							
+					<Track number="027"/>
+					<Track number="028">
+						<Status>
+							<ScRetHS/>
+						</Status>
+					</Track>							
+					<Track number="029"/>
+				</Tracks>
+			</CV_PLC>
+		</CV_GROUP>
+		<HS_GROUP>
+			<STO_HS>
+				<HS NO="1" TID="005" CV_PLC_NO="1" PAIR="0" BANK="1" BAY="0" LEVEL="0"/>
+				<HS NO="3" TID="008" CV_PLC_NO="1" PAIR="0" BANK="2" BAY="0" LEVEL="0"/>
+				<HS NO="5" TID="025" CV_PLC_NO="1" PAIR="0" BANK="2" BAY="0" LEVEL="0"/>
+			</STO_HS>
+			<RET_HS>
+				<HS NO="2" TID="028" CV_PLC_NO="1" PAIR="0" BANK="2" BAY="0" LEVEL="0"/>
+				<HS NO="4" TID="026" CV_PLC_NO="1" PAIR="0" BANK="2" BAY="0" LEVEL="0"/>
+				<HS NO="6" TID="009" CV_PLC_NO="1" PAIR="0" BANK="2" BAY="0" LEVEL="0"/>
+			</RET_HS>
+		</HS_GROUP>
+	</CV>
+	<BAY COUNT="10"/>
+	<LEVEL COUNT="10"/>
+</SC>
