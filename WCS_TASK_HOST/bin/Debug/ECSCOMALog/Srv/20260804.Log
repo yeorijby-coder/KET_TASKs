@@ -13,3 +13,47 @@
 07:13:32:526;IMP;통신이 연결되었습니다..
 07:13:36:463;IMP;DB 로그인 중...
 07:13:36:471;IMP;DB 로그인 성공.
+08:49:49:044;IMP;통신이 연결되었습니다..
+08:49:52:981;IMP;DB 로그인 중...
+08:49:52:993;IMP;DB 로그인 성공.
+08:50:36:174;ERR;메세지의 끝이 ETX가 아닙니다.
+08:50:36:184;ERR;WMS_MBX   0104 O6A10011234PalletID(20???)      101000000000010700000000000100 Product_ID(20???)    User_Data(20???)
+08:50:36:208;NOR;ECS_MBX   0013 xN020000000
+08:50:36:264;IMP;리모트 시스템과 연결을 종료합니다.
+08:50:36:280;IMP;통신 쓰레드를 종료합니다.
+08:50:37:664;IMP;통신이 연결되었습니다..
+08:50:40:948;IMP;DB 로그인 중...
+08:50:40:974;IMP;DB 로그인 성공.
+08:52:56:408;IMP;통신이 연결되었습니다..
+08:53:00:331;IMP;DB 로그인 중...
+08:53:00:340;IMP;DB 로그인 성공.
+08:53:10:580;NOR;WMS_MBX   0104 O6A10011234PALLET_ID_00000000  101000000000010700000000000100 PRODUCT_ID_00000000 USER_DATA_000000000 
+08:53:10:654;ERR;[ParseOorR] .. 출발지가 올바르지 않습니다.[작업번호:1001][출발지:101]
+08:53:10:672;NOR;ECS_MBX   0013 oN091001000
+08:55:29:468;IMP;통신이 연결되었습니다..
+08:55:33:409;IMP;DB 로그인 중...
+08:55:33:420;IMP;DB 로그인 성공.
+08:55:43:671;NOR;WMS_MBX   0104 O6A10011234PALLET_ID_00000000  102000000000010500000000000100 PRODUCT_ID_00000000 USER_DATA_000000000 
+08:55:43:722;ERR;[ParseOorR] .. 출발지가 올바르지 않습니다.[작업번호:1001][출발지:102]
+08:55:43:731;NOR;ECS_MBX   0013 oN091001000
+08:58:28:380;IMP;통신이 연결되었습니다..
+08:58:32:320;IMP;DB 로그인 중...
+08:58:32:329;IMP;DB 로그인 성공.
+08:58:42:127;NOR;WMS_MBX   0104 O6A10011234PALLET_ID_00000000  102000000000010500000000000100 PRODUCT_ID_00000000 USER_DATA_000000000 
+08:58:42:206;ERR;System.ArgumentException: 'SC_PLT_JOB_TYP' 열은 Default 테이블에 속하지 않습니다.
+   위치: System.Data.DataRow.GetDataColumn(String columnName)
+   위치: System.Data.DataRow.get_Item(String columnName)
+   위치: TSK_HostCom.CSrvWork.IsValidStation(Int32 nJobPattern, String strStation, Boolean bStart, String& strCV_PLT_JOB_TYP) 파일 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_HOST\CSrvWork.cs:줄 489
+   위치: TSK_HostCom.CSrvWork.ParseOorR(Int32 p_iBodyCnt) 파일 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_HOST\CSrvWork.cs:줄 1072
+   위치: TSK_HostCom.CSrvWork.Parsing(Int32 p_iBodyCnt) 파일 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_HOST\CSrvWork.cs:줄 429
+   위치: TSK_HostCom.modWorkThread.SrvWorkThread() 파일 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_HOST\modWorkThread.cs:줄 124
+08:58:42:226;IMP;통신 쓰레드를 종료합니다.
+08:58:44:280;IMP;통신이 연결되었습니다..
+08:58:47:585;IMP;DB 로그인 중...
+08:58:47:655;IMP;DB 로그인 성공.
+09:00:50:676;IMP;통신이 연결되었습니다..
+09:00:54:609;IMP;DB 로그인 중...
+09:00:54:619;IMP;DB 로그인 성공.
+09:01:04:538;NOR;WMS_MBX   0104 O6A10011234PALLET_ID_00000000  102000000000010500000000000100 PRODUCT_ID_00000000 USER_DATA_000000000 
+09:01:04:615;IMP;[ParseOorR] .. 작업 추가 되었습니다.[작업번호:1001]
+09:01:04:628;NOR;ECS_MBX   0013 oA001001000

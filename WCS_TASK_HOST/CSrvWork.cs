@@ -454,6 +454,23 @@ namespace TSK_HostCom
             m_BDb.dtMain.Reset();
         }
 
+        /*
+         * GfRowValue :: 조회 결과에서 컬럼 값을 꺼낸다. 컬럼이 없으면 기본값.
+         *
+         *   SC_PLT_JOB_TYP(파렛트 종류 구분) 같은 항목은 다른 현장 스키마에는
+         *   있지만 이 현장 CV_DATA 에는 없다. 예전에는 작업대 검증이 그 앞에서
+         *   항상 실패해 이 줄까지 오지 않아 드러나지 않았다.
+         */
+        private string GfRowValue(int p_nRow, string p_strCol, string p_strDefault)
+        {
+            if (m_BDb.dtMain == null) return p_strDefault;
+            if (!m_BDb.dtMain.Columns.Contains(p_strCol)) return p_strDefault;
+            if (p_nRow < 0 || p_nRow >= m_BDb.dtMain.Rows.Count) return p_strDefault;
+
+            string strValue = m_BDb.dtMain.Rows[p_nRow][p_strCol].ToString().Trim();
+            return (strValue.Length == 0) ? p_strDefault : strValue;
+        }
+
         #region 작업대에 대한 Validation
         private bool IsValidStation(int nJobPattern, string strStation, bool bStart, ref string strCV_PLT_JOB_TYP)
         {
@@ -486,7 +503,7 @@ namespace TSK_HostCom
                     }
                     else 
                     {
-                        strCV_PLT_JOB_TYP = "" + m_BDb.dtMain.Rows[ii]["SC_PLT_JOB_TYP"].ToString() == "" ? "0" : m_BDb.dtMain.Rows[ii]["SC_PLT_JOB_TYP"].ToString();
+                        strCV_PLT_JOB_TYP = GfRowValue(ii, "SC_PLT_JOB_TYP", "0");
                         return bValid;
                     }
                 }
@@ -499,7 +516,7 @@ namespace TSK_HostCom
                     }
                     else
                     {
-                        strCV_PLT_JOB_TYP = "" + m_BDb.dtMain.Rows[ii]["SC_PLT_JOB_TYP"].ToString() == "" ? "0" : m_BDb.dtMain.Rows[ii]["SC_PLT_JOB_TYP"].ToString();
+                        strCV_PLT_JOB_TYP = GfRowValue(ii, "SC_PLT_JOB_TYP", "0");
                         return bValid;
                     }
                 }
@@ -514,19 +531,20 @@ namespace TSK_HostCom
             bValid = false;
 		    switch (nJobPattern)
 		    {
+		    // @.입고 / 이동은 입고대에서 출발한다.
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternSto:
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternMove:
-			    if ((nKIND != (int)modDefApp.EN_STN_KIND.enStoStation) &&
-				    (nKIND != (int)modDefApp.EN_STN_KIND.enArvStation))
+			    if ((nKIND & modDefApp.STN_KIND_STO) == 0)
                 {
 				    return false;
                 }
 			    break;
 
+		    // @.출고 / 호기간 이동은 크레인 H/S 에서 출발한다.
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternRet:
     //		case (int)modDefApp.EN_JOB_PATTERN.enJobPatternPR:
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternW2W:
-			    if (nKIND != (int)modDefApp.EN_STN_KIND.enScStation)
+			    if ((nKIND & modDefApp.STN_KIND_SC) == 0)
                 {
 				    return false;
                 }
@@ -555,34 +573,26 @@ namespace TSK_HostCom
 
 		    switch (nJobPattern)
 		    {
+		    // @.입고 / 호기간 이동 / 랙간 이동은 크레인 H/S 로 도착한다.
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternSto:
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternW2W:
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternR2R:
-                if (nKIND != (int)modDefApp.EN_STN_KIND.enScStation)
+                if ((nKIND & modDefApp.STN_KIND_SC) == 0)
                 {
                     //continue;
                     return false;
                 }
 			    break;
 
+		    // @.출고 / 이동은 출고대로 도착한다.
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternRet:
     //		case (int)modDefApp.EN_JOB_PATTERN.enJobPatternPR:
-                if ((nKIND != (int)modDefApp.EN_STN_KIND.enArvStation) &&
-                    (nKIND != (int)modDefApp.EN_STN_KIND.enRetStation))
-                {
-                    //continue;
-                    return false;
-                }
-			    break;
-
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternMove:
-                if ((nKIND != (int)modDefApp.EN_STN_KIND.enArvStation) &&
-                    (nKIND != (int)modDefApp.EN_STN_KIND.enRetStation))
+                if ((nKIND & modDefApp.STN_KIND_RET) == 0)
                 {
                     //continue;
                     return false;
                 }
-
 			    break;
 	
 		    default:

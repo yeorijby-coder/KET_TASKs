@@ -289,6 +289,23 @@ public static frmMain g_frmForm;
             enScStation, enStoStation, enRetStation, enArvStation 
         };
 
+        /*
+         * CV_DATA.STN_KIND 는 위 열거형의 서수가 아니라 비트 플래그다.
+         *
+         *   IO_SCH(IOSchDB.cs)도 & 0x01 / & 0x02 로 읽고,
+         *   실제 데이터의 설비명도 그렇게 되어 있다.
+         *     51(0b110011) = 입출고대,  4 = SC 입고 H/S,  8 = SC 출고 H/S,
+         *     16 = RTV 출발 STN,        32 = RTV 도착 STN
+         *
+         *   예전 CSrvWork 의 작업대 검증은 이 값을 열거형 서수와 그대로 비교해
+         *   어떤 작업지시든 "출발지가 올바르지 않습니다" 로 거절했다.
+         */
+        public const int STN_KIND_STO    = 0x01;    // 입고대
+        public const int STN_KIND_RET    = 0x02;    // 출고대
+        public const int STN_KIND_SC_IN  = 0x04;    // SC 입고 H/S
+        public const int STN_KIND_SC_OUT = 0x08;    // SC 출고 H/S
+        public const int STN_KIND_SC     = STN_KIND_SC_IN | STN_KIND_SC_OUT;
+
         #endregion
 
         #region 작업정보 처리 함수들
