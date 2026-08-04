@@ -124,20 +124,6 @@ namespace TSK_HostCom
             }
 		}
 
-        struct stuSendEmptyPlt
-        {
-            public string strMessageType;
-
-            public string strJobDef;        // 1:공파레트 입고, 2:공파레트 출고
-            public string strStation;
-            public stuSendEmptyPlt(string p_strInit)
-            {
-                strMessageType = "";
-                strJobDef = "";
-                strStation = "";
-            }
-        }
-
         //최초작성자	: BASE(이길문)
 		//작성일		: 20160829
 		//설명		: 클라이언트클래스 생성시 초기값 할당
@@ -712,15 +698,20 @@ namespace TSK_HostCom
             {
                 // @.상태 보고(S). 안에서 30초 경과 여부를 보고 정기보고/변경보고를 가른다.
                 //   원본 문서 : "상태가 변경되면 즉시 + 정기적으로 30초에 1회"
-                GetStatusReport();
-                GetErrorReport();
-                GetWeightReport();
-                GetEmptyPltRequest();
-                GetPmStoRequest();      // @.공파렛트 입고 요구(N)
-                GetBoxStoRequest();     // @.P-BOX 입고 요구(L)
+                GetStatusReport();      // @.상태 보고(S)          문서 IV.3
+                GetErrorReport();       // @.에러 보고(E)          문서 IV.4
+                GetPmStoRequest();      // @.공파렛트 입고 요구(N) 문서 IV.8
+                GetBoxStoRequest();     // @.P-BOX 입고 요구(L)    문서 IV.9
+
+                /*
+                 * 아래 두 가지는 없앴다.
+                 *   GetWeightReport()    : 무게 보고(UG). 문서에도 원본에도 없는 전문이다.
+                 *   GetEmptyPltRequest() : 문서 IV.8 의 공파렛트 입고 요구는
+                 *                          GetPmStoRequest() 가 담당한다. 중복이었다.
+                 */
             }
-            GetJobCompleteReport();
-            GetLoadArrivalReport();
+            GetJobCompleteReport();     // @.작업 완료 보고(F) 1차완료   문서 IV.5
+            GetLoadArrivalReport();     // @.도착 보고. 원본은 완료보고(F) 최종완료로 보낸다
 
 			return true;
 		}
@@ -915,11 +906,9 @@ namespace TSK_HostCom
             
             // 다행 스럽게도 리모콘과 모드와 무게값이 모두 입고대에 표현된다 
             // 혹시라도 다른 조건이 필요하다면 쿼리 수정 요망 
-            m_strSql = modDefApp.CRLF + "     SELECT  WD.WEIGHT_RCV_VAL             ";
-            m_strSql += modDefApp.CRLF + "         ,  CD.*                          ";
+            // @.무게는 문서의 상태 보고 항목이 아니어서 WC_DATA 조인을 뺐다.
+            m_strSql = modDefApp.CRLF + "     SELECT  CD.*                          ";
             m_strSql += modDefApp.CRLF + "      FROM  CV_DATA CD                    ";
-            m_strSql += modDefApp.CRLF + "      LEFT  OUTER    JOIN      WC_DATA WD ";
-            m_strSql += modDefApp.CRLF + "        ON  CD.MC_NO        =  WD.WC_MC_NO";
             /*
              * 보고 대상 작업대 고르기 (원본 CCvTrackInfo::StatusReport)
              *
@@ -990,10 +979,6 @@ namespace TSK_HostCom
             string strMC_NO = "";
             string strMC_NO_NM = "";
 
-            string strMODE = "0";
-            string strREMOTE_CONTROL = "0";
-            string strWEIGHT_RCV_VAL = "0000000";
-            string strROLL_MODE = "0";
 
             string strMC_NO_LIST = "'0'";
 
@@ -1008,23 +993,6 @@ namespace TSK_HostCom
                 strMC_NO_NM = "" + m_BDb.dtMain.Rows[iii]["MC_NO_NM"].ToString() == "" ? "0" : m_BDb.dtMain.Rows[iii]["MC_NO_NM"].ToString();
                 
                 strMC_NO_LIST += ",'" + strMC_NO + "'";
-                
-                // 모드 정보와 무게 정보 리모콘 정보 
-                switch (strMC_NO)
-                {
-                    case "101":
-                        strREMOTE_CONTROL = "" + m_BDb.dtMain.Rows[iii]["REMOTE_CONTROL"].ToString() == "" ? "0" : m_BDb.dtMain.Rows[iii]["REMOTE_CONTROL"].ToString();
-                        strWEIGHT_RCV_VAL = "" + m_BDb.dtMain.Rows[iii]["WEIGHT_RCV_VAL"].ToString() == "" ? "0000000" : m_BDb.dtMain.Rows[iii]["WEIGHT_RCV_VAL"].ToString(); 
-                        break;
-                    case "149":
-                        strMODE = "" + m_BDb.dtMain.Rows[iii]["STOCK_MODE"].ToString() == "" ? "0" : m_BDb.dtMain.Rows[iii]["STOCK_MODE"].ToString(); 
-                        break;
-                    case "154":
-                        strROLL_MODE = "" + m_BDb.dtMain.Rows[iii]["ROLL_MODE"].ToString() == "" ? "0" : m_BDb.dtMain.Rows[iii]["ROLL_MODE"].ToString();
-                        break;
-                }
-
-
                 if (strSTO_READY_RD == "1")
                 {
                     nCvStatus = 1;
@@ -1152,209 +1120,6 @@ namespace TSK_HostCom
 
             return true;
         }
-
-        //최초작성자	: BASE(정복열)
-        //작성일		: 20200727
-        //설명		    : 무게 보고 
-        private bool GetWeightReport()
-        {
-            string strTitle = "[GetWeightReport] .. ";
-            m_strHostCmd = "U";
-
-            //if (!m_blSockConnected)
-            //{
-            //    return false;
-            //}
-
-            int nJobType = 0;
-
-            #region 무게 보고해야할 작업이 있는지?
-            m_BDb.ParamsClear();
-
-            m_strSql = modDefApp.CRLF + "  SELECT  WD.*, CD.LUGG_NO_RD ";
-            m_strSql += modDefApp.CRLF + "   FROM  WC_DATA WD";
-            m_strSql += modDefApp.CRLF + "  INNER  JOIN CV_DATA CD";
-            m_strSql += modDefApp.CRLF + "     ON  CD.MC_NO = WD.WC_MC_NO            ";
-            m_strSql += modDefApp.CRLF + "  WHERE  WD.WH_TYP   = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
-            //m_strSql += modDefApp.CRLF + "    AND  WD.WC_MC_NO = '104'";                  // 어차피 WC가 1개 뿐이므로 1개만 가져올 것이므로 주석 처리 함!
-            //m_strSql += modDefApp.CRLF + "    AND  WD.OD_RQ_ID = 'RQ'";
-            m_strSql += modDefApp.CRLF + "    AND  CD.LUGG_NO_RD   NOT IN ('0000', '0')";
-            m_strSql += modDefApp.CRLF + "    AND  WD.USE_YN   = 'Y'";
-            m_strSql += modDefApp.CRLF + "  ORDER  BY       WD.UPD_DT DESC LIMIT 1";             // 입력할때 Update 시간도 함께 처리
-
-            int iCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
-
-            if (iCnt < 0)
-            {
-                m_strLog = m_BDb.ErrMsg + m_strSql;
-                modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
-                return false;
-            }
-
-            // 보고할 작업이 없으면
-            if (iCnt == 0)
-            {
-                return true;
-            }
-            #endregion
-
-            string strLUGG_NO_RD = "" + m_BDb.dtMain.Rows[0]["LUGG_NO_RD"].ToString() == "" ? "0000" : m_BDb.dtMain.Rows[0]["LUGG_NO_RD"].ToString();
-            string strWEIGHT_DATA = "" + m_BDb.dtMain.Rows[0]["WEIGHT_RCV_VAL"].ToString() == "" ? "0000000" : m_BDb.dtMain.Rows[0]["WEIGHT_RCV_VAL"].ToString();
-            string strCHK_BYPASS_YN = "" + m_BDb.dtMain.Rows[0]["CHK_BYPASS_YN"].ToString() == "" ? "N" : m_BDb.dtMain.Rows[0]["CHK_BYPASS_YN"].ToString();
-            string strOD_RQ_ID = "" + m_BDb.dtMain.Rows[0]["OD_RQ_ID"].ToString() == "" ? "OK" : m_BDb.dtMain.Rows[0]["OD_RQ_ID"].ToString();
-            string strWC_MC_NO = "" + m_BDb.dtMain.Rows[0]["WC_MC_NO"].ToString() == "" ? "000" : m_BDb.dtMain.Rows[0]["WC_MC_NO"].ToString();
-
-            #region 메세지 보내기 체크 
-            if (strCHK_BYPASS_YN != "Y")
-            {
-                if (strOD_RQ_ID != "RQ")
-                {
-                    return true;
-                }
-                #region 상위에 보낼 메세지 구성
-                //전문 작성
-                string strTemp = null;
-                byte[] bytTempByte = null;
-
-                strTemp = string.Format("UG{0:0000}00000000{1:0000000}", Convert.ToInt32(strLUGG_NO_RD), Convert.ToInt32(strWEIGHT_DATA));
-
-                int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
-                //MSG_ORDER_CNT
-
-                m_bytTxBuff = new byte[iTxCnt];
-
-                //### Header ###
-                MakeHeader(strTemp.Length);
-                //MSG_ORDER_CNT
-
-
-                //### Body ###
-                m_bytTxBuff[modDefApp.MSG_HEAD_CNT] = modDefApp.STX;
-
-
-                bytTempByte = System.Text.Encoding.Default.GetBytes(strTemp);
-                Array.Copy(bytTempByte, 0, m_bytTxBuff, modDefApp.MSG_HEAD_CNT + 1, strTemp.Length);
-
-                m_bytTxBuff[iTxCnt - 1] = modDefApp.ETX;
-                #endregion
-
-                #region 메세지 보내기
-                if (!RequestSrv(iTxCnt.ToString()))
-                {
-                    return false;
-                }
-
-                #endregion
-
-                #region 보고 상태를 OK로 상태 변경
-                m_BDb.BeginTrans();
-                m_BDb.ParamsClear();
-
-                m_strSql = modDefApp.CRLF + "  UPDATE WC_DATA";
-                m_strSql += modDefApp.CRLF + "    SET OD_RQ_ID  = 'OK'";
-                m_strSql += modDefApp.CRLF + "      , UPD_USER_ID  = 'HOST_TASK'";
-                m_strSql += modDefApp.CRLF + "      , UPD_DT  = " + modDateTime.SYSDATE;
-                m_strSql += modDefApp.CRLF + "  WHERE WH_TYP  = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
-                m_strSql += modDefApp.CRLF + "    AND OD_RQ_ID = 'RQ'";
-                m_strSql += modDefApp.CRLF + "    AND USE_YN   = 'Y'";
-                //m_strSql += modDefApp.CRLF + "    AND  WD.WC_MC_NO = '104'";       // 어차피 WC가 1개 뿐이므로 1개만 가져올 것이므로 주석 처리 함!
-                //m_strSql += modDefApp.CRLF + "  ORDER  BY       WD.UPD_DT";                                               // 입력할때 Update 시간도 함께 처리
-
-                m_iSelCnt = m_BDb.ExcuteNonQry_Par(ref m_strSql);
-
-                if (m_iSelCnt < 0)
-                {
-                    m_strLog = m_BDb.ErrMsg + m_strSql;
-                    modCmWork.ShowMsgClient(m_strLog, modDefApp.MSG_ERR);
-                    m_BDb.RollbackTrans();
-                    return false;
-                }
-                if (m_iSelCnt == 0)
-                {
-                    m_strLog = "WC_DATA UPDATE 처리 실패";
-                    modCmWork.ShowMsgClient(m_strLog, modDefApp.MSG_ERR);
-                    m_BDb.RollbackTrans();
-                    return false;
-                }
-                #endregion
-
-            }
-
-            #endregion
-
-            m_BDb.ParamsClear();
-
-            m_strSql = modDefApp.CRLF + "  SELECT  CD.*                                     ";
-            m_strSql += modDefApp.CRLF + "   FROM  CV_DATA CD";
-            m_strSql += modDefApp.CRLF + "  INNER  JOIN JOB_MST JM";
-            m_strSql += modDefApp.CRLF + "     ON  CD.LUGG_NO_RD    = JM.LUGG_NO            ";
-            m_strSql += modDefApp.CRLF + "    AND  CD.WH_TYP        = JM.WH_TYP            ";
-            m_strSql += modDefApp.CRLF + "  WHERE  CD.WH_TYP        = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
-            m_strSql += modDefApp.CRLF + "    AND  CD.DEST_POS_RD   = '" + strWC_MC_NO + "'";
-            //m_strSql += modDefApp.CRLF + "    AND  CD.DEST_POS_OD   = '" + strWC_MC_NO + "'";
-            m_strSql += modDefApp.CRLF + "    AND  CD.RET_READY_RD  = '1'";
-            m_strSql += modDefApp.CRLF + "    AND  JM.JOB_STATUS    = '11'";
-            m_strSql += modDefApp.CRLF + "    AND  JM.WC_STEP       = '0'";
-
-            iCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
-
-            if (iCnt < 0)
-            {
-                m_strLog = m_BDb.ErrMsg + m_strSql;
-                modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
-                m_BDb.RollbackTrans();
-                return false;
-            }
-
-            // 보고할 작업이 없으면
-            if (iCnt == 0)
-            {
-                m_BDb.RollbackTrans();
-                return true;
-            }
-
-            #region 작업상태를 16으로 변경 
-            m_BDb.ParamsClear();
-
-            m_strSql = modDefApp.CRLF + "  UPDATE JOB_MST";
-            m_strSql += modDefApp.CRLF + "    SET JOB_STATUS  = '16'";
-            m_strSql += modDefApp.CRLF + "      , WC_STEP     = '1'";
-            m_strSql += modDefApp.CRLF + "      , UPD_USER_ID = 'HOST_TASK'";
-            m_strSql += modDefApp.CRLF + "      , UPD_DT  = " + modDateTime.SYSDATE;
-            m_strSql += modDefApp.CRLF + "  WHERE WH_TYP  = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
-            m_strSql += modDefApp.CRLF + "    AND LUGG_NO = " + m_BDb.ParamsAdd("LUGG_NO", strLUGG_NO_RD);
-            m_strSql += modDefApp.CRLF + "    AND WC_STEP = '0'";
-
-            m_iSelCnt = m_BDb.ExcuteNonQry_Par(ref m_strSql);
-
-            if (m_iSelCnt < 0)
-            {
-                m_strLog = strTitle + m_BDb.ErrMsg + m_strSql;
-                modCmWork.ShowMsgClient(m_strLog, modDefApp.MSG_ERR);
-                m_BDb.RollbackTrans();
-                return false;
-            }
-            if (m_iSelCnt == 0)
-            {
-                m_strLog = strTitle + "JOB_MST UPDATE 처리 실패";
-                modCmWork.ShowMsgClient(m_strLog, modDefApp.MSG_ERR);
-                m_BDb.RollbackTrans();
-                return false;
-            }
-
-            string strTempTemp = (strCHK_BYPASS_YN == "Y") ? "[BYPASS 모드]" : "[무게:" + strWEIGHT_DATA + "]";
-
-            m_strLog = strTitle + "무게 보고 했습니다.[작업번호:" + strLUGG_NO_RD + "]" + strTempTemp;
-            modCmWork.ShowMsgClient(m_strLog, modDefApp.MSG_IMP);
-            m_BDb.CommitTrans();
-
-            #endregion
-
-            return true;
-        }
-
-
-
         //최초작성자	: BASE(정복열)
         //작성일		: 20200519
         //설명		    : 에러 보고  
@@ -1840,47 +1605,30 @@ namespace TSK_HostCom
             modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_NOR);
             #endregion
 
-            #region 공파레트 출고 작업이었을 경우 요청상태를 변경한다. 
-            //int nLuggNum = Convert.ToInt32(strLuggNum);
-
-            if (modDefApp.g_bEmtpyPltJob[nLuggNum] == true)
-            {
-                if (modDefApp.g_frmForm.UpdateHostEmptyPlt(m_BDb, "", "", strLuggNum, "Q", "C") == false)
-                {
-                    m_strLog = string.Format("공파레트 출고요청 관련 완료처리를 하지 못했습니다. [작업번호:{0}][실패내용:{1}]", strLuggNum, modDefApp.GM_RTN_MSG);
-                    modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
-
-                    return false;                   
-                }
-                m_strLog = string.Format("공파레트 출고요청 관련 완료 하였습니다. [작업번호:{0}]", strLuggNum);
-                modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_NOR);
-            }
-            #endregion         
+                        /*
+             * 공파렛트 요청 관련 후처리. GetEmptyPltRequest() 를 없애면서
+             * g_strEmtpyPltKind / g_strEmtpyPltStation / g_bEmtpyPltJob 에
+             * 값을 넣는 곳이 사라져 더 이상 타지 않는 자리가 되었다.
+             * 문서 IV.8 의 공파렛트 입고 요구는 GetPmStoRequest() 가 담당한다.
+             */
+//#region 공파레트 출고 작업이었을 경우 요청상태를 변경한다.
+            ////int nLuggNum = Convert.ToInt32(strLuggNum);
+            //
+            //if (modDefApp.g_bEmtpyPltJob[nLuggNum] == true)
+            //{
+            //if (modDefApp.g_frmForm.UpdateHostEmptyPlt(m_BDb, "", "", strLuggNum, "Q", "C") == false)
+            //{
+            //m_strLog = string.Format("공파레트 출고요청 관련 완료처리를 하지 못했습니다. [작업번호:{0}][실패내용:{1}]", strLuggNum, modDefApp.GM_RTN_MSG);
+            //modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
+            //
+            //return false;
+            //}
+            //m_strLog = string.Format("공파레트 출고요청 관련 완료 하였습니다. [작업번호:{0}]", strLuggNum);
+            //modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_NOR);
+            //}
+            //#endregion         
             return true;
         }
-
-        //최초작성자	: BASE(정복열)
-        //작성일		: 20200518
-        //설명		    : 공파레트 입출고 요청 
-        private void GetEmptyPltRequest()
-        {
-            /*
-             * 문서 IV.8 공파렛트 입고 요구(N) 는 Job Define 이 1(입고) 뿐이다.
-             * 예전 코드는 여기에 2(출고)까지 넣고 문서에 없는 'P' 전문으로 보냈다.
-             * 'P' 는 받는 쪽이 알 수 없는 타입이라 응답이 없어 통신이 끊기고
-             * 재접속을 반복했다. 문서에 있는 입고 요구만 남긴다.
-             */
-            int[] nKind = new int[] { 1, 1 };
-            int[] nStation = new int[] { 108, 149 };
-
-            //bool bResult = false;
-            int nCount = nKind.Length;
-            for (int i = 0; i < nCount; i++)
-            {
-                GetEmptyPltRequest(nKind[i], nStation[i]);
-            }
-        }
-
         //최초작성자	: BASE(정복열)
         //작성일		: 20200515
         //설명		    : 공파레트 입출고 요청 
@@ -2080,202 +1828,6 @@ namespace TSK_HostCom
             int.TryParse(m_BDb.dtMain.Rows[0]["CNT"].ToString().Trim(), out nCnt);
             return (nCnt > 0);
         }
-
-        private bool GetEmptyPltRequest(int nKind, int nStation)
-        {
-            string strTitle = "[GetEmptyPltRequest] .. ";
-            m_strHostCmd = "N";
-
-            if (!m_blSockConnected)
-            {
-                return false;
-            }
-
-            int iSend_Max = 3;
-            #region 요청중인 작업이 있는지? [주석]
-            //m_BDb.ParamsClear();
-            //
-            //m_strSql = modDefApp.CRLF + "  SELECT  * ";
-            //m_strSql += modDefApp.CRLF + "   FROM  HOST_EMPTY_PLT ";
-            //m_strSql += modDefApp.CRLF + "  WHERE  WH_TYP = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
-            //m_strSql += modDefApp.CRLF + "    AND  KIND   = " + m_BDb.ParamsAdd("KIND", nKind.ToString());
-            //m_strSql += modDefApp.CRLF + "    AND  STN    = " + m_BDb.ParamsAdd("STN", nStation.ToString());
-            //m_strSql += modDefApp.CRLF + "    AND  STATUS <> 'C'";                                                  // 요청중
-            //m_strSql += modDefApp.CRLF + "    AND (STATUS = 'Q' OR LUGG_NO <> '0')";                                                  // 요청중
-            //m_strSql += modDefApp.CRLF + "  ORDER  BY     UPD_DT";                                               // 입력할때 Update 시간도 함께 처리
-            //
-            //int iCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
-            //
-            //if (iCnt < 0)
-            //{
-            //    m_strLog = m_BDb.ErrMsg + m_strSql;
-            //    modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
-            //    return false;
-            //}
-            //
-            //// 요청중인 작업이 1개라도 있으면 
-            //if (iCnt > 0)
-            //{
-            //    //m_strLog = "이미 요청 중인 작업이 있으므로 요청하지 않음![요청시간 : " + m_BDb.dtMain.Rows[0]["UDT_DT"] + "]";
-            //    //modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
-            //    return false;
-            //}
-            //#endregion
-            //
-            //#region 진행중인 작업이 있는지?  
-            //m_BDb.ParamsClear();
-            //
-            //m_strSql = modDefApp.CRLF + "  SELECT * ";
-            //m_strSql += modDefApp.CRLF + "   FROM JOB_MST ";
-            //m_strSql += modDefApp.CRLF + "  WHERE WH_TYP    = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
-            //switch (nKind)
-            //{
-            //    case 1:
-            //        m_strSql += modDefApp.CRLF + "AND START_POS = " + m_BDb.ParamsAdd("STN", nStation.ToString());
-            //        iSend_Max = 1;      // 입고시에는 1개
-            //        break;
-            //    case 2:
-            //        m_strSql += modDefApp.CRLF + "AND DEST_POS = " + m_BDb.ParamsAdd("STN", nStation.ToString());
-            //        iSend_Max = 1;      // 출고시에는 1개???
-            //        break;
-            //    default:
-            //        return false;
-            //}
-            //
-            //iCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
-            //
-            //if (iCnt < 0)
-            //{
-            //    m_strLog = m_BDb.ErrMsg + m_strSql;
-            //    modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
-            //    return false;
-            //}
-            //
-            //// 진행중인 작업이 최대작업보다 크거나 같을 경우  
-            //if (iCnt >= iSend_Max)
-            //{
-            //    //m_strLog = "이미 진행 중인 작업이 있으므로 요청하지 않음![작업갯수 : " + iCnt.ToString() + "]";
-            //    //modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
-            //    return false;
-            //}
-            #endregion
-
-            #region 요청해야할 작업이 있는지?
-            m_BDb.ParamsClear();
-
-            m_strSql = modDefApp.CRLF + "  SELECT * ";
-            m_strSql += modDefApp.CRLF + "   FROM HOST_EMPTY_PLT ";
-            m_strSql += modDefApp.CRLF + "  WHERE WH_TYP  = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
-            m_strSql += modDefApp.CRLF + "    AND KIND    = " + m_BDb.ParamsAdd("KIND", nKind.ToString());
-            m_strSql += modDefApp.CRLF + "    AND STN     = " + m_BDb.ParamsAdd("STN", nStation.ToString());
-            m_strSql += modDefApp.CRLF + "    AND STATUS  = 'N'";                                                // 신규
-            m_strSql += modDefApp.CRLF + "    AND LUGG_NO = '0'";                                                // 작업번호가 없음!
-            m_strSql += modDefApp.CRLF + "  ORDER BY     UPD_DT";                                                // 입력할때 Update 시간도 함께 처리
-
-            int iCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
-
-            if (iCnt < 0)
-            {
-                m_strLog = m_BDb.ErrMsg + m_strSql;
-                modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
-                return false;
-            }
-
-            // 요청중인 작업이 없을때
-            if (iCnt == 0)
-            {
-                //m_strLog = "요청 중인 작업이 없음![요청시간 : " + m_BDb.dtMain.Rows[0]["UDT_DT"] + "]";
-                //modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
-                return true;
-            }
-            #endregion
-
-            //요청중인 작업이 1개라도 있으면 
-            #region 상위에 보낼 메세지 구성
-            //전문 작성
-            string strTemp = null;
-            byte[] bytTempByte = null;
-
-            /*
-             * 문서 IV.8 공파렛트 입고 요구
-             *   STX + 'N' + 작업구분(1:입고) + P/M 스테이션(3) + User Data(0x20) + ETX
-             *   (본문 6자)
-             */
-            strTemp = string.Format("N{0}{1:000}{2}", nKind, nStation, (char)0x20);
-
-            int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
-            //MSG_ORDER_CNT
-
-            m_bytTxBuff = new byte[iTxCnt];
-
-            //### Header ###
-            MakeHeader(strTemp.Length);
-            //MSG_ORDER_CNT
-
-
-            //### Body ###
-            m_bytTxBuff[modDefApp.MSG_HEAD_CNT] = modDefApp.STX;
-
-
-            bytTempByte = System.Text.Encoding.Default.GetBytes(strTemp);
-            Array.Copy(bytTempByte, 0, m_bytTxBuff, modDefApp.MSG_HEAD_CNT + 1, strTemp.Length);
-
-            m_bytTxBuff[iTxCnt - 1] = modDefApp.ETX;
-
-            #endregion
-
-            #region 메세지 보내기
-            if (!RequestSrv(iTxCnt.ToString()))
-            {
-                return false;
-            }
-            #endregion
-
-            #region 요청 중으로 상태 변경 
-            m_BDb.BeginTrans();
-
-            //### manual_temp 갱신
-            //### Status UPDATE
-            m_BDb.ParamsClear();
-
-            m_strSql = modDefApp.CRLF + "  UPDATE HOST_EMPTY_PLT ";
-            m_strSql += modDefApp.CRLF + "    SET STATUS  = 'Q'";
-            m_strSql += modDefApp.CRLF + "      , UPD_ID  = 'HOST_TASK'";
-            m_strSql += modDefApp.CRLF + "      , UPD_DT  = " + modDateTime.SYSDATE;
-            m_strSql += modDefApp.CRLF + "  WHERE WH_TYP  = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
-            m_strSql += modDefApp.CRLF + "    AND KIND    = " + m_BDb.ParamsAdd("KIND", nKind);
-            m_strSql += modDefApp.CRLF + "    AND STN     = " + m_BDb.ParamsAdd("STN", nStation);
-            m_strSql += modDefApp.CRLF + "    AND STATUS  = 'N'";
-            m_strSql += modDefApp.CRLF + "    AND LUGG_NO = '0'";
-
-            m_iSelCnt = m_BDb.ExcuteNonQry_Par(ref m_strSql);
-
-            if (m_iSelCnt < 0)
-            {
-                m_strLog = m_BDb.ErrMsg + m_strSql;
-                modCmWork.ShowMsgClient(m_strLog, modDefApp.MSG_ERR);
-                m_BDb.RollbackTrans();
-                return false;
-            }
-            if (m_iSelCnt != 1)
-            {
-                strTemp = (nKind == 1) ? "공파레트 입고, 작업대 : " : "공파레트 출고, 작업대 : ";
-                m_strLog = "작업 처리 실패,[" + strTemp + nStation.ToString() + "]" + modDefApp.CRLF + m_strSql;
-                modCmWork.ShowMsgClient(m_strLog, modDefApp.MSG_ERR);
-                m_BDb.RollbackTrans();
-                return false;
-            }
-
-            modDefApp.g_strEmtpyPltKind = nKind.ToString();             // 작업 생성될때 확인
-            modDefApp.g_strEmtpyPltStation = nStation.ToString();       // 작업 생성될때 확인
-
-            m_BDb.CommitTrans();
-
-            #endregion
-
-            return true;
-        }
-
         //최초작성자	: BASE(정복열)
         //작성일		: 20200518
         //설명		    : 도착 보고  
@@ -2296,7 +1848,8 @@ namespace TSK_HostCom
         private bool GetLoadArrivalReport(int nJobStatus)
         {
             string strTitle = "[GetLoadArrivalReport] .. ";
-            m_strHostCmd = "A";
+            // @.원본과 같이 완료보고 전문으로 보낸다.(완료차수만 2)
+            m_strHostCmd = "F";
 
             int nJobType = 0;
             string strUserID = "";
@@ -2318,6 +1871,19 @@ namespace TSK_HostCom
                 return true;
             }
             #endregion
+
+            /*
+             * @.소켓이 붙기 전이면 여기서 그만둔다.
+             *
+             *   아래에서 JOB_STATUS 를 먼저 올려놓고 그 뒤에 소켓을 확인했었다.
+             *   그래서 기동 직후처럼 아직 연결이 안 된 시점에 한 번 돌면
+             *   보고는 못 보냈는데 상태만 올라가, 그 작업의 도착보고가 영영 나가지
+             *   않았다. 원본은 보고를 보낸 뒤에 상태를 정리한다.
+             */
+            if (!m_blSockConnected)
+            {
+                return false;
+            }
 
             #region 보고를 못했어도 그냥 지나감! - 다시 보고안하기 위해서 먼저 업데이트 하고 넘어감
             m_BDb.BeginTrans();
@@ -2354,12 +1920,6 @@ namespace TSK_HostCom
 
             #endregion
 
-
-            if (!m_blSockConnected)
-            {
-                return false;
-            }
-
             #region 상위에 보낼 메세지 구성
             //전문 작성
             string strTemp = null;
@@ -2375,19 +1935,38 @@ namespace TSK_HostCom
                 modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
                 return false;
             }
-            //string strLuggNum = "" + m_BDb.dtMain.Rows[0]["LUGG_NO"];
+            /*
+             * 도착 보고는 별도 전문이 아니다.
+             *
+             *   원본 CHostCl::ArrivedReport(EcsSv/HostCl.cpp) 는 완료보고와 똑같은
+             *   전문을 쓰되 완료차수(Step Count)만 2(최종완료)로 보낸다.
+             *     STX + CMD_COMPLETE + 작업구분 + 창고구분 + 작업번호(4)
+             *         + 완료구분 + 2 + 도착작업대(3) + ETX
+             *   문서 IV.5 도 완료차수를 "1:1차완료, 2:최종완료" 로 정의한다.
+             *
+             *   예전 코드는 문서에도 원본에도 없는 'A' 전문을 만들고 있었다.
+             *   (EcsEnv.h 에 CMD_LOAD_ARRV='A' 가 있긴 하나 원본 ECS 는 쓰지 않는다)
+             *
+             *   작업구분 -> 완료구분 / 작업대 매핑은 완료보고와 같다.
+             */
+            int nClass = 0;
             switch (nJobType)
             {
-                case 1: nStation = Convert.ToInt16(strSPosition); break;
-                case 2: nStation = Convert.ToInt16(strDPosition); break;
-                //case 3: nStation = Convert.ToInt16(strDPosition); break;
-                //case 4: nStation = Convert.ToInt16(strDPosition); break;
-                //case 5: nStation = Convert.ToInt16(strDPosition); break;
-                //case 6: nStation = Convert.ToInt16(strDPosition); break;
+                case 1: nStation = Convert.ToInt16(strSPosition); nClass = 1; break;
+                case 2: nStation = Convert.ToInt16(strDPosition); nClass = 2; break;
+                case 3: nStation = Convert.ToInt16(strDPosition); nClass = 2; break; // @.피킹은 출고와 동일
+                case 4: nStation = 0;                             nClass = 3; break;
+                case 5: nStation = 0;                             nClass = 3; break;
+                case 6: nStation = Convert.ToInt32(strDPosition); nClass = 3; break;
+                default:
+                    m_strLog = "작업정보는 존재하지만 잘못된 작업 정보입니다.[작업 타입:" + nJobType.ToString() + "]";
+                    modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
+                    return false;
             }
 
-
-            strTemp = string.Format("A{0}{1:0000}{2:000}", nJobType, Convert.ToInt32(strLuggNum), nStation);
+            strTemp = string.Format("F{0:0}{1}{2:0000}{3:0}{4:0}{5:000}",
+                                    nJobType, modDefApp.WH_DEF, nLuggNum, nClass,
+                                    modDefApp.STEP_FINAL, nStation);
 
             int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
             //MSG_ORDER_CNT

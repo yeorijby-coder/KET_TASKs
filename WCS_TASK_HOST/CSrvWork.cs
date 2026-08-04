@@ -423,15 +423,19 @@ namespace TSK_HostCom
                 //    ParseThroughput(p_iBodyCnt);
                 //    break;
                 #endregion 
+                // @.문서 II 메시지 타입 List : WMS 가 보내는 것은 작업지시(O)와 재작업지시(R) 뿐이다.
                 case "O":
                 case "R":
-                    // 작업지시 메세지 
+                    // 작업지시 / 재작업지시 메세지 
                     ParseOorR(p_iBodyCnt);
                     break;
-                case "D":
-                    // 작업삭제 메세지 
-                    ParseCancel(p_iBodyCnt);
-                    break;
+
+                //// @.작업삭제(D) 는 문서의 메시지 타입 목록에도 원본 CHostSv::Parsing 에도 없다.
+                ////   현장에서 필요해지면 WMS 와 규격을 정한 뒤 되살릴 것.
+                //case "D":
+                //    // 작업삭제 메세지 
+                //    ParseCancel(p_iBodyCnt);
+                //    break;
                 default:
 					m_strLog = string.Format("알수 없는 MsgType입니다.[{0}]", m_strMsgType);
 					modCmWork.ShowMsgServer(m_strLog, modDefApp.MSG_ERR);
@@ -1214,32 +1218,38 @@ namespace TSK_HostCom
 
                 #endregion
 
-                #region 공파레트 입고, 출고 요청이 있을때 해당 작업인지 체크할것!
-                if (modDefApp.g_strEmtpyPltKind != "" && modDefApp.g_strEmtpyPltStation != "")
-                {
-                    switch (strJob_Define)
-                    {
-                    case "1":
-                        if (modDefApp.g_strEmtpyPltKind == strJob_Define && modDefApp.g_strEmtpyPltStation == strStartPos)
-                        {
-                            modDefApp.g_frmForm.UpdateHostEmptyPlt(m_BDb, modDefApp.g_strEmtpyPltKind, modDefApp.g_strEmtpyPltStation, strLuggNo, "Q");
-                        }
-                                
-                        break;
-
-                    case "2":
-                        if (modDefApp.g_strEmtpyPltKind == strJob_Define && modDefApp.g_strEmtpyPltStation == strDestPos)
-                        {
-                            modDefApp.g_frmForm.UpdateHostEmptyPlt(m_BDb, modDefApp.g_strEmtpyPltKind, modDefApp.g_strEmtpyPltStation, strLuggNo, "Q");
-                        }
-                                
-                        break;
-
-                    default:
-                        break;
-                    }
-                }
-                #endregion
+                            /*
+             * 공파렛트 요청 관련 후처리. GetEmptyPltRequest() 를 없애면서
+             * g_strEmtpyPltKind / g_strEmtpyPltStation / g_bEmtpyPltJob 에
+             * 값을 넣는 곳이 사라져 더 이상 타지 않는 자리가 되었다.
+             * 문서 IV.8 의 공파렛트 입고 요구는 GetPmStoRequest() 가 담당한다.
+             */
+//#region 공파레트 입고, 출고 요청이 있을때 해당 작업인지 체크할것!
+            //if (modDefApp.g_strEmtpyPltKind != "" && modDefApp.g_strEmtpyPltStation != "")
+            //{
+            //switch (strJob_Define)
+            //{
+            //case "1":
+            //if (modDefApp.g_strEmtpyPltKind == strJob_Define && modDefApp.g_strEmtpyPltStation == strStartPos)
+            //{
+            //modDefApp.g_frmForm.UpdateHostEmptyPlt(m_BDb, modDefApp.g_strEmtpyPltKind, modDefApp.g_strEmtpyPltStation, strLuggNo, "Q");
+            //}
+            //
+            //break;
+            //
+            //case "2":
+            //if (modDefApp.g_strEmtpyPltKind == strJob_Define && modDefApp.g_strEmtpyPltStation == strDestPos)
+            //{
+            //modDefApp.g_frmForm.UpdateHostEmptyPlt(m_BDb, modDefApp.g_strEmtpyPltKind, modDefApp.g_strEmtpyPltStation, strLuggNo, "Q");
+            //}
+            //
+            //break;
+            //
+            //default:
+            //break;
+            //}
+            //}
+            //#endregion
                 break;
             case "R":
                 // @.문서 IV.2 : +28(1) Kind, +29(2) Stacker Number
