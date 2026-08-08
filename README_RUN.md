@@ -70,11 +70,27 @@ psql -h 127.0.0.1 -U KET_WCS -d KET_WCS -f WCS_TASK_HOST/DB/04_JOB_MST_RESTORE.s
 - 14개 프로그램 동시 기동, 전 구간 TCP 접속 성립
 - HOST↔HostSim : 전문 왕복 (S/E/F/N/O/R, [09]Interface목록서 규격)
 - SC_SINGLE/TWIN↔ScSim : 접속 유지
-- CV 3형제↔CvSim : 접속 유지 (1F 는 8포트 전부)
+- **CV 종단간 데이터 흐름** : CvSim 메모리(D레지스터)에 값을 쓰면
+  CV TASK 의 Q3E 폴링이 읽어 CV_DATA 까지 반영된다.
+  (트랙 101 에 LuggNum=1234 를 넣어 lugg_no_rd/job_typ_rd/read_upd_dt 갱신 확인)
+  ※ CV_DATA 의 read_upd_dt 는 "값이 바뀐 트랙만" 갱신된다. 시뮬레이터
+    메모리가 전부 0 이면 갱신이 없는 것이 정상이다.
 
 남은 것
-- CV 폴링이 접속 후 "트랙 데이터 읽기 에러"(트랙 180/188 등)를 낸다.
-  Q3E 프레임 형식은 양쪽이 같음을 확인했고, CvSim 쪽 트랙/디바이스 맵
-  (EcsDefine.xml, DeviceMap*.xml)과 TASK 의 트랙 범위 정합이 남은 일이다.
+- CV_1F 의 WCS_DB.INI 는 COMM0~7 여덟 스레드가 전부 같은 트랙(101~188)을
+  폴링하게 되어 있다(시험 흔적). 일부 스레드가 "트랙 데이터 읽기 에러" 를
+  간헐적으로 남기는 원인. 실제 PLC 8대 구성에 맞게 COMM 별 트랙 범위를
+  나누거나 PROCESS CNT 를 줄이면 된다.
+- CvSim 은 시작주소가 10000 을 넘는 요청에 응답하지 않고 연결을 끊는다
+  (Cv.cpp CheckRequest 의 주소 가드). 트랙 수를 늘릴 때 주의.
 - ScSim 은 EcsDefine.xml 이 SC 4대(901~904)를 정의하지만 레이아웃에는
   1대분 컨트롤만 있어 화면 표시는 1대만 된다. (크래시는 나지 않게 고침)
+
+## 종단간 확인에 쓴 방법 (재현용)
+
+CvSim 트랙 101 에 값 넣기 (Q3E WRITE, 트랙당 5워드라 트랙 101 = 주소 5):
+```python
+# 주소5 = LuggNum, 주소6 = 하위바이트 DestPos / 상위바이트 JobType
+q3e_write(5, [1234, (2<<8)|103])   # 9101 로 전송
+```
+몇 초 안에 CV_DATA (mc_no=101) 의 lugg_no_rd 가 1234 로 바뀐다.
