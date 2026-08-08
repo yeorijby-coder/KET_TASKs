@@ -243,7 +243,7 @@ namespace TSK_COMM_IOSCH
                 strSql += cDefApp.CRLF + "  INNER JOIN JOB_MST JM                       ";
                 strSql += cDefApp.CRLF + "     ON CD.MC_NO = JM.START_POS               ";
                 strSql += cDefApp.CRLF + "    AND JM.JOB_STATUS = '10'                  ";
-                strSql += cDefApp.CRLF + "  WHERE CD.LUGG_NO_RD 	= '0'               ";
+                strSql += cDefApp.CRLF + "  WHERE CD.LUGG_NO_RD    IN ('','0','0000')   ";
                 strSql += cDefApp.CRLF + "    AND CD.STO_READY_RD 	= '1'               ";
                 strSql += cDefApp.CRLF + "    AND CD.SENSOR0_DATA_RD = '1'              ";
                 strSql += cDefApp.CRLF + "    AND CD.AUTO_MODE_RD 	= '1'               ";
@@ -750,7 +750,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "     ON CD.MC_NO = JM.START_POS               ";
                 strSql += CRLF + "    AND JM.JOB_STATUS = '10'                  ";
                 strSql += CRLF + "  WHERE CD.PLC_NO         = :CV_PLC           ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
-                strSql += CRLF + "    AND CD.LUGG_NO_RD 	= '0'               ";
+                strSql += CRLF + "    AND CD.LUGG_NO_RD    IN ('','0','0000')   ";
                 strSql += CRLF + "    AND CD.STO_READY_RD 	= '1'               ";
                 strSql += CRLF + "    AND CD.SENSOR0_DATA_RD = '1'              ";
                 strSql += CRLF + "    AND CD.AUTO_MODE_RD 	= '1'               ";
