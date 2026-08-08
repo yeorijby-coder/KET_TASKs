@@ -8,6 +8,7 @@ using System.Data.OleDb;
 using log4net;
 using log4net.Config;
 using NpgsqlTypes;
+using Npgsql;
 
 namespace WCS_TASK_CV
 {
@@ -149,6 +150,9 @@ namespace WCS_TASK_CV
             set { StoStatus = value; }
         }
 
+        // DeviceMap XML 필드별 직전 값 (컬럼명 -> 값). 상위 보고 여부 판단용
+        public Dictionary<string, string> PrevVals = new Dictionary<string, string>();
+
         // M 비트 이벤트 ACK 상태 (PPT 시나리오 Load/Unload Complete 핸드셰이크)
         public bool UnloadComp1Acked = false; // Unload Complete #1 ACK 전송 여부 (RGV→CV 언로드)
         public bool LoadComp1Acked   = false; // Load Complete #1 ACK 전송 여부  (RGV→CV 로드)
@@ -214,8 +218,20 @@ namespace WCS_TASK_CV
         private int m_nAddress;
         private string m_strConnectString;
         private MelsecQ3EProtocol m_msQPlc;
+        private cDeviceMapRuntime m_devMap;   // DeviceMap XML 런타임 파서
         public Thread m_thThread;
         public SYS_MAIN m_frmMain;
+
+        /*
+         * 수동 통신 절단 지시.
+         *
+         *   화면의 소켓 상태 아이콘을 눌러 "통신연결 해제" 를 고르면 참이 된다.
+         *   - 스레드 본체(Thread_Doing)는 이 플래그를 보고 소켓을 닫고 내려간다.
+         *   - 메인폼의 Thread_Tick 은 이 플래그가 선 슬롯을 재기동하지 않는다.
+         *   UI 스레드가 쓰고 통신 스레드가 읽으므로 volatile 로 가시성을 보장한다.
+         */
+        public volatile bool m_bManualStop = false;
+
         private bool m_bOpen;
         public bool IsOpen { get { return m_bOpen; } set { m_bOpen = value; } } //프로그램 화면표시용.
 
@@ -278,6 +294,7 @@ namespace WCS_TASK_CV
         {
             try
             {
+                if (m_frmMain == null) return;
                 m_frmMain.PsMsgView(msg, m_strPlc_No.ToString(), nThGbn);
             }
             catch (Exception ex)
@@ -290,6 +307,7 @@ namespace WCS_TASK_CV
         {
             try
             {
+                if (m_frmMain == null) return;
                 m_frmMain.PsMsgView_Error(msg, m_strPlc_No.ToString(), nThGbn);
                 cDefApp.m_LogQ[m_nthNo].Enqueue(new LogParam(DateTime.Now, msg));
             }
@@ -303,6 +321,7 @@ namespace WCS_TASK_CV
         {
             try
             {
+                if (m_frmMain == null) return;
                 m_frmMain.PsMsgView_IMP(msg, m_strPlc_No.ToString(), nThGbn);
                 cDefApp.m_LogQ[m_nthNo].Enqueue(new LogParam(DateTime.Now, msg));
             }
@@ -331,6 +350,12 @@ namespace WCS_TASK_CV
                     throw new Exception("서비스 중지로 인한 쓰레드 종료");
                 }
 
+                // @.수동 절단 지시가 선 채로 (타이머 경합 등으로) 기동됐으면 바로 내려간다.
+                if (m_bManualStop)
+                {
+                    throw new Exception("수동 절단 지시로 인한 쓰레드 종료");
+                }
+
                 MakeMsg_Imp("DB/Socket Connectting", m_nthNo);
 
                 if (m_msQPlc.m_bSocCon == false && m_msQPlc.m_bDBOpen == false)
@@ -338,12 +363,17 @@ namespace WCS_TASK_CV
                     // open된 포트개수 만큼 재연결 (FROM==TO 단일 포트여도 1회는 시도)
                     for (int i = 0; i <= m_nToPort - m_nFromPort; i++)
                     {
+                        // @.재시도 도중 절단 지시가 서면 접속을 성립시키지 않고 바로 내려간다.
+                        if (m_bManualStop) goto EXIT_LBL;
+
                         if (m_nCurPort > m_nToPort)
                         {
                             m_nCurPort = m_nFromPort;
                         }
                         for (int j = 0; j < m_nPortCnt; j++)
                         {
+                            if (m_bManualStop) goto EXIT_LBL;
+
                             MakeMsg_Imp(string.Format("IP [{0}] PORT [{1}] 접속시도", m_strIp, m_nCurPort.ToString()), m_nthNo);
                             m_msQPlc.SetConfig(m_strIp, m_nCurPort, 2);
 
@@ -396,10 +426,30 @@ namespace WCS_TASK_CV
                     IsOpen = true;
                     MakeMsg_Imp("DB login Ok! (21.07.07)", m_nthNo);
 
-                    while (true)
+                    //DeviceMap XML 로드 (트랙 데이터 파싱 정의)
+                    string strDevErr = "";
+                    m_devMap = cDeviceMapRuntime.Load(m_strPlc_No, ref strDevErr);
+                    if (m_devMap == null)
+                    {
+                        MakeMsg_Error("[DeviceMap] " + strDevErr, m_nthNo);
+                        goto EXIT_LBL;
+                    }
+                    MakeMsg_Imp("[DeviceMap] DeviceMap" + m_strPlc_No + ".xml 로드 완료"
+                                + " (트랙당 " + m_devMap.WordPerTrack + "워드, 필드 " + m_devMap.Fields.Count + "개"
+                                + ", 상태영역 " + m_devMap.EtcAreas.Count + "개)", m_nthNo);
+                    foreach (string strSkip in m_devMap.SkippedAreas)
+                        MakeMsg_Imp("[DeviceMap] 상태영역 스킵: " + strSkip, m_nthNo);
+
+                    //XML 에 정의된 dbcol 컬럼이 CV_DATA 에 없으면 생성
+                    if (!EnsureCvDataColumns()) goto EXIT_LBL;
+
+                    while (!m_bManualStop)
                     {
                         for (int Idx = 1; Idx <= m_nCnt; Idx++)
                         {
+                            // @.수동 절단 지시는 한 트랙그룹 처리 안에서도 바로 반영한다.
+                            if (m_bManualStop) goto EXIT_LBL;
+
                             this.m_msQPlc.IsAscii = m_frmMain.IsAscii;
                             this.m_msQPlc.IsHex = m_frmMain.IsHex;
 
@@ -407,23 +457,12 @@ namespace WCS_TASK_CV
 
                             if (!CvStatus(Idx)) goto EXIT_LBL; //컨베이어 정보를 READ한다.
 
-                            //if (!CvRevStatus(Idx)) goto EXIT_LBL; //D9911~ 정보를 READ한다. (반전기) - 미사용 기능으로 제거됨
-
-                            //if (!CvRollStatus(Idx)) goto EXIT_LBL; //D9011~ 정보를 READ한다. (롤링기) - 미사용 기능으로 제거됨
+                            if (!CvEtcStatus(Idx)) goto EXIT_LBL; //SeparatelyETC 상태영역(Auto 등)을 READ한다.
 
                             if (!CvChg_CMD_RQ_YN(Idx)) goto EXIT_LBL; //컨베이어 CMD 쓰기지시를 확인하고 DATA를 WRITE한다..
 
                             if (!CvChg_OD_RQ_YN(Idx)) goto EXIT_LBL; //컨베이어 OD 쓰기지시를 확인하고 DATA를 WRITE한다..
 
-                            //if (!chkSIM_MODE(Idx)) goto EXIT_LBL; //시뮬레이터 모드 확인
-
-                            //if (!WC_DATA_RQ(Idx)) goto EXIT_LBL; // WC 읽기 요청 - 미사용 기능으로 제거됨
-
-                            if (!CvEventCheck(Idx)) goto EXIT_LBL; // M 비트 이벤트(Load/Unload Complete) ACK 처리
-
-                            if (!CvTrackingWrite(Idx)) goto EXIT_LBL; // R 영역 트래킹 JOB 쓰기
-
-                            if (!CvAlarmCheck(Idx)) goto EXIT_LBL; // 알람 비트(M0492/M0493) 처리
 
                             Thread.Sleep(200);
                         }
@@ -432,6 +471,16 @@ namespace WCS_TASK_CV
 
             EXIT_LBL:
                 {
+                    if (m_bManualStop)
+                    {
+                        MakeMsg_Imp("수동 절단 지시로 통신을 해제합니다.", m_nthNo);
+                        InsertWcsLogPgr("", "[Thread_Doing] 수동 절단 지시로 통신 해제 (PLC " + m_strPlc_No + ")");
+
+                        // @.수동 절단도 EQP_MST 통신상태를 'N' 으로 내린다.
+                        //   (정상 폴링은 CvStatus 가 매회 'Y' 로 유지하므로, 여기서 안 내리면
+                        //    상위 시스템이 절단된 설비를 계속 접속중으로 오판한다)
+                        Communication("N", m_strWh_typ, m_strEqmt_typ, m_strPlc_No);
+                    }
                     SetErrorMsg("CoMM" + m_nthNo + " DB & Socket logoff!");
                     MakeMsg_Imp("DB & Socket logoff!", m_nthNo);
                 }
@@ -496,7 +545,7 @@ namespace WCS_TASK_CV
                 //m_strAddress = m_nFrTrackNo.ToString().Substring(2, 3);
 
                 if (nSelCnt > 0)
-                    m_nAddress = (Convert.ToInt32(0 + m_strAddress)) * 10; //시작트랙 * 10 -> 시작 어드레스
+                    m_nAddress = (Convert.ToInt32(0 + m_strAddress)) * m_devMap.WordPerTrack; //시작트랙 * 트랙당워드수 -> 시작 어드레스
 
 
                 if (m_nAddress < 0)
@@ -572,71 +621,16 @@ namespace WCS_TASK_CV
         }
         #endregion
 
-        #region [CvStatus] :: CV READ 후 값이 변한게 있으면 DB UPDATE
+        #region [CvStatus] :: CV READ 후 값이 변한게 있으면 DB UPDATE (DeviceMap XML 정의 기반 파싱)
         private bool CvStatus(int Idx)
         {
             string strTitle = "[CvStatus]";
 
             try
             {
-                byte[] byRxBuff = new byte[2000];
+                int nWPT = m_devMap.WordPerTrack;
+                byte[] byRxBuff = new byte[80 * nWPT * 2 + 64];
                 int nReadTrack;
-
-                int nStatusData = 0;
-                int nSenSorData = 0;
-                int nMortorData = 0;
-                int nErrorCode = 0;
-                int nRetStatus = 0;
-
-                string LUGG_NO_RD = "";
-                string DEST_POS_RD = "";
-                string IS_TURN_RD = "";
-                string JOB_TYP_RD = "";
-                string TRAY_LEV_RD = "";
-                string TRAY_TYP_RD = "";
-                string FMS_RPT_RD = "";
-                string TR_PAUSE_RD = "";
-                string WAIT_TIME_RD = "";
-                string ERR_RQ_RD = "";
-                string AUTO_MODE_RD = "";
-                string STO_READY_RD = "";
-                string RET_READY_RD = "";
-                string STOHS_READY_RD = "";
-                string RETHS_READY_RD = "";
-                string SENSOR0_DATA_RD = "";
-                string SENSOR1_DATA_RD = "";
-                string SENSOR2_DATA_RD = "";
-                string ERROR_CODE = "";
-                string REMOTE_CONTROL = "";
-                string STOCK_MODE = "";
-                string ROLL_MODE = "";
-                string A_TURN_YN = "";
-                string B_TURN_YN = "";
-                string PULP_SENSOR_RD = "";
-                string WAIT_SC_RET_JOB_RD = "";
-                string DELETE_TRACK_RD = "";
-                string SC_LOCK_SENSOR = "";
-
-                string DRIV_PAPER_POS = "";
-
-                //10n+9
-                string ELEV_ASC_ERR = "";
-                string ELEV_DESC_ERR = "";
-                string CLAMP_FORWARD_ERR = "";
-                string CLAMP_BACKWARD_ERR = "";
-                string DRIV_FORWARD_ERR = "";
-                string DRIV_BACKWARD_ERR = "";
-                string PAPER_BLOCK_SENSOR1 = "";
-                string PAPER_BLOCK_SENSOR2 = "";
-                string PAPER_BLOCK_SENSOR3 = "";
-                string PAPER_BLOCK_SENSOR4 = "";
-                string PAPER_FULL_SENSOR = "";
-                string DRIV_FORWARD_POS = "";
-                string DRIV_BACKWARD_POS = "";
-                string CRUSH_PAPER_SENSOR = "";
-                string CLAMP_FORWARD_SENSOR = "";
-                string CLAMP_BACKWARD_SENSOR = "";
-                
 
                 /*
                  * 80개의 트랙식 읽음.
@@ -653,31 +647,22 @@ namespace WCS_TASK_CV
                     }
 
                     Array.Clear(byRxBuff, 0x00, byRxBuff.Length);
-                    int nAddress = (CvNo - m_nFrTrackNo) * 10 + m_nAddress;
-
-                    if (CvNo == 197 || CvNo == 198)
-                    {
-                        int a = 11;
-                    }
+                    int nAddress = (CvNo - m_nFrTrackNo) * nWPT + m_nAddress;
 
                     if (m_msQPlc.READ((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT,
                             (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D,
                             nAddress,
-                            nReadTrack * 10,
+                            nReadTrack * nWPT,
                             ref byRxBuff) == false)
                     {
                         throw new Exception();
                     }
 
-                    int nReadLen = 20;
-
                     MakeMsg("상태값 DB저장", m_nthNo);
                     for (int nIdx = 0; nIdx < nReadTrack; nIdx++)
                     {
-
                         int nCvNo = nIdx + CvNo;
-
-                        int nArrayIdx = ((((nIdx))) * 10) * 2;
+                        int nArrayIdx = nIdx * nWPT * 2;
 
                         if (!CvDic.ContainsKey(nCvNo))
                         {
@@ -685,249 +670,55 @@ namespace WCS_TASK_CV
                         }
 
                         //최초 실행 시 현재 DB값을 DIC에 넣기(상위에 상태보고 하는 값들)
-                        if (CvDic[nCvNo].AUTO_MODE_RD == "" &&
-                            CvDic[nCvNo].STO_READY_RD == "" &&
-                            CvDic[nCvNo].RET_READY_RD == "" &&
-                            CvDic[nCvNo].STOHS_READY_RD == "" &&
-                            CvDic[nCvNo].RETHS_READY_RD == "" &&
-                            CvDic[nCvNo].SENSOR0_DATA_RD == "" &&
-                            CvDic[nCvNo].SENSOR1_DATA_RD == "" &&
-                            CvDic[nCvNo].SENSOR2_DATA_RD == "" &&
-                            CvDic[nCvNo].DELETE_TRACK_RD == "" &&
-                            CvDic[nCvNo].A_TURN_YN == "" &&
-                            CvDic[nCvNo].B_TURN_YN == "" &&
-                            CvDic[nCvNo].SC_LOCK_SENSOR == "" &&
-                            CvDic[nCvNo].REMOTE_CONTROL == "" &&
-                            CvDic[nCvNo].STOCK_MODE == "" &&
-                            CvDic[nCvNo].ROLL_MODE == "" &&
-                            CvDic[nCvNo].CVERRCD == 0)
+                        if (CvDic[nCvNo].PrevVals.Count == 0)
                         {
-                            int nSelCount = 0;
-
-                            strSql = "";
-                            strSql += cDefApp.CRLF + "SELECT CD.*                                          ";
-                            strSql += cDefApp.CRLF + "  FROM CV_DATA CD                                    ";
-                            strSql += cDefApp.CRLF + " WHERE CD.WH_TYP = :WH_TYP                           ";
-                            strSql += cDefApp.CRLF + "   AND CD.PLC_NO = :PLC_NO                           ";
-                            strSql += cDefApp.CRLF + "   AND CD.MC_NO  = :MC_NO                            ";
-
-                            m_msQPlc._pBdb.mComMain.CommandType = CommandType.Text;
-                            m_msQPlc._pBdb.mComMain.Parameters.Clear();
-                            m_msQPlc._pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR, 255).Value = m_strWh_typ;
-                            m_msQPlc._pBdb.mComMain.Parameters.Add("PLC_NO", DbLang.VARCHAR, 255).Value = m_strPlc_No;
-                            m_msQPlc._pBdb.mComMain.Parameters.Add("MC_NO", DbLang.VARCHAR, 255).Value = nCvNo;
-
-                            nSelCount = m_msQPlc._pBdb.ExcuteQry(strSql);
-
-                            if (nSelCount < 0)
+                            if (!LoadPrevValsFromDb(nCvNo))
                             {
                                 MakeMsg_Error(strTitle + "최초 트랙정보 읽는 중 에러(CV_DATA)", m_nthNo);
                                 return false;
                             }
-
-                            CvDic[nCvNo].AUTO_MODE_RD = m_msQPlc._pBdb.mDtMain.Rows[0]["AUTO_MODE_RD"].ToString();
-                            CvDic[nCvNo].STO_READY_RD = m_msQPlc._pBdb.mDtMain.Rows[0]["STO_READY_RD"].ToString();
-                            CvDic[nCvNo].RET_READY_RD = m_msQPlc._pBdb.mDtMain.Rows[0]["RET_READY_RD"].ToString();
-                            CvDic[nCvNo].STOHS_READY_RD = m_msQPlc._pBdb.mDtMain.Rows[0]["STOHS_READY_RD"].ToString();
-                            CvDic[nCvNo].RETHS_READY_RD = m_msQPlc._pBdb.mDtMain.Rows[0]["RETHS_READY_RD"].ToString();
-                            CvDic[nCvNo].SENSOR0_DATA_RD = m_msQPlc._pBdb.mDtMain.Rows[0]["SENSOR0_DATA_RD"].ToString();
-                            CvDic[nCvNo].SENSOR1_DATA_RD = m_msQPlc._pBdb.mDtMain.Rows[0]["SENSOR1_DATA_RD"].ToString();
-                            CvDic[nCvNo].SENSOR2_DATA_RD = m_msQPlc._pBdb.mDtMain.Rows[0]["SENSOR2_DATA_RD"].ToString();
-                            CvDic[nCvNo].DELETE_TRACK_RD = m_msQPlc._pBdb.mDtMain.Rows[0]["DELETE_TRACK_RD"].ToString();
-                            CvDic[nCvNo].A_TURN_YN = m_msQPlc._pBdb.mDtMain.Rows[0]["A_TURN_YN"].ToString();
-                            CvDic[nCvNo].B_TURN_YN = m_msQPlc._pBdb.mDtMain.Rows[0]["B_TURN_YN"].ToString();
-                            CvDic[nCvNo].SC_LOCK_SENSOR = m_msQPlc._pBdb.mDtMain.Rows[0]["SC_LOCK_SENSOR"].ToString();
-                            CvDic[nCvNo].REMOTE_CONTROL = m_msQPlc._pBdb.mDtMain.Rows[0]["REMOTE_CONTROL"].ToString();
-                            CvDic[nCvNo].STOCK_MODE = m_msQPlc._pBdb.mDtMain.Rows[0]["STOCK_MODE"].ToString();
-                            CvDic[nCvNo].ROLL_MODE = m_msQPlc._pBdb.mDtMain.Rows[0]["ROLL_MODE"].ToString();
-                            CvDic[nCvNo].CVERRCD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[0]["ERROR_CODE"].ToString());
                         }
+
                         //Hexa string 값으로 가져온다.
-                        string strCvHexVal = BytesToHexs(byRxBuff, nArrayIdx, nReadLen);
+                        string strCvHexVal = BytesToHexs(byRxBuff, nArrayIdx, nWPT * 2);
 
-
-                        //Conveyor상태값 또는 BCR 값이 다를 때만 Update.
+                        //Conveyor상태값이 다를 때만 Update.
                         if (CvDic[nCvNo].CVSTATHEXVAL != strCvHexVal)
                         {
-                            CvDic[nCvNo].CVSTATHEXVAL = strCvHexVal; //Dictionary 값을 변경한다. true 0X
+                            CvDic[nCvNo].CVSTATHEXVAL = strCvHexVal; //Dictionary 값을 변경한다.
 
-                            //D10n
-                            LUGG_NO_RD = ((byRxBuff[1 + nArrayIdx] << 8) + byRxBuff[0 + nArrayIdx]).ToString("0000"); //작업번호
+                            //DeviceMap XML 정의대로 트랙 버퍼를 필드 단위 파싱
+                            Dictionary<string, string> dicVals = m_devMap.ParseTrack(byRxBuff, nArrayIdx);
 
-                            //D10n+1
-                            DEST_POS_RD = ((byRxBuff[3 + nArrayIdx] << 8) + byRxBuff[2 + nArrayIdx]).ToString("000"); //목적지
-
-                            //D10n+2
-                            JOB_TYP_RD = Convert.ToString("" + (byRxBuff[4 + nArrayIdx] & 0X0F).ToString());//작업구분.
-                            IS_TURN_RD = Convert.ToString("" + (byRxBuff[4 + nArrayIdx] >> 4).ToString());//Turn 신호.
-                            PULP_SENSOR_RD = Convert.ToString("" + (byRxBuff[5 + nArrayIdx] & 0X0F).ToString());//PULP 단수(0,1,2,3)
-                            //IS_TURN_RD = Convert.ToString("" + (byRxBuff[5 + nArrayIdx] >> 4).ToString());//Tilting
-
-                            //D10n+3 (spare)
-                            //TRAY_TYP_RD = (byRxBuff[6 + nArrayIdx] & 0X0F).ToString();
-                            //TRAY_LEV_RD = (byRxBuff[6 + nArrayIdx] >> 4).ToString();
-                            //TRAY_TYP_RD = (byRxBuff[7 + nArrayIdx] & 0X0F).ToString();
-                            //TRAY_LEV_RD = (byRxBuff[7 + nArrayIdx] >> 4).ToString();
-
-                            //D10n+4 (spare)
-                            //WAIT_TIME_RD = (byRxBuff[8 + nArrayIdx]).ToString();
-                            //FMS_RPT_RD = (byRxBuff[9 + nArrayIdx] & 0X0F).ToString();
-                            //TR_PAUSE_RD = (byRxBuff[9 + nArrayIdx] >> 4).ToString();
-
-                            //D10n+5
-                            TR_PAUSE_RD = (byRxBuff[10 + nArrayIdx] & 0X0F).ToString(); //TRACK PAUSE
-                            WAIT_SC_RET_JOB_RD = (byRxBuff[10 + nArrayIdx] >> 4).ToString(); // 대기필요
-                            //WAIT_TIME_RD = (byRxBuff[11 + nArrayIdx]).ToString(); //대기시간(사용X)
-                            //ERR_RQ_RD = ((byRxBuff[11 + nArrayIdx] << 8) + byRxBuff[10 + nArrayIdx]).ToString(); //SKI에서 사용중
-                            //IS_TURN_RD = Convert.ToString("" + (byRxBuff[10 + nArrayIdx] >> 4).ToString());//대기필요
-                            //ERR_RQ_RD = (byRxBuff[10 + nArrayIdx] & 0X0F).ToString();
-                            //ERR_RQ_RD = (byRxBuff[10 + nArrayIdx] >> 4).ToString();
-                            //ERR_RQ_RD = (byRxBuff[11 + nArrayIdx]).ToString(); //대기시간(사용X)
-
-                            //D10n+6
-                            nErrorCode = (byRxBuff[13 + nArrayIdx] << 8) + byRxBuff[12 + nArrayIdx]; //에러코드 int형
-                            ERROR_CODE = ((byRxBuff[13 + nArrayIdx] << 8) + byRxBuff[12 + nArrayIdx]).ToString("0000");	//에러코드
-
-                            //7번, 8번 영역은 값이 변경되면 상위에 보고함.
-                            //10n+7
-                            nStatusData = (byRxBuff[15 + nArrayIdx] << 8) + byRxBuff[14 + nArrayIdx];
-
-                            AUTO_MODE_RD = ((nStatusData >> 0) & 0x01).ToString();	//자동,수동.
-                            if (CvDic[nCvNo].AUTO_MODE_RD != AUTO_MODE_RD)
+                            //상위 보고 대상(hostRpt) 필드 값이 변했으면 보고 플래그 SET
+                            foreach (cDeviceMapRuntime.CvField fld in m_devMap.Fields)
                             {
-                                CvDic[nCvNo].AUTO_MODE_RD = AUTO_MODE_RD;
-                                m_blHostSendYN = true;
+                                string strNew = dicVals[fld.DbCol];
+                                string strOld;
+                                CvDic[nCvNo].PrevVals.TryGetValue(fld.DbCol, out strOld);
+                                if (strOld != strNew)
+                                {
+                                    CvDic[nCvNo].PrevVals[fld.DbCol] = strNew;
+                                    if (fld.HostRpt)
+                                        m_blHostSendYN = true;
+                                }
                             }
-
-                            STO_READY_RD = ((nStatusData >> 1) & 0x01).ToString();	//입고대.
-                            if (CvDic[nCvNo].STO_READY_RD != STO_READY_RD)
-                            {
-                                CvDic[nCvNo].STO_READY_RD = STO_READY_RD;
-                                m_blHostSendYN = true;
-                            }
-
-                            RET_READY_RD = ((nStatusData >> 2) & 0x01).ToString();	//출고대.
-                            if (CvDic[nCvNo].RET_READY_RD != RET_READY_RD)
-                            {
-                                CvDic[nCvNo].RET_READY_RD = RET_READY_RD;
-                                m_blHostSendYN = true;
-                            }
-
-                            STOHS_READY_RD = ((nStatusData >> 3) & 0x01).ToString();	//입고HS.
-                            if (CvDic[nCvNo].STOHS_READY_RD != STOHS_READY_RD)
-                            {
-                                CvDic[nCvNo].STOHS_READY_RD = STOHS_READY_RD;
-                                m_blHostSendYN = true;
-                            }
-
-                            RETHS_READY_RD = ((nStatusData >> 4) & 0x01).ToString();	//출고HS.
-                            if (CvDic[nCvNo].RETHS_READY_RD != RETHS_READY_RD)
-                            {
-                                CvDic[nCvNo].RETHS_READY_RD = RETHS_READY_RD;
-                                m_blHostSendYN = true;
-                            }
-
-                            DRIV_PAPER_POS = ((nStatusData >> 15) & 0x01).ToString(); //주행 지관 위치
-
-                            //10n+8
-                            nSenSorData = (byRxBuff[17 + nArrayIdx] << 8) + byRxBuff[16 + nArrayIdx];
-
-                            SENSOR0_DATA_RD = Convert.ToString(Convert.ToInt32((nSenSorData >> 0) & 0x01)) == "0" ? "0" : "1"; //화물감지1단
-                            if (CvDic[nCvNo].SENSOR0_DATA_RD != SENSOR0_DATA_RD)
-                            {
-                                CvDic[nCvNo].SENSOR0_DATA_RD = SENSOR0_DATA_RD;
-                                m_blHostSendYN = true;
-                            }
-
-                            SENSOR1_DATA_RD = Convert.ToString(Convert.ToInt32((nSenSorData >> 1) & 0x01)) == "0" ? "0" : "1"; //[PULP 1단] 0=1단아님, 1=1단
-                            if (CvDic[nCvNo].SENSOR1_DATA_RD != SENSOR1_DATA_RD)
-                            {
-                                CvDic[nCvNo].SENSOR1_DATA_RD = SENSOR1_DATA_RD;
-                                m_blHostSendYN = true;
-                            }
-
-                            SENSOR2_DATA_RD = Convert.ToString(Convert.ToInt32((nSenSorData >> 2) & 0x01)) == "0" ? "0" : "1"; //[PULP 2단] 0=2단아님, 1=2단
-                            if (CvDic[nCvNo].SENSOR2_DATA_RD != SENSOR2_DATA_RD)
-                            {
-                                CvDic[nCvNo].SENSOR2_DATA_RD = SENSOR2_DATA_RD;
-                                m_blHostSendYN = true;
-                            }
-
-                            DELETE_TRACK_RD = Convert.ToString(Convert.ToInt32((nSenSorData >> 3) & 0x01)) == "0" ? "0" : "1"; //PLC 삭제 요청
-                            if (CvDic[nCvNo].DELETE_TRACK_RD != DELETE_TRACK_RD)
-                            {
-                                CvDic[nCvNo].DELETE_TRACK_RD = DELETE_TRACK_RD;
-                                m_blHostSendYN = true;
-                            }
-
-                            A_TURN_YN = Convert.ToString(Convert.ToInt32((nSenSorData >> 4) & 0x01)) == "0" ? "0" : "1"; //A TURN 여부
-                            if (CvDic[nCvNo].A_TURN_YN != A_TURN_YN)
-                            {
-                                CvDic[nCvNo].A_TURN_YN = A_TURN_YN;
-                                m_blHostSendYN = true;
-                            }
-
-                            B_TURN_YN = Convert.ToString(Convert.ToInt32((nSenSorData >> 5) & 0x01)) == "0" ? "0" : "1"; //B TURN 여부
-                            if (CvDic[nCvNo].B_TURN_YN != B_TURN_YN)
-                            {
-                                CvDic[nCvNo].B_TURN_YN = B_TURN_YN;
-                                m_blHostSendYN = true;
-                            }
-
-                            REMOTE_CONTROL = Convert.ToString(Convert.ToInt32((nSenSorData >> 6) & 0x01)) == "0" ? "0" : "1"; //리모콘 정보
-                            if (CvDic[nCvNo].REMOTE_CONTROL != REMOTE_CONTROL)
-                            {
-                                CvDic[nCvNo].REMOTE_CONTROL = REMOTE_CONTROL;
-                                m_blHostSendYN = true;
-                            }
-
-                            SC_LOCK_SENSOR = Convert.ToString(Convert.ToInt32((nSenSorData >> 10) & 0x01)) == "0" ? "0" : "1"; //SC 인터락 센서 감지 여부
-                            if (CvDic[nCvNo].SC_LOCK_SENSOR != SC_LOCK_SENSOR)
-                            {
-                                CvDic[nCvNo].SC_LOCK_SENSOR = SC_LOCK_SENSOR;
-                                m_blHostSendYN = true;
-                            }
-
-                            ROLL_MODE = Convert.ToString(Convert.ToInt32((nSenSorData >> 14) & 0x01)) == "0" ? "0" : "1"; //ROLL 모드
-                            if (CvDic[nCvNo].ROLL_MODE != ROLL_MODE)
-                            {
-                                CvDic[nCvNo].ROLL_MODE = ROLL_MODE;
-                                m_blHostSendYN = true;
-                            }
-
-                            STOCK_MODE = Convert.ToString(Convert.ToInt32((nSenSorData >> 15) & 0x01)) == "0" ? "0" : "1"; //입출고 모드
-                            if (CvDic[nCvNo].STOCK_MODE != STOCK_MODE)
-                            {
-                                CvDic[nCvNo].STOCK_MODE = STOCK_MODE;
-                                m_blHostSendYN = true;
-                            }
-
-                            //10n + 9
-                            nMortorData = (byRxBuff[19 + nArrayIdx] << 8) + byRxBuff[18 + nArrayIdx];
-
-                            ELEV_ASC_ERR = Convert.ToString(Convert.ToInt32((nMortorData >> 0) & 0x01)) == "0" ? "0" : "1"; //승강 상승 비상(반전기,롤링기)
-                            ELEV_DESC_ERR = Convert.ToString(Convert.ToInt32((nMortorData >> 1) & 0x01)) == "0" ? "0" : "1"; //승강 하강 비상(반전기,롤링기)
-                            CLAMP_FORWARD_ERR = Convert.ToString(Convert.ToInt32((nMortorData >> 2) & 0x01)) == "0" ? "0" : "1"; //클램프 전진 비상(반전기,롤링기)
-                            CLAMP_BACKWARD_ERR = Convert.ToString(Convert.ToInt32((nMortorData >> 3) & 0x01)) == "0" ? "0" : "1"; //클램프 후진 비상(반전기,롤링기)
-                            DRIV_FORWARD_ERR = Convert.ToString(Convert.ToInt32((nMortorData >> 4) & 0x01)) == "0" ? "0" : "1"; //주행 전진 비상(반전기,롤링기)
-                            DRIV_BACKWARD_ERR = Convert.ToString(Convert.ToInt32((nMortorData >> 5) & 0x01)) == "0" ? "0" : "1"; //주행 후진 비상(반전기,롤링기)
-                            PAPER_BLOCK_SENSOR1 = Convert.ToString(Convert.ToInt32((nMortorData >> 6) & 0x01)) == "0" ? "0" : "1"; //지관 막힘 센서 #1(롤링기)
-                            PAPER_BLOCK_SENSOR2 = Convert.ToString(Convert.ToInt32((nMortorData >> 7) & 0x01)) == "0" ? "0" : "1"; //지관 막힘 센서 #2(롤링기)
-                            PAPER_BLOCK_SENSOR3 = Convert.ToString(Convert.ToInt32((nMortorData >> 8) & 0x01)) == "0" ? "0" : "1"; //지관 막힘 센서 #3(롤링기)
-                            PAPER_BLOCK_SENSOR4 = Convert.ToString(Convert.ToInt32((nMortorData >> 9) & 0x01)) == "0" ? "0" : "1"; //지관 막힘 센서 #4(롤링기)
-                            PAPER_FULL_SENSOR = Convert.ToString(Convert.ToInt32((nMortorData >> 10) & 0x01)) == "0" ? "0" : "1"; //지관 만재 센서(트랜스퍼)
-                            DRIV_FORWARD_POS = Convert.ToString(Convert.ToInt32((nMortorData >> 11) & 0x01)) == "0" ? "0" : "1"; //주행 전진 위치(롤링기, 반전기)
-                            DRIV_BACKWARD_POS = Convert.ToString(Convert.ToInt32((nMortorData >> 12) & 0x01)) == "0" ? "0" : "1"; //주행 후진 위치(롤링기, 반전기)
-                            CRUSH_PAPER_SENSOR = Convert.ToString(Convert.ToInt32((nMortorData >> 13) & 0x01)) == "0" ? "0" : "1"; //파쇄 종이 감지 센서(롤링기)
-                            CLAMP_FORWARD_SENSOR = Convert.ToString(Convert.ToInt32((nMortorData >> 14) & 0x01)) == "0" ? "0" : "1"; //클램프 전진 감지(롤링기, 반전기)
-                            CLAMP_BACKWARD_SENSOR = Convert.ToString(Convert.ToInt32((nMortorData >> 15) & 0x01)) == "0" ? "0" : "1"; //클램프 후진 감지(롤링기, 반전기)
 
                             //에러코드가 있고 전에 에러코드와 다를때만.
                             //처음에 에러코드가 0인거는 안탐.
+                            int nErrorCode = 0;
+                            string ERROR_CODE = "0000";
+                            if (dicVals.ContainsKey("ERROR_CODE"))
+                            {
+                                ERROR_CODE = dicVals["ERROR_CODE"];
+                                nErrorCode = Convert.ToInt32("0" + ERROR_CODE);
+                            }
+
                             if (CvDic[nCvNo].CVERRCD != nErrorCode)
                             {
                                 m_blHostErrSendYN = true;
 
+                                string LUGG_NO_RD = dicVals.ContainsKey("LUGG_NO_RD") ? dicVals["LUGG_NO_RD"] : "";
                                 if (!UpdateEQMT_ERR_LOG(m_strWh_typ, m_strEqmt_typ, nCvNo.ToString("000"), ERROR_CODE, LUGG_NO_RD))
                                 {
                                     m_blHostErrSendYN = false;
@@ -938,54 +729,8 @@ namespace WCS_TASK_CV
                                 CvDic[nCvNo].CVERRCD = nErrorCode;
                             }
 
-
-                            //TRACK정보 UPDATE.
-                            if (!UpdateCvData(LUGG_NO_RD
-                                            , DEST_POS_RD
-                                            , JOB_TYP_RD
-                                            , IS_TURN_RD
-                                            , TRAY_TYP_RD
-                                            , TRAY_LEV_RD
-                                            , FMS_RPT_RD
-                                            , TR_PAUSE_RD
-                                            , ERR_RQ_RD
-                                            , nErrorCode
-                                            , ERROR_CODE
-                                            , AUTO_MODE_RD
-                                            , STO_READY_RD
-                                            , RET_READY_RD
-                                            , STOHS_READY_RD
-                                            , RETHS_READY_RD
-                                            , SENSOR0_DATA_RD
-                                            , SENSOR1_DATA_RD
-                                            , SENSOR2_DATA_RD
-                                            , nCvNo.ToString("000")
-                                            , REMOTE_CONTROL
-                                            , ROLL_MODE
-                                            , STOCK_MODE
-                                            , A_TURN_YN
-                                            , B_TURN_YN
-                                            , PULP_SENSOR_RD
-                                            , WAIT_SC_RET_JOB_RD
-                                            , DELETE_TRACK_RD
-                                            , SC_LOCK_SENSOR
-                                            , DRIV_PAPER_POS
-                                            , ELEV_ASC_ERR
-                                            , ELEV_DESC_ERR
-                                            , CLAMP_FORWARD_ERR
-                                            , CLAMP_BACKWARD_ERR
-                                            , DRIV_FORWARD_ERR
-                                            , DRIV_BACKWARD_ERR
-                                            , PAPER_BLOCK_SENSOR1
-                                            , PAPER_BLOCK_SENSOR2
-                                            , PAPER_BLOCK_SENSOR3
-                                            , PAPER_BLOCK_SENSOR4
-                                            , PAPER_FULL_SENSOR
-                                            , DRIV_FORWARD_POS
-                                            , DRIV_BACKWARD_POS
-                                            , CRUSH_PAPER_SENSOR
-                                            , CLAMP_FORWARD_SENSOR
-                                            , CLAMP_BACKWARD_SENSOR))
+                            //TRACK정보 UPDATE. (파싱된 전체 필드를 동적 반영)
+                            if (!UpdateCvData(nCvNo.ToString("000"), dicVals))
                             {
                                 m_blHostSendYN = false;
                                 m_blHostErrSendYN = false;
@@ -995,7 +740,6 @@ namespace WCS_TASK_CV
                         m_blHostSendYN = false;
                         m_blHostErrSendYN = false;
                         m_strCvNo = Convert.ToString("" + nCvNo);
-                        nReadLen += 20;
                     }
 
                     CvNo += nReadTrack;
@@ -1011,11 +755,137 @@ namespace WCS_TASK_CV
                 m_blHostErrSendYN = false;
                 SetErrorMsg("Comm" + m_nthNo + strTitle + "Exception Error" + ex.Message);
                 Communication("N", m_strWh_typ, m_strEqmt_typ, m_strPlc_No);
-                InsertWcsLogPgr(m_strCvNo, strTitle + " 트랙번호 : [" + m_strCvNo + "] 데이터 읽기 중 에러");
+                InsertWcsLogPgr(m_strCvNo, strTitle + " 트랙번호 : [" + m_strCvNo + "] 데이터 읽기 중 에러 : " + ex.Message);
                 MakeMsg_Error(strTitle + m_strCvNo + "Exception Error" + ex.Message, m_nthNo);
                 return false;
             }
             return true;
+        }
+        #endregion
+
+        #region [LoadPrevValsFromDb] :: 최초 1회 CV_DATA 현재값을 PrevVals 에 적재
+        private bool LoadPrevValsFromDb(int nCvNo)
+        {
+            strSql = "";
+            strSql += cDefApp.CRLF + "SELECT CD.*                                          ";
+            strSql += cDefApp.CRLF + "  FROM CV_DATA CD                                    ";
+            strSql += cDefApp.CRLF + " WHERE CD.WH_TYP = :WH_TYP                           ";
+            strSql += cDefApp.CRLF + "   AND CD.PLC_NO = :PLC_NO                           ";
+            strSql += cDefApp.CRLF + "   AND CD.MC_NO  = :MC_NO                            ";
+
+            m_msQPlc._pBdb.mComMain.CommandType = CommandType.Text;
+            m_msQPlc._pBdb.mComMain.Parameters.Clear();
+            m_msQPlc._pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR, 255).Value = m_strWh_typ;
+            m_msQPlc._pBdb.mComMain.Parameters.Add("PLC_NO", DbLang.VARCHAR, 255).Value = m_strPlc_No;
+            m_msQPlc._pBdb.mComMain.Parameters.Add("MC_NO", DbLang.VARCHAR, 255).Value = nCvNo.ToString("000");
+
+            int nSelCount = m_msQPlc._pBdb.ExcuteQry(strSql);
+            if (nSelCount < 0)
+                return false;
+            if (nSelCount == 0)
+                return true;   //행이 없으면 최초 파싱값으로 채워짐
+
+            foreach (string strCol in m_devMap.GetDbColumns())
+            {
+                if (m_msQPlc._pBdb.mDtMain.Columns.Contains(strCol))
+                    CvDic[nCvNo].PrevVals[strCol] = m_msQPlc._pBdb.mDtMain.Rows[0][strCol].ToString();
+            }
+
+            if (m_msQPlc._pBdb.mDtMain.Columns.Contains("ERROR_CODE"))
+                CvDic[nCvNo].CVERRCD = Convert.ToInt32("0" + m_msQPlc._pBdb.mDtMain.Rows[0]["ERROR_CODE"].ToString());
+
+            return true;
+        }
+        #endregion
+
+        #region [CvEtcStatus] :: SeparatelyETC 상태영역(Auto 등) READ 후 변경분 DB UPDATE
+        private bool CvEtcStatus(int Idx)
+        {
+            string strTitle = "[CvEtcStatus]";
+
+            if (m_devMap.EtcAreas.Count == 0)
+                return true;
+
+            try
+            {
+                byte[] byRxBuff = new byte[64];
+
+                foreach (cDeviceMapRuntime.EtcArea area in m_devMap.EtcAreas)
+                {
+                    Array.Clear(byRxBuff, 0, byRxBuff.Length);
+                    if (!m_msQPlc.READ((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT,
+                                       (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D,
+                                       area.Address,
+                                       1,
+                                       ref byRxBuff))
+                    {
+                        throw new Exception(area.Name + " 영역(D" + area.Address + ") 읽기 실패");
+                    }
+
+                    int nWord = (byRxBuff[1] << 8) + byRxBuff[0];
+
+                    foreach (cDeviceMapRuntime.EtcBit bit in area.Bits)
+                    {
+                        string strVal = ((nWord >> bit.Pos) & 0x01).ToString();
+
+                        foreach (int nCvNo in bit.Tracks)
+                        {
+                            if (!CvDic.ContainsKey(nCvNo))
+                                CvDic.Add(nCvNo, new CVData());
+
+                            string strOld;
+                            CvDic[nCvNo].PrevVals.TryGetValue(area.DbCol, out strOld);
+                            if (strOld == strVal) continue;
+
+                            CvDic[nCvNo].PrevVals[area.DbCol] = strVal;
+                            if (area.HostRpt)
+                                m_blHostSendYN = true;
+
+                            Dictionary<string, string> dicVals = new Dictionary<string, string>();
+                            dicVals[area.DbCol] = strVal;
+                            if (!UpdateCvData(nCvNo.ToString("000"), dicVals))
+                            {
+                                m_blHostSendYN = false;
+                                return false;
+                            }
+                            m_blHostSendYN = false;
+                        }
+                    }
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                SetErrorMsg("Comm" + m_nthNo + strTitle + "Exception Error" + ex.Message);
+                MakeMsg_Error(strTitle + "Exception Error" + ex.Message, m_nthNo);
+                return false;
+            }
+        }
+        #endregion
+
+        #region [EnsureCvDataColumns] :: XML dbcol 컬럼이 CV_DATA 에 없으면 생성
+        private bool EnsureCvDataColumns()
+        {
+#if POSTGRESQL
+            try
+            {
+                foreach (string strCol in m_devMap.GetDbColumns())
+                {
+                    NpgsqlCommand cmdAdd = new NpgsqlCommand(
+                        "ALTER TABLE CV_DATA ADD COLUMN IF NOT EXISTS " + strCol + " VARCHAR(10)",
+                        m_msQPlc._pConObj);
+                    cmdAdd.ExecuteNonQuery();
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                MakeMsg_Error("[DeviceMap] CV_DATA 컬럼 생성 중 에러: " + ex.Message, m_nthNo);
+                return false;
+            }
+#else
+            return true;   //Oracle 은 수동 컬럼 관리
+#endif
         }
         #endregion
 
@@ -1071,7 +941,7 @@ namespace WCS_TASK_CV
                     //LFC 사용
                     string TRACK_NO = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["MC_NO"].ToString();
                     string ADDR_NO = TRACK_NO.Substring(TRACK_NO.Length - 2, 2);
-                    int nADDR_NO = (Convert.ToInt32(0 + ADDR_NO)) * 10; //시작트랙 * 10 -> 해당 어드레스
+                    int nADDR_NO = (Convert.ToInt32(0 + ADDR_NO)) * m_devMap.WordPerTrack; //시작트랙 * 트랙당워드수 -> 해당 어드레스
 
                     string CMD_RQ_ID = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["CMD_RQ_ID"].ToString();
 
@@ -1103,6 +973,14 @@ namespace WCS_TASK_CV
                     #region
                     if (CMD_RQ_ID == "ROTATE")
                     {
+                        if (9 >= m_devMap.WordPerTrack)
+                        {
+                            //현재 DeviceMap 트랙블록에 +9(모터) 영역이 없으면 지시 생략
+                            MakeMsg_Error(strTitle + " TRACK [" + TRACK_NO + "] ROTATE 지시 생략 - DeviceMap 에 +9 영역 없음", m_nthNo);
+                            if (!UpdateCvDataCmd(TRACK_NO)) return false;
+                            continue;
+                        }
+
                         Array.Clear(byTxBuff, 0, byTxBuff.Length);
                         byTxBuff[0] = (byte)(0 >> 0); //0
                         byTxBuff[1] = (byte)(0 >> 8); //128
@@ -1159,6 +1037,13 @@ namespace WCS_TASK_CV
                     }
                     else if (CMD_RQ_ID == "WAIT")
                     {
+                        if (4 >= m_devMap.WordPerTrack)
+                        {
+                            MakeMsg_Error(strTitle + " TRACK [" + TRACK_NO + "] WAIT 지시 생략 - DeviceMap 에 +4 영역 없음", m_nthNo);
+                            if (!UpdateCvDataCmd(TRACK_NO)) return false;
+                            continue;
+                        }
+
                         Array.Clear(byTxBuff, 0, byTxBuff.Length);
                         byTxBuff[0] = (byte)(nCMD_RQ_PARM);
                         byTxBuff[1] = (byte)(0);
@@ -1215,6 +1100,14 @@ namespace WCS_TASK_CV
                     }
                     else if (CMD_RQ_ID == "NOREAD")
                     {
+                        int nOffErr = m_devMap.GetWordOffsetByCol("ERROR_CODE");
+                        if (nOffErr < 0)
+                        {
+                            MakeMsg_Error(strTitle + " TRACK [" + TRACK_NO + "] NOREAD 지시 생략 - DeviceMap 에 ERROR_CODE 정의 없음", m_nthNo);
+                            if (!UpdateCvDataCmd(TRACK_NO)) return false;
+                            continue;
+                        }
+
                         Array.Clear(byTxBuff, 0, byTxBuff.Length);
                         int nNoread = 102;
                         byTxBuff[0] = (byte)(nNoread >> 0);
@@ -1224,7 +1117,7 @@ namespace WCS_TASK_CV
 
                         if (m_msQPlc.WRITE((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT,
                                                            (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D,
-                                                           nADDR_NO + 6,
+                                                           nADDR_NO + nOffErr,
                                                            nWriteLen,
                                                            byTxBuff) == false)
                         {
@@ -1272,18 +1165,23 @@ namespace WCS_TASK_CV
                     }
                     else if (CMD_RQ_ID == "RESET")  //에러 리셋
                     {
+                        int nOffErr = m_devMap.GetWordOffsetByCol("ERROR_CODE");
+                        if (nOffErr < 0)
+                        {
+                            MakeMsg_Error(strTitle + " TRACK [" + TRACK_NO + "] RESET 지시 생략 - DeviceMap 에 ERROR_CODE 정의 없음", m_nthNo);
+                            if (!UpdateCvDataCmd(TRACK_NO)) return false;
+                            continue;
+                        }
 
                         Array.Clear(byTxBuff, 0, byTxBuff.Length);
                         byTxBuff[0] = (byte)(0);
                         byTxBuff[1] = (byte)(0);
-                        // byTxBuff[2] = (byte)(0);
-                        //byTxBuff[3] = (byte)(0);
 
                         int nWriteLen = 1;
 
                         if (m_msQPlc.WRITE((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT,
                                                            (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D,
-                                                           nADDR_NO + 6,
+                                                           nADDR_NO + nOffErr,
                                                            nWriteLen,
                                                            byTxBuff) == false)
                         {
@@ -1331,17 +1229,29 @@ namespace WCS_TASK_CV
                     }
                     else if (CMD_RQ_ID == "1") // PULP_SENSOR
                     {
+                        int nOffPulp = m_devMap.GetWordOffsetByCol("PULP_SENSOR_RD");
+                        if (nOffPulp < 0)
+                        {
+                            MakeMsg_Error(strTitle + " TRACK [" + TRACK_NO + "] PULP_SENSOR 지시 생략 - DeviceMap 에 PULP_SENSOR_RD 정의 없음", m_nthNo);
+                            if (!UpdateCvDataCmd(TRACK_NO)) return false;
+                            continue;
+                        }
+
+                        //PULP 워드를 XML 정의 위치대로 구성 (같은 워드에 JOB_TYP 이 있으면 RD값 유지)
+                        int[] anWords = new int[m_devMap.WordPerTrack];
+                        bool[] abUsed = new bool[m_devMap.WordPerTrack];
+                        m_devMap.SetWriteValue(anWords, abUsed, "JOB_TYP_RD", nJOB_TYP_RD);
+                        m_devMap.SetWriteValue(anWords, abUsed, "PULP_SENSOR_RD", nPULP_SENSOR_OD);
+
                         Array.Clear(byTxBuff, 0, byTxBuff.Length);
-                        byTxBuff[0] = (byte)((nJOB_TYP_RD >> 0) | (0 << 4));
-                        byTxBuff[1] = (byte)((nPULP_SENSOR_OD >> 0) | (0 << 4));
-                        // byTxBuff[2] = (byte)(0);
-                        //byTxBuff[3] = (byte)(0);
+                        byTxBuff[0] = (byte)(anWords[nOffPulp] & 0xFF);
+                        byTxBuff[1] = (byte)((anWords[nOffPulp] >> 8) & 0xFF);
 
                         int nWriteLen = 1;
 
                         if (m_msQPlc.WRITE((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT,
                                                            (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D,
-                                                           nADDR_NO + 2,
+                                                           nADDR_NO + nOffPulp,
                                                            nWriteLen,
                                                            byTxBuff) == false)
                         {
@@ -1389,17 +1299,29 @@ namespace WCS_TASK_CV
                     }
                     else if (CMD_RQ_ID == "2")//대기필요
                     {
+                        int nOffPause = m_devMap.GetWordOffsetByCol("TR_PAUSE_RD");
+                        if (nOffPause < 0)
+                        {
+                            MakeMsg_Error(strTitle + " TRACK [" + TRACK_NO + "] 대기필요 지시 생략 - DeviceMap 에 TR_PAUSE_RD 정의 없음", m_nthNo);
+                            if (!UpdateCvDataCmd(TRACK_NO)) return false;
+                            continue;
+                        }
+
+                        //대기필요 워드를 XML 정의 위치대로 구성 (TR_PAUSE는 기존에 가지고있던 rd값)
+                        int[] anWords = new int[m_devMap.WordPerTrack];
+                        bool[] abUsed = new bool[m_devMap.WordPerTrack];
+                        m_devMap.SetWriteValue(anWords, abUsed, "TR_PAUSE_RD", nTR_PAUSE_RD);
+                        m_devMap.SetWriteValue(anWords, abUsed, "WAIT_SC_RET_JOB_RD", nWAIT_SC_RET_JOB_OD);
+
                         Array.Clear(byTxBuff, 0, byTxBuff.Length);
-                        byTxBuff[0] = (byte)((nTR_PAUSE_RD >> 0) | (nWAIT_SC_RET_JOB_OD << 4)); //TR_PAUSE는 기존에 가지고있던 rd값.
-                        byTxBuff[1] = (byte)(0);
-                        // byTxBuff[2] = (byte)(0);
-                        //byTxBuff[3] = (byte)(0);
+                        byTxBuff[0] = (byte)(anWords[nOffPause] & 0xFF);
+                        byTxBuff[1] = (byte)((anWords[nOffPause] >> 8) & 0xFF);
 
                         int nWriteLen = 1;
 
                         if (m_msQPlc.WRITE((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT,
                                                            (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D,
-                                                           nADDR_NO + 5,
+                                                           nADDR_NO + nOffPause,
                                                            nWriteLen,
                                                            byTxBuff) == false)
                         {
@@ -1447,17 +1369,29 @@ namespace WCS_TASK_CV
                     }
                     else if (CMD_RQ_ID == "3") //트랙 대기
                     {
+                        int nOffPause = m_devMap.GetWordOffsetByCol("TR_PAUSE_RD");
+                        if (nOffPause < 0)
+                        {
+                            MakeMsg_Error(strTitle + " TRACK [" + TRACK_NO + "] 트랙대기 지시 생략 - DeviceMap 에 TR_PAUSE_RD 정의 없음", m_nthNo);
+                            if (!UpdateCvDataCmd(TRACK_NO)) return false;
+                            continue;
+                        }
+
+                        //트랙대기 워드를 XML 정의 위치대로 구성 (대기필요는 기존에 가지고 있던 rd값)
+                        int[] anWords = new int[m_devMap.WordPerTrack];
+                        bool[] abUsed = new bool[m_devMap.WordPerTrack];
+                        m_devMap.SetWriteValue(anWords, abUsed, "TR_PAUSE_RD", nTR_PAUSE_OD);
+                        m_devMap.SetWriteValue(anWords, abUsed, "WAIT_SC_RET_JOB_RD", nWAIT_SC_RET_JOB_RD);
+
                         Array.Clear(byTxBuff, 0, byTxBuff.Length);
-                        byTxBuff[0] = (byte)((nTR_PAUSE_OD >> 0) | (nWAIT_SC_RET_JOB_RD << 4));//대기필요는 기존에 가지고 있던 rd값.
-                        byTxBuff[1] = (byte)(0);
-                        // byTxBuff[2] = (byte)(0);
-                        //byTxBuff[3] = (byte)(0);
+                        byTxBuff[0] = (byte)(anWords[nOffPause] & 0xFF);
+                        byTxBuff[1] = (byte)((anWords[nOffPause] >> 8) & 0xFF);
 
                         int nWriteLen = 1;
 
                         if (m_msQPlc.WRITE((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT,
                                                            (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D,
-                                                           nADDR_NO + 5,
+                                                           nADDR_NO + nOffPause,
                                                            nWriteLen,
                                                            byTxBuff) == false)
                         {
@@ -1576,7 +1510,7 @@ namespace WCS_TASK_CV
                     //LFC 사용
                     string TRACK_NO = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["MC_NO"].ToString();
                     string ADDR_NO = TRACK_NO.Substring(TRACK_NO.Length - 2, 2);
-                    int nADDR_NO = (Convert.ToInt32(0 + ADDR_NO)) * 10; //시작트랙 * 10 -> 해당 어드레스
+                    int nADDR_NO = (Convert.ToInt32(0 + ADDR_NO)) * m_devMap.WordPerTrack; //시작트랙 * 트랙당워드수 -> 해당 어드레스
 
                     string LUGG_NO_OD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["LUGG_NO_OD"].ToString();
                     int nLUGG_NO_OD = (Convert.ToInt32(0 + LUGG_NO_OD));
@@ -1614,21 +1548,23 @@ namespace WCS_TASK_CV
                                                 + ", 도착위치:" + DEST_POS_OD
                                                 , m_nthNo);
 
-                    byTxBuff[0] = (byte)(nLUGG_NO_OD >> 0);
-                    byTxBuff[1] = (byte)(nLUGG_NO_OD >> 8);
-                    byTxBuff[2] = (byte)(nDEST_POS_OD >> 0);
-                    byTxBuff[3] = (byte)(nDEST_POS_OD >> 8);
-                    byTxBuff[4] = (byte)((nJOB_TYP_OD >> 0) | (0 << 4));
-                    byTxBuff[5] = (byte)((nPULP_SENSOR_OD >> 0) | (0 << 4)); //nPULP_SENSOR_OD
-                    //byTxBuff[6] = (byte)((0 >> 0));
-                    //byTxBuff[7] = (byte)(0 >> 0);
-                    //byTxBuff[8] = (byte)(0 >> 0);
-                    //byTxBuff[9] = (byte)(0 >> 0);
-                    //byTxBuff[10] = (byte)((0 >> 0) | (nWAIT_SC_RET_JOB_RD << 4));
-                    //byTxBuff[11] = (byte)(0 >> 0);
+                    //DeviceMap XML 정의 위치대로 쓰기 워드 구성 (맵에 없는 필드는 자동 제외)
+                    int[] anWords = new int[m_devMap.WordPerTrack];
+                    bool[] abUsed = new bool[m_devMap.WordPerTrack];
+                    m_devMap.SetWriteValue(anWords, abUsed, "LUGG_NO_RD", nLUGG_NO_OD);
+                    m_devMap.SetWriteValue(anWords, abUsed, "DEST_POS_RD", nDEST_POS_OD);
+                    m_devMap.SetWriteValue(anWords, abUsed, "JOB_TYP_RD", nJOB_TYP_OD);
+                    m_devMap.SetWriteValue(anWords, abUsed, "PULP_SENSOR_RD", nPULP_SENSOR_OD);
 
-                    //int nWriteLen = 5;
-                    int nWriteLen = 3;
+                    int nWriteLen = 0;
+                    for (int nW = 0; nW < abUsed.Length; nW++)
+                        if (abUsed[nW]) nWriteLen = nW + 1;
+
+                    for (int nW = 0; nW < nWriteLen; nW++)
+                    {
+                        byTxBuff[nW * 2]     = (byte)(anWords[nW] & 0xFF);
+                        byTxBuff[nW * 2 + 1] = (byte)((anWords[nW] >> 8) & 0xFF);
+                    }
 
                     if (m_msQPlc.WRITE((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT,
                                                        (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D,
@@ -1692,53 +1628,8 @@ namespace WCS_TASK_CV
         }
         #endregion
 
-        #region [UpdateCvData] :: CV_DATA 상태값 변경
-        public bool UpdateCvData(string pLUGG_NO_RD
-                                , string pDEST_POS_RD
-                                , string pJOB_TYP_RD
-                                , string pIS_TURN_RD
-                                , string pTRAY_TYP_RD
-                                , string pTRAY_LEV_RD
-                                , string pFMS_RPT_RD
-                                , string pTR_PAUSE_RD
-                                , string pERR_RQ_RD
-                                , int pnErrorCode
-                                , string pERROR_CODE
-                                , string pAUTO_MODE_RD
-                                , string pSTO_READY_RD
-                                , string pRET_READY_RD
-                                , string pSTOHS_READY_RD
-                                , string pRETHS_READY_RD
-                                , string pSENSOR0_DATA_RD
-                                , string pSENSOR1_DATA_RD
-                                , string pSENSOR2_DATA_RD
-                                , string nCvNo
-                                , string pREMOTE_CONTROL
-                                , string pROLL_MODE
-                                , string pSTOCK_MODE
-                                , string pA_TURN_YN
-                                , string pB_TURN_YN
-                                , string pPULP_SENSOR_RD
-                                , string pWAIT_SC_RET_JOB_RD
-                                , string pDELETE_TRACK_RD
-                                , string pSC_LOCK_SENSOR
-                                , string pDRIV_PAPER_POS
-                                , string pELEV_ASC_ERR
-                                , string pELEV_DESC_ERR
-                                , string pCLAMP_FORWARD_ERR
-                                , string pCLAMP_BACKWARD_ERR
-                                , string pDRIV_FORWARD_ERR
-                                , string pDRIV_BACKWARD_ERR
-                                , string pPAPER_BLOCK_SENSOR1
-                                , string pPAPER_BLOCK_SENSOR2
-                                , string pPAPER_BLOCK_SENSOR3
-                                , string pPAPER_BLOCK_SENSOR4
-                                , string pPAPER_FULL_SENSOR
-                                , string pDRIV_FORWARD_POS
-                                , string pDRIV_BACKWARD_POS
-                                , string pCRUSH_PAPER_SENSOR
-                                , string pCLAMP_FORWARD_SENSOR
-                                , string pCLAMP_BACKWARD_SENSOR)
+        #region [UpdateCvData] :: 파싱된 DeviceMap XML 필드들을 CV_DATA 에 동적 UPDATE
+        public bool UpdateCvData(string strTRACK_NO, Dictionary<string, string> dicVals)
         {
             string strTitle = "[UpdateCvData]";
 
@@ -1748,34 +1639,12 @@ namespace WCS_TASK_CV
 
                 strSql = "";
                 strSql += cDefApp.CRLF + " UPDATE CV_DATA                                                     ";
-                strSql += cDefApp.CRLF + "    SET LUGG_NO_RD = :LUGG_NO_RD                                    ";
-                strSql += cDefApp.CRLF + "       ,DEST_POS_RD = :DEST_POS_RD                                  ";
-                //strSql += cDefApp.CRLF + "       ,IS_TURN_RD = :IS_TURN_RD                                    ";
-                strSql += cDefApp.CRLF + "       ,JOB_TYP_RD = :JOB_TYP_RD                                    ";
-                //strSql += cDefApp.CRLF + "       ,TRAY_LEV_RD = :TRAY_LEV_RD                                  ";
-                //strSql += cDefApp.CRLF + "       ,TRAY_TYP_RD = :TRAY_TYP_RD                                  ";
-                //strSql += cDefApp.CRLF + "       ,FMS_RPT_RD = :FMS_RPT_RD                                    ";
-                strSql += cDefApp.CRLF + "       ,TR_PAUSE_RD = :TR_PAUSE_RD                                  ";
-               // strSql += cDefApp.CRLF + "       ,WAIT_TIME_RD = :WAIT_TIME_RD                                ";
-                //strSql += cDefApp.CRLF + "       ,ERR_RQ_RD = :ERR_RQ_RD                                      ";
-                strSql += cDefApp.CRLF + "       ,STO_READY_RD = :STO_READY_RD                                ";
-                strSql += cDefApp.CRLF + "       ,RET_READY_RD = :RET_READY_RD                                ";
-                strSql += cDefApp.CRLF + "       ,STOHS_READY_RD = :STOHS_READY_RD                            ";
-                strSql += cDefApp.CRLF + "       ,RETHS_READY_RD = :RETHS_READY_RD                            ";
-                strSql += cDefApp.CRLF + "       ,AUTO_MODE_RD = :AUTO_MODE_RD                                ";
-                strSql += cDefApp.CRLF + "       ,SENSOR0_DATA_RD = :SENSOR0_DATA_RD                          ";
-                strSql += cDefApp.CRLF + "       ,SENSOR1_DATA_RD = :SENSOR1_DATA_RD                          ";
-                strSql += cDefApp.CRLF + "       ,SENSOR2_DATA_RD = :SENSOR2_DATA_RD                          ";
-                strSql += cDefApp.CRLF + "       ,ERROR_CODE = :ERROR_CODE                                    ";
-                strSql += cDefApp.CRLF + "       ,REMOTE_CONTROL = :REMOTE_CONTROL                            ";
-                strSql += cDefApp.CRLF + "       ,ROLL_MODE = :ROLL_MODE                                      ";
-                strSql += cDefApp.CRLF + "       ,STOCK_MODE = :STOCK_MODE                                    ";
-                strSql += cDefApp.CRLF + "       ,A_TURN_YN = :A_TURN_YN                                      ";
-                strSql += cDefApp.CRLF + "       ,B_TURN_YN = :B_TURN_YN                                      ";
-                strSql += cDefApp.CRLF + "       ,PULP_SENSOR_RD = :PULP_SENSOR_RD                            ";
-                strSql += cDefApp.CRLF + "       ,WAIT_SC_RET_JOB_RD = :WAIT_SC_RET_JOB_RD                    ";
-                strSql += cDefApp.CRLF + "       ,DELETE_TRACK_RD = :DELETE_TRACK_RD                          ";
-                strSql += cDefApp.CRLF + "       ,SC_LOCK_SENSOR = :SC_LOCK_SENSOR                            ";
+                bool bFirst = true;
+                foreach (KeyValuePair<string, string> kv in dicVals)
+                {
+                    strSql += cDefApp.CRLF + (bFirst ? "    SET " : "       ,") + kv.Key + " = :" + kv.Key;
+                    bFirst = false;
+                }
                 strSql += cDefApp.CRLF + "       ,READ_UPD_DT = " + DbLang.SYSDATE + "                        ";
                 strSql += cDefApp.CRLF + "       ,OD_RQ_FLAG = 'N'                                            ";
                 if (m_blHostSendYN == true)
@@ -1786,106 +1655,42 @@ namespace WCS_TASK_CV
                 {
                     strSql += cDefApp.CRLF + "       ,HOST_ERR_SEND_YN = 'N'                                  ";
                 }
-                strSql += cDefApp.CRLF + "       ,DRIV_PAPER_POS = :DRIV_PAPER_POS					          ";
-                strSql += cDefApp.CRLF + "       ,ELEV_ASC_ERR = :ELEV_ASC_ERR					              ";
-                strSql += cDefApp.CRLF + "       ,ELEV_DESC_ERR = :ELEV_DESC_ERR                              ";
-                strSql += cDefApp.CRLF + "       ,CLAMP_FORWARD_ERR = :CLAMP_FORWARD_ERR                      ";
-                strSql += cDefApp.CRLF + "       ,CLAMP_BACKWARD_ERR = :CLAMP_BACKWARD_ERR                    ";
-                strSql += cDefApp.CRLF + "       ,DRIV_FORWARD_ERR = :DRIV_FORWARD_ERR                        ";
-                strSql += cDefApp.CRLF + "       ,DRIV_BACKWARD_ERR = :DRIV_BACKWARD_ERR                      ";
-                strSql += cDefApp.CRLF + "       ,PAPER_BLOCK_SENSOR1 = :PAPER_BLOCK_SENSOR1                  ";
-                strSql += cDefApp.CRLF + "       ,PAPER_BLOCK_SENSOR2 = :PAPER_BLOCK_SENSOR2                  ";
-                strSql += cDefApp.CRLF + "       ,PAPER_BLOCK_SENSOR3 = :PAPER_BLOCK_SENSOR3                  ";
-                strSql += cDefApp.CRLF + "       ,PAPER_BLOCK_SENSOR4 = :PAPER_BLOCK_SENSOR4                  ";
-                strSql += cDefApp.CRLF + "       ,PAPER_FULL_SENSOR = :PAPER_FULL_SENSOR                      ";
-                strSql += cDefApp.CRLF + "       ,DRIV_FORWARD_POS = :DRIV_FORWARD_POS                        ";
-                strSql += cDefApp.CRLF + "       ,DRIV_BACKWARD_POS = :DRIV_BACKWARD_POS                      ";
-                strSql += cDefApp.CRLF + "       ,CRUSH_PAPER_SENSOR = :CRUSH_PAPER_SENSOR                    ";
-                strSql += cDefApp.CRLF + "       ,CLAMP_FORWARD_SENSOR = :CLAMP_FORWARD_SENSOR                ";
-                strSql += cDefApp.CRLF + "       ,CLAMP_BACKWARD_SENSOR = :CLAMP_BACKWARD_SENSOR              ";
                 strSql += cDefApp.CRLF + "WHERE  WH_TYP   = :WH_TYP                                           ";
                 strSql += cDefApp.CRLF + "AND    PLC_NO   = :PLC_NO                                           ";
                 strSql += cDefApp.CRLF + "AND    MC_NO    = :MC_NO                                         ";
 
                 m_msQPlc._pBdb.mComMain.CommandType = CommandType.Text;
                 m_msQPlc._pBdb.mComMain.Parameters.Clear();
-                m_msQPlc._pBdb.mComMain.Parameters.Add("LUGG_NO_RD", DbLang.VARCHAR).Value = pLUGG_NO_RD;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("DEST_POS_RD", DbLang.VARCHAR).Value = pDEST_POS_RD.PadLeft(3, '0');
-                //m_msQPlc._pBdb.mComMain.Parameters.Add("IS_TURN_RD", DbLang.VARCHAR).Value = pIS_TURN_RD;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("JOB_TYP_RD", DbLang.VARCHAR).Value = pJOB_TYP_RD;
-               // m_msQPlc._pBdb.mComMain.Parameters.Add("TRAY_LEV_RD", DbLang.VARCHAR).Value = pTRAY_LEV_RD;
-                //m_msQPlc._pBdb.mComMain.Parameters.Add("TRAY_TYP_RD", DbLang.VARCHAR).Value = pTRAY_TYP_RD;
-                //m_msQPlc._pBdb.mComMain.Parameters.Add("FMS_RPT_RD", DbLang.VARCHAR).Value = pFMS_RPT_RD;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("TR_PAUSE_RD", DbLang.VARCHAR).Value = pTR_PAUSE_RD;
-                //m_msQPlc._pBdb.mComMain.Parameters.Add("WAIT_TIME_RD", DbLang.VARCHAR).Value = pWAIT_TIME_RD;
-               // m_msQPlc._pBdb.mComMain.Parameters.Add("ERR_RQ_RD", DbLang.VARCHAR).Value = pERR_RQ_RD;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("STO_READY_RD", DbLang.VARCHAR).Value = pSTO_READY_RD;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("RET_READY_RD", DbLang.VARCHAR).Value = pRET_READY_RD;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("STOHS_READY_RD", DbLang.VARCHAR).Value = pSTOHS_READY_RD;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("RETHS_READY_RD", DbLang.VARCHAR).Value = pRETHS_READY_RD;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("AUTO_MODE_RD", DbLang.VARCHAR).Value = pAUTO_MODE_RD;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("SENSOR0_DATA_RD", DbLang.VARCHAR).Value = pSENSOR0_DATA_RD;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("SENSOR1_DATA_RD", DbLang.VARCHAR).Value = pSENSOR1_DATA_RD;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("SENSOR2_DATA_RD", DbLang.VARCHAR).Value = pSENSOR2_DATA_RD;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("ERROR_CODE", DbLang.VARCHAR).Value = pnErrorCode;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("REMOTE_CONTROL", DbLang.VARCHAR).Value = pREMOTE_CONTROL;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("ROLL_MODE", DbLang.VARCHAR).Value = pROLL_MODE;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("STOCK_MODE", DbLang.VARCHAR).Value = pSTOCK_MODE;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("A_TURN_YN", DbLang.VARCHAR).Value = pA_TURN_YN;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("B_TURN_YN", DbLang.VARCHAR).Value = pB_TURN_YN;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("PULP_SENSOR_RD", DbLang.VARCHAR).Value = pPULP_SENSOR_RD;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("WAIT_SC_RET_JOB_RD", DbLang.VARCHAR).Value = pWAIT_SC_RET_JOB_RD;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("DELETE_TRACK_RD", DbLang.VARCHAR).Value = pDELETE_TRACK_RD;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("SC_LOCK_SENSOR", DbLang.VARCHAR).Value = pSC_LOCK_SENSOR;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("DRIV_PAPER_POS", DbLang.VARCHAR).Value = pDRIV_PAPER_POS;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("ELEV_ASC_ERR", DbLang.VARCHAR).Value = pELEV_ASC_ERR;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("ELEV_DESC_ERR", DbLang.VARCHAR).Value = pELEV_DESC_ERR;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("CLAMP_FORWARD_ERR", DbLang.VARCHAR).Value = pCLAMP_FORWARD_ERR;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("CLAMP_BACKWARD_ERR", DbLang.VARCHAR).Value = pCLAMP_BACKWARD_ERR;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("DRIV_FORWARD_ERR", DbLang.VARCHAR).Value = pDRIV_FORWARD_ERR;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("DRIV_BACKWARD_ERR", DbLang.VARCHAR).Value = pDRIV_BACKWARD_ERR;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("PAPER_BLOCK_SENSOR1", DbLang.VARCHAR).Value = pPAPER_BLOCK_SENSOR1;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("PAPER_BLOCK_SENSOR2", DbLang.VARCHAR).Value = pPAPER_BLOCK_SENSOR2;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("PAPER_BLOCK_SENSOR3", DbLang.VARCHAR).Value = pPAPER_BLOCK_SENSOR3;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("PAPER_BLOCK_SENSOR4", DbLang.VARCHAR).Value = pPAPER_BLOCK_SENSOR4;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("PAPER_FULL_SENSOR", DbLang.VARCHAR).Value = pPAPER_FULL_SENSOR;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("DRIV_FORWARD_POS", DbLang.VARCHAR).Value = pDRIV_FORWARD_POS;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("DRIV_BACKWARD_POS", DbLang.VARCHAR).Value = pDRIV_BACKWARD_POS;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("CRUSH_PAPER_SENSOR", DbLang.VARCHAR).Value = pCRUSH_PAPER_SENSOR;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("CLAMP_FORWARD_SENSOR", DbLang.VARCHAR).Value = pCLAMP_FORWARD_SENSOR;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("CLAMP_BACKWARD_SENSOR", DbLang.VARCHAR).Value = pCLAMP_BACKWARD_SENSOR;
+                foreach (KeyValuePair<string, string> kv in dicVals)
+                    m_msQPlc._pBdb.mComMain.Parameters.Add(kv.Key, DbLang.VARCHAR).Value = kv.Value;
                 m_msQPlc._pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = m_strWh_typ;
                 m_msQPlc._pBdb.mComMain.Parameters.Add("PLC_NO", DbLang.VARCHAR).Value = m_strPlc_No;
-                m_msQPlc._pBdb.mComMain.Parameters.Add("MC_NO", DbLang.VARCHAR).Value = nCvNo;
+                m_msQPlc._pBdb.mComMain.Parameters.Add("MC_NO", DbLang.VARCHAR).Value = strTRACK_NO;
 
                 nSelCnt = m_msQPlc._pBdb.ExcuteNonQry(strSql);
 
                 if (nSelCnt < 0)
                 {
                     m_msQPlc._pBdb.Rollback();
-                    SetErrorMsg("Comm" + m_nthNo + " :" + strTitle + "트랙정보 변경 중 에러(CV_DATA)., MSG [" + m_msQPlc._pBdb.ErrMsg + "]");
-                    MakeMsg_Error(strTitle + "트랙정보 변경 중 에러(CV_DATA)., MSG [" + m_msQPlc._pBdb.ErrMsg + "]", m_nthNo);
+                    SetErrorMsg("Comm" + m_nthNo + " :" + strTitle + "트랙정보 변경 중 에러(CV_DATA)., PLC_NO [" + m_strPlc_No + "] TRACK_NO [" + strTRACK_NO + "] MSG [" + m_msQPlc._pBdb.ErrMsg + "]");
+                    MakeMsg_Error(strTitle + "트랙정보 변경 중 에러(CV_DATA)., PLC_NO [" + m_strPlc_No + "] TRACK_NO [" + strTRACK_NO + "] MSG [" + m_msQPlc._pBdb.ErrMsg + "]", m_nthNo);
                     return false;
                 }
 
                 if (nSelCnt == 0)
                 {
                     m_msQPlc._pBdb.Rollback();
-                    SetErrorMsg("Comm" + m_nthNo + " :" + strTitle + "트랙정보 변경 중 DATA가 없습니다., PLC_NO [" + m_strPlc_No + "] " + "TRACK_NO [" + nCvNo + "]");
-                    MakeMsg_Error(strTitle + "트랙정보 변경 중 DATA가 없습니다., TRACK_NO [" + nCvNo.ToString() + "]", m_nthNo);
+                    MakeMsg_Error(strTitle + "트랙정보 변경 중 DATA가 없습니다., TRACK_NO [" + strTRACK_NO + "]", m_nthNo);
                     return false;
                 }
 
-
                 m_msQPlc._pBdb.Commit();
                 return true;
-
             }
             catch (Exception ex)
             {
                 m_msQPlc._pBdb.Rollback();
-                SetErrorMsg("Comm" + m_nthNo + " :" + strTitle + "트랙정보 변경 중 에러(CV_DATA)., EXCEPTION MSG [" + ex.ToString() + "]");
-                MakeMsg_Error(strTitle + "트랙정보 변경 중 에러(CV_DATA)., EXCEPTION MSG [" + ex.ToString() + "]", m_nthNo);
+                MakeMsg_Error(strTitle + "트랙정보 변경 중 에러(CV_DATA)., TRACK_NO [" + strTRACK_NO + "] MSG [" + ex.ToString() + "]", m_nthNo);
                 return false;
             }
         }
@@ -2350,7 +2155,7 @@ namespace WCS_TASK_CV
         #endregion
 
 
-
+        /*
         // ─────────────────────────────────────────────────────────────────────
         //  헬퍼: M 비트 읽기/쓰기 (워드 단위 PLC 통신 기반)
         // ─────────────────────────────────────────────────────────────────────
@@ -2458,14 +2263,14 @@ namespace WCS_TASK_CV
         ///   +3 : Unload Complete #2  (작업자 반출)
         ///   +4 : Load Complete #2    (입고쪽 화물 적재)
         ///   +6 : W.O (작업지시 보고)
-        ///   +10: Pallet Exist #1
-        ///   +11: Pallet Exist #2
+        ///   +10: 파렛트 존재 #1
+        ///   +11: 파렛트 존재 #2
         ///
         ///   ACK base = 801 + (N-1)*10
-        ///   +0 : Unload Complete #1 ACK
-        ///   +1 : Load Complete #1 ACK
-        ///   +2 : Unload Complete #2 ACK
-        ///   +3 : Load Complete #2 ACK
+        ///   +0 : 언로드 완료 #1 ACK
+        ///   +1 : 로드 완료 #1 ACK
+        ///   +2 : 언로드 완료 #2 ACK
+        ///   +3 : 로드 완료 #2 ACK
         /// </summary>
         private bool CvEventCheck(int Idx)
         {
@@ -2779,5 +2584,6 @@ namespace WCS_TASK_CV
             }
         }
         #endregion
+        //*/
     }
 }

@@ -40,6 +40,40 @@ namespace WCS_TASK_CV
         public bool IsHex { get { return m_bHex; } set { m_bHex = value; } }
         public bool IsAscii { get { return m_bAscii; } set { m_bAscii = value; } }
 
+
+        // @@.타이틀 표시 정보
+        private const string TITLE_BASE      = "WCS_TASK_CV";  // @.기본 타이틀
+        private const string TITLE_PLC       = "Melsec";    // @.PLC 종류
+        private const string TITLE_DB_TABLE  = "CV_DATA";   // @.주 사용 테이블
+        private cTitleBar m_TitleBar;                       // @.타이틀 표시/스크롤 제어
+
+        /*
+         * PsSetMainTitle
+         *   WCS_TASK_* [PLC종류] [DB(DB종류) : DB명@계정/IP:PORT] [DB TABLE : 테이블명] [COMM0 => IP : PORT] ...
+         *   표시내용이 현재 창 폭보다 길면 왼쪽으로 흘러간다.
+         */
+        #region[Method]@@@.타이틀에 시스템 구성정보 표시
+        private void PsSetMainTitle()
+        {
+            string strTitle = TITLE_BASE;
+
+            strTitle += " [" + TITLE_PLC + "]";
+            strTitle += " " + cTitleBar.GfDbInfo();
+            strTitle += " [DB TABLE : " + TITLE_DB_TABLE + "]";
+
+            for (int ii = 0; ii < m_nProcessCnt; ii++)
+            {
+                if (m_strPLC_NO[ii] == null) break;
+
+                strTitle += " [COMM" + ii.ToString() + " => " + m_strCOMM_IP[ii] + " : " + m_nCOMM_CUR_PORT[ii].ToString() + "]";
+            }
+
+            if (m_TitleBar == null) m_TitleBar = new cTitleBar(this);
+
+            m_TitleBar.SetTitle(strTitle);
+        }
+        #endregion
+
         #region@@@.생성자
         public SYS_MAIN()
         {
@@ -71,8 +105,7 @@ namespace WCS_TASK_CV
             this.IsAscii = checkBox1.Checked;
             this.IsHex = checkBox2.Checked;
 
-            // Melsec : 타이틀에 Melsec 표시, 라디오(Display) 버튼 숨김, XML 파싱 버튼 표시
-            this.Text = this.Text + " [Melsec]";
+            // Melsec : 라디오(Display) 버튼 숨김, XML 파싱 버튼 표시 (타이틀 표시는 PsSetMainTitle 참조)
             checkBox1.Visible = false;
             checkBox2.Visible = false;
             btnXmlSync.Visible = true;
@@ -80,12 +113,10 @@ namespace WCS_TASK_CV
 #if ORACLE
             cDefApi.GsGetInitPorFileDB_1(ref cDefApp.GM_DB1_PROVIDER, ref cDefApp.GM_DB1_ALIAS, ref cDefApp.GM_DB1_USERID, ref cDefApp.GM_DB1_PASSWORD, ref m_strRtnMsg);
             m_strConnectString = "Provider=" + cDefApp.GM_DB1_PROVIDER + "; Data Source=" + cDefApp.GM_DB1_ALIAS + "; User ID=" + cDefApp.GM_DB1_USERID + "; Password =" + cDefApp.GM_DB1_PASSWORD;
-            this.Text = this.Text + " [DB:" + cDefApp.GM_DB1_ALIAS + "]";   // 접속 DB명 타이틀 표시
 #endif
 #if POSTGRESQL
             cDefApi.GsGetInitPorFileDB_2(ref cDefApp.GM_DB2_IP, ref cDefApp.GM_DB2_DATABASE, ref cDefApp.GM_DB2_PORT, ref cDefApp.GM_DB2_USER, ref cDefApp.GM_DB2_USER_PW, ref m_strRtnMsg);
             m_strConnectString = "host=" + cDefApp.GM_DB2_IP + ";username=" + cDefApp.GM_DB2_USER + ";password=" + cDefApp.GM_DB2_USER_PW + ";database=" + cDefApp.GM_DB2_DATABASE + ";MAXPOOLSIZE=50;";
-            this.Text = this.Text + " [DB:" + cDefApp.GM_DB2_DATABASE + "@" + cDefApp.GM_DB2_IP + "]"; // 접속 DB명 타이틀 표시
 #endif
 #if SQL
 #endif
@@ -125,6 +156,11 @@ namespace WCS_TASK_CV
                 SetVisable(pnlTop, ii, "picCvDbCn" + ii.ToString(), "DB  Status #" + ii.ToString("00"));
                 SetVisable(pnlTop, ii, "picCvSkt" + ii.ToString(), "Socket  Status #" + ii.ToString("00"));
 
+                // @.소켓 상태 아이콘 클릭으로 통신 접속을 직접 제어한다.
+                PsHookSktClick(ii);
+
+                SetVisableListView(tab, ii, "tabPage" + (ii + 1).ToString(), "TabPage #" + ii.ToString("00"));
+
                 SetDisplay(pnlTop, ii, "picCvDbCn" + ii.ToString(), "D");
                 SetDisplay(pnlTop, ii, "picCvSkt" + ii.ToString(), "D", "E");
 
@@ -134,7 +170,7 @@ namespace WCS_TASK_CV
             cDefApi.GsReadInitProfileDelay("SND", ref cDefApp.GM_COMM_SND_TIME_OUT, ref m_strRtnMsg); // @.전송
             cDefApi.GsReadInitProfileDelay("RCV", ref cDefApp.GM_COMM_RCV_TIME_OUT, ref m_strRtnMsg); // @.수신
 
-            // Initialize log queues to avoid NullReference when threads enqueue log messages
+            // 스레드가 로그를 큐에 넣을 때 NullReference 가 나지 않도록 로그 큐를 미리 만든다
             int logInitCount = Math.Min(m_nProcessCnt, cDefApp.m_LogQ.Length);
             for (int ii = 0; ii < logInitCount; ii++)
             {
@@ -143,8 +179,82 @@ namespace WCS_TASK_CV
             }
 
             // @@.여기서 부터 쓰레드 시작
+            PsSetMainTitle();   // @.타이틀에 시스템 구성정보 표시
+
             cDefApp.GM_STAT_MAIN  = true; // @.메인 시스템 동작상태
             WrkThStart();   // @.쓰레드 시작
+        }
+        #endregion
+
+        /*
+         * 소켓 상태 아이콘 클릭 - 통신 접속 수동 제어
+         *
+         *   연결된 상태에서 누르면  "통신연결을 해제하시겠습니까?"
+         *   끊긴  상태에서 누르면  "통신을 연결하겠습니까?"
+         *   를 물어보고, 예 를 고르면 해당 COMM 의 접속 여부를 바꾼다.
+         *
+         *   해제 : CvThread.m_bManualStop 을 세운다. 스레드가 소켓을 닫고 내려가며
+         *          Thread_Tick 은 이 슬롯을 재기동하지 않는다.
+         *   연결 : 플래그를 내리면 Thread_Tick(5초 주기)이 스레드를 되살린다.
+         */
+        #region 소켓 상태 아이콘 클릭
+        private void PsHookSktClick(int ii)
+        {
+            string msg = null;
+            Panel pnl = pnlTop;
+            Control ctrl = m_mfgClass.PfCtlFind(ref pnl, "picCvSkt" + ii.ToString(), ref msg);
+            if (ctrl == null) return;
+
+            // @.중복 배선 방지 후 걸기 (Load 가 다시 돌아도 안전)
+            ctrl.Click -= picCvSkt_Click;
+            ctrl.Click += picCvSkt_Click;
+        }
+
+        private void picCvSkt_Click(object sender, EventArgs e)
+        {
+            PictureBox pic = sender as PictureBox;
+            if (pic == null) return;
+
+            // @.컨트롤 이름 "picCvSkt{n}" 에서 슬롯 번호를 얻는다.
+            int ii;
+            if (!int.TryParse(pic.Name.Substring("picCvSkt".Length), out ii)) return;
+            if (ii < 0 || ii >= m_nProcessCnt) return;
+            if (m_thCvThread[ii] == null) return;
+
+            bool bConnected = m_thCvThread[ii].IsOpen && !m_thCvThread[ii].m_bManualStop;
+
+            if (bConnected)
+            {
+                if (MessageBox.Show(this,
+                        "COMM" + ii.ToString() + " (PLC " + m_strPLC_NO[ii] + ") 통신연결을 해제하시겠습니까?",
+                        "통신 해제",
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Question,
+                        MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+                    return;
+
+                m_thCvThread[ii].m_bManualStop = true;
+
+                // @.스레드가 내려가기 전이라도 절단 지시를 화면에 먼저 보여준다.
+                SetDisplay(pnlTop, ii, "picCvSkt" + ii.ToString(), "D", "E");
+                SetDisplay(pnlTop, ii, "picCvDbCn" + ii.ToString(), "D");
+                PsMsgView_IMP("[수동 절단] 통신연결 해제를 지시했습니다.", m_strPLC_NO[ii], ii);
+            }
+            else
+            {
+                if (MessageBox.Show(this,
+                        "COMM" + ii.ToString() + " (PLC " + m_strPLC_NO[ii] + ") 통신을 연결하겠습니까?",
+                        "통신 연결",
+                        MessageBoxButtons.YesNo, MessageBoxIcon.Question,
+                        MessageBoxDefaultButton.Button2) != DialogResult.Yes)
+                    return;
+
+                m_thCvThread[ii].m_bManualStop = false;
+
+                // @.접속 시도 표시. 실제 기동은 Thread_Tick(5초 주기)이 한다.
+                SetDisplay(pnlTop, ii, "picCvSkt" + ii.ToString(), "T");
+                SetDisplay(pnlTop, ii, "picCvDbCn" + ii.ToString(), "T");
+                PsMsgView_IMP("[수동 연결] 통신 연결을 지시했습니다.", m_strPLC_NO[ii], ii);
+            }
         }
         #endregion
 
@@ -169,6 +279,79 @@ namespace WCS_TASK_CV
             FindPictureBox = ctrl as PictureBox;
             this.ToolTip.SetToolTip(FindPictureBox, tipname);
             FindPictureBox.Visible = true;
+        }
+        //ini CNT 수만큼 탭페이지가 없으면 동적 생성한다. (tabPage1/lsvCOMM1 은 디자이너 정적, 이후는 생성)
+        private void SetVisableListView(TabControl obj, int ii, string ctrName, string tipname)
+        {
+            Control ctrl = null;
+            TabPage FindTabPage = null;
+
+            string msg = null;
+            ctrl = m_mfgClass.PfCtlFindTab(ref obj, ctrName, ref msg);
+            if (ctrl == null)
+            {
+                //=======================================================================================================================
+                // 컬럼해더 작성
+                //=======================================================================================================================
+                ColumnHeader ColumnHeader1 = new System.Windows.Forms.ColumnHeader();
+                ColumnHeader ColumnHeader2 = new System.Windows.Forms.ColumnHeader();
+                ColumnHeader ColumnHeader3 = new System.Windows.Forms.ColumnHeader();
+                ColumnHeader ColumnHeader4 = new System.Windows.Forms.ColumnHeader();
+                ColumnHeader ColumnHeader5 = new System.Windows.Forms.ColumnHeader();
+                ColumnHeader1.Text = "Timestamp";
+                ColumnHeader1.Width = 120;
+                ColumnHeader2.Text = "Thread No";
+                ColumnHeader3.Text = "Cmd";
+                ColumnHeader4.Text = "Message";
+                ColumnHeader4.Width = 500;
+                ColumnHeader5.Text = "Telegram";
+                ColumnHeader5.Width = 900;
+
+                //=======================================================================================================================
+                // 리스트뷰 작성
+                //=======================================================================================================================
+                ListView lsvCOMM = new ListView();
+                lsvCOMM.AllowColumnReorder = true;
+                lsvCOMM.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+                ColumnHeader1,
+                ColumnHeader2,
+                ColumnHeader3,
+                ColumnHeader4,
+                ColumnHeader5});
+                lsvCOMM.Dock = System.Windows.Forms.DockStyle.Fill;
+                lsvCOMM.FullRowSelect = true;
+                lsvCOMM.GridLines = true;
+                lsvCOMM.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+                lsvCOMM.Location = new System.Drawing.Point(3, 3);
+                lsvCOMM.MultiSelect = false;
+                lsvCOMM.Name = "lsvCOMM" + (ii + 1).ToString();   //"lsvCOMM1";
+                lsvCOMM.TabIndex = 790;
+                lsvCOMM.UseCompatibleStateImageBehavior = false;
+                lsvCOMM.View = System.Windows.Forms.View.Details;
+                lsvCOMM.Click += new System.EventHandler(this.lsvMsg_Click);
+
+                //=======================================================================================================================
+                // 탭페이지 작성
+                //=======================================================================================================================
+                TabPage tabPage = new TabPage();
+                tabPage.Controls.Add(lsvCOMM);
+                tabPage.Location = new System.Drawing.Point(4, 22);
+                tabPage.Name = ctrName;                            //"tabPage2"...
+                tabPage.Padding = new System.Windows.Forms.Padding(3);
+                tabPage.TabIndex = ii;
+                tabPage.Text = "COMM" + (ii + 1).ToString();       //"COMM1";
+                tabPage.UseVisualStyleBackColor = true;
+                tabPage.Visible = true;
+
+                obj.TabPages.Add(tabPage);
+
+                this.ToolTip.SetToolTip(tabPage, tipname);
+                return;
+            }
+
+            FindTabPage = ctrl as TabPage;
+            this.ToolTip.SetToolTip(FindTabPage, tipname);
+            FindTabPage.Visible = true;
         }
         private void SetDisplay(Panel obj, int ii, string ctrName, params string[] opt)
         {
@@ -200,6 +383,41 @@ namespace WCS_TASK_CV
             ctrl = m_mfgClass.PfCtlFind(ref obj, ctrName, ref msg);
             if (ctrl == null)
             {
+                //ini CNT 수만큼 상태 아이콘이 없으면 동적 생성한다. (picCvDbCn0/picCvSkt0 은 디자이너 정적, 이후는 생성)
+                PictureBox picCvDbCn = new System.Windows.Forms.PictureBox();
+                PictureBox picCvSkt = new System.Windows.Forms.PictureBox();
+
+                int nXPoint = 7 + (22 * ii);
+                //=======================================================================================================================
+                // picCvDbCn 작성
+                //=======================================================================================================================
+                picCvDbCn.Location = new System.Drawing.Point(nXPoint, 6);
+                picCvDbCn.Name = "picCvDbCn" + ii.ToString();   //"picCvDbCn0";
+                picCvDbCn.Size = new System.Drawing.Size(17, 17);
+                picCvDbCn.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+                picCvDbCn.TabIndex = 843 + (ii * 2);
+                picCvDbCn.TabStop = false;
+                picCvDbCn.Tag = "S";
+                ToolTip.SetToolTip(picCvDbCn, "C/V #" + (ii + 1).ToString() + " Database");
+
+                //=======================================================================================================================
+                // picCvSkt 작성
+                //=======================================================================================================================
+                picCvSkt.Location = new System.Drawing.Point(nXPoint, 29);
+                picCvSkt.Name = "picCvSkt" + ii.ToString();     //"picCvSkt0";
+                picCvSkt.Size = new System.Drawing.Size(17, 17);
+                picCvSkt.SizeMode = System.Windows.Forms.PictureBoxSizeMode.StretchImage;
+                picCvSkt.TabIndex = 843 + (ii * 2) + 1;
+                picCvSkt.TabStop = false;
+                picCvSkt.Tag = "S";
+                ToolTip.SetToolTip(picCvSkt, "C/V #" + (ii + 1).ToString() + " Status");
+
+                obj.Controls.Add(picCvDbCn);
+                obj.Controls.Add(picCvSkt);
+
+                // @.동적 생성분에도 클릭 접속 제어를 건다.
+                picCvSkt.Click += new EventHandler(picCvSkt_Click);
+
                 return;
             }
 
@@ -251,6 +469,21 @@ namespace WCS_TASK_CV
 
                 for (int ii = 0; ii < m_nProcessCnt; ii++)
                 {
+                    /*
+                     * 수동 절단 지시(m_bManualStop)가 선 슬롯은 재기동하지 않는다.
+                     * (이 검사가 없으면 어떤 절단도 5초 안에 자동 재접속으로 무효화된다)
+                     * 스레드가 내려간 것을 확인한 뒤 절단 표시(D/E)로 굳힌다.
+                     */
+                    if (m_thCvThread[ii].m_bManualStop)
+                    {
+                        if (m_thCvThread[ii].m_thThread == null)
+                        {
+                            SetDisplay(pnlTop, ii, "picCvSkt" + ii.ToString(), "D", "E");
+                            SetDisplay(pnlTop, ii, "picCvDbCn" + ii.ToString(), "D");
+                        }
+                        continue;
+                    }
+
                     if (m_thCvThread[ii].m_thThread == null)
                     {
                         SetDisplay(pnlTop, ii, "picCvSkt" + ii.ToString(), "T");
@@ -505,7 +738,18 @@ namespace WCS_TASK_CV
         #region[Event]btnDelLog_Click
         private void btnDelLog_Click(object sender, EventArgs e)
         {
-            this.lsvCOMM1.Items.Clear();
+            //현재 선택된 탭의 리스트뷰(동적 생성분 포함)를 비운다.
+            if (tab.SelectedTab != null)
+            {
+                foreach (Control ctrl in tab.SelectedTab.Controls)
+                {
+                    if (ctrl is ListView)
+                    {
+                        ((ListView)ctrl).Items.Clear();
+                        break;
+                    }
+                }
+            }
             this.txtMsg.Text = "";
             this.txtTgm.Text = "";
         }
@@ -516,8 +760,12 @@ namespace WCS_TASK_CV
         {
             try
             {
-                 this.txtMsg.Text = this.lsvCOMM1.SelectedItems[0].SubItems[3].Text;
-                 this.txtTgm.Text = this.lsvCOMM1.SelectedItems[0].SubItems[4].Text;
+                 //클릭된 리스트뷰(동적 생성분 포함) 기준으로 표시
+                 ListView lsv = sender as ListView;
+                 if (lsv == null || lsv.SelectedItems.Count == 0) return;
+
+                 this.txtMsg.Text = lsv.SelectedItems[0].SubItems[3].Text;
+                 this.txtTgm.Text = lsv.SelectedItems[0].SubItems[4].Text;
             }
             catch(Exception ex)
             {

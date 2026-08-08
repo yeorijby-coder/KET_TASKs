@@ -62,6 +62,34 @@ namespace WCS_TASK_CV
             pRtnMsg = "[PfCtlFind]Error::" + "(" + pCtlNm + ")" + pRtnMsg;
             return null;
         }
+
+        public Control PfCtlFindTab(ref TabControl pPnl, string pCtlNm, ref string pRtnMsg)
+        {
+            Control[] ctl;
+
+            try
+            {
+                pRtnMsg = "";
+
+                ctl = pPnl.Controls.Find(pCtlNm, true);
+
+                if (ctl.Length == 0)
+                {
+                    return null;
+                }
+                else
+                {
+                    pRtnMsg = "[PfCtlFind]Success::" + "(" + pCtlNm + ")";
+                    return ctl[0];
+                }
+            }
+            catch (Exception ex)
+            {
+                pRtnMsg = ex.Message;
+            }
+            pRtnMsg = "[PfCtlFind]Error::" + "(" + pCtlNm + ")" + pRtnMsg;
+            return null;
+        }
         #endregion
     }
 }

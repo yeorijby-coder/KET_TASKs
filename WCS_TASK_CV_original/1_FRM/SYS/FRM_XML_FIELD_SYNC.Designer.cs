@@ -13,7 +13,7 @@ namespace WCS_TASK_CV
             base.Dispose(disposing);
         }
 
-        #region Windows Form Designer generated code
+        #region Windows Form 디자이너에서 생성한 코드
 
         private void InitializeComponent()
         {
