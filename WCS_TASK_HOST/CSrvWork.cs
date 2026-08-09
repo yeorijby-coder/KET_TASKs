@@ -543,9 +543,11 @@ namespace TSK_HostCom
 		    switch (nJobPattern)
 		    {
 		    // @.입고 / 이동은 입고대에서 출발한다.
+		    //   도착대도 출발지가 된다. 이동으로 도착대에 내려놓은 화물을 다시
+		    //   입고로 내보내기 때문이다. (101 -> 107 이동, 이어서 107 -> 랙 입고)
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternSto:
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternMove:
-			    if ((nKIND & modDefApp.STN_KIND_STO) == 0)
+			    if ((nKIND & (modDefApp.STN_KIND_STO | modDefApp.STN_KIND_ARV)) == 0)
                 {
 				    return false;
                 }
@@ -595,11 +597,11 @@ namespace TSK_HostCom
                 }
 			    break;
 
-		    // @.출고 / 이동은 출고대로 도착한다.
+		    // @.출고 / 이동은 출고대로 도착한다. 도착대도 도착지가 된다.
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternRet:
     //		case (int)modDefApp.EN_JOB_PATTERN.enJobPatternPR:
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternMove:
-                if ((nKIND & modDefApp.STN_KIND_RET) == 0)
+                if ((nKIND & (modDefApp.STN_KIND_RET | modDefApp.STN_KIND_ARV)) == 0)
                 {
                     //continue;
                     return false;
@@ -846,13 +848,10 @@ namespace TSK_HostCom
                 #endregion
 
                 #region 작업 구분 별로 확인해야 하는 부분 처리
-                string strCELL_USE_YN = "";
-                string strSC_PLT_JOB_TYP = "";
+                // @.이 현장은 재고관리(CELL_MST)를 쓰지 않는다. 랙 위치 확인과
+                //   금지랙/파렛트 종류 확인을 들어냈다. 작업대 확인(IsValidStation)은
+                //   CV_DATA 를 보는 것이라 그대로 둔다.
                 string strCV_PLT_JOB_TYP = "";
-                string strSC_PLT_JOB_TYP1 = "";
-                string strCV_PLT_JOB_TYP1 = "";
-                string strSC_PLT_JOB_TYP2 = "";
-                string strCV_PLT_JOB_TYP2 = "";
                 switch (strJob_Define)
                 {
                     case "1":       // 입고
@@ -867,30 +866,6 @@ namespace TSK_HostCom
                         }
 
                         // 도착LOC 올바른지 체크!
-                        if (modDefApp.g_frmForm.IsValidLocation(m_BDb, strDestPos, strDestLoc, ref strCELL_USE_YN, ref strSC_PLT_JOB_TYP) == false)
-                        {
-                            m_strLog = string.Format("도착 Location이 올바르지 않습니다.[작업번호:{0}][도착지:{1}][도착LOC:{2}]", nLuggNum, strDestPos, strDestLoc);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INVALID_LOC);
-                            return;
-                        }
-
-                        if (strCELL_USE_YN != "Y")
-                        {
-                            m_strLog = string.Format("도착 Location이 금지랙 입니다.[작업번호:{0}][도착지:{1}][도착LOC:{2}]", nLuggNum, strDestPos, strDestLoc);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INHIBITED_LOC);
-                            return;
-                        }
-
-                        if (strCV_PLT_JOB_TYP != strSC_PLT_JOB_TYP)
-                        {
-                            m_strLog = string.Format("해당 출발지에서는 도착 Location로 이동할수 없습니다. ROLL입고대 <-> PLT 랙[작업번호:{0}][출발지:{1}][도착LOC:{2}]", nLuggNum, strStartPos, strDestLoc);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INHIBITED_LOC);
-                            return;
-                        }
-
                         #endregion
                         #region 해당 출발지에 지시하지 않은 작업이 존재할때 작업 생성하지 않기
                         m_strSql = "";
@@ -931,22 +906,6 @@ namespace TSK_HostCom
                     case "2":       // 출고
                         #region 출고시에 출발지와 도착지가 정상적인지 체크
                         // 출발LOC 올바른지 체크!
-                        if (modDefApp.g_frmForm.IsValidLocation(m_BDb, strStartPos, strStartLoc, ref strCELL_USE_YN, ref strSC_PLT_JOB_TYP) == false)
-                        {
-                            m_strLog = string.Format("출발 Location이 올바르지 않습니다.[작업번호:{0}][출발지:{1}][출발LOC:{2}]", nLuggNum, strStartPos, strStartLoc);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INVALID_LOC);
-                            return;
-                        }
-
-                        if (strCELL_USE_YN != "Y")
-                        {
-                            m_strLog = string.Format("출발 Location이 금지랙 입니다.[작업번호:{0}][출발지:{1}][출발LOC:{2}]", nLuggNum, strStartPos, strStartLoc);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INHIBITED_LOC);
-                            return;
-                        }
-
                         // 도착지 올바른지 체크! 
                         if (IsValidStation(modDefApp.ConvertJobPattern(nJobType), strDestPos, false, ref strCV_PLT_JOB_TYP) == false)
                         {
@@ -956,13 +915,6 @@ namespace TSK_HostCom
                             return;
                         }
 
-                        if (strCV_PLT_JOB_TYP != strSC_PLT_JOB_TYP)
-                        {
-                            m_strLog = string.Format("해당 Location에서는 도착지로 이동할수 없습니다. ROLL입고대 <-> PLT 랙[작업번호:{0}][출발LOC:{1}][도착지:{2}]", nLuggNum, strStartLoc, strDestPos);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INHIBITED_LOC);
-                            return;
-                        }
                         #endregion
                         break;
                     //case "3":       // 피킹 출고
@@ -970,39 +922,7 @@ namespace TSK_HostCom
                     case "4":       // 랙투랙
                         #region 랙투랙시에 출발지와 도착지가 정상적인지 체크
                         // 출발LOC 올바른지 체크!
-                        if (modDefApp.g_frmForm.IsValidLocation(m_BDb, strStartPos, strStartLoc, ref strCELL_USE_YN, ref strSC_PLT_JOB_TYP1) == false)
-                        {
-                            m_strLog = string.Format("출발 Location이 올바르지 않습니다.[작업번호:{0}][출발지:{1}][출발LOC:{2}]", nLuggNum, strStartPos, strStartLoc);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INVALID_LOC);
-                            return;
-                        }
-
-                        if (strCELL_USE_YN != "Y")
-                        {
-                            m_strLog = string.Format("출발 Location이 금지랙 입니다.[작업번호:{0}][출발지:{1}][출발LOC:{2}]", nLuggNum, strStartPos, strStartLoc);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INHIBITED_LOC);
-                            return;
-                        }
-
                         // 도착LOC 올바른지 체크!
-                        if (modDefApp.g_frmForm.IsValidLocation(m_BDb, strDestPos, strDestLoc, ref strCELL_USE_YN, ref strSC_PLT_JOB_TYP2) == false)
-                        {
-                            m_strLog = string.Format("도착 Location이 올바르지 않습니다.[작업번호:{0}][도착지:{1}][도착LOC:{2}]", nLuggNum, strDestPos, strDestLoc);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INVALID_LOC);
-                            return;
-                        }
-
-                        if (strCELL_USE_YN != "Y")
-                        {
-                            m_strLog = string.Format("도착 Location이 금지랙 입니다.[작업번호:{0}][도착지:{1}][도착LOC:{2}]", nLuggNum, strDestPos, strDestLoc);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INHIBITED_LOC);
-                            return;
-                        }
-
                         // 출발 랙과 도착 랙의 SC 번호가 다른지 체크 
                         if (strStartPos != strDestPos)
                         {
@@ -1020,53 +940,13 @@ namespace TSK_HostCom
                             return;
                         }
 
-                        if (strSC_PLT_JOB_TYP1 != strSC_PLT_JOB_TYP2)
-                        {
-                            m_strLog = string.Format("해당 Location에서는 도착Location으로 이동할수 없습니다. ROLL랙 <-> PLT 랙[작업번호:{0}][출발LOC:{1}][도착LOC:{2}]", nLuggNum, strStartLoc, strDestLoc);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INHIBITED_LOC);
-                            return;
-                        }
                         
                         #endregion
                         break;
                     case "5":       // 호기간 이동
                         #region 호기간 이동시에 출발지와 도착지가 정상적인지 체크
                         // 출발LOC 올바른지 체크!
-                        if (modDefApp.g_frmForm.IsValidLocation(m_BDb, strStartPos, strStartLoc, ref strCELL_USE_YN, ref strSC_PLT_JOB_TYP1) == false)
-                        {
-                            m_strLog = string.Format("출발 Location이 올바르지 않습니다.[작업번호:{0}][출발지:{1}][출발LOC:{2}]", nLuggNum, strStartPos, strStartLoc);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INVALID_LOC);
-                            return;
-                        }
-
-                        if (strCELL_USE_YN != "Y")
-                        {
-                            m_strLog = string.Format("출발 Location이 금지랙 입니다.[작업번호:{0}][출발지:{1}][출발LOC:{2}]", nLuggNum, strStartPos, strStartLoc);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INHIBITED_LOC);
-                            return;
-                        }
-
                         // 도착LOC 올바른지 체크!
-                        if (modDefApp.g_frmForm.IsValidLocation(m_BDb, strDestPos, strDestLoc, ref strCELL_USE_YN, ref strSC_PLT_JOB_TYP2) == false)
-                        {
-                            m_strLog = string.Format("도착 Location이 올바르지 않습니다.[작업번호:{0}][도착지:{1}][도착LOC:{2}]", nLuggNum, strDestPos, strDestLoc);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INVALID_LOC);
-                            return;
-                        }
-
-                        if (strCELL_USE_YN != "Y")
-                        {
-                            m_strLog = string.Format("도착 Location이 금지랙 입니다.[작업번호:{0}][도착지:{1}][도착LOC:{2}]", nLuggNum, strDestPos, strDestLoc);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INHIBITED_LOC);
-                            return;
-                        }
-
-
                         // 출발 랙과 도착 랙의 SC 번호가 다른지 체크 
                         if (strStartPos == strDestPos)
                         {
@@ -1081,14 +961,6 @@ namespace TSK_HostCom
                             m_strLog = string.Format("출발 S/C와 도착 S/C가 같습니다.[작업번호:{0}][출발Location:{1}][도착Location:{2}]", nLuggNum, strStartLoc, strDestLoc);
                             modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
                             MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INVALID_LOC);
-                            return;
-                        }
-
-                        if (strSC_PLT_JOB_TYP1 != strSC_PLT_JOB_TYP2)
-                        {
-                            m_strLog = string.Format("해당 Location에서는 도착Location으로 이동할수 없습니다. ROLL랙 <-> PLT 랙[작업번호:{0}][출발LOC:{1}][도착LOC:{2}]", nLuggNum, strStartLoc, strDestLoc);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INHIBITED_LOC);
                             return;
                         }
 
@@ -1114,13 +986,6 @@ namespace TSK_HostCom
                             return;
                         }
 
-                        if (strSC_PLT_JOB_TYP1 != strSC_PLT_JOB_TYP2)
-                        {
-                            m_strLog = string.Format("해당 출발지에서는 도착지로 이동할수 없습니다. ROLL CV <-> PLT CV[작업번호:{0}][출발지:{1}][도착지:{2}]", nLuggNum, strStartPos, strDestPos);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INVALID_STN_NO);
-                            return;
-                        }
                         #endregion
                         #region 해당 출발지에 지시하지 않은 작업이 존재할때 작업 생성하지 않기
                         m_strSql = "";

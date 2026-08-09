@@ -966,8 +966,9 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "     ON CD.HOST_STN_NO = JM.START_POS         ";
                 strSql += CRLF + "    AND JM.JOB_STATUS = '" + ST_NEW + "'          ";   // @.신규('99') 가 구동대기다. '10' 은 2026-07-10 에 없앤 상태라 새 작업이 안 집혔다
                 strSql += CRLF + "  WHERE CD.PLC_NO         = :CV_PLC           ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
-                strSql += CRLF + "    AND CD.LUGG_NO_RD    IN ('','0','0000')   ";
-                strSql += CRLF + "    AND CD.STO_READY_RD 	= '1'               ";
+                strSql += CRLF + "    AND (   (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_STO) + " <> 0 AND CD.STO_READY_RD = '1'   ";
+                strSql += CRLF + "             AND CD.LUGG_NO_RD IN ('','0','0000'))                                                        ";
+                strSql += CRLF + "         OR (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_ARV) + " <> 0 AND CD.RET_READY_RD = '1') )  ";
                 strSql += CRLF + "    AND CD.SENSOR0_DATA_RD = '1'              ";
                 strSql += CRLF + "    AND CD.AUTO_MODE_RD 	= '1'               ";
                 strSql += CRLF + "    AND CD.ERROR_CODE		IN ('0','0000')     ";
@@ -1156,6 +1157,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND CD.LUGG_NO_RD         = JM.LUGG_NO        ";
                 strSql += CRLF + "  WHERE CD.WH_TYP		        = :WH_TYP           ";
                 strSql += CRLF + "    AND CD.PLC_NO             = :CV_PLC           ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
+                strSql += CRLF + "    AND (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_RET | cDefApp.STN_KIND_ARV) + " <> 0)  ";
                 strSql += CRLF + "    AND CD.RET_READY_RD 	    = '1'               ";
                 strSql += CRLF + "    AND CD.AUTO_MODE_RD 	    = '1'               ";
                 strSql += CRLF + "    AND CD.OD_RQ_YN		    = 'N'               ";

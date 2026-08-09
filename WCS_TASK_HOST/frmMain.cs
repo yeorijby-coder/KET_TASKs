@@ -986,30 +986,14 @@ namespace TSK_HostCom
 		}
 
         #region 랙에 대한 체크 하는 함수(랙 위치) 
-        public bool IsValidLocation(CUserDb bDb, string strScNo, string strLocation, ref string strCELL_USE_YN, ref string strSC_PLT_JOB_TYP)
-        {
-            bDb.ParamsClear();
-            string strSql = "SELECT * FROM CELL_MST";
-            strSql += modDefApp.CRLF + "WHERE SC_NO = " + bDb.ParamsAdd("SC_NO", strScNo);
-            strSql += modDefApp.CRLF + "  AND BANK = " + bDb.ParamsAdd("BANK", strLocation.Substring(0, 2));
-            strSql += modDefApp.CRLF + "  AND BAY = " + bDb.ParamsAdd("BAY", strLocation.Substring(3, 3));
-            strSql += modDefApp.CRLF + "  AND LEV = " + bDb.ParamsAdd("LEV", strLocation.Substring(7, 2));
-            strSql += modDefApp.CRLF + "  AND WH_TYP = " + bDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
-
-            int iSelCnt = bDb.ExcuteQry_Par(ref strSql);
-
-            if (iSelCnt <= 0)
-            {
-                return false;
-            }
-
-            if (iSelCnt > 0)
-            {
-                strCELL_USE_YN = "" + bDb.dtMain.Rows[0]["CELL_USE_YN"].ToString();
-                strSC_PLT_JOB_TYP = "" + bDb.dtMain.Rows[0]["SC_PLT_JOB_TYP"].ToString();
-            }
-            return true;
-        }
+        /*
+         * IsValidLocation 은 없앴다.
+         *   CELL_MST 에서 BANK/BAY/LEV 로 셀을 찾아 랙 위치를 확인하던 함수다.
+         *   이 현장은 재고관리(CELL_MST)를 쓰지 않아 확인할 근거가 없고,
+         *   그 때문에 상위가 준 입고 작업이 전부 "도착 Location이 올바르지
+         *   않습니다" 로 되돌아갔다.
+         *   작업대(스테이션) 확인은 CV_DATA 를 보는 IsValidStation 이 한다.
+         */
         #endregion       
         private void chkSimMode_CheckedChanged(object sender, EventArgs e)
         {

@@ -110,6 +110,29 @@ namespace TSK_COMM_IOSCH
             }
         }
 
+        /*
+         * @@.CV_DATA.STN_KIND 비트
+         *
+         *   한 트랙이 여러 역할을 겸할 수 있어 비트로 겹쳐 쓴다.
+         *   51(0b0110011) = 입출고대 처럼 여러 비트가 같이 선다.
+         *
+         *   도착대(ARV)는 이번에 새로 뺀 것이다. 예전에는 IsValidStartStation 이
+         *   (STN_KIND & 0x03) 을 도착대라고 읽었는데, 그건 "입고대이거나 출고대" 라는
+         *   뜻이지 도착대라는 뜻이 아니었다. 실제 도착대(예: 1F Size Checker)는
+         *   EcsDefine.xml 에 ArvStation 으로 따로 정의돼 있다.
+         *
+         *   도착대는 출고대와 같은 준비신호(RET_READY_RD)를 쓴다.
+         *   WCS Client 도 ArvStation 을 RetStation 과 같은 칸에서 처리한다.
+         *   (ClientNSim/Ecs/TrackInfo.cpp 의 enStatusArvSTReady)
+         */
+        public const int STN_KIND_STO    = 0x01;    // 입고대
+        public const int STN_KIND_RET    = 0x02;    // 출고대
+        public const int STN_KIND_SC_IN  = 0x04;    // SC 입고 H/S
+        public const int STN_KIND_SC_OUT = 0x08;    // SC 출고 H/S
+        public const int STN_KIND_RTV_DEP = 0x10;   // RTV 출발
+        public const int STN_KIND_RTV_ARV = 0x20;   // RTV 도착
+        public const int STN_KIND_ARV    = 0x40;    // 도착대 (RET_READY_RD 를 본다)
+
         // @@.DB Err 정의
         public const int DB_ERR = -1;      // @.DB 오류
         public const int DB_LOCK = -2;     // @.DB 오류로 DB Lock

@@ -1315,7 +1315,9 @@ namespace WCS_TASK_CV
                         int nOffPause = m_devMap.GetWordOffsetByCol("TR_PAUSE_RD");
                         if (nOffPause < 0)
                         {
-                            MakeMsg_Error(strTitle + " TRACK [" + TRACK_NO + "] 대기필요 지시 생략 - DeviceMap 에 TR_PAUSE_RD 정의 없음", m_nthNo);
+                            // @.이 현장은 TR_PAUSE 를 PLC 에 두지 않고 WCS 내부 변수로 들고 간다.
+                            //   (DeviceMap 에 TrPause 항목이 없는 것이 정상이다)
+                            //   대기필요는 이 현장에서 PLC 로 나갈 값이 없으므로 그대로 완료 처리한다.
                             if (!UpdateCvDataCmd(TRACK_NO)) return false;
                             continue;
                         }
@@ -1385,7 +1387,9 @@ namespace WCS_TASK_CV
                         int nOffPause = m_devMap.GetWordOffsetByCol("TR_PAUSE_RD");
                         if (nOffPause < 0)
                         {
-                            MakeMsg_Error(strTitle + " TRACK [" + TRACK_NO + "] 트랙대기 지시 생략 - DeviceMap 에 TR_PAUSE_RD 정의 없음", m_nthNo);
+                            // @.이 현장은 TR_PAUSE 를 PLC 에 두지 않고 WCS 내부 변수로 들고 간다.
+                            //   PLC 에 쓰는 대신 지시값(OD)을 그대로 상태값(RD)에 반영한다.
+                            if (!UpdateTrPauseInternal(TRACK_NO, nTR_PAUSE_OD)) return false;
                             if (!UpdateCvDataCmd(TRACK_NO)) return false;
                             continue;
                         }
@@ -1822,6 +1826,53 @@ namespace WCS_TASK_CV
         #endregion
 
         #region [UpdateCvDataCmd] :: CV_DATA의 CMD_RQ_YN = 'N' 업데이트
+        /*
+         * UpdateTrPauseInternal :: 트랙 일시정지를 WCS 안에서만 반영한다.
+         *
+         *   TR_PAUSE 는 현장에 따라 CV PLC 에 기록하는 신호이기도 하고, 이 현장처럼
+         *   WCS 내부 변수이기도 하다. 내부 변수인 현장에서는 DeviceMap 에 자리가 없으므로
+         *   PLC 로 나가지 못한다. 그럴 때 지시값을 상태값에 그대로 옮겨 준다.
+         */
+        public bool UpdateTrPauseInternal(string strTRACK_NO, int nTrPause)
+        {
+            try
+            {
+                m_msQPlc._pBdb.BeginTrans();
+
+                strSql = "";
+                strSql += CRLF + "UPDATE CV_DATA						";
+                strSql += CRLF + "   SET TR_PAUSE_RD     = :TR_PAUSE	";
+                strSql += CRLF + "WHERE  WH_TYP          = :WH_TYP		";
+                strSql += CRLF + "AND    PLC_NO          = :PLC_NO		";
+                strSql += CRLF + "AND    MC_NO           = :MC_NO	    ";
+
+                m_msQPlc._pBdb.mComMain.CommandType = CommandType.Text;
+                m_msQPlc._pBdb.mComMain.Parameters.Clear();
+                m_msQPlc._pBdb.mComMain.Parameters.Add("TR_PAUSE", DbLang.VARCHAR, 255).Value = nTrPause.ToString();
+                m_msQPlc._pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR, 255).Value = m_strWh_typ;
+                m_msQPlc._pBdb.mComMain.Parameters.Add("PLC_NO", DbLang.VARCHAR, 255).Value = m_strPlc_No;
+                m_msQPlc._pBdb.mComMain.Parameters.Add("MC_NO", DbLang.VARCHAR, 255).Value = strTRACK_NO;
+
+                nSelCnt = m_msQPlc._pBdb.ExcuteNonQry(strSql);
+
+                if (nSelCnt < 0)
+                {
+                    m_msQPlc._pBdb.Rollback();
+                    MakeMsg_Error("[UpdateTrPauseInternal] 트랙 일시정지 반영 중 ERROR., TRACK_NO [" + strTRACK_NO + "] MSG [" + m_msQPlc._pBdb.ErrMsg + "]", m_nthNo);
+                    return false;
+                }
+
+                m_msQPlc._pBdb.Commit();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                m_msQPlc._pBdb.Rollback();
+                MakeMsg_Error("[UpdateTrPauseInternal] Exception Error " + ex.Message, m_nthNo);
+                return false;
+            }
+        }
+
         public bool UpdateCvDataCmd(string strTRACK_NO)
         {
             try

@@ -1494,57 +1494,8 @@ namespace TSK_HostCom
                         strLocation = string.Format("{0:00}-{1:000}-{2:00}", nCurBank, nCurBay, nCurLevel);
 
                         
-                        // 생성된 Location이  올바른지 체크!
-                        string strCELL_USE_YN = "";
-                        string strSC_PLT_JOB_TYP = "";
-                        if (modDefApp.g_frmForm.IsValidLocation(m_BDb, strSScNum, strLocation, ref strCELL_USE_YN, ref strSC_PLT_JOB_TYP) == false)
-                        {
-                            m_strLog = string.Format("Sim Test를 위해 생성된 Location이 올바르지 않습니다.[작업번호:{0}][도착지:{1}][도착LOC:{2}]", nLuggNum, strSScNum, strLocation);
-                            modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            //MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INVALID_LOC);
-                            m_BDb.RollbackTrans();
-                            break;
-                        }
-
-                        if (strCELL_USE_YN != "Y")
-                        {
-                            m_strLog = string.Format("도착 Location이 금지랙 입니다. 다음 로케이션을 검색하도록 준비합니다.[작업번호:{0}][도착지:{1}][다음도착LOC:{2}]", nLuggNum, strSScNum, strLocation);
-                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
-
-                            m_BDb.ParamsClear();
-
-                            m_strSql = modDefApp.CRLF + "  UPDATE JOB_MST ";
-                            m_strSql += modDefApp.CRLF + "    SET START_LOCATION= " + m_BDb.ParamsAdd("START_LOCATION", strLocation);     
-                            m_strSql += modDefApp.CRLF + "      , UPD_USER_ID  = 'HOST_TASK'";
-                            m_strSql += modDefApp.CRLF + "      , UPD_DT       = " + modDateTime.SYSDATE;
-                            m_strSql += modDefApp.CRLF + "  WHERE WH_TYP       = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
-                            m_strSql += modDefApp.CRLF + "    AND LUGG_NO      = " + m_BDb.ParamsAdd("LUGG_NO", strLuggNum);
-
-                            iCnt = m_BDb.ExcuteNonQry_Par(ref m_strSql);
-
-                            if (iCnt < 0)
-                            {
-                                m_strLog = m_BDb.ErrMsg + m_strSql;
-                                modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
-                                m_BDb.RollbackTrans();
-                                return false;
-                            }
-
-                            // CELL_MST에서 각 조건에 맞는 최대값을 가져오지 못할수는 없을것이다.   
-                            if (iCnt != 1)
-                            {
-                                m_strLog = "작업 정보를 바르게 가져오지 못했습니다.[작업번호:" + strLuggNum + "]";
-                                modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
-                                m_BDb.RollbackTrans();
-                                return false;
-                            }
-                            m_strLog = "금지랙이라서 로케이션을 수정합니다.[작업번호:" + strLuggNum + "][현재LOC:" + strSPosition + "][신규LOC:" + strLocation + "]";
-                            modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_IMP);
-                                
-                            m_BDb.CommitTrans();
-                            return false;
-                        }
-
+                        // @.이 현장은 재고관리(CELL_MST)를 쓰지 않으므로 생성된
+                        //   Location 을 확인할 근거가 없다. 그대로 쓴다.
                         #region 기존 작업 삭제
                         if (modDefApp.g_frmForm.DeleteJobMst(m_BDb, false, strLuggNum) == false)
                         {

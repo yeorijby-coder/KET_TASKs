@@ -2500,9 +2500,13 @@ namespace TSK_COMM_IOSCH
                 //int nStnKind = Convert.ToInt32(strSTN_KIND);
 
                 byte byteTemp = Convert.ToByte(Convert.ToInt16(strSTN_KIND));
-                bool bStoStation = Convert.ToBoolean(byteTemp & 0x01);       // 입고대
-                bool bRetStation = Convert.ToBoolean(byteTemp & 0x02);       // 출고대
-                bool bArvStation = Convert.ToBoolean(byteTemp & 0x03);       // 도착대
+                bool bStoStation = Convert.ToBoolean(byteTemp & cDefApp.STN_KIND_STO);   // 입고대
+                bool bRetStation = Convert.ToBoolean(byteTemp & cDefApp.STN_KIND_RET);   // 출고대
+
+                // @.예전에는 (byteTemp & 0x03) 을 도착대라고 읽었다. 그건 "입고대이거나
+                //   출고대" 라는 뜻이지 도착대라는 뜻이 아니다. 도착대는 EcsDefine.xml 에
+                //   ArvStation 으로 따로 정의된 자리다(예: 1F Size Checker).
+                bool bArvStation = Convert.ToBoolean(byteTemp & cDefApp.STN_KIND_ARV);   // 도착대
 
 
                 switch (enPattern)
@@ -2552,9 +2556,13 @@ namespace TSK_COMM_IOSCH
                 //int nStnKind = Convert.ToInt32(strSTN_KIND);
 
                 byte byteTemp = Convert.ToByte(Convert.ToInt16(strSTN_KIND));
-                bool bStoStation = Convert.ToBoolean(byteTemp & 0x01);       // 입고대
-                bool bRetStation = Convert.ToBoolean(byteTemp & 0x02);       // 출고대
-                bool bArvStation = Convert.ToBoolean(byteTemp & 0x03);       // 도착대
+                bool bStoStation = Convert.ToBoolean(byteTemp & cDefApp.STN_KIND_STO);   // 입고대
+                bool bRetStation = Convert.ToBoolean(byteTemp & cDefApp.STN_KIND_RET);   // 출고대
+
+                // @.예전에는 (byteTemp & 0x03) 을 도착대라고 읽었다. 그건 "입고대이거나
+                //   출고대" 라는 뜻이지 도착대라는 뜻이 아니다. 도착대는 EcsDefine.xml 에
+                //   ArvStation 으로 따로 정의된 자리다(예: 1F Size Checker).
+                bool bArvStation = Convert.ToBoolean(byteTemp & cDefApp.STN_KIND_ARV);   // 도착대
 
 
                 switch (enPattern)

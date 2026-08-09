@@ -304,6 +304,16 @@ public static frmMain g_frmForm;
         public const int STN_KIND_RET    = 0x02;    // 출고대
         public const int STN_KIND_SC_IN  = 0x04;    // SC 입고 H/S
         public const int STN_KIND_SC_OUT = 0x08;    // SC 출고 H/S
+        public const int STN_KIND_RTV_DEP = 0x10;   // RTV 출발 STN
+        public const int STN_KIND_RTV_ARV = 0x20;   // RTV 도착 STN
+
+        /*
+         * 도착대. 화물이 내려앉았다가 다시 나가는 자리다(예: 1F Size Checker).
+         * EcsDefine.xml 에 ArvStation 으로 정의돼 있고, 준비신호는 출고대와 같은
+         * RET_READY_RD 를 쓴다. 출발지로도 도착지로도 쓰이므로 두 검증에 모두 넣는다.
+         */
+        public const int STN_KIND_ARV    = 0x40;    // 도착대
+
         public const int STN_KIND_SC     = STN_KIND_SC_IN | STN_KIND_SC_OUT;
 
         #endregion
