@@ -394,7 +394,7 @@ namespace TSK_COMM_IOSCH
                     strPLC_NO = "" + _pBdb.mDtMain.Rows[i]["PLC_NO"].ToString() == "" ? "0" : _pBdb.mDtMain.Rows[i]["PLC_NO"].ToString();
 
                     // 설비타스크에 작업지시
-                    if (UPDATE_CV_DATA(nJobType.ToString(), strPRODUCT_SIZE, "0", strJOB_DEST_POS, "0", strLUGG_NO, strWH_TYP, strPLC_NO, strJOB_START_POS, "", ref pRTN_MSG) == false)
+                    if (UPDATE_CV_DATA(nJobType.ToString(), strPRODUCT_SIZE, "0", strJOB_DEST_POS, "0", strLUGG_NO, strWH_TYP, strPLC_NO, strTRACK_NO, "", ref pRTN_MSG) == false)
                     {
                         m_strRtnMsg = pRTN_MSG;
                         _pBdb.Rollback();
@@ -1001,12 +1001,20 @@ namespace TSK_COMM_IOSCH
                 string strTRAY_LEV = "" + _pBdb.mDtMain.Rows[0]["TRAY_LEV"].ToString() == "" ? "0" : _pBdb.mDtMain.Rows[0]["TRAY_LEV"].ToString();
                 string strJOB_DEST_POS = "" + _pBdb.mDtMain.Rows[0]["DEST_POS"].ToString() == "" ? "0" : _pBdb.mDtMain.Rows[0]["DEST_POS"].ToString();
                 string strJOB_START_POS = "" + _pBdb.mDtMain.Rows[0]["START_POS"].ToString() == "" ? "0" : _pBdb.mDtMain.Rows[0]["START_POS"].ToString();
+
+                // @.CV 에 지시할 때는 물리 트랙번호(CV_DATA.MC_NO)를 써야 한다.
+                //   START_POS 는 HOST 가 쓰는 스테이션 번호(101)이고, 설비를 움직이는
+                //   번호는 MC_NO(217)다. 조회를 HOST_STN_NO 로 맞춰 뒀으므로 여기서
+                //   같은 행의 MC_NO 를 꺼내 쓴다. (예전에는 101 로 UPDATE 해서 0건이
+                //   갱신되고 "설비 미준비" 로 조용히 재시도만 반복했다)
+                string strCV_MC_NO = _pBdb.mDtMain.Rows[0]["MC_NO"].ToString();
+                if (strCV_MC_NO == "") strCV_MC_NO = strJOB_START_POS;
                 string strIS_TURN = "" + _pBdb.mDtMain.Rows[0]["TURN"].ToString() == "" ? "0" : _pBdb.mDtMain.Rows[0]["TURN"].ToString();
 
                 _pBdb.BeginTrans();
 
                 if (UPDATE_CV_DATA(strJOB_TYP, strPRODUCT_SIZE, strTRAY_LEV, strJOB_DEST_POS, strIS_TURN,
-                                   strLUGG_NO, strWH_TYP, strCV_PLC, strJOB_START_POS, "", ref pRTN_MSG) == false)
+                                   strLUGG_NO, strWH_TYP, strCV_PLC, strCV_MC_NO, "", ref pRTN_MSG) == false)
                 {
                     _pBdb.Rollback();
                     pRTN_MSG = "";
