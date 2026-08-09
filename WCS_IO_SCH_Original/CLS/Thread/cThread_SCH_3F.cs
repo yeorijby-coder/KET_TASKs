@@ -950,6 +950,26 @@ namespace TSK_COMM_IOSCH
         // 공통 코어 1 : 3층 입고대 출발 (ECS StartInvokeCheck3/6 - NEW_JOB_ORDER 의 PLC 한정판)
         //   해당 PLC 입고대(START_POS)에 재하 + 구동대기('99') 작업 → CV 지시 + 상태 '15'
         // ─────────────────────────────────────────────────────────────────
+        /*
+         * GfCvDestPos :: CV 에 실을 목적지 번호
+         *
+         *   크레인이 목적지일 때 JOB_MST.DEST_POS 는 WCS 표기인 9NN(901~911)이다.
+         *   CV 레지스터의 목적지 자리는 한 바이트라 904 를 넣으면 136(904 & 0xFF)으로
+         *   잘린다. 설비가 쓰는 번호는 호기 번호 1~11 이므로 그것으로 바꿔 넘긴다.
+         *   (상위는 1~11 로 주고, HOST 태스크가 9NN 으로 저장한다.
+         *    WCS_TASK_HOST/CSrvWork.cs 의 Convert S/C No)
+         */
+        private string GfCvDestPos(string strDestPos)
+        {
+            int nDest = 0;
+            Int32.TryParse((strDestPos == null) ? "" : strDestPos.Trim(), out nDest);
+
+            if (nDest > 900 && nDest < 1000)
+                return (nDest - 900).ToString("000");
+
+            return strDestPos;
+        }
+
         private bool CV_STO_START_PLC(string strWH_TYP, string strCV_PLC, string strTitle, ref string pRTN_MSG)
         {
             try
@@ -1014,7 +1034,7 @@ namespace TSK_COMM_IOSCH
 
                 _pBdb.BeginTrans();
 
-                if (UPDATE_CV_DATA(strJOB_TYP, strPRODUCT_SIZE, strTRAY_LEV, strJOB_DEST_POS, strIS_TURN,
+                if (UPDATE_CV_DATA(strJOB_TYP, strPRODUCT_SIZE, strTRAY_LEV, GfCvDestPos(strJOB_DEST_POS), strIS_TURN,
                                    strLUGG_NO, strWH_TYP, strCV_PLC, strCV_MC_NO, "", ref pRTN_MSG) == false)
                 {
                     _pBdb.Rollback();
