@@ -353,7 +353,7 @@ namespace TSK_COMM_IOSCH
                 strSql += cDefApp.CRLF + "    AND CD.ERROR_CODE		IN ('0','0000')     ";
                 strSql += cDefApp.CRLF + "    AND CD.OD_RQ_YN		= 'N'               ";
                 strSql += cDefApp.CRLF + "    AND CD.OD_RQ_FLAG		= 'N'               ";
-                strSql += cDefApp.CRLF + "    AND CD.TR_PAUSE_RD    = '0'               ";
+                strSql += cDefApp.CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')               ";
                 strSql += cDefApp.CRLF + "    AND CD.WH_TYP		    = :WH_TYP           ";
                 strSql += cDefApp.CRLF + "    AND 0 = (SELECT COUNT(*)                  ";
                 strSql += cDefApp.CRLF + "               FROM JOB_MST                   ";
@@ -580,7 +580,7 @@ namespace TSK_COMM_IOSCH
                 // ※ PLC_NO 필터 제거 (2026-07-11) : 스케줄러는 전체 PLC 를 관장한다.
                 //    (기존에는 스레드 ID(SCH_GR01=50)가 :PLC_NO 로 전달되어 무동작이었음)
                 strSql += CRLF + "  WHERE  CD.WH_TYP             = :WH_TYP            ";
-                strSql += CRLF + "    AND  CD.TR_PAUSE_RD        = '0'                ";    // 트랙 일시정지가 아니어야 함! - 안보는게 나을듯!
+                strSql += CRLF + "    AND  COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')                ";    // 트랙 일시정지가 아니어야 함! - 안보는게 나을듯!
                 strSql += CRLF + "    AND  CD.SENSOR0_DATA_RD    = '1'                ";
                 strSql += CRLF + "    AND  JM.JOB_STATUS 	     = '29'               ";    // 도착 보고 완료
                 _pBdb.mComMain.CommandType = CommandType.Text;
@@ -729,7 +729,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND  CD.AUTO_MODE_RD       = '1'                    ";
                 strSql += CRLF + "    AND  CD.OD_RQ_YN           = 'N'                    ";
                 strSql += CRLF + "    AND  CD.OD_RQ_FLAG         = 'N'                    ";
-                strSql += CRLF + "    AND  CD.TR_PAUSE_RD        = '0'                    ";
+                strSql += CRLF + "    AND  COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')                    ";
                 strSql += CRLF + "    AND  CD.ERROR_CODE        IN ('0','00','000','0000')";
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
@@ -973,7 +973,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND CD.ERROR_CODE		IN ('0','0000')     ";
                 strSql += CRLF + "    AND CD.OD_RQ_YN		= 'N'               ";
                 strSql += CRLF + "    AND CD.OD_RQ_FLAG		= 'N'               ";
-                strSql += CRLF + "    AND CD.TR_PAUSE_RD    = '0'               ";
+                strSql += CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')               ";
                 strSql += CRLF + "    AND CD.WH_TYP		    = :WH_TYP           ";
                 strSql += CRLF + "    AND 0 = (SELECT COUNT(*)                  ";
                 strSql += CRLF + "               FROM JOB_MST                   ";
@@ -1067,7 +1067,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND  SHD.HS_USE_YN         = 'Y'                 ";
                 strSql += CRLF + "  WHERE  CD.WH_TYP             = :WH_TYP             ";
                 strSql += CRLF + "    AND  CD.PLC_NO             = :CV_PLC             ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
-                strSql += CRLF + "    AND  CD.TR_PAUSE_RD        = '0'                 ";
+                strSql += CRLF + "    AND  COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')                 ";
                 strSql += CRLF + "    AND  CD.SENSOR0_DATA_RD    = '1'                 ";   // 재하 (ECS IsOnSensorIO(0))
                 strSql += CRLF + "    AND  CD.OD_RQ_YN           = 'N'                 ";
                 strSql += CRLF + "    AND  JM.JOB_STATUS 	     = '29'                ";   // S/C 반출 완료 (CV 요구)

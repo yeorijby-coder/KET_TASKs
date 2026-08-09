@@ -1052,7 +1052,7 @@ namespace TSK_COMM_IOSCH
                 strSql += cDefApp.CRLF + "   AND SD.ACTIVE_MODE_RD      = '1'                                                  ";
                 strSql += cDefApp.CRLF + "   AND SD.UCSTATUS_RD         = '1'                                                  ";
                 strSql += cDefApp.CRLF + "   AND CD.RETHS_READY_RD      = '1'                                                  ";  // DATA 없을때 출고H/S READY ON
-                strSql += cDefApp.CRLF + "   AND CD.TR_PAUSE_RD         = '0'                                                  ";  // 트랙 일시정지가 아니어야 함!
+                strSql += cDefApp.CRLF + "   AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')                                                  ";  // 트랙 일시정지가 아니어야 함!
                 strSql += cDefApp.CRLF + "   AND (SD.ITN_LUGG_FK1       = '0' AND SD.ITN_LUGG_FK2 = '0')                       ";
                 strSql += cDefApp.CRLF + "   AND SD.OD_RQ_YN            = 'N'                                                  ";
                 strSql += cDefApp.CRLF + "   AND SCM.CELL_USE_YN        = 'Y'                                                  ";
@@ -1866,7 +1866,7 @@ namespace TSK_COMM_IOSCH
                 strSql += cDefApp.CRLF + "   AND CD.SENSOR0_DATA_RD = '0'   ";  // A
                 strSql += cDefApp.CRLF + "   AND CD.OD_RQ_YN        = 'N'   ";
                 strSql += cDefApp.CRLF + "   AND SD.OD_RQ_YN        = 'N'   ";
-                strSql += cDefApp.CRLF + "   AND CD.TR_PAUSE_RD     = '0'   ";  // 트랙 일시정지가 아니어야 함!
+                strSql += cDefApp.CRLF + "   AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')   ";  // 트랙 일시정지가 아니어야 함!
                 strSql += cDefApp.CRLF + "   AND CD.RET_HS_YN       = 'Y'   ";
                 strSql += cDefApp.CRLF + "   AND JM.DEST_POS        <> '0'  ";
                 strSql += cDefApp.CRLF + "   AND SD.ONLINE_MODE_RD  = '1'   ";
@@ -2818,7 +2818,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND JM.DEST_POS      = SD.SC_NO                               ";
                 strSql += CRLF + "  WHERE CD.WH_TYP		    = :pWH_TYP                              ";
                 strSql += CRLF + "    AND CD.STOHS_READY_RD = '1'                                   ";  // 입고 H/S READY ON
-                strSql += CRLF + "    AND CD.TR_PAUSE_RD = '0'                                      ";  // 트랙 일시정지가 아니어야 함!
+                strSql += CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')                                      ";  // 트랙 일시정지가 아니어야 함!
                 strSql += CRLF + "    AND CD.DEST_POS_RD like '%' " + DbLang.II + " :pAGING_TYP " + DbLang.II + " '%'             ";
                 strSql += CRLF + "    AND JM.DEST_POS    like '%' " + DbLang.II + " :pAGING_TYP " + DbLang.II + " '%'             ";
                 strSql += CRLF + "    AND CD.SENSOR0_DATA_RD    = '1'                               ";

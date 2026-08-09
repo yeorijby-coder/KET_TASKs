@@ -1387,7 +1387,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND JM.JOB_STATUS 	    = '16'            ";
                 strSql += CRLF + "    AND JM.DEST_POS           IS NOT NULL       ";
                 strSql += CRLF + "    AND CD.RET_READY_RD 	    = '1'             ";                  // 출고대  READY ON
-                strSql += CRLF + "    AND CD.TR_PAUSE_RD        = '0'             ";    // 트랙 일시정지가 아니어야 함!
+                strSql += CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')             ";    // 트랙 일시정지가 아니어야 함!
                 strSql += CRLF + "    AND CD.MC_NO              = CD.DEST_POS_RD  ";
                 strSql += CRLF + "    AND CD.MC_NO              <> JM.DEST_POS    ";                  //조한성추가 - 해당 함수는 중간목적지에서 진행시키는 부분인데, 이부분이 없으면 최종목적지에서도 이함수가 진행돼서 완료처리를 못하                                                                                                              는 경우가 생겼었음. 확인부탁드립니다 !
                 //strSql += CRLF + "    AND JM.JOB_STATUS         IS NOT NULL     ";
@@ -1795,7 +1795,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND JM.JOB_STATUS 	    = '11'                          ";
                 strSql += CRLF + "    AND JM.DEST_POS           IS NOT NULL                     ";
                 strSql += CRLF + "    AND (CD.RET_READY_RD 	    = '1' OR CD.STO_READY_RD = '1') ";  // 출고대 또는 입고대 READY ON
-                strSql += CRLF + "    AND CD.TR_PAUSE_RD        = '0'                           ";    // 트랙 일시정지가 아니어야 함!
+                strSql += CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')                           ";    // 트랙 일시정지가 아니어야 함!
                 strSql += CRLF + "    AND CD.MC_NO              = CD.DEST_POS_RD                ";
                 strSql += CRLF + "    AND CD.MC_NO              <> JM.DEST_POS                  "; //조한성추가 - 해당 함수는 중간목적지에서 진행시키는 부분인데, 이부분이 없으면 최종목적지에서도 이함수가 진행돼서 완료처리를 못하는 경우가 생겼었음. 확인부탁드립니다 !
                 strSql += CRLF + "    AND JM.JOB_STATUS         IS NOT NULL                     ";
@@ -2214,7 +2214,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND CD.ERROR_CODE	     = '0'                                                          ";
                 strSql += CRLF + "    AND CD.MC_NO	         = '148'                                                        ";
                 strSql += CRLF + "    AND CD.RET_READY_RD 	 = '1'                                                          ";      // 출고대 또는 입고대 READY ON
-                strSql += CRLF + "    AND CD.TR_PAUSE_RD     = '0'                                                          ";      // 트랙 일시정지가 아니어야 함!
+                strSql += CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')                                                          ";      // 트랙 일시정지가 아니어야 함!
                 strSql += CRLF + "    AND CD.MC_NO           = CD.DEST_POS_RD                                               ";
                 strSql += CRLF + "    and 0 = (CASE WHEN CD.LUGG_NO_RD = (SELECT LUGG_NO                                    ";
                 strSql += CRLF + "                                          FROM JOB_MST                                    ";
@@ -2689,7 +2689,7 @@ namespace TSK_COMM_IOSCH
                 strSql += cDefApp.CRLF + "    AND CD.SENSOR0_DATA_RD    = '1'               ";   // 화물감지
                 strSql += cDefApp.CRLF + "    AND CD.AUTO_MODE_RD 	    = '1'               ";   // 자동모드
                 strSql += cDefApp.CRLF + "    AND CD.OD_RQ_YN		    = 'N'               ";
-                strSql += cDefApp.CRLF + "    AND CD.TR_PAUSE_RD        = '0'               ";    // 트랙 일시정지가 아니어야 함!
+                strSql += cDefApp.CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')               ";    // 트랙 일시정지가 아니어야 함!
                 strSql += cDefApp.CRLF + "    AND CD.READ_UPD_DT        > CD.WRITE_UPD_DT   ";
                 strSql += cDefApp.CRLF + "    AND JM.JOB_STATUS 	    IN ('11', '92')     ";
                 strSql += cDefApp.CRLF + "    AND JM.DEST_POS Is not null                   ";
