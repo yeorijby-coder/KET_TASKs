@@ -219,6 +219,9 @@ namespace WCS_TASK_CV
         private string m_strConnectString;
         private MelsecQ3EProtocol m_msQPlc;
         private cDeviceMapRuntime m_devMap;   // DeviceMap XML 런타임 파서
+
+        // @.CV_DATA 에 행이 없어 건너뛴 트랙. 같은 트랙을 매 주기 알리지 않으려고 기억해 둔다.
+        private Dictionary<string, bool> m_dicNoRowTrack = new Dictionary<string, bool>();
         public Thread m_thThread;
         public SYS_MAIN m_frmMain;
 
@@ -684,7 +687,13 @@ namespace WCS_TASK_CV
                         }
 
                         //Hexa string 값으로 가져온다.
-                        string strCvHexVal = BytesToHexs(byRxBuff, nArrayIdx, nWPT * 2);
+                        // @.BytesToHexs 의 세번째 인자는 "길이" 가 아니라 "끝 인덱스" 다.
+                        //   (maindefine.cs : for (ii = nStartLen; ii < nEndlen; ii++))
+                        //   예전에는 길이(nWPT*2 = 10)를 넘겨서 첫 트랙(오프셋 0)만 값이 나오고
+                        //   두번째 트랙부터는 ii = 10 < 10 이 거짓이라 빈 문자열이 됐다.
+                        //   그러면 직전 값(역시 빈 문자열)과 같아 "변화 없음" 으로 판정되어
+                        //   그 트랙의 읽기값이 영영 CV_DATA 에 반영되지 않았다.
+                        string strCvHexVal = BytesToHexs(byRxBuff, nArrayIdx, nArrayIdx + nWPT * 2);
 
                         //Conveyor상태값이 다를 때만 Update.
                         if (CvDic[nCvNo].CVSTATHEXVAL != strCvHexVal)
@@ -1704,9 +1713,19 @@ namespace WCS_TASK_CV
 
                 if (nSelCnt == 0)
                 {
+                    // @.그 트랙의 CV_DATA 행이 없는 경우다. 설비에서 읽는 범위
+                    //   (WCS_DB.INI 의 FR_TRACK~TO_TRACK)와 DB 행이 정확히 일치하지 않는 것은
+                    //   현장에서 흔하다. (이 현장 PLC 02 는 227/228/229 행이 없다)
+                    //   예전에는 여기서 false 를 돌려주었고, 호출부가 그것을 곧바로
+                    //   return false 로 받아 그 주기의 나머지 트랙을 전부 건너뛰었다.
                     m_msQPlc._pBdb.Rollback();
-                    MakeMsg_Error(strTitle + "트랙정보 변경 중 DATA가 없습니다., TRACK_NO [" + strTRACK_NO + "]", m_nthNo);
-                    return false;
+
+                    if (!m_dicNoRowTrack.ContainsKey(strTRACK_NO))
+                    {
+                        m_dicNoRowTrack[strTRACK_NO] = true;    // @.같은 트랙은 한 번만 알린다
+                        MakeMsg_Imp(strTitle + "CV_DATA 에 행이 없어 건너뜁니다. TRACK_NO [" + strTRACK_NO + "]", m_nthNo);
+                    }
+                    return true;
                 }
 
                 m_msQPlc._pBdb.Commit();

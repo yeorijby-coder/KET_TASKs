@@ -18,6 +18,11 @@ namespace WCS_TASK_CV
             return cvtvalue;
         }
 
+		/*
+		 * 바이트 배열의 [nStartLen, nEndlen) 구간을 16진 문자열로 만든다.
+		 *   ※ 세번째 인자는 "길이" 가 아니라 "끝 인덱스" 다.
+		 *     길이를 넘기면 시작이 0 이 아닌 경우 빈 문자열이 돌아온다.
+		 */
 		public string BytesToHexs(byte[] value, int nStartLen, int nEndlen)
 		{
 			string cvtvalue = "";
