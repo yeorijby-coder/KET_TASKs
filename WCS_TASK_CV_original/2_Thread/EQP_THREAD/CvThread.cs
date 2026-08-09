@@ -952,13 +952,13 @@ namespace WCS_TASK_CV
                     string CMD_RQ_PARM = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["CMD_RQ_PARM"].ToString();
                     int nCMD_RQ_PARM = (Convert.ToInt32(0 + CMD_RQ_PARM));
 
-                    string PULP_SENSOR_OD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["PULP_SENSOR_OD"].ToString(); // 대기필요
+                    string PULP_SENSOR_OD = GfRow(nRows, "PULP_SENSOR_OD"); // 대기필요
                     int nPULP_SENSOR_OD = (Convert.ToInt32(0 + PULP_SENSOR_OD));
 
-                    string WAIT_SC_RET_JOB_OD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["WAIT_SC_RET_JOB_OD"].ToString(); // 대기필요
+                    string WAIT_SC_RET_JOB_OD = GfRow(nRows, "WAIT_SC_RET_JOB_OD"); // 대기필요
                     int nWAIT_SC_RET_JOB_OD = (Convert.ToInt32(0 + WAIT_SC_RET_JOB_OD));
 
-                    string WAIT_SC_RET_JOB_RD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["WAIT_SC_RET_JOB_RD"].ToString(); // 대기필요
+                    string WAIT_SC_RET_JOB_RD = GfRow(nRows, "WAIT_SC_RET_JOB_RD"); // 대기필요
                     int nWAIT_SC_RET_JOB_RD = (Convert.ToInt32(0 + WAIT_SC_RET_JOB_RD));
 
                     string TR_PAUSE_OD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["TR_PAUSE_OD"].ToString();
@@ -1463,6 +1463,27 @@ namespace WCS_TASK_CV
         }
         #endregion
 
+        /*
+         * GfRow :: 조회 결과에서 컬럼 하나를 안전하게 꺼낸다.
+         *
+         *   현장마다 CV_DATA 의 컬럼 구성이 조금씩 다르다. 없는 컬럼을 DataRow 에서
+         *   읽으면 예외가 나고, 그러면 통신 스레드가 통째로 빠져나가 재접속만 반복한다.
+         *   (이 현장에는 PULP_SENSOR_OD / WAIT_SC_RET_JOB_OD / WAIT_SC_RET_JOB_RD 가 없다)
+         */
+        private string GfRow(int p_nRow, string p_strCol, string p_strDefault = "0")
+        {
+            try
+            {
+                if (m_msQPlc._pBdb.mDtMain == null) return p_strDefault;
+                if (!m_msQPlc._pBdb.mDtMain.Columns.Contains(p_strCol)) return p_strDefault;
+                if (p_nRow < 0 || p_nRow >= m_msQPlc._pBdb.mDtMain.Rows.Count) return p_strDefault;
+
+                string strValue = m_msQPlc._pBdb.mDtMain.Rows[p_nRow][p_strCol].ToString().Trim();
+                return (strValue.Length == 0) ? p_strDefault : strValue;
+            }
+            catch { return p_strDefault; }
+        }
+
         #region [CvChg_OD_RQ_YN] :: CV_DATA에서 OD_RQ_YN 여부에 따른 CV 지시
         private bool CvChg_OD_RQ_YN(int Idx)
         {
@@ -1525,16 +1546,16 @@ namespace WCS_TASK_CV
                     string JOB_TYP_OD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["JOB_TYP_OD"].ToString();
                     int nJOB_TYP_OD = (Convert.ToInt32(0 + JOB_TYP_OD));
 
-                    string PULP_SENSOR_RD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["PULP_SENSOR_RD"].ToString();
+                    string PULP_SENSOR_RD = GfRow(nRows, "PULP_SENSOR_RD");
                     int nPULP_SENSOR_RD = (Convert.ToInt32(0 + PULP_SENSOR_RD));
 
-                    string PULP_SENSOR_OD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["PULP_SENSOR_OD"].ToString();
+                    string PULP_SENSOR_OD = GfRow(nRows, "PULP_SENSOR_OD");
                     int nPULP_SENSOR_OD = (Convert.ToInt32(0 + PULP_SENSOR_OD));
 
-                    string WAIT_SC_RET_JOB_RD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["WAIT_SC_RET_JOB_RD"].ToString();
+                    string WAIT_SC_RET_JOB_RD = GfRow(nRows, "WAIT_SC_RET_JOB_RD");
                     int nWAIT_SC_RET_JOB_RD = (Convert.ToInt32(0 + WAIT_SC_RET_JOB_RD));
 
-                    string WAIT_SC_RET_JOB_OD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["WAIT_SC_RET_JOB_OD"].ToString();
+                    string WAIT_SC_RET_JOB_OD = GfRow(nRows, "WAIT_SC_RET_JOB_OD");
                     int nWAIT_SC_RET_JOB_OD = (Convert.ToInt32(0 + WAIT_SC_RET_JOB_OD));
 
                     #endregion
