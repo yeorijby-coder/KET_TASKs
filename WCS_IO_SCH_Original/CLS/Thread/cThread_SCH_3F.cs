@@ -36,7 +36,7 @@ namespace TSK_COMM_IOSCH
 {
     /// <summary>
     /// KET 물류창고 자동 반송 Scheduler Thread (JOB_MST 스키마)
-    /// - C/V 구동 : 입고대/출고대 팔레트 + 구동대기 작업(JOB_STATUS='10') → CV 명령 지시
+    /// - C/V 구동 : 입고대/출고대 팔레트 + 구동대기 작업(JOB_STATUS='99') → CV 명령 지시
     /// - S/C 반송 : 구동대기 작업(JOB_STATUS='20') + 유휴 S/C → 이송 명령 지시
     /// </summary>
     public class cThread_SCH_3F : IOSchDB
@@ -345,7 +345,7 @@ namespace TSK_COMM_IOSCH
                 strSql += cDefApp.CRLF + "   FROM CV_DATA CD                            ";
                 strSql += cDefApp.CRLF + "  INNER JOIN JOB_MST JM                       ";
                 strSql += cDefApp.CRLF + "     ON CD.MC_NO = JM.START_POS               ";
-                strSql += cDefApp.CRLF + "    AND JM.JOB_STATUS = '10'                  ";
+                strSql += cDefApp.CRLF + "    AND JM.JOB_STATUS = '" + ST_NEW + "'          ";   // @.신규('99') 가 구동대기다. '10' 은 2026-07-10 에 없앤 상태라 새 작업이 안 집혔다
                 strSql += cDefApp.CRLF + "  WHERE CD.LUGG_NO_RD    IN ('','0','0000')   ";
                 strSql += cDefApp.CRLF + "    AND CD.STO_READY_RD 	= '1'               ";
                 strSql += cDefApp.CRLF + "    AND CD.SENSOR0_DATA_RD = '1'              ";
@@ -948,7 +948,7 @@ namespace TSK_COMM_IOSCH
 
         // ─────────────────────────────────────────────────────────────────
         // 공통 코어 1 : 3층 입고대 출발 (ECS StartInvokeCheck3/6 - NEW_JOB_ORDER 의 PLC 한정판)
-        //   해당 PLC 입고대(START_POS)에 재하 + 구동대기('10') 작업 → CV 지시 + 상태 '15'
+        //   해당 PLC 입고대(START_POS)에 재하 + 구동대기('99') 작업 → CV 지시 + 상태 '15'
         // ─────────────────────────────────────────────────────────────────
         private bool CV_STO_START_PLC(string strWH_TYP, string strCV_PLC, string strTitle, ref string pRTN_MSG)
         {
@@ -964,7 +964,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "   FROM CV_DATA CD                            ";
                 strSql += CRLF + "  INNER JOIN JOB_MST JM                       ";
                 strSql += CRLF + "     ON CD.MC_NO = JM.START_POS               ";
-                strSql += CRLF + "    AND JM.JOB_STATUS = '10'                  ";
+                strSql += CRLF + "    AND JM.JOB_STATUS = '" + ST_NEW + "'          ";   // @.신규('99') 가 구동대기다. '10' 은 2026-07-10 에 없앤 상태라 새 작업이 안 집혔다
                 strSql += CRLF + "  WHERE CD.PLC_NO         = :CV_PLC           ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
                 strSql += CRLF + "    AND CD.LUGG_NO_RD    IN ('','0','0000')   ";
                 strSql += CRLF + "    AND CD.STO_READY_RD 	= '1'               ";
