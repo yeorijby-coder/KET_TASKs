@@ -655,7 +655,11 @@ namespace WCS_TASK_CV
                             nReadTrack * nWPT,
                             ref byRxBuff) == false)
                     {
-                        throw new Exception();
+                        // @.프로토콜이 남긴 실패 사유를 그대로 올린다. 인자 없이 던지면
+                        //   로그에 "'System.Exception' 형식의 예외" 만 남아 원인을 못 본다.
+                        throw new Exception("PLC 읽기 실패 (주소 " + nAddress
+                                            + ", 워드 " + (nReadTrack * nWPT) + ") : "
+                                            + m_msQPlc.GetErrorMsg());
                     }
 
                     MakeMsg("상태값 DB저장", m_nthNo);
