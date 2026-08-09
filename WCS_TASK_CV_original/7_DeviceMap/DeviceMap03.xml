@@ -107,7 +107,7 @@
 				<TrList>325</TrList>
 				<TrList>326</TrList>
 			</Bit>
-			<Bit  desc="D557.4" Use ="0" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
+			<Bit  desc="D557.4" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
 				<TrList>327</TrList>
 				<TrList>328</TrList>
 				<TrList>329</TrList>
@@ -116,7 +116,7 @@
 				<TrList>332</TrList>
 				<TrList>333</TrList>
 			</Bit>
-			<Bit  desc="D357.5" Use ="0" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
+			<Bit  desc="D557.5" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
 				<TrList>334</TrList>
 				<TrList>335</TrList>
 				<TrList>336</TrList>
@@ -125,7 +125,7 @@
 				<TrList>339</TrList>
 				<TrList>340</TrList>
 			</Bit>
-			<Bit  desc="D357.6" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
+			<Bit  desc="D557.6" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
 				<TrList>341</TrList>
 				<TrList>342</TrList>
 				<TrList>343</TrList>

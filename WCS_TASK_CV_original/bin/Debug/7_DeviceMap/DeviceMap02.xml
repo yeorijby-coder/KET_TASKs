@@ -110,7 +110,7 @@
 				<TrList>225</TrList>
 				<TrList>226</TrList>
 			</Bit>
-			<Bit  desc="D557.4" Use ="0" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
+			<Bit  desc="D557.4" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
 				<TrList>230</TrList>
 				<TrList>231</TrList>
 				<TrList>232</TrList>
@@ -118,7 +118,7 @@
 				<TrList>234</TrList>
 				<TrList>235</TrList>
 			</Bit>
-			<Bit  desc="D357.5" Use ="0" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
+			<Bit  desc="D557.5" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
 				<TrList>236</TrList>
 				<TrList>237</TrList>
 				<TrList>238</TrList>
@@ -132,7 +132,7 @@
 				<TrList>246</TrList>
 				<TrList>247</TrList>
 			</Bit>
-			<Bit  desc="D357.6" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
+			<Bit  desc="D557.6" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
 				<TrList>248</TrList>
 				<TrList>249</TrList>
 				<TrList>250</TrList>
@@ -162,6 +162,18 @@
 			<Bit  desc="D558.4" Use ="1" tid="249" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 			<Bit  desc="D558.5" Use ="1" tid="259" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 		</Area>
+ 		<Area type="W" name="RetCnt"  address="570"> 
+    			<ExtraTable>
+         			<Table name="eqp_mst">
+		  			<cndtnFields>
+						<Field>eqp_typ</Field>
+						<Field>plc_no</Field>
+		  			</cndtnFields>
+		  			<valueField>cv_ret-cnt</valueField>
+        			</Table>
+    			</ExtraTable>
+		</Area>
+
 	</SeparatelyETC>
 
 	<FlantEquip use="0"/>

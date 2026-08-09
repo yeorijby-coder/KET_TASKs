@@ -1417,47 +1417,26 @@ namespace TSK_HostCom
                         #region 입고 작업 생성
                         nNewJobType = 1;
                         
-                        #region CELL MST에서 BANK와 BAY와 LEVEL의 최대값을 가져온다.
-                        m_BDb.ParamsClear();
+                        /*
+                         * 시험용 랙 범위
+                         *
+                         *   예전에는 CELL_MST 에서 BANK/BAY/LEV 의 최대·최소를 읽었다.
+                         *   이 현장은 재고관리를 쓰지 않아 그 표가 없다.
+                         *   SIM MODE 는 상위 없이 혼자 작업을 이어 붙이는 시험 모드이고,
+                         *   여기서 정하는 위치는 실제 재고와 맞출 필요가 없다.
+                         *   범위만 ECSCOMA.ini 에서 읽는다.
+                         *   기본값은 이 현장 CELL_MST 에 들어 있던 값 그대로다.
+                         */
+                        int nMinBank  = modDefAPI.GetPrivateProfileInt("SIM", "MIN_BANK",   1, modDefApp.MAIN_INI);
+                        int nMaxBank  = modDefAPI.GetPrivateProfileInt("SIM", "MAX_BANK",   8, modDefApp.MAIN_INI);
+                        int nMaxBay   = modDefAPI.GetPrivateProfileInt("SIM", "MAX_BAY",   17, modDefApp.MAIN_INI);
+                        int nMaxLevel = modDefAPI.GetPrivateProfileInt("SIM", "MAX_LEVEL", 15, modDefApp.MAIN_INI);
 
-                        m_strSql = modDefApp.CRLF + "   SELECT  MAX(BANK) AS MAX_BANK";
-                        m_strSql += modDefApp.CRLF + "       ,  MIN(BANK) AS MIN_BANK";
-                        m_strSql += modDefApp.CRLF + "       ,  MAX(BAY) AS MAX_BAY";
-                        m_strSql += modDefApp.CRLF + "       ,  MAX(LEV) AS MAX_LEVEL";
-                        m_strSql += modDefApp.CRLF + "    FROM  CELL_MST          ";
-                        m_strSql += modDefApp.CRLF + "   WHERE  WH_TYP = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
-                        m_strSql += modDefApp.CRLF + "     AND  CELL_SC_NO = '" + strSScNum + "'"; 
-                        m_strSql += modDefApp.CRLF + "GROUP BY  SC_NO             ";
-                        m_strSql += modDefApp.CRLF + "ORDER BY  SC_NO             ";
+                        if (nMinBank  < 1) nMinBank  = 1;
+                        if (nMaxBank  < nMinBank) nMaxBank  = nMinBank;
+                        if (nMaxBay   < 1) nMaxBay   = 1;
+                        if (nMaxLevel < 1) nMaxLevel = 1;
 
-                        int iCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
-
-                        if (iCnt < 0)
-                        {
-                            m_strLog = m_BDb.ErrMsg + m_strSql;
-                            modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            return false;
-                        }
-
-                        // CELL_MST에서 각 조건에 맞는 최대값을 가져오지 못할수는 없을것이다.   
-                        if (iCnt != 1)
-                        {
-                            m_strLog = "LOCATION 정보를 바르게 가져오지 못했습니다.";
-                            modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
-                            return false;
-                        }
-
-                        string strMIN_BANK = "" + m_BDb.dtMain.Rows[0]["MIN_BANK"].ToString() == "" ? "0" : m_BDb.dtMain.Rows[0]["MIN_BANK"].ToString();
-                        string strMAX_BANK = "" + m_BDb.dtMain.Rows[0]["MAX_BANK"].ToString() == "" ? "0" : m_BDb.dtMain.Rows[0]["MAX_BANK"].ToString();
-                        string strMAX_BAY = "" + m_BDb.dtMain.Rows[0]["MAX_BAY"].ToString() == "" ? "0" : m_BDb.dtMain.Rows[0]["MAX_BAY"].ToString();
-                        string strMAX_LEVEL = "" + m_BDb.dtMain.Rows[0]["MAX_LEVEL"].ToString() == "" ? "0" : m_BDb.dtMain.Rows[0]["MAX_LEVEL"].ToString();
-
-                        int nMinBank = Convert.ToInt32(strMIN_BANK);
-                        int nMaxBank = Convert.ToInt32(strMAX_BANK);
-                        int nMaxBay = Convert.ToInt32(strMAX_BAY);
-                        int nMaxLevel = Convert.ToInt32(strMAX_LEVEL);
-
-                        #endregion
                         #region 현재 로케이션의 BANK, BAY, LEVEL을 추출한다. 
                         string strCurBank = strSPosition.Substring(0, 2);
                         string strCurBay = strSPosition.Substring(3, 3);

@@ -1911,34 +1911,11 @@ namespace TSK_HostCom
 		
 				//03. 20161122 이길문 이중입고일 경우 로케이션 재지정
 				if (strErrKind == "1") {
-					//------------------------------------------------
-					// 기존저장위치 이중입고 마킹
-					//------------------------------------------------
-					m_BDb.ParamsClear();
-		
-					m_strSql = "";
-					m_strSql += modDefApp.CRLF + " UPDATE CELL_MST                                                                      ";
-					m_strSql += modDefApp.CRLF + "    SET CELL_STA = '4'                                                                ";
-					m_strSql += modDefApp.CRLF + "  WHERE COMPANY_CD =  " + m_BDb.ParamsAdd("COMPANY_CD", modDefApp.COMPANY_CD);  // RYU 추가
-                    m_strSql += modDefApp.CRLF + "    AND AREA_CD    =  " + m_BDb.ParamsAdd("AREA_CD", modDefApp.AREA_CD);
-                    m_strSql += modDefApp.CRLF + "    AND CELL_NO    =  " + m_BDb.ParamsAdd(strWH_CD + strAREA);
-					m_iSelCnt = m_BDb.ExcuteNonQry_Par(ref m_strSql);
-					if (m_iSelCnt < 0) {
-						m_strLog = m_BDb.ErrMsg + m_strSql;
-						modCmWork.ShowMsgServer(m_strLog, modDefApp.MSG_ERR);
-		
-						m_BDb.trnMain.Rollback();
-						MakeResponse(m_strMsgType, "", modDefApp.MSG_INTERNAL_ERROR);
-						return;
-					}
-					if (m_iSelCnt != 1) {
-						m_strLog = "Error Report, CELL_MST 셀상태 수정 실패 ";
-						modCmWork.ShowMsgServer(m_strLog, modDefApp.MSG_ERR);
-		
-						m_BDb.trnMain.Rollback();
-						MakeResponse(m_strMsgType, "", modDefApp.MSG_INTERNAL_ERROR);
-						return;
-					}
+					/*
+					 * 예전에는 여기서 기존 저장위치를 CELL_MST 에 '4'(이중입고)로
+					 * 표시했다. 이 현장은 재고관리를 쓰지 않아 그 표가 없다.
+					 * 표시는 빼고 아래의 로케이션 재지정만 한다.
+					 */
 					//------------------------------------------------
 					//ini에 정의된 횟수만큼만 재지정
 					//------------------------------------------------

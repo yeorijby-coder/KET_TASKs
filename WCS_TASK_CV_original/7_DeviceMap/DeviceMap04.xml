@@ -84,14 +84,14 @@
 				<TrList>419</TrList>
 				<TrList>420</TrList>
 			</Bit>
-			<Bit  desc="D257.4" Use ="0" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
+			<Bit  desc="D257.4" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
 				<TrList>421</TrList>
 				<TrList>422</TrList>
 				<TrList>423</TrList>
 				<TrList>424</TrList>
 				<TrList>425</TrList>
 			</Bit>
-			<Bit  desc="D257.5" Use ="0" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
+			<Bit  desc="D257.5" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
 				<TrList>426</TrList>
 				<TrList>427</TrList>
 				<TrList>428</TrList>
