@@ -251,7 +251,7 @@ namespace TSK_COMM_IOSCH
                 strSql += cDefApp.CRLF + " SELECT CD.*, JM.*                            ";
                 strSql += cDefApp.CRLF + "   FROM CV_DATA CD                            ";
                 strSql += cDefApp.CRLF + "  INNER JOIN JOB_MST JM                       ";
-                strSql += cDefApp.CRLF + "     ON CD.MC_NO = JM.START_POS               ";
+                strSql += cDefApp.CRLF + "     ON CD.HOST_STN_NO = JM.START_POS         ";
                 strSql += cDefApp.CRLF + "    AND JM.JOB_STATUS = '" + ST_NEW + "'          ";   // @.신규('99') 가 구동대기다. '10' 은 2026-07-10 에 없앤 상태라 새 작업이 안 집혔다
                 strSql += cDefApp.CRLF + "  WHERE CD.LUGG_NO_RD    IN ('','0','0000')   ";
                 strSql += cDefApp.CRLF + "    AND CD.STO_READY_RD 	= '1'               ";
@@ -348,7 +348,7 @@ namespace TSK_COMM_IOSCH
                 strSql += cDefApp.CRLF + "   FROM CV_DATA CD                                ";
                 strSql += cDefApp.CRLF + "  INNER JOIN JOB_MST JM                           ";
                 strSql += cDefApp.CRLF + "     ON CD.WH_TYP             = JM.WH_TYP 	    ";
-                strSql += cDefApp.CRLF + "    AND CD.MC_NO              = JM.DEST_POS 	    ";
+                strSql += cDefApp.CRLF + "    AND CD.HOST_STN_NO       = JM.DEST_POS 	    ";
                 strSql += cDefApp.CRLF + "    AND CD.LUGG_NO_RD         = JM.LUGG_NO        ";
                 // ※ PLC_NO 필터 제거 (2026-07-11) : 스케줄러는 전체 PLC 를 관장한다.
                 strSql += cDefApp.CRLF + "  WHERE CD.WH_TYP		        = :pWH_TYP          ";
@@ -1081,7 +1081,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + " SELECT CD.*, JM.*                            ";
                 strSql += CRLF + "   FROM CV_DATA CD                            ";
                 strSql += CRLF + "  INNER JOIN JOB_MST JM                       ";
-                strSql += CRLF + "     ON CD.MC_NO = JM.START_POS               ";
+                strSql += CRLF + "     ON CD.HOST_STN_NO = JM.START_POS         ";
                 strSql += CRLF + "    AND JM.JOB_STATUS = '" + ST_NEW + "'          ";   // @.신규('99') 가 구동대기다. '10' 은 2026-07-10 에 없앤 상태라 새 작업이 안 집혔다
                 strSql += CRLF + "  WHERE CD.PLC_NO         = :CV_PLC           ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
                 strSql += CRLF + "    AND CD.LUGG_NO_RD    IN ('','0','0000')   ";
@@ -1262,7 +1262,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "   FROM CV_DATA CD                                ";
                 strSql += CRLF + "  INNER JOIN JOB_MST JM                           ";
                 strSql += CRLF + "     ON CD.WH_TYP             = JM.WH_TYP 	    ";
-                strSql += CRLF + "    AND CD.MC_NO              = JM.DEST_POS 	    ";
+                strSql += CRLF + "    AND CD.HOST_STN_NO       = JM.DEST_POS 	    ";
                 strSql += CRLF + "    AND CD.LUGG_NO_RD         = JM.LUGG_NO        ";
                 strSql += CRLF + "  WHERE CD.WH_TYP		        = :WH_TYP           ";
                 strSql += CRLF + "    AND CD.PLC_NO             = :CV_PLC           ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)

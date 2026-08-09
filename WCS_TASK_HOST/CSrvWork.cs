@@ -480,8 +480,12 @@ namespace TSK_HostCom
         {
             m_BDb.ParamsClear();
 
+            // @.HOST 가 주는 번호는 상위 체계의 스테이션 번호이고, 설비를 움직이는 번호는
+            //   물리 트랙번호(MC_NO)다. CV_DATA.HOST_STN_NO 가 그 대응표다.
+            //   (HOST 101 -> MC_NO 217) 예전에는 MC_NO 로 찾아서 PLC 01 에 남아 있던
+            //   옛 행이 걸렸고, 그 행들은 STN_KIND 가 0 이라 출발지/도착지 거절이 났다.
             m_strSql = "SELECT * FROM CV_DATA";
-            m_strSql += modDefApp.CRLF + "WHERE MC_NO = " + m_BDb.ParamsAdd("MC_NO", strStation);
+            m_strSql += modDefApp.CRLF + "WHERE HOST_STN_NO = " + m_BDb.ParamsAdd("HOST_STN_NO", strStation);
             m_strSql += modDefApp.CRLF + "  AND WH_TYP = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
 
             m_iSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
@@ -494,7 +498,10 @@ namespace TSK_HostCom
             for (int ii = 0; ii < m_iSelCnt; ii++)
             {
                 string strKIND = "" + m_BDb.dtMain.Rows[ii]["STN_KIND"].ToString() == "" ? "0" : m_BDb.dtMain.Rows[ii]["STN_KIND"].ToString();
-                string strID = "" + m_BDb.dtMain.Rows[ii]["MC_NO"].ToString() == "" ? "0" : m_BDb.dtMain.Rows[ii]["MC_NO"].ToString();
+                // @.아래 IsValidStartStation/IsValidDestStation 이 이 값을 요구한 스테이션 번호와
+                //   맞춰 보므로, 조회 기준과 같은 HOST_STN_NO 를 써야 한다.
+                //   (MC_NO 를 쓰면 217 vs 101 이 되어 bValid 가 늘 false 였다)
+                string strID = GfRowValue(ii, "HOST_STN_NO", "0");
 
                 int nKind = Convert.ToInt32(strKIND);
 
