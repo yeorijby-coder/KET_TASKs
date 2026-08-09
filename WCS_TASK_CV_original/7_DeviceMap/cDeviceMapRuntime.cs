@@ -225,7 +225,11 @@ namespace WCS_TASK_CV
             }
             etc.DbCol = strDbCol.ToUpper();
 
-            // Bit + TrList : 비트별 담당 트랙
+            // 비트별 담당 트랙. DeviceMap 에는 두 가지 형식이 섞여 있다.
+            //   tid="0"   : OpBox. 담당 트랙을 <TrList> 자식으로 나열한다. (Auto 가 이 형식)
+            //   tid="217" : 그 비트가 트랙 217 하나를 담당한다.            (StoStation/RetStation 이 이 형식)
+            // XML 주석에도 "tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재" 라고 적혀 있다.
+            // 예전에는 <TrList> 만 읽어서 tid 형식으로 적힌 영역이 통째로 버려졌다.
             int nSeq = 0;
             foreach (XmlNode bit in area.ChildNodes)
             {
@@ -238,12 +242,21 @@ namespace WCS_TASK_CV
 
                 EtcBit eb = new EtcBit();
                 eb.Pos = nPos;
+
                 foreach (XmlNode tr in bit.ChildNodes)
                 {
                     if (tr.NodeType != XmlNodeType.Element || tr.Name != "TrList") continue;
                     if (GetAttr(tr, "desc").IndexOf("사용안함") >= 0) continue;
                     eb.Tracks.Add(Convert.ToInt32("0" + tr.InnerText.Trim()));
                 }
+
+                // @.<TrList> 가 없으면 tid 가 담당 트랙이다. (tid="0" 은 OpBox 이므로 제외)
+                if (eb.Tracks.Count == 0)
+                {
+                    int nTid = Convert.ToInt32("0" + GetAttr(bit, "tid"));
+                    if (nTid > 0) eb.Tracks.Add(nTid);
+                }
+
                 if (eb.Tracks.Count > 0)
                     etc.Bits.Add(eb);
             }
