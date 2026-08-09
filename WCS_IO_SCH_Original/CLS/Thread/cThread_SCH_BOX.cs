@@ -1053,16 +1053,32 @@ namespace TSK_COMM_IOSCH
                 {
                     strLUGG_NO = "" + _pBdb.mDtMain.Rows[i]["LUGG_NO"].ToString() == "" ? "0" : _pBdb.mDtMain.Rows[i]["LUGG_NO"].ToString();
                     strMC_NO = "" + _pBdb.mDtMain.Rows[i]["MC_NO"].ToString() == "" ? "" : _pBdb.mDtMain.Rows[i]["MC_NO"].ToString();
+                    string strJOB_TYP = "" + _pBdb.mDtMain.Rows[i]["JOB_TYP"].ToString() == "" ? "1" : _pBdb.mDtMain.Rows[i]["JOB_TYP"].ToString();
 
-                    // 상위 TASK에 도착 보고
+                    // 상위 TASK에 도착 보고 (LFC 인터페이스 테이블)
                     if (UPDATE_IF_LUGG_STA(strWH_TYP, strLUGG_NO, "90", ref pRTN_MSG) == false)
                     {
                         _pBdb.Rollback();
                         return false;
                     }
 
-                    // 도착보고가 성공하면 - 작업 삭제
-                    if (DELETE_JOB_DATA(strLUGG_NO, strWH_TYP, ref pRTN_MSG) == false)
+                    /*
+                     * 여기서 작업을 지우면 안 된다.
+                     *
+                     *   HOST 태스크는 JOB_MST 의 상태로 보고 대상을 고른다.
+                     *     GetJobCompleteReport(19)  출고작업 완료 보고(CV 완료)
+                     *     GetJobCompleteReport(29)  입고작업 완료 보고(SC 완료)
+                     *   행을 지워 버리면 보고할 것이 없어져 완료보고(F)가 나가지 않는다.
+                     *   상위는 그 작업이 끝난 줄 모르니 다음 작업도 만들지 않아,
+                     *   이동 -> 입고 -> 출고 순환이 첫 단계에서 멈췄다.
+                     *
+                     *   원본 참고 구현(CLS/cThread_CV.cs)도 같은 자리에 이렇게 적어 두었다.
+                     *     "목적지 이동완료 (도착보고시 기존작업삭제 후 MES에서 새작업을
+                     *      생성하기에 JOB_STATUS = '19' 로 처리한다."
+                     *   거기서도 DELETE_JOB_DATA 는 주석 처리돼 있다.
+                     *   실제 삭제는 HOST 태스크가 완료보고를 보낸 뒤에 한다.
+                     */
+                    if (UPDATE_JOB_DATA(ST_CV_DONE, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG) == false)
                     {
                         _pBdb.Rollback();
                         return false;
