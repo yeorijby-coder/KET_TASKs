@@ -362,7 +362,7 @@ namespace TSK_COMM_IOSCH
                 strSql += cDefApp.CRLF + "    AND CD.RET_READY_RD 	    = '1'               ";   // 출고대 READY ON
                 strSql += cDefApp.CRLF + "    AND CD.AUTO_MODE_RD 	    = '1'               ";   // 자동모드
                 strSql += cDefApp.CRLF + "    AND CD.OD_RQ_YN		    = 'N'               ";
-                strSql += cDefApp.CRLF + "    AND JM.JOB_STATUS 	    IN ('11','15')     ";   // CV 구동중 (지시 '11' 호환)
+                strSql += cDefApp.CRLF + "    AND JM.JOB_STATUS 	    = '11'             ";   // 11 = CV 구동중
                 strSql += cDefApp.CRLF + "    AND JM.DEST_POS Is not null                   ";
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
@@ -1323,7 +1323,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND CD.RET_READY_RD 	    = '1'               ";
                 strSql += CRLF + "    AND CD.AUTO_MODE_RD 	    = '1'               ";
                 strSql += CRLF + "    AND CD.OD_RQ_YN		    = 'N'               ";
-                strSql += CRLF + "    AND JM.JOB_STATUS 	    IN ('11','15')      ";
+                strSql += CRLF + "    AND JM.JOB_STATUS 	    = '11'              ";
                 strSql += CRLF + "    AND JM.DEST_POS Is not null                   ";
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
