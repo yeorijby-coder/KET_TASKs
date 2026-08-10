@@ -26,7 +26,11 @@
     출고 완료 (SC_DATA.JOB_TYP_RD=2, COMPLETE_RD<>0)
         그 호기의 출고 H/S(SC_HS_DEF HS_NO='02')에 화물을 놓는다.
 
-    CvSim 레지스터는 Melsec Q3E 로 직접 쓴다.
+    크레인 활성 유지
+        ScSim 은 포크 데이터를 지우면 크레인을 INACTIVE 로 내려 다음 작업을
+        진행하지 않는다. 실제 현장처럼 활성으로 되돌린다.
+
+    시뮬레이터 레지스터는 Melsec Q3E 로 직접 쓴다 (CvSim 9n01, ScSim 81nn).
 
 쓰는 법
     python sc_cv_handoff.py            한 번만 훑고 끝낸다
@@ -193,10 +197,13 @@ def wait_track_ready(verbose=True):
         addr, bit = bits[track]
         port = port_of(track)
 
-        words = q3e_read(port, base_of(track), 3)
-        holds = (words[0] != 0) or (words[2] & 0x0001)
+        try:
+            words = q3e_read(port, base_of(track), 3)
+            cur = q3e_read(port, addr, 1)[0]
+        except Exception:
+            continue                              # 해당 CV 가 안 떠 있으면 건너뛴다
 
-        cur = q3e_read(port, addr, 1)[0]
+        holds = (words[0] != 0) or (words[2] & 0x0001)
         on = bool(cur & (1 << bit))
 
         if holds and not on:
@@ -210,6 +217,40 @@ def wait_track_ready(verbose=True):
             if verbose:
                 print('  대기대 %s : 비었음 -> 출발 준비 OFF' % track)
 
+    return done
+
+
+# ── 크레인 활성 유지 ────────────────────────────────────────────────────
+#   ScSim 은 포크 데이터를 지우면 크레인을 INACTIVE(D109=0)로 내린다.
+#   그 상태에서는 다음 지시를 받아도 작업을 진행하지 않는다.
+#   실제 현장에서는 상위/운전이 활성으로 유지하므로 여기서 대신 세워 준다.
+SC_PORT_BASE = 8100          # ScSim : 901호기 -> 8101
+SC_REG_ACTIVE = 109
+
+
+def sc_port_of(sc_no):
+    return SC_PORT_BASE + (int(sc_no) - 900)
+
+
+SQL_CRANES = """
+SELECT SC_NO FROM SC_DATA WHERE WH_TYP = '%s' ORDER BY SC_NO
+""" % WH_TYP
+
+
+def crane_active(verbose=True):
+    """INACTIVE 로 내려간 크레인을 다시 활성으로 만든다."""
+    done = 0
+    for (sc_no,) in query(SQL_CRANES):
+        port = sc_port_of(sc_no)
+        try:
+            cur = q3e_read(port, SC_REG_ACTIVE, 1)[0]
+        except Exception:
+            continue                                   # 안 떠 있는 호기는 건너뛴다
+        if cur == 0:
+            q3e_write(port, SC_REG_ACTIVE, [1])
+            done += 1
+            if verbose:
+                print('  %s호기 : INACTIVE -> 활성' % sc_no)
     return done
 
 
@@ -241,6 +282,9 @@ def handoff_once(verbose=True):
 
     # 대기대 출발 준비
     done += wait_track_ready(verbose)
+
+    # 크레인 활성 유지
+    done += crane_active(verbose)
 
     return done
 
