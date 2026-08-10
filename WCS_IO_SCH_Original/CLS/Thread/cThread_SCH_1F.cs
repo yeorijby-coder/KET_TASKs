@@ -190,6 +190,9 @@ namespace TSK_COMM_IOSCH
                     RunSchFunc(ArrivedCheck2);          // 1F 구라인 픽킹대 도착보고
                     RunSchFunc(ArrivedCheck5);          // 1F 신라인 픽킹대 도착보고
 
+                    RunSchFunc(StoHsCheck2);            // 1F 구라인 입고 H/S -> 크레인 입고 지시
+                    RunSchFunc(StoHsCheck5);            // 1F 신라인 입고 H/S -> 크레인 입고 지시
+
                     RunSchFunc(CopyTrackData2);         // 이음새 352→631 작업 데이터 복사
                     RunSchFunc(DeleteTrackData2);       // 이음새 352 작업 데이터 삭제
                     RunSchFunc(CopyTrackData5);         // 이음새 654→355 작업 데이터 복사
@@ -679,6 +682,12 @@ namespace TSK_COMM_IOSCH
         { return CV_ARRIVE_PLC(strWH_TYP, CV_PLC_1F_OLD, "[ArrivedCheck2]", ref pRTN_MSG); }
         public bool ArrivedCheck5(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
         { return CV_ARRIVE_PLC(strWH_TYP, CV_PLC_1F_NEW, "[ArrivedCheck5]", ref pRTN_MSG); }
+
+        public bool StoHsCheck2(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return SC_STO_CMD_PLC(strWH_TYP, CV_PLC_1F_OLD, "[StoHsCheck2]", ref pRTN_MSG); }
+
+        public bool StoHsCheck5(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return SC_STO_CMD_PLC(strWH_TYP, CV_PLC_1F_NEW, "[StoHsCheck5]", ref pRTN_MSG); }
 
         public bool NewStartRoutinePlc2(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
         { return CHECK_CV_RET_START(strWH_TYP, CV_PLC_1F_OLD, "[NewStartRoutinePlc2]", ref pRTN_MSG); }
@@ -1370,6 +1379,97 @@ namespace TSK_COMM_IOSCH
             }
         }
 
+
+        // ─────────────────────────────────────────────────────────────────
+        // 공통 코어 5 : 입고 H/S 도착 -> 크레인 입고 지시 (레거시 ECS CSc::Store)
+        //   화물이 크레인 입고 H/S 에 올라오면 그 크레인에 입고를 지시한다.
+        //     지시 대상 크레인 : JOB_MST.DEST_POS (901~911)
+        //     넣을 랙 위치     : JOB_MST.DEST_LOCATION (상위가 준 값)
+        //   입고 H/S 인지는 CV_DATA.STOHS_READY_RD 로 안다. 그 값은 CV 태스크가
+        //   DeviceMap 의 ScStoHS 영역에서 읽어 채운다.
+        // ─────────────────────────────────────────────────────────────────
+        private bool SC_STO_CMD_PLC(string strWH_TYP, string strCV_PLC, string strTitle, ref string pRTN_MSG)
+        {
+            try
+            {
+                int nSelCnt = 0;
+                string strSql = "";
+
+                pRTN_MSG = strTitle;
+
+                strSql = "";
+                strSql += CRLF + " SELECT JM.LUGG_NO, JM.JOB_TYP, JM.DEST_POS, JM.DEST_LOCATION, CD.MC_NO  ";
+                strSql += CRLF + "   FROM JOB_MST JM                                        ";
+                strSql += CRLF + "  INNER JOIN CV_DATA CD                                   ";
+                strSql += CRLF + "     ON CD.WH_TYP           = JM.WH_TYP                   ";
+                strSql += CRLF + "    AND CD.LUGG_NO_RD       = JM.LUGG_NO                  ";
+                strSql += CRLF + "  INNER JOIN SC_DATA SD                                   ";
+                strSql += CRLF + "     ON SD.WH_TYP           = JM.WH_TYP                   ";
+                strSql += CRLF + "    AND SD.SC_NO            = JM.DEST_POS                 ";
+                strSql += CRLF + "  WHERE JM.WH_TYP           = :WH_TYP                     ";
+                strSql += CRLF + "    AND JM.JOB_TYP          = '" + JT_STO + "'            ";
+                strSql += CRLF + "    AND JM.JOB_STATUS       = '" + ST_CV_RUN + "'         ";   // CV 구동중
+                strSql += CRLF + "    AND CD.PLC_NO           = :CV_PLC                     ";
+                strSql += CRLF + "    AND CD.STOHS_READY_RD   = '1'                         ";   // 입고 H/S 준비
+                strSql += CRLF + "    AND CD.SENSOR0_DATA_RD  = '1'                         ";   // 재하
+                strSql += CRLF + "    AND CD.AUTO_MODE_RD     = '1'                         ";
+                strSql += CRLF + "    AND CD.ERROR_CODE       IN ('0','0000')               ";
+                strSql += CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')          ";
+                strSql += CRLF + "    AND SD.OD_RQ_YN         = 'N'                         ";   // 크레인이 지시를 받을 수 있는 상태
+                strSql += CRLF + "    AND SD.ERR_CODE_RD      = '0000'                      ";
+                strSql += CRLF + "    AND SD.AUTO_MODE_RD     = '1'                         ";
+                strSql += CRLF + "  LIMIT 1                                                 ";
+
+                _pBdb.mComMain.CommandType = CommandType.Text;
+                _pBdb.mComMain.Parameters.Clear();
+                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+                _pBdb.mComMain.Parameters.Add("CV_PLC", DbLang.VARCHAR).Value = strCV_PLC;
+
+                nSelCnt = _pBdb.ExcuteQry(strSql);
+                if (nSelCnt < 0)
+                {
+                    pRTN_MSG += _pBdb.ErrMsg;
+                    return false;
+                }
+                if (nSelCnt == 0)
+                {
+                    pRTN_MSG = "";
+                    return true;
+                }
+
+                string strLUGG_NO  = _pBdb.mDtMain.Rows[0]["LUGG_NO"].ToString();
+                string strSC_NO    = _pBdb.mDtMain.Rows[0]["DEST_POS"].ToString();
+                string strDEST_LOC = _pBdb.mDtMain.Rows[0]["DEST_LOCATION"].ToString();
+                string strMC_NO    = _pBdb.mDtMain.Rows[0]["MC_NO"].ToString();
+
+                _pBdb.BeginTrans();
+
+                if (UpdateScData(strSC_NO, JT_STO, strLUGG_NO, "", strDEST_LOC, ref pRTN_MSG) == false)
+                {
+                    _pBdb.Rollback();
+                    pRTN_MSG = "";
+                    return true;    // 크레인 미준비 - 다음 사이클 재시도
+                }
+
+                if (UPDATE_JOB_DATA(ST_SC_CMD, strLUGG_NO, strWH_TYP, JT_STO, ref pRTN_MSG) == false)
+                {
+                    _pBdb.Rollback();
+                    return false;
+                }
+
+                pRTN_MSG = strTitle + "TRACK " + strMC_NO + "번[입고 H/S]에서 SC_TASK를 통해서 "
+                         + strSC_NO + "호기에 입고 지시하였습니다. [작업번호:" + strLUGG_NO + "][도착LOC:" + strDEST_LOC + "]";
+                _pBdb.Commit();
+                InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_SC_CMD, strMC_NO, strSC_NO);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                pRTN_MSG = strTitle + ex.ToString();
+                _pBdb.Rollback();
+                return false;
+            }
+        }
         // ─────────────────────────────────────────────────────────────────
         // 공통 코어 4 : 픽킹 레인 진입 제한 (ECS MovingTrackCheckPlc3/6)
         //   레거시 : 레인 점유수 < 제한(6)이면 진입허가 비트를 PLC 워드 558 에 기록.
@@ -1902,7 +2002,7 @@ namespace TSK_COMM_IOSCH
             catch (Exception ex) { strRtn += ex.Message; return false; }
         }
 
-        /*
+        //*
         /// <summary>
         /// SC_DATA 이송 명령 지시 (레거시 ECS CSc::Store / CSc::Retrieve 의 명령 데이터 포팅)
         ///   레거시 Melsec 명령 D171~D192 : 명령(1=입고/2=출고), 화물번호, BANK/BAY/LEVEL, HS(=랭크)
@@ -1977,6 +2077,34 @@ namespace TSK_COMM_IOSCH
             catch (Exception ex) { strRtn += ex.Message; return false; }
         }
         //*/
+
+        /*
+         * ParseLocation :: 랙 위치 문자열을 뱅크/베이/단으로 나눈다.
+         *
+         *   상위가 주는 형식이 현장마다 다르다. "07-001-01" 처럼 구분자를 넣기도 하고
+         *   "0700101" 처럼 붙여 쓰기도 한다. 숫자만 뽑아 2/3/2 로 자른다.
+         *   (레거시 LOCATION_LEN=7 : BANK 2 + BAY 3 + LEVEL 2)
+         */
+        private bool ParseLocation(string strLoc, ref string strBank, ref string strBay, ref string strLev)
+        {
+            if (strLoc == null)
+                return false;
+
+            string strDigit = "";
+            foreach (char ch in strLoc)
+            {
+                if ((ch >= '0') && (ch <= '9'))
+                    strDigit += ch;
+            }
+
+            if (strDigit.Length != 7)
+                return false;
+
+            strBank = strDigit.Substring(0, 2);
+            strBay  = strDigit.Substring(2, 3);
+            strLev  = strDigit.Substring(5, 2);
+            return true;
+        }
         /// <summary>DataRow 값 추출 (null/공백 안전, Trim)</summary>
         private string GetVal(DataRow row, string col)
         {
