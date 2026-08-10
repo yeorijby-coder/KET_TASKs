@@ -242,7 +242,7 @@ namespace TSK_COMM_IOSCH
                 strSql += cDefApp.CRLF + "   FROM CV_DATA CD                            ";
                 strSql += cDefApp.CRLF + "  INNER JOIN JOB_MST JM                       ";
                 strSql += cDefApp.CRLF + "     ON CD.HOST_STN_NO = JM.START_POS         ";
-                strSql += cDefApp.CRLF + "    AND JM.JOB_STATUS = '" + ST_NEW + "'          ";   // @.신규('99') 가 구동대기다. '10' 은 2026-07-10 에 없앤 상태라 새 작업이 안 집혔다
+                strSql += cDefApp.CRLF + "    AND JM.JOB_STATUS = '" + ST_CV_WAIT + "'      ";   // 10 = CV 구동대기. 신규('99')는 1F 스레드의 JOB_ACCEPT 가 나눈다
                 strSql += cDefApp.CRLF + "  WHERE CD.LUGG_NO_RD    IN ('','0','0000')   ";
                 strSql += cDefApp.CRLF + "    AND CD.STO_READY_RD 	= '1'               ";
                 strSql += cDefApp.CRLF + "    AND CD.SENSOR0_DATA_RD = '1'              ";
@@ -768,7 +768,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "   FROM CV_DATA CD                            ";
                 strSql += CRLF + "  INNER JOIN JOB_MST JM                       ";
                 strSql += CRLF + "     ON CD.HOST_STN_NO = JM.START_POS         ";
-                strSql += CRLF + "    AND JM.JOB_STATUS = '" + ST_NEW + "'          ";   // @.신규('99') 가 구동대기다. '10' 은 2026-07-10 에 없앤 상태라 새 작업이 안 집혔다
+                strSql += CRLF + "    AND JM.JOB_STATUS = '" + ST_CV_WAIT + "'      ";   // 10 = CV 구동대기. 신규('99')는 1F 스레드의 JOB_ACCEPT 가 나눈다
                 strSql += CRLF + "  WHERE CD.PLC_NO         = :CV_PLC           ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
                 strSql += CRLF + "    AND (   (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_STO) + " <> 0 AND CD.STO_READY_RD = '1'   ";
                 strSql += CRLF + "             AND CD.LUGG_NO_RD IN ('','0','0000'))                                                        ";
@@ -1455,7 +1455,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "      , UPD_USER_ID  = '" + OD_USER + "' ";
                 strSql += CRLF + "  WHERE WH_TYP       = :WH_TYP         ";
                 strSql += CRLF + "    AND LUGG_NO      = :LUGG_NO        ";
-                strSql += CRLF + "    AND JOB_STATUS   = '" + ST_NEW + "' ";
+                strSql += CRLF + "    AND JOB_STATUS   = '" + ST_CV_WAIT + "' ";
 
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();

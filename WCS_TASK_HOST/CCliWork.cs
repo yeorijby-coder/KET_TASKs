@@ -395,7 +395,8 @@ namespace TSK_HostCom
                         , ref string strDScNum
                         , ref string strSPosition
                         , ref string strDPosition
-                        , ref string strLuggNum)
+                        , ref string strLuggNum
+                        , string strJobTypNotIn = "")
         {
             string strTitle = "[IsJobExist]";
             string strTemp;
@@ -409,6 +410,11 @@ namespace TSK_HostCom
                 m_strSql = modDefApp.CRLF + " SELECT * FROM JOB_MST                   ";
                 m_strSql += modDefApp.CRLF + "  WHERE JOB_STATUS = " + m_BDb.ParamsAdd("JOB_STATUS", nJobStatus.ToString());
                 m_strSql += modDefApp.CRLF + "    AND WH_TYP     = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+                if (strJobTypNotIn != "")
+                {
+                    // 해당 상태가 최종이 아닌 작업구분을 뺀다
+                    m_strSql += modDefApp.CRLF + "    AND JOB_TYP NOT IN (" + strJobTypNotIn + ")";
+                }
                 int nSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
                 if (nSelCnt < 0) 
                 { 
@@ -1257,6 +1263,15 @@ namespace TSK_HostCom
             string strTitle = "[GetJobCompleteReport] .. ";
             m_strHostCmd = "F";
 
+            /*
+             * 29(SC 구동완료)가 최종인 것은 입고다.
+             * 출고/픽킹은 29 뒤에 컨베이어 구간(11 → 19)이 남으므로 여기서 보고하면 안 된다.
+             *   이동(6)   99 → 10 → 11 → 19
+             *   입고(1)   99 → 10 → 11 → 21 → 29
+             *   출고(2,3) 99 → 20 → 21 → 29 → 11 → 19
+             */
+            string strJobTypNotIn = (nJobStatus == 29) ? "'2','3'" : "";
+
             int nJobType = 0;
             string strUserID = "";
             string strSScNum = "";
@@ -1267,7 +1282,7 @@ namespace TSK_HostCom
 
             #region 완료 보고해야할 작업이 있는지?
 
-            int nResult = IsJobExist(nJobStatus, ref nJobType, ref strUserID, ref strSScNum, ref strDScNum, ref strSPosition, ref strDPosition, ref strLuggNum);
+            int nResult = IsJobExist(nJobStatus, ref nJobType, ref strUserID, ref strSScNum, ref strDScNum, ref strSPosition, ref strDPosition, ref strLuggNum, strJobTypNotIn);
             if (nResult == 0)
             {
                 // 이미 함수내에서 리스트 박스에 디스플레이함!

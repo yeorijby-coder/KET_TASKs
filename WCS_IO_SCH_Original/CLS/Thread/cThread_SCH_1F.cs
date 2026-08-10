@@ -183,6 +183,8 @@ namespace TSK_COMM_IOSCH
                     Thread.Sleep(10);
                     //*/
 
+                    RunSchFunc(JobAccept);              // 신규 작업 접수 99 -> 10 / 20
+
                     RunSchFunc(StartInvokeCheck2);      // 1F 구라인 입고대 출발
                     RunSchFunc(StartInvokeCheck5);      // 1F 신라인 입고대 출발
                     RunSchFunc(RetInvokeCheck2);        // 1F 구라인 출고HS → 픽킹대 지시
@@ -193,7 +195,6 @@ namespace TSK_COMM_IOSCH
                     RunSchFunc(StoHsCheck2);            // 1F 구라인 입고 H/S -> 크레인 입고 지시
                     RunSchFunc(StoHsCheck5);            // 1F 신라인 입고 H/S -> 크레인 입고 지시
 
-                    RunSchFunc(ScRunCheck);             // 크레인이 지시를 물었다 -> 25
                     RunSchFunc(ScCompleteCheck);        // 크레인 작업 완료 -> 29
 
                     RunSchFunc(CopyTrackData2);         // 이음새 352→631 작업 데이터 복사
@@ -258,7 +259,7 @@ namespace TSK_COMM_IOSCH
                 strSql += cDefApp.CRLF + "   FROM CV_DATA CD                            ";
                 strSql += cDefApp.CRLF + "  INNER JOIN JOB_MST JM                       ";
                 strSql += cDefApp.CRLF + "     ON CD.HOST_STN_NO = JM.START_POS         ";
-                strSql += cDefApp.CRLF + "    AND JM.JOB_STATUS = '" + ST_NEW + "'          ";   // @.신규('99') 가 구동대기다. '10' 은 2026-07-10 에 없앤 상태라 새 작업이 안 집혔다
+                strSql += cDefApp.CRLF + "    AND JM.JOB_STATUS = '" + ST_CV_WAIT + "'      ";   // 10 = CV 구동대기. 신규('99')는 JOB_ACCEPT 가 10/20 으로 나눈다
                 strSql += cDefApp.CRLF + "  WHERE CD.LUGG_NO_RD    IN ('','0','0000')   ";
                 strSql += cDefApp.CRLF + "    AND CD.STO_READY_RD 	= '1'               ";
                 strSql += cDefApp.CRLF + "    AND CD.SENSOR0_DATA_RD = '1'              ";
@@ -697,8 +698,8 @@ namespace TSK_COMM_IOSCH
          * SC_HS_DEF 를 보면 모든 호기가 1층 H/S(HS_NO 02)와 3층 H/S(03/04)를 다 가진다.
          * 세 스레드(1F/3F/BOX)가 같은 작업을 중복해서 잡지 않도록 여기서만 돌린다.
          */
-        public bool ScRunCheck(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
-        { return SC_RUN_CHK(strWH_TYP, "[ScRunCheck]", ref pRTN_MSG); }
+        public bool JobAccept(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return JOB_ACCEPT(strWH_TYP, "[JobAccept]", ref pRTN_MSG); }
 
         public bool ScCompleteCheck(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
         { return SC_COMP_CHK(strWH_TYP, "[ScCompleteCheck]", ref pRTN_MSG); }
@@ -1125,7 +1126,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "   FROM CV_DATA CD                            ";
                 strSql += CRLF + "  INNER JOIN JOB_MST JM                       ";
                 strSql += CRLF + "     ON CD.HOST_STN_NO = JM.START_POS         ";
-                strSql += CRLF + "    AND JM.JOB_STATUS = '" + ST_NEW + "'          ";   // @.신규('99') 가 구동대기다. '10' 은 2026-07-10 에 없앤 상태라 새 작업이 안 집혔다
+                strSql += CRLF + "    AND JM.JOB_STATUS = '" + ST_CV_WAIT + "'      ";   // 10 = CV 구동대기. 신규('99')는 JOB_ACCEPT 가 10/20 으로 나눈다
                 strSql += CRLF + "  WHERE CD.PLC_NO         = :CV_PLC           ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
                 strSql += CRLF + "    AND (   (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_STO) + " <> 0 AND CD.STO_READY_RD = '1'   ";
                 strSql += CRLF + "             AND CD.LUGG_NO_RD IN ('','0','0000'))                                                        ";
@@ -1394,6 +1395,81 @@ namespace TSK_COMM_IOSCH
         }
 
 
+
+        // ─────────────────────────────────────────────────────────────────
+        // 공통 코어 0 : 신규 작업 접수 (99 → 10 / 20)
+        //   상위가 넣은 신규('99')를 어느 설비 구간에서 시작할지 정한다.
+        //     이동(6)/입고(1) : CV 에서 시작한다  → 10(CV 구동대기)
+        //     그 밖(출고 등)  : 크레인에서 시작한다 → 20(SC 구동요구)
+        //   층이 아니라 작업 단위의 일이라 1F 스레드에서 한 번만 돌린다.
+        // ─────────────────────────────────────────────────────────────────
+        private bool JOB_ACCEPT(string strWH_TYP, string strTitle, ref string pRTN_MSG)
+        {
+            try
+            {
+                int nSelCnt = 0;
+                string strSql = "";
+
+                pRTN_MSG = strTitle;
+
+                strSql = "";
+                strSql += CRLF + " SELECT LUGG_NO, JOB_TYP        ";
+                strSql += CRLF + "   FROM JOB_MST                 ";
+                strSql += CRLF + "  WHERE WH_TYP     = :WH_TYP    ";
+                strSql += CRLF + "    AND JOB_STATUS = '" + ST_NEW + "' ";
+                strSql += CRLF + "  ORDER BY LUGG_NO              ";
+
+                _pBdb.mComMain.CommandType = CommandType.Text;
+                _pBdb.mComMain.Parameters.Clear();
+                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+
+                nSelCnt = _pBdb.ExcuteQry(strSql);
+                if (nSelCnt < 0)
+                {
+                    pRTN_MSG += _pBdb.ErrMsg;
+                    return false;
+                }
+                if (nSelCnt == 0)
+                {
+                    pRTN_MSG = "";
+                    return true;
+                }
+
+                string strMsg = "";
+                _pBdb.BeginTrans();
+
+                for (int i = 0; i < nSelCnt; i++)
+                {
+                    string strLUGG_NO = _pBdb.mDtMain.Rows[i]["LUGG_NO"].ToString();
+                    string strJOB_TYP = _pBdb.mDtMain.Rows[i]["JOB_TYP"].ToString();
+
+                    // CV 에서 시작하는 작업인가
+                    bool bCvFirst = (strJOB_TYP == JT_STO) || (strJOB_TYP == JT_MOVE);
+                    string strNext = bCvFirst ? ST_CV_WAIT : ST_SC_WAIT;
+
+                    if (UPDATE_JOB_DATA(strNext, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG) == false)
+                    {
+                        _pBdb.Rollback();
+                        return false;
+                    }
+
+                    strMsg += (strMsg == "" ? "" : ", ") + strLUGG_NO + "→" + strNext;
+                    InsertLog(SCH_WH_TYP, strTitle + "작업 " + strLUGG_NO + " 접수 (상태 " + strNext + ")",
+                              "", "", strLUGG_NO, strNext, "", "", false);
+                }
+
+                pRTN_MSG = strTitle + "신규 작업을 접수했습니다. [" + strMsg + "]";
+                _pBdb.Commit();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                pRTN_MSG = strTitle + ex.ToString();
+                _pBdb.Rollback();
+                return false;
+            }
+        }
+
         // ─────────────────────────────────────────────────────────────────
         // 공통 코어 5 : 입고 H/S 도착 -> 크레인 입고 지시 (레거시 ECS CSc::Store)
         //   화물이 크레인 입고 H/S 에 올라오면 그 크레인에 입고를 지시한다.
@@ -1465,7 +1541,7 @@ namespace TSK_COMM_IOSCH
                     return true;    // 크레인 미준비 - 다음 사이클 재시도
                 }
 
-                if (UPDATE_JOB_DATA(ST_SC_CMD, strLUGG_NO, strWH_TYP, JT_STO, ref pRTN_MSG) == false)
+                if (UPDATE_JOB_DATA(ST_SC_RUN, strLUGG_NO, strWH_TYP, JT_STO, ref pRTN_MSG) == false)
                 {
                     _pBdb.Rollback();
                     return false;
@@ -1474,7 +1550,7 @@ namespace TSK_COMM_IOSCH
                 pRTN_MSG = strTitle + "TRACK " + strMC_NO + "번[입고 H/S]에서 SC_TASK를 통해서 "
                          + strSC_NO + "호기에 입고 지시하였습니다. [작업번호:" + strLUGG_NO + "][도착LOC:" + strDEST_LOC + "]";
                 _pBdb.Commit();
-                InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_SC_CMD, strMC_NO, strSC_NO);
+                InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_SC_RUN, strMC_NO, strSC_NO);
                 return true;
             }
             catch (Exception ex)
@@ -1486,78 +1562,7 @@ namespace TSK_COMM_IOSCH
         }
 
         // ─────────────────────────────────────────────────────────────────
-        // 공통 코어 6 : 크레인이 지시를 물었다 -> 작업 25(SC 구동중)
-        //   SC 태스크가 명령을 PLC 에 쓰면 ITN_LUGG_FK1 에 작업번호를 채운다.
-        //   거기에 더해 크레인이 완료표시(D110)를 내리고 움직이기 시작한 것까지
-        //   보고 나서 25 로 올린다. 완료표시가 남아 있는 채로 올리면 다음 단계가
-        //   직전 작업의 완료값을 이번 작업 완료로 오인한다.
-        // ─────────────────────────────────────────────────────────────────
-        private bool SC_RUN_CHK(string strWH_TYP, string strTitle, ref string pRTN_MSG)
-        {
-            try
-            {
-                int nSelCnt = 0;
-                string strSql = "";
-
-                pRTN_MSG = strTitle;
-
-                strSql = "";
-                strSql += CRLF + " SELECT JM.LUGG_NO, JM.JOB_TYP, SD.SC_NO                 ";
-                strSql += CRLF + "   FROM JOB_MST JM                                       ";
-                strSql += CRLF + "  INNER JOIN SC_DATA SD                                  ";
-                strSql += CRLF + "     ON SD.WH_TYP           = JM.WH_TYP                  ";
-                strSql += CRLF + "    AND (SD.SC_NO = JM.DEST_POS OR SD.SC_NO = JM.START_POS) ";
-                strSql += CRLF + "  WHERE JM.WH_TYP           = :WH_TYP                    ";
-                strSql += CRLF + "    AND JM.JOB_STATUS       = '" + ST_SC_CMD + "'        ";
-                strSql += CRLF + "    AND SD.OD_RQ_YN         = 'N'                        ";   // 명령이 PLC 로 나갔다
-                strSql += CRLF + "    AND SD.ITN_LUGG_FK1     = JM.LUGG_NO                 ";   // SC 태스크가 진행중 작업번호를 채웠다
-                strSql += CRLF + "    AND COALESCE(SD.COMPLETE_RD,'0') IN ('','0')         ";   // 크레인이 완료표시를 내렸다 = 이동 시작
-                strSql += CRLF + "    AND SD.ERR_CODE_RD      = '0000'                     ";
-                strSql += CRLF + "  ORDER BY JM.LUGG_NO                                    ";
-
-                _pBdb.mComMain.CommandType = CommandType.Text;
-                _pBdb.mComMain.Parameters.Clear();
-                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
-
-                nSelCnt = _pBdb.ExcuteQry(strSql);
-                if (nSelCnt < 0)
-                {
-                    pRTN_MSG += _pBdb.ErrMsg;
-                    return false;
-                }
-                if (nSelCnt == 0)
-                {
-                    pRTN_MSG = "";
-                    return true;
-                }
-
-                string strLUGG_NO = _pBdb.mDtMain.Rows[0]["LUGG_NO"].ToString();
-                string strJOB_TYP = _pBdb.mDtMain.Rows[0]["JOB_TYP"].ToString();
-                string strSC_NO   = _pBdb.mDtMain.Rows[0]["SC_NO"].ToString();
-
-                _pBdb.BeginTrans();
-
-                if (UPDATE_JOB_DATA(ST_SC_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG) == false)
-                {
-                    _pBdb.Rollback();
-                    return false;
-                }
-
-                pRTN_MSG = strTitle + strSC_NO + "호기가 지시를 받아 구동을 시작했습니다. [작업번호:" + strLUGG_NO + "]";
-                _pBdb.Commit();
-                InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_SC_RUN, "", strSC_NO);
-                return true;
-            }
-            catch (Exception ex)
-            {
-                pRTN_MSG = strTitle + ex.ToString();
-                _pBdb.Rollback();
-                return false;
-            }
-        }
-
-        // ─────────────────────────────────────────────────────────────────
-        // 공통 코어 7 : 크레인 작업 완료 -> 작업 29(SC 구동완료)
+        // 공통 코어 6 : 크레인 작업 완료 -> 작업 29(SC 구동완료 보고)
         //   D110(COMPLETE_RD)이 0 이 아니면 완료다. (1=포크1, 2=포크2, 3=전체)
         //   입고는 29 가 최종이라 HOST_TASK 가 완료보고(F)를 보내고 작업을 지운다.
         //   출고는 29 이후 CV 구간(11→15→19)이 남는다.
@@ -1582,6 +1587,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND JM.JOB_STATUS       = '" + ST_SC_RUN + "'        ";
                 strSql += CRLF + "    AND SD.ITN_LUGG_FK1     = JM.LUGG_NO                 ";
                 strSql += CRLF + "    AND COALESCE(SD.COMPLETE_RD,'0') NOT IN ('','0')     ";   // 작업완료표시
+                strSql += CRLF + "    AND SD.READ_UPD_DT      > SD.WRITE_UPD_DT            ";   // 지시를 쓴 뒤에 읽은 값이어야 한다
                 strSql += CRLF + "    AND SD.ERR_CODE_RD      = '0000'                     ";
                 strSql += CRLF + "  ORDER BY JM.LUGG_NO                                    ";
 
@@ -2069,7 +2075,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "      , UPD_USER_ID  = '" + OD_USER + "' ";
                 strSql += CRLF + "  WHERE WH_TYP       = :WH_TYP         ";
                 strSql += CRLF + "    AND LUGG_NO      = :LUGG_NO        ";
-                strSql += CRLF + "    AND JOB_STATUS   = '" + ST_NEW + "' ";
+                strSql += CRLF + "    AND JOB_STATUS   = '" + ST_CV_WAIT + "' ";
 
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();

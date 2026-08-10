@@ -1514,18 +1514,25 @@ namespace TSK_COMM_IOSCH
         public string _strErrorMsg = "";
 
 
-        // JOB_MST.JOB_STATUS 라이프사이클 (대기 상태 없음 - '99' 또는 직전  완료가 대기 역할)
-        //   CV : 99 → 지시 11 → 중 15 → 완료 19
-        //   SC : 99 → 지시 21 → 중 25 → 완료 29
-        //   입고(JOB_TYP 1)   : 99 → 11 → 15 → 19(CV완료=SC대기) → 21 → 25 → 29(최종)
-        //   출고(JOB_TYP 2,3) : 99 → 21 → 25 → 29(SC완료=CV대기) → 11 → 15 → 19(최종)
-        public const string ST_CV_CMD = "11"; // CV 구동지시
-        public const string ST_CV_RUN = "15"; // CV 구동중
-        public const string ST_CV_DONE = "19"; // CV 구동완료 (입고는 SC  대기)
+        /*
+         * JOB_MST.JOB_STATUS 라이프사이클
+         *
+         *   이동(6)      99 → 10 → 11 → 19
+         *   입고(1)      99 → 10 → 11 → 21 → 29
+         *   출고(2,3)    99 → 20 → 21 → 29 → 11 → 19
+         *
+         *   값은 이 현장 코드표(COMMON_CODE.JOB_STATUS)에 등록된 것을 그대로 쓴다.
+         *   레거시 cThread_CV.cs 도 10 을 세우고 10/11 을 찾아 쓴다.
+         *   통합 스케줄러를 만들며 잠깐 쓰던 15/25 는 코드표에 없는 값이라 없앴다.
+         *   "지시했다"와 "구동중"을 따로 두지 않는다. 지시가 나가면 구동중이다.
+         */
+        public const string ST_CV_WAIT = "10"; // CV 구동대기 (접수 - CV 구간 진입 대기)
+        public const string ST_CV_RUN = "11"; // CV 구동중 (지시가 나가 화물이 CV 위에 있다)
+        public const string ST_CV_DONE = "19"; // CV 도착완료 보고
 
-        public const string ST_SC_CMD = "21"; // SC 구동지시
-        public const string ST_SC_RUN = "25"; // SC 구동중
-        public const string ST_SC_DONE = "29"; // SC 구동완료 (출고는 CV  대기)
+        public const string ST_SC_WAIT = "20"; // SC 구동요구 (접수 - 크레인 지시 대기)
+        public const string ST_SC_RUN = "21"; // SC 구동중 (지시가 나가 크레인이 움직인다)
+        public const string ST_SC_DONE = "29"; // SC 구동완료 보고
 
         // HOST_TASK 신규 작업 (WCS_TASK_HOST frmMain.InsertJobMst 가 '99' 로 INSERT)
         public const string ST_NEW = "99";
