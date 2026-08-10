@@ -1043,8 +1043,9 @@ namespace TSK_COMM_IOSCH
 
                 string strDestMc = "";
                 string strDestNm = "";
-                if (bRet1Ready == true) { strDestMc = strMC_RET1; strDestNm = "출고대#1"; }
-                else if (bRet2Ready == true) { strDestMc = strMC_RET2; strDestNm = "출고대#2"; }
+                string strDestStn = "";     // 작업대 번호 (JOB_MST.DEST_POS 는 트랙이 아니라 작업대다)
+                if (bRet1Ready == true) { strDestMc = strMC_RET1; strDestStn = "103"; strDestNm = "출고대#1"; }
+                else if (bRet2Ready == true) { strDestMc = strMC_RET2; strDestStn = "104"; strDestNm = "출고대#2"; }
                 else
                 {
                     // 둘 다 사용중 - 다음 사이클 재시도
@@ -1079,7 +1080,9 @@ namespace TSK_COMM_IOSCH
                 }
 
                 // JOB_MST 목적지 변경 (ARRIVE_CV 가 출고대 도착을 매칭하도록)
-                if (UPDATE_JOB_DATA(ST_CV_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG, strDestMc) == false)
+                //   도착보고는 CD.HOST_STN_NO = JM.DEST_POS 로 맞추므로 트랙번호가 아니라
+                //   작업대 번호를 넣어야 한다. CV 에는 위에서 트랙번호를 이미 썼다.
+                if (UPDATE_JOB_DATA(ST_CV_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG, strDestStn) == false)
                 {
                     _pBdb.Rollback();
                     return false;
