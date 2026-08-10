@@ -193,6 +193,9 @@ namespace TSK_COMM_IOSCH
                     RunSchFunc(StoHsCheck2);            // 1F 구라인 입고 H/S -> 크레인 입고 지시
                     RunSchFunc(StoHsCheck5);            // 1F 신라인 입고 H/S -> 크레인 입고 지시
 
+                    RunSchFunc(ScRunCheck);             // 크레인이 지시를 물었다 -> 25
+                    RunSchFunc(ScCompleteCheck);        // 크레인 작업 완료 -> 29
+
                     RunSchFunc(CopyTrackData2);         // 이음새 352→631 작업 데이터 복사
                     RunSchFunc(DeleteTrackData2);       // 이음새 352 작업 데이터 삭제
                     RunSchFunc(CopyTrackData5);         // 이음새 654→355 작업 데이터 복사
@@ -688,6 +691,17 @@ namespace TSK_COMM_IOSCH
 
         public bool StoHsCheck5(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
         { return SC_STO_CMD_PLC(strWH_TYP, CV_PLC_1F_NEW, "[StoHsCheck5]", ref pRTN_MSG); }
+
+        /*
+         * 크레인 진행/완료는 층에 속한 일이 아니라 작업에 속한 일이다.
+         * SC_HS_DEF 를 보면 모든 호기가 1층 H/S(HS_NO 02)와 3층 H/S(03/04)를 다 가진다.
+         * 세 스레드(1F/3F/BOX)가 같은 작업을 중복해서 잡지 않도록 여기서만 돌린다.
+         */
+        public bool ScRunCheck(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return SC_RUN_CHK(strWH_TYP, "[ScRunCheck]", ref pRTN_MSG); }
+
+        public bool ScCompleteCheck(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return SC_COMP_CHK(strWH_TYP, "[ScCompleteCheck]", ref pRTN_MSG); }
 
         public bool NewStartRoutinePlc2(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
         { return CHECK_CV_RET_START(strWH_TYP, CV_PLC_1F_OLD, "[NewStartRoutinePlc2]", ref pRTN_MSG); }
@@ -1469,6 +1483,184 @@ namespace TSK_COMM_IOSCH
                 _pBdb.Rollback();
                 return false;
             }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // 공통 코어 6 : 크레인이 지시를 물었다 -> 작업 25(SC 구동중)
+        //   SC 태스크가 명령을 PLC 에 쓰면 ITN_LUGG_FK1 에 작업번호를 채운다.
+        //   거기에 더해 크레인이 완료표시(D110)를 내리고 움직이기 시작한 것까지
+        //   보고 나서 25 로 올린다. 완료표시가 남아 있는 채로 올리면 다음 단계가
+        //   직전 작업의 완료값을 이번 작업 완료로 오인한다.
+        // ─────────────────────────────────────────────────────────────────
+        private bool SC_RUN_CHK(string strWH_TYP, string strTitle, ref string pRTN_MSG)
+        {
+            try
+            {
+                int nSelCnt = 0;
+                string strSql = "";
+
+                pRTN_MSG = strTitle;
+
+                strSql = "";
+                strSql += CRLF + " SELECT JM.LUGG_NO, JM.JOB_TYP, SD.SC_NO                 ";
+                strSql += CRLF + "   FROM JOB_MST JM                                       ";
+                strSql += CRLF + "  INNER JOIN SC_DATA SD                                  ";
+                strSql += CRLF + "     ON SD.WH_TYP           = JM.WH_TYP                  ";
+                strSql += CRLF + "    AND (SD.SC_NO = JM.DEST_POS OR SD.SC_NO = JM.START_POS) ";
+                strSql += CRLF + "  WHERE JM.WH_TYP           = :WH_TYP                    ";
+                strSql += CRLF + "    AND JM.JOB_STATUS       = '" + ST_SC_CMD + "'        ";
+                strSql += CRLF + "    AND SD.OD_RQ_YN         = 'N'                        ";   // 명령이 PLC 로 나갔다
+                strSql += CRLF + "    AND SD.ITN_LUGG_FK1     = JM.LUGG_NO                 ";   // SC 태스크가 진행중 작업번호를 채웠다
+                strSql += CRLF + "    AND COALESCE(SD.COMPLETE_RD,'0') IN ('','0')         ";   // 크레인이 완료표시를 내렸다 = 이동 시작
+                strSql += CRLF + "    AND SD.ERR_CODE_RD      = '0000'                     ";
+                strSql += CRLF + "  ORDER BY JM.LUGG_NO                                    ";
+
+                _pBdb.mComMain.CommandType = CommandType.Text;
+                _pBdb.mComMain.Parameters.Clear();
+                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+
+                nSelCnt = _pBdb.ExcuteQry(strSql);
+                if (nSelCnt < 0)
+                {
+                    pRTN_MSG += _pBdb.ErrMsg;
+                    return false;
+                }
+                if (nSelCnt == 0)
+                {
+                    pRTN_MSG = "";
+                    return true;
+                }
+
+                string strLUGG_NO = _pBdb.mDtMain.Rows[0]["LUGG_NO"].ToString();
+                string strJOB_TYP = _pBdb.mDtMain.Rows[0]["JOB_TYP"].ToString();
+                string strSC_NO   = _pBdb.mDtMain.Rows[0]["SC_NO"].ToString();
+
+                _pBdb.BeginTrans();
+
+                if (UPDATE_JOB_DATA(ST_SC_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG) == false)
+                {
+                    _pBdb.Rollback();
+                    return false;
+                }
+
+                pRTN_MSG = strTitle + strSC_NO + "호기가 지시를 받아 구동을 시작했습니다. [작업번호:" + strLUGG_NO + "]";
+                _pBdb.Commit();
+                InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_SC_RUN, "", strSC_NO);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                pRTN_MSG = strTitle + ex.ToString();
+                _pBdb.Rollback();
+                return false;
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // 공통 코어 7 : 크레인 작업 완료 -> 작업 29(SC 구동완료)
+        //   D110(COMPLETE_RD)이 0 이 아니면 완료다. (1=포크1, 2=포크2, 3=전체)
+        //   입고는 29 가 최종이라 HOST_TASK 가 완료보고(F)를 보내고 작업을 지운다.
+        //   출고는 29 이후 CV 구간(11→15→19)이 남는다.
+        //   완료를 확인했으면 포크 데이터를 지워 크레인을 다음 작업에 쓸 수 있게 한다.
+        // ─────────────────────────────────────────────────────────────────
+        private bool SC_COMP_CHK(string strWH_TYP, string strTitle, ref string pRTN_MSG)
+        {
+            try
+            {
+                int nSelCnt = 0;
+                string strSql = "";
+
+                pRTN_MSG = strTitle;
+
+                strSql = "";
+                strSql += CRLF + " SELECT JM.LUGG_NO, JM.JOB_TYP, SD.SC_NO, SD.COMPLETE_RD ";
+                strSql += CRLF + "   FROM JOB_MST JM                                       ";
+                strSql += CRLF + "  INNER JOIN SC_DATA SD                                  ";
+                strSql += CRLF + "     ON SD.WH_TYP           = JM.WH_TYP                  ";
+                strSql += CRLF + "    AND (SD.SC_NO = JM.DEST_POS OR SD.SC_NO = JM.START_POS) ";
+                strSql += CRLF + "  WHERE JM.WH_TYP           = :WH_TYP                    ";
+                strSql += CRLF + "    AND JM.JOB_STATUS       = '" + ST_SC_RUN + "'        ";
+                strSql += CRLF + "    AND SD.ITN_LUGG_FK1     = JM.LUGG_NO                 ";
+                strSql += CRLF + "    AND COALESCE(SD.COMPLETE_RD,'0') NOT IN ('','0')     ";   // 작업완료표시
+                strSql += CRLF + "    AND SD.ERR_CODE_RD      = '0000'                     ";
+                strSql += CRLF + "  ORDER BY JM.LUGG_NO                                    ";
+
+                _pBdb.mComMain.CommandType = CommandType.Text;
+                _pBdb.mComMain.Parameters.Clear();
+                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+
+                nSelCnt = _pBdb.ExcuteQry(strSql);
+                if (nSelCnt < 0)
+                {
+                    pRTN_MSG += _pBdb.ErrMsg;
+                    return false;
+                }
+                if (nSelCnt == 0)
+                {
+                    pRTN_MSG = "";
+                    return true;
+                }
+
+                string strLUGG_NO = _pBdb.mDtMain.Rows[0]["LUGG_NO"].ToString();
+                string strJOB_TYP = _pBdb.mDtMain.Rows[0]["JOB_TYP"].ToString();
+                string strSC_NO   = _pBdb.mDtMain.Rows[0]["SC_NO"].ToString();
+
+                _pBdb.BeginTrans();
+
+                if (UPDATE_JOB_DATA(ST_SC_DONE, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG) == false)
+                {
+                    _pBdb.Rollback();
+                    return false;
+                }
+
+                if (ClearScFork1(strSC_NO, ref pRTN_MSG) == false)
+                {
+                    _pBdb.Rollback();
+                    return false;
+                }
+
+                pRTN_MSG = strTitle + strSC_NO + "호기가 작업을 완료했습니다. [작업번호:" + strLUGG_NO + "]";
+                _pBdb.Commit();
+                InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_SC_DONE, "", strSC_NO);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                pRTN_MSG = strTitle + ex.ToString();
+                _pBdb.Rollback();
+                return false;
+            }
+        }
+
+        /*
+         * ClearScFork1 :: 완료한 크레인의 포크#1 데이터를 지운다.
+         *
+         *   SC 태스크가 CMD_RQ_YN='Y' 를 보고 CMD_RQ_ID 별로 PLC 에 명령을 쓴다.
+         *   DELFK1 은 D199=16(포크#1 데이터 삭제)이고, 기록 뒤 SC 태스크가
+         *   ITN_LUGG_FK1 을 '0' 으로 되돌린다. 이 현장은 SINGLE 포크라 FK1 만 쓴다.
+         */
+        private bool ClearScFork1(string strScNo, ref string strRtn)
+        {
+            try
+            {
+                string strSql = "";
+                strSql += CRLF + " UPDATE SC_DATA                        ";
+                strSql += CRLF + "    SET CMD_RQ_YN  = 'Y'               ";
+                strSql += CRLF + "      , CMD_RQ_ID  = 'DELFK1'          ";
+                strSql += CRLF + "      , OD_USER_ID = '" + OD_USER + "' ";
+                strSql += CRLF + "  WHERE WH_TYP     = :WH_TYP           ";
+                strSql += CRLF + "    AND SC_NO      = :SC_NO            ";
+
+                _pBdb.mComMain.CommandType = CommandType.Text;
+                _pBdb.mComMain.Parameters.Clear();
+                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = SCH_WH_TYP;
+                _pBdb.mComMain.Parameters.Add("SC_NO",  DbLang.VARCHAR).Value = strScNo;
+
+                int n = _pBdb.ExcuteNonQry(strSql);
+                if (n < 0) { strRtn += "SC_DATA 포크 삭제 지시 오류:" + _pBdb.ErrMsg; return false; }
+                return true;
+            }
+            catch (Exception ex) { strRtn += ex.Message; return false; }
         }
         // ─────────────────────────────────────────────────────────────────
         // 공통 코어 4 : 픽킹 레인 진입 제한 (ECS MovingTrackCheckPlc3/6)
