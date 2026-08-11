@@ -41,6 +41,7 @@
             this.chkStopLog = new System.Windows.Forms.CheckBox();
             this.pnlTop = new System.Windows.Forms.Panel();
             this.chkLogDelTest = new System.Windows.Forms.CheckBox();
+            this.chkRetDecideWait = new System.Windows.Forms.CheckBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.TABLOG = new System.Windows.Forms.TabControl();
             this.tbR = new System.Windows.Forms.TabPage();
@@ -154,6 +155,7 @@
             // pnlTop
             //
             this.pnlTop.Controls.Add(this.label1);
+            this.pnlTop.Controls.Add(this.chkRetDecideWait);
             this.pnlTop.Controls.Add(this.chkLogDelTest);
             this.pnlTop.Controls.Add(this.chkStopLog);
             this.pnlTop.Controls.Add(this.picDbCn0);
@@ -175,6 +177,21 @@
             this.chkLogDelTest.TabIndex = 794;
             this.chkLogDelTest.Text = "Log Delete Test(Always Read ini) ";
             this.chkLogDelTest.UseVisualStyleBackColor = true;
+            //
+            // chkRetDecideWait
+            //
+            this.chkRetDecideWait.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
+            this.chkRetDecideWait.AutoSize = true;
+            this.chkRetDecideWait.Checked = false;
+            this.chkRetDecideWait.CheckState = System.Windows.Forms.CheckState.Unchecked;
+            this.chkRetDecideWait.Font = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.chkRetDecideWait.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(70)))), ((int)(((byte)(140)))));
+            this.chkRetDecideWait.Location = new System.Drawing.Point(95, 34);
+            this.chkRetDecideWait.Name = "chkRetDecideWait";
+            this.chkRetDecideWait.TabIndex = 819;
+            this.chkRetDecideWait.Text = "1층 출고 : 결정대가 비어야 대기대에서 출발 (추가 제한)";
+            this.chkRetDecideWait.UseVisualStyleBackColor = true;
+            this.chkRetDecideWait.CheckedChanged += new System.EventHandler(this.chkRetDecideWait_CheckedChanged);
             //
             // splitContainer1
             //
@@ -312,6 +329,7 @@
         internal System.Windows.Forms.ColumnHeader CH03;
         internal System.Windows.Forms.ColumnHeader CH04;
         internal System.Windows.Forms.CheckBox chkLogDelTest;
+        internal System.Windows.Forms.CheckBox chkRetDecideWait;
         private System.Windows.Forms.Label label1;
     }
 }

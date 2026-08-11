@@ -818,8 +818,10 @@ namespace TSK_COMM_IOSCH
                 }
 
                 // ── 2) 스테이션 → 실트랙(MC) 변환 (DEST_POS_DEF)
-                string strMC_RET2 = "";     // 출고대#2 (스테이션 104)
-                string strMC_DECIDE = "";   // 출고위치 결정대 (스테이션 171)
+                //   트랙 번호는 대기대/결정대의 상태를 볼 때만 쓴다.
+                //   CV 에 넘기는 목적지는 작업대 번호다. (CvSim 의 DestCode 와 같다)
+                string strMC_RET2 = "";     // 출고대#2 트랙 (스테이션 104)
+                string strMC_DECIDE = "";   // 출고위치 결정대 트랙 (스테이션 171)
                 if (GET_DEST_POS_MC(strWH_TYP, "104", ref strMC_RET2, ref pRTN_MSG) == false) return false;
                 if (GET_DEST_POS_MC(strWH_TYP, "171", ref strMC_DECIDE, ref pRTN_MSG) == false) return false;
 
@@ -937,16 +939,19 @@ namespace TSK_COMM_IOSCH
                     {
                         // 출발 크레인이 1호기 → 출고대#2(스테이션 104) 직행
                         //   (최종 목적지 확정이므로 JOB_MST.DEST_POS 도 함께 변경 - ARRIVE_CV 도착 매칭용)
+                        //   CV 목적지와 JOB_MST.DEST_POS 둘 다 작업대 번호를 쓴다.
+                        //   CV 는 목적지를 작업대 번호(DestCode)로 읽고, 도착 매칭은
+                        //   CD.HOST_STN_NO = JM.DEST_POS 로 맞추기 때문이다.
                         strDestMc = strMC_RET2;
 
                         _pBdb.BeginTrans();
-                        if (UPDATE_CV_DATA(strJOB_TYP, strTRAY_TYP, strTRAY_LEV, strDestMc, strIS_TURN,
+                        if (UPDATE_CV_DATA(strJOB_TYP, strTRAY_TYP, strTRAY_LEV, "104", strIS_TURN,
                                            strLUGG_NO, strWH_TYP, strCV_PLC, strWAIT_MC, "", ref pRTN_MSG) == false)
                         {
                             _pBdb.Rollback();
                             continue;
                         }
-                        if (UPDATE_JOB_DATA(ST_CV_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG, strDestMc) == false)
+                        if (UPDATE_JOB_DATA(ST_CV_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG, "104") == false)
                         {
                             _pBdb.Rollback();
                             continue;
@@ -964,7 +969,7 @@ namespace TSK_COMM_IOSCH
                     strDestMc = strMC_DECIDE;
 
                     _pBdb.BeginTrans();
-                    if (UPDATE_CV_DATA(strJOB_TYP, strTRAY_TYP, strTRAY_LEV, strDestMc, strIS_TURN,
+                    if (UPDATE_CV_DATA(strJOB_TYP, strTRAY_TYP, strTRAY_LEV, "171", strIS_TURN,
                                        strLUGG_NO, strWH_TYP, strCV_PLC, strWAIT_MC, "", ref pRTN_MSG) == false)
                     {
                         _pBdb.Rollback();
@@ -1059,8 +1064,8 @@ namespace TSK_COMM_IOSCH
 
                 // ── 3) 출고대#1/#2 가용 확인 : 빈 상태 + 진입중(지시된) 화물 없음
                 //      (ECS ReStartRoutine2 : 출고대#1 가용 → #1 우선, 아니면 #2)
-                bool bRet1Ready = CHECK_RET_LANE_READY(strWH_TYP, strMC_RET1);
-                bool bRet2Ready = CHECK_RET_LANE_READY(strWH_TYP, strMC_RET2);
+                bool bRet1Ready = CHECK_RET_LANE_READY(strWH_TYP, strMC_RET1, "103");
+                bool bRet2Ready = CHECK_RET_LANE_READY(strWH_TYP, strMC_RET2, "104");
 
                 string strDestMc = "";
                 string strDestNm = "";
@@ -1092,7 +1097,7 @@ namespace TSK_COMM_IOSCH
                 _pBdb.BeginTrans();
 
                 // C/V에 목적지정보쓰기 (결정대 → 출고대)
-                if (UPDATE_CV_DATA(strJOB_TYP, strTRAY_TYP, strTRAY_LEV, strDestMc, strIS_TURN,
+                if (UPDATE_CV_DATA(strJOB_TYP, strTRAY_TYP, strTRAY_LEV, strDestStn, strIS_TURN,
                                    strLUGG_NO, strWH_TYP, strCV_PLC, strMC_DECIDE, "", ref pRTN_MSG) == false)
                 {
                     _pBdb.Rollback();
@@ -2149,10 +2154,10 @@ namespace TSK_COMM_IOSCH
          *   출고대만 보면 레인을 한 자리로만 쓰게 되어, 지게차가 올 때까지
          *   결정대와 대기대가 계속 막힌다. (대기대가 막히면 그 크레인도 못 나간다)
          *
-         *   진입 중인 화물 검사는 그대로 출고대 트랙으로 본다. CV 에 쓰는 목적지가
-         *   출고대이기 때문이다. 그래서 한 레인에 "도착한 것 1 + 가는 중 1" 까지만 찬다.
+         *   진입 중인 화물 검사는 작업대 번호로 본다. CV 에 쓰는 목적지가 작업대 번호다.
+         *   그래서 한 레인에 "도착한 것 1 + 가는 중 1" 까지만 찬다.
          */
-        private bool CHECK_RET_LANE_READY(string strWH_TYP, string strMC_NO)
+        private bool CHECK_RET_LANE_READY(string strWH_TYP, string strMC_NO, string strSTN_NO)
         {
             try
             {
@@ -2175,7 +2180,7 @@ namespace TSK_COMM_IOSCH
                 _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
                 _pBdb.mComMain.Parameters.Add("ENTRY_MC", DbLang.VARCHAR).Value = strENTRY_MC;
                 _pBdb.mComMain.Parameters.Add("WH_TYP2", DbLang.VARCHAR).Value = strWH_TYP;
-                _pBdb.mComMain.Parameters.Add("MC_NO2", DbLang.VARCHAR).Value = strMC_NO;
+                _pBdb.mComMain.Parameters.Add("MC_NO2", DbLang.VARCHAR).Value = strSTN_NO;
                 int nSelCnt = _pBdb.ExcuteQry(strSql);
                 if (nSelCnt <= 0) return false;
                 return Convert.ToInt32(_pBdb.mDtMain.Rows[0]["READY_CNT"]) > 0;
@@ -2484,7 +2489,11 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "      , DEST_BAY_FK1_OD     = :DEST_BAY                ";
                 strSql += CRLF + "      , DEST_LEVEL_FK1_OD   = :DEST_LEVEL              ";
                 strSql += CRLF + "      , DEST_HSPOS_FK1_OD   = :DEST_HSPOS              ";
-                strSql += CRLF + "      , USE_FK_OD           = '1'                      ";   // FK1 사용 (SINGLE 포크)
+                //   사용 포크 : 0 = 포크1 / 1 = 포크1,2(양쪽) / 2 = 포크2
+                //   이 현장 크레인은 전부 SINGLE 이므로 0 이다.
+                //   1 을 주면 크레인이 양포크 작업으로 돌아 한 건을 끝내도
+                //   적재 표시가 다 안 내려가고, 다음 작업이 집기부터 시작하지 못한다.
+                strSql += CRLF + "      , USE_FK_OD           = '0'                      ";   // 포크1 사용 (SINGLE 포크)
                 strSql += CRLF + "      , WRITE_FLAG_OD       = '1'                      ";   // 명령 기록 완료 (레거시 D191=1)
                 strSql += CRLF + "      , OD_RQ_YN            = 'Y'                      ";
                 strSql += CRLF + "      , OD_USER_ID          = '" + OD_USER + "'        ";

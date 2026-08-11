@@ -99,6 +99,10 @@ namespace TSK_COMM_IOSCH
             cDefApi.GsGetInitPorFilePDB(ref cDefApp.GM_PDB_IP, ref cDefApp.GM_PDB_PORT, ref cDefApp.GM_PDB_DATABASE, ref cDefApp.GM_PDB_USER, ref cDefApp.GM_PDB_USER_PW, ref cDefApp.GM_LOG_PATH, ref cDefApp.GM_FILENAME, ref m_strRtnMsg);
             m_StrConnecString = "Server=" + cDefApp.GM_PDB_IP + ";Database=" + cDefApp.GM_PDB_DATABASE + ";User ID=" + cDefApp.GM_PDB_USER + ";Password=" + cDefApp.GM_PDB_USER_PW + ";";
 #endif
+            // @.1층 출고 : 결정대가 비어야 출발할지 (ENV_IOSCH.INI [1F_RET] DECIDE_WAIT, 기본 N)
+            cDefApp.GM_RET_DECIDE_WAIT = cDefApi.GsGetRetDecideWait();
+            chkRetDecideWait.Checked = cDefApp.GM_RET_DECIDE_WAIT;
+
 			//Main에서 동작중 상태를 나타내기위해 표시.
             // Scheduler 상태 LED (picDbCn0)
             SetVisable(pnlTop, 0, "picDbCn0", "Scheduler STATUS");
@@ -465,6 +469,31 @@ namespace TSK_COMM_IOSCH
             // Scheduler 로그 CLEAR 처리.
             this.lsvR.Items.Clear();
             this.txtMsg.Text = "";
+		}
+		#endregion
+
+		#region[Event]chkRetDecideWait_CheckedChanged
+        /*
+         * 1층 출고 : 결정대가 비어야 대기대에서 출발 (추가 제한)
+         *
+         *   끔(기본) : 결정대 상태를 보지 않고 대기대 자신의 조건으로만 출발시킨다.
+         *              대기대는 크레인 출고 H/S 바로 다음 트랙이라, 붙잡아 두면
+         *              크레인이 출고 H/S 를 못 비워 다음 출고를 시작하지 못한다.
+         *              루프 화물 수는 1층 출고 유량 제한이 따로 맡는다.
+         *   켬     : 출고위치 결정대(트랙 232)가 비어 있고 그리로 가는 화물이
+         *            없을 때만 출발시킨다. 결정대 앞에 줄 서는 것을 원치 않는
+         *            현장에서 쓴다.
+         *
+         *   바꾸면 바로 반영되고 ENV_IOSCH.INI 에 남아 다음 기동에도 이어진다.
+         */
+		private void chkRetDecideWait_CheckedChanged(object sender, EventArgs e)
+		{
+            cDefApp.GM_RET_DECIDE_WAIT = chkRetDecideWait.Checked;
+            cDefApi.GsSetRetDecideWait(cDefApp.GM_RET_DECIDE_WAIT);
+
+            PsMsgView("1층 출고 : 결정대가 비어야 출발 = "
+                      + (cDefApp.GM_RET_DECIDE_WAIT ? "켬" : "끔"),
+                      "SCH", "", "", (int)cDefApp.eThGbn.SCH_GR01, cDefApp.eLogMsgType.MSG_IMP);
 		}
 		#endregion
 

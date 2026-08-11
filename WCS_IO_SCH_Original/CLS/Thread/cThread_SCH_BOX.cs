@@ -1623,7 +1623,11 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "      , DEST_BAY_FK1_OD     = :DEST_BAY                ";
                 strSql += CRLF + "      , DEST_LEVEL_FK1_OD   = :DEST_LEVEL              ";
                 strSql += CRLF + "      , DEST_HSPOS_FK1_OD   = :DEST_HSPOS              ";
-                strSql += CRLF + "      , USE_FK_OD           = '1'                      ";   // FK1 사용 (SINGLE 포크)
+                //   사용 포크 : 0 = 포크1 / 1 = 포크1,2(양쪽) / 2 = 포크2
+                //   이 현장 크레인은 전부 SINGLE 이므로 0 이다.
+                //   1 을 주면 크레인이 양포크 작업으로 돌아 한 건을 끝내도
+                //   적재 표시가 다 안 내려가고, 다음 작업이 집기부터 시작하지 못한다.
+                strSql += CRLF + "      , USE_FK_OD           = '0'                      ";   // 포크1 사용 (SINGLE 포크)
                 strSql += CRLF + "      , WRITE_FLAG_OD       = '1'                      ";   // 명령 기록 완료 (레거시 D191=1)
                 strSql += CRLF + "      , OD_RQ_YN            = 'Y'                      ";
                 strSql += CRLF + "      , OD_USER_ID          = '" + OD_USER + "'        ";

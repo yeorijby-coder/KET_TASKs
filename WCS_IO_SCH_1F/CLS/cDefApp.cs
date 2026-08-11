@@ -39,6 +39,25 @@ namespace TSK_COMM_IOSCH
         public static string GM_LOG_DEL_ADDVALUE = "0";
         public static string GM_LOG_DEL_ADDTYPE = "MINUTE";
 
+        /*
+         * 1층 출고 : 결정대가 비어야 대기대에서 출발시킬지 (추가 제한)
+         *
+         *   기본은 끔(false)이다. 즉 결정대 상태를 보지 않고 내보낸다.
+         *
+         *   대기대는 크레인 출고 H/S 바로 다음 트랙이다. 여기서 출발할지는
+         *   그 자리의 조건(재하 / 출발 준비 / 자동 / 무에러)으로 정할 일이지,
+         *   한참 떨어진 도착지(결정대)가 비었는지로 정할 일이 아니다.
+         *   도착지를 보고 붙잡아 두면 대기대가 안 비고, 그러면 크레인이
+         *   출고 H/S 를 못 비워 다음 출고를 시작하지 못한다.
+         *
+         *   루프에 화물이 몇 대까지 도느냐는 이미 1층 출고 유량 제한이 맡는다.
+         *   (EQP_MST CV_RET_CNT 합계 vs DEL_HIS_SETTING '1f_ret_rimit')
+         *
+         *   그래도 현장에서 결정대 앞에 줄 서는 것을 원치 않으면 켤 수 있게 남겼다.
+         *   메인 폼의 체크박스로 켜고 끄며, ENV_IOSCH.INI [1F_RET] DECIDE_WAIT 에 남는다.
+         */
+        public static bool GM_RET_DECIDE_WAIT = false;
+
         // @@.응용프로그램 타임아웃 설정
         public static int GM_COMM_SND_TIME_OUT = 500;
         public static int GM_COMM_RCV_TIME_OUT = 500;
