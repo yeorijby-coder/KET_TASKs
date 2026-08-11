@@ -39,6 +39,24 @@ namespace TSK_COMM_IOSCH
         public static string GM_LOG_DEL_ADDVALUE = "0";
         public static string GM_LOG_DEL_ADDTYPE = "MINUTE";
 
+        /*
+         * 1층 출고 : 결정대가 비었을 때만 대기대에서 출발시킬지
+         *
+         *   출고위치 결정대(작업대 171 = 트랙 232)는 한 자리이고, 배치상
+         *   열(230->232->233)과 행(207 출고H/S ->208->232)이 만나는 합류점이다.
+         *   여기가 막히면 크레인 출고 H/S 쪽 흐름까지 같이 막힌다.
+         *   그래서 기본은 "비었을 때만 출발"(true)로 둔다.
+         *
+         *   현장 컨베이어가 뒤에 줄 세워 두는 것을 허용한다면 꺼도 된다.
+         *   끄면 결정대가 차 있어도 대기대에서 출발시킨다. 화물은 결정대 앞에서
+         *   기다렸다가 앞의 것이 배정되면 들어간다.
+         *   (끄더라도 한 사이클에 한 대만 내보내는 것은 그대로다. 1층 출고
+         *    유량 제한이 사이클마다 다시 계산되므로 그래야 제한이 뜻을 가진다)
+         *
+         *   메인 폼의 체크박스로 켜고 끄며, ENV_IOSCH.INI [1F_RET] DECIDE_WAIT 에 남는다.
+         */
+        public static bool GM_RET_DECIDE_WAIT = true;
+
         // @@.응용프로그램 타임아웃 설정
         public static int GM_COMM_SND_TIME_OUT = 500;
         public static int GM_COMM_RCV_TIME_OUT = 500;

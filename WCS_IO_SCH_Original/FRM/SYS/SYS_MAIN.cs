@@ -236,6 +236,10 @@ namespace TSK_COMM_IOSCH
             cDefApi.GsGetInitPorFilePDB(ref cDefApp.GM_PDB_IP, ref cDefApp.GM_PDB_PORT, ref cDefApp.GM_PDB_DATABASE, ref cDefApp.GM_PDB_USER, ref cDefApp.GM_PDB_USER_PW, ref cDefApp.GM_LOG_PATH, ref cDefApp.GM_FILENAME, ref m_strRtnMsg);
             m_StrConnecString = "Server=" + cDefApp.GM_PDB_IP + ";Database=" + cDefApp.GM_PDB_DATABASE + ";User ID=" + cDefApp.GM_PDB_USER + ";Password=" + cDefApp.GM_PDB_USER_PW + ";";
 #endif
+            // @.1층 출고 : 결정대 비었을 때만 출발할지 (ENV_IOSCH.INI [1F_RET] DECIDE_WAIT)
+            cDefApp.GM_RET_DECIDE_WAIT = cDefApi.GsGetRetDecideWait();
+            chkRetDecideWait.Checked = cDefApp.GM_RET_DECIDE_WAIT;
+
 			//Main에서 동작중 상태를 나타내기위해 표시.
             // Scheduler 상태 LED (슬롯마다 하나 : picDbCn0 / 1 / 2)
             for (int slot = 0; slot < SCH_CNT; slot++)
@@ -671,6 +675,31 @@ namespace TSK_COMM_IOSCH
             // Scheduler 로그 CLEAR 처리.
             this.lsvR.Items.Clear();
             this.txtMsg.Text = "";
+		}
+		#endregion
+
+		#region[Event]chkRetDecideWait_CheckedChanged
+        /*
+         * 1층 출고 : 결정대 비었을 때만 출발
+         *
+         *   켬(기본) : 출고위치 결정대(트랙 232)가 비어 있고 그리로 가는 화물이
+         *              없을 때만 대기대에서 출발시킨다.
+         *              결정대는 한 자리이고, 열(230->232->233)과
+         *              행(207 출고H/S ->208->232)이 만나는 합류점이라
+         *              여기가 막히면 크레인 출고 쪽 흐름까지 같이 막힌다.
+         *   끔     : 결정대가 차 있어도 출발시킨다. 화물은 결정대 앞에서 기다렸다가
+         *            앞의 것이 배정되면 들어간다. 현장 컨베이어가 줄 세워 두는 것을
+         *            허용할 때만 쓴다.
+         *
+         *   바꾸면 바로 반영되고 ENV_IOSCH.INI 에 남아 다음 기동에도 이어진다.
+         */
+		private void chkRetDecideWait_CheckedChanged(object sender, EventArgs e)
+		{
+            cDefApp.GM_RET_DECIDE_WAIT = chkRetDecideWait.Checked;
+            cDefApi.GsSetRetDecideWait(cDefApp.GM_RET_DECIDE_WAIT);
+
+            PsMsgViewMain("1층 출고 : 결정대 비었을 때만 출발 = "
+                          + (cDefApp.GM_RET_DECIDE_WAIT ? "켬" : "끔"), 0);
 		}
 		#endregion
 

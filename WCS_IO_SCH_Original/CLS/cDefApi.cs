@@ -62,6 +62,40 @@ namespace TSK_COMM_IOSCH
             pRtnMsg = "[GsGetInitPorFileDB]Error::" + pRtnMsg;
         }
 
+        // @@@.INI파일에 문자형 데이터를 씀.
+        [DllImport("kernel32.dll")]
+        static extern bool WritePrivateProfileString(string lpAppName, string lpKeyName, string lpString, string lpFileName);
+
+        /*
+         * 1층 출고 : 결정대가 비었을 때만 출발시킬지 (ENV_IOSCH.INI [1F_RET] DECIDE_WAIT)
+         *
+         *   키가 없으면 Y(비었을 때만 출발)로 본다. 기존 동작이 그것이다.
+         */
+        public static bool GsGetRetDecideWait()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(16);
+                GetPrivateProfileString("1F_RET", "DECIDE_WAIT", "Y", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                return (sb.ToString().Trim().ToUpper() != "N");
+            }
+            catch
+            {
+                return true;
+            }
+        }
+
+        public static void GsSetRetDecideWait(bool bWait)
+        {
+            try
+            {
+                WritePrivateProfileString("1F_RET", "DECIDE_WAIT", bWait ? "Y" : "N", cDefApp.GM_ENV_INI);
+            }
+            catch
+            {
+            }
+        }
+
         // @@@.GsGetInitPorFileLogDel
         public static void GsGetInitPorFileLogDel(ref string pYear,
                                                   ref string pMonth,

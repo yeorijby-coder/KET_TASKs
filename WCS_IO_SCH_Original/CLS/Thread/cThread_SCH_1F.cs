@@ -863,28 +863,37 @@ namespace TSK_COMM_IOSCH
                 DataTable dtWait = _pBdb.mDtMain.Copy();
 
                 // ── 4) 출고위치 결정대(171) 가용 확인 : 빈 상태 + 진입중(지시된) 화물 없음
-                bool bDecideReady = false;
-                strSql = "";
-                strSql += CRLF + " SELECT COUNT(*) AS READY_CNT                                        ";
-                strSql += CRLF + "   FROM CV_DATA CD                                                   ";
-                strSql += CRLF + "  WHERE CD.WH_TYP           = :WH_TYP                                ";
-                strSql += CRLF + "    AND CD.MC_NO            = :MC_NO                                 ";
-                strSql += CRLF + "    AND CD.SENSOR0_DATA_RD  = '0'                                    ";   // 빈 상태
-                strSql += CRLF + "    AND CD.AUTO_MODE_RD     = '1'                                    ";
-                strSql += CRLF + "    AND CD.ERROR_CODE      IN ('0','00','000','0000')                ";
-                strSql += CRLF + "    AND 0 = (SELECT COUNT(*) FROM CV_DATA CD2                        ";   // 결정대로 진입중인 화물 없음
-                strSql += CRLF + "              WHERE CD2.WH_TYP      = :WH_TYP2                       ";
-                strSql += CRLF + "                AND CD2.DEST_POS_OD = :MC_NO2                        ";
-                strSql += CRLF + "                AND CD2.OD_RQ_YN    = 'Y')                           ";
-                _pBdb.mComMain.CommandType = CommandType.Text;
-                _pBdb.mComMain.Parameters.Clear();
-                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
-                _pBdb.mComMain.Parameters.Add("MC_NO", DbLang.VARCHAR).Value = strMC_DECIDE;
-                _pBdb.mComMain.Parameters.Add("WH_TYP2", DbLang.VARCHAR).Value = strWH_TYP;
-                _pBdb.mComMain.Parameters.Add("MC_NO2", DbLang.VARCHAR).Value = strMC_DECIDE;
-                nSelCnt = _pBdb.ExcuteQry(strSql);
-                if (nSelCnt > 0)
-                    bDecideReady = Convert.ToInt32(_pBdb.mDtMain.Rows[0]["READY_CNT"]) > 0;
+                //
+                //      메인 폼의 "결정대 비었을 때만 출발" 이 꺼져 있으면 보지 않고 내보낸다.
+                //      결정대(트랙 232)는 한 자리이고, 배치상 열(230->232->233)과
+                //      행(207 출고H/S ->208->232)이 만나는 합류점이라 기본은 켬이다.
+                //      현장 컨베이어가 뒤에 줄 세워 두는 것을 허용한다면 꺼도 된다.
+                bool bDecideReady = true;
+                if (cDefApp.GM_RET_DECIDE_WAIT == true)
+                {
+                    bDecideReady = false;
+                    strSql = "";
+                    strSql += CRLF + " SELECT COUNT(*) AS READY_CNT                                        ";
+                    strSql += CRLF + "   FROM CV_DATA CD                                                   ";
+                    strSql += CRLF + "  WHERE CD.WH_TYP           = :WH_TYP                                ";
+                    strSql += CRLF + "    AND CD.MC_NO            = :MC_NO                                 ";
+                    strSql += CRLF + "    AND CD.SENSOR0_DATA_RD  = '0'                                    ";   // 빈 상태
+                    strSql += CRLF + "    AND CD.AUTO_MODE_RD     = '1'                                    ";
+                    strSql += CRLF + "    AND CD.ERROR_CODE      IN ('0','00','000','0000')                ";
+                    strSql += CRLF + "    AND 0 = (SELECT COUNT(*) FROM CV_DATA CD2                        ";   // 결정대로 진입중인 화물 없음
+                    strSql += CRLF + "              WHERE CD2.WH_TYP      = :WH_TYP2                       ";
+                    strSql += CRLF + "                AND CD2.DEST_POS_OD = :MC_NO2                        ";
+                    strSql += CRLF + "                AND CD2.OD_RQ_YN    = 'Y')                           ";
+                    _pBdb.mComMain.CommandType = CommandType.Text;
+                    _pBdb.mComMain.Parameters.Clear();
+                    _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+                    _pBdb.mComMain.Parameters.Add("MC_NO", DbLang.VARCHAR).Value = strMC_DECIDE;
+                    _pBdb.mComMain.Parameters.Add("WH_TYP2", DbLang.VARCHAR).Value = strWH_TYP;
+                    _pBdb.mComMain.Parameters.Add("MC_NO2", DbLang.VARCHAR).Value = strMC_DECIDE;
+                    nSelCnt = _pBdb.ExcuteQry(strSql);
+                    if (nSelCnt > 0)
+                        bDecideReady = Convert.ToInt32(_pBdb.mDtMain.Rows[0]["READY_CNT"]) > 0;
+                }
 
                 // ── 5) 출발 지시
                 string strJOB_TYP = "";
@@ -2107,29 +2116,52 @@ namespace TSK_COMM_IOSCH
             }
         }
 
-        /// <summary>
-        /// 출고대 가용 확인 : 빈 상태(무재하/AUTO/무에러) + 해당 출고대로 진입중인 화물 없음
-        /// </summary>
+        /*
+         * 출고대 레인이 화물을 더 받을 수 있는가
+         *
+         *   레인은 두 자리다. 1층 출고 구간 배치(CvSim EcsLayout1.xml 좌표)는 이렇다.
+         *
+         *          l=51     l=52    l=53
+         *     b=2   233      205     206  (출고대#1)   <- 막다른 끝
+         *     b=3   232      211     212  (출고대#2)   <- 막다른 끝
+         *     b=5   230
+         *
+         *   결정대(232)에서 갈라져 233->205->206 / 211->212 로 들어가는 막다른 지선이다.
+         *   205 와 211 은 지나가는 길이 아니라 각 출고대의 진입 자리다.
+         *   (실제로 돌려 보면 화물이 230 -> 232 -> 233 -> 205 -> 206 으로 간다)
+         *
+         *   그래서 볼 것은 "출고대(206/212)가 비었는가" 가 아니라
+         *   "진입 자리(205/211)가 비었는가" 다.
+         *   출고대에 화물이 있어도 진입 자리가 비어 있으면 한 대 더 보낼 수 있고,
+         *   지게차가 앞의 것을 가져가면 목적지가 출고대이므로 저절로 밀려 들어간다.
+         *   출고대만 보면 레인을 한 자리로만 쓰게 되어, 지게차가 올 때까지
+         *   결정대와 대기대가 계속 막힌다. (대기대가 막히면 그 크레인도 못 나간다)
+         *
+         *   진입 중인 화물 검사는 그대로 출고대 트랙으로 본다. CV 에 쓰는 목적지가
+         *   출고대이기 때문이다. 그래서 한 레인에 "도착한 것 1 + 가는 중 1" 까지만 찬다.
+         */
         private bool CHECK_RET_LANE_READY(string strWH_TYP, string strMC_NO)
         {
             try
             {
+                string strENTRY_MC = GET_RET_LANE_ENTRY(strWH_TYP, strMC_NO);
+
                 string strSql = "";
                 strSql += CRLF + " SELECT COUNT(*) AS READY_CNT                                        ";
                 strSql += CRLF + "   FROM CV_DATA CD                                                   ";
                 strSql += CRLF + "  WHERE CD.WH_TYP           = :WH_TYP                                ";
-                strSql += CRLF + "    AND CD.MC_NO            = :MC_NO                                 ";
+                strSql += CRLF + "    AND CD.MC_NO            = :ENTRY_MC                              ";   // 레인 진입 자리
                 strSql += CRLF + "    AND CD.SENSOR0_DATA_RD  = '0'                                    ";
                 strSql += CRLF + "    AND CD.AUTO_MODE_RD     = '1'                                    ";
                 strSql += CRLF + "    AND CD.ERROR_CODE      IN ('0','0000')                           ";
-                strSql += CRLF + "    AND 0 = (SELECT COUNT(*) FROM CV_DATA CD2                        ";
+                strSql += CRLF + "    AND 0 = (SELECT COUNT(*) FROM CV_DATA CD2                        ";   // 그 레인으로 가는 중인 화물 없음
                 strSql += CRLF + "              WHERE CD2.WH_TYP      = :WH_TYP2                       ";
                 strSql += CRLF + "                AND CD2.DEST_POS_OD = :MC_NO2                        ";
                 strSql += CRLF + "                AND CD2.OD_RQ_YN    = 'Y')                           ";
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
                 _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
-                _pBdb.mComMain.Parameters.Add("MC_NO", DbLang.VARCHAR).Value = strMC_NO;
+                _pBdb.mComMain.Parameters.Add("ENTRY_MC", DbLang.VARCHAR).Value = strENTRY_MC;
                 _pBdb.mComMain.Parameters.Add("WH_TYP2", DbLang.VARCHAR).Value = strWH_TYP;
                 _pBdb.mComMain.Parameters.Add("MC_NO2", DbLang.VARCHAR).Value = strMC_NO;
                 int nSelCnt = _pBdb.ExcuteQry(strSql);
@@ -2139,6 +2171,41 @@ namespace TSK_COMM_IOSCH
             catch
             {
                 return false;
+            }
+        }
+
+        /*
+         * 출고대 레인의 진입 자리 트랙 (출고대 트랙 - 1)
+         *
+         *   206 -> 205, 212 -> 211. 이 현장 트랙 번호는 흐름 순서대로 붙어 있다.
+         *   그런 트랙이 CV_DATA 에 없으면 예전처럼 출고대 자체를 본다.
+         *   (설비가 바뀌어 진입 자리가 없어져도 동작이 멈추지는 않게)
+         */
+        private string GET_RET_LANE_ENTRY(string strWH_TYP, string strMC_NO)
+        {
+            try
+            {
+                int nMc = 0;
+                if (Int32.TryParse((strMC_NO == null) ? "" : strMC_NO.Trim(), out nMc) == false || nMc <= 0)
+                    return strMC_NO;
+
+                string strENTRY = (nMc - 1).ToString();
+
+                string strSql = "";
+                strSql += CRLF + " SELECT COUNT(*) AS CNT FROM CV_DATA                                 ";
+                strSql += CRLF + "  WHERE WH_TYP = :WH_TYP AND MC_NO = :MC_NO                          ";
+                _pBdb.mComMain.CommandType = CommandType.Text;
+                _pBdb.mComMain.Parameters.Clear();
+                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+                _pBdb.mComMain.Parameters.Add("MC_NO", DbLang.VARCHAR).Value = strENTRY;
+                if (_pBdb.ExcuteQry(strSql) <= 0) return strMC_NO;
+                if (Convert.ToInt32(_pBdb.mDtMain.Rows[0]["CNT"]) <= 0) return strMC_NO;
+
+                return strENTRY;
+            }
+            catch
+            {
+                return strMC_NO;
             }
         }
 
