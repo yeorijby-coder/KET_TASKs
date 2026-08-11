@@ -5,6 +5,7 @@ CV_DATA 에 작업대 번호(`HOST_STN_NO`)가 들어 있는 트랙 전부에 �
 
 - 원본 소스 : `D:\인수인계\한국단자\Ecs Server\EcsSv` (2026-01-09 판)
 - 상수 : `Common\Include\Ecs\EcsDef.h`
+- 짝이 되는 문서 : `원본ECS_3층SC_동작정리.md` (크레인 쪽 정리)
 - 이 문서는 소스에서 표를 기계적으로 뽑아 만들었다. 손으로 적은 값이 아니다.
 
 ## 0. 먼저 알아야 할 것
@@ -195,7 +196,7 @@ else
 | --- | --- | --- | --- | --- | --- |
 | 평상시 | 없음 | 없음 | 없음 | 둘 다 OFF | 아무것도 안 함 |
 | 화물 도착 | 있음 | 있음 | 있음 | **출고대 ON** | `ArrivedCheck` → `IsArrivedToRetStation` 통과 |
-| DATA 삭제 | 있음 | **삭제** | 있음 | 출고대 ON | `IsDeleteDataStation` TRUE → `WriteTrackInfo(트랙, **0**, …)` (`Cv.cpp:1200`) |
+| DATA 삭제 | 있음 | **삭제** | 있음 | 출고대 ON | `IsDeleteDataStation` TRUE → 작번 자리에 **0** 을 써 넣는다 `WriteTrackInfo(트랙, 0, …)` (`Cv.cpp:1200`) |
 | 도착 보고 | 있음 | 없음 | 완료 | 출고대 ON | `JOB->Arrived(작번)` |
 | 작업 없이 DATA 만 남음 | 있음 | 있음 | **없음** | **출고대 ON** | `JOB->Find()` NULL → `IsDeleteDataStation` TRUE → `WriteTrackInfo(트랙, 0, …)` 후 continue (`Cv.cpp:1075`) |
 | 다음 출발 | 없음 | 없음 | 있음 | 입고대 ON | `IsStartNDestStation==FALSE` 라 **`GetLuggNum()==0` 이어야 출발** |
