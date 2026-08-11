@@ -10,7 +10,7 @@
     <AppDesignerFolder>Properties</AppDesignerFolder>
     <RootNamespace>WCS_TASK_SC</RootNamespace>
     <AssemblyName>WCS_TASK_SC</AssemblyName>
-    <ApplicationIcon>s-sc.ico</ApplicationIcon>
+    <ApplicationIcon>sc.ico</ApplicationIcon>
     <TargetFrameworkVersion>v2.0</TargetFrameworkVersion>
     <FileUpgradeFlags>
     </FileUpgradeFlags>
@@ -179,7 +179,7 @@
     <Content Include="bin\Release\TSK_COMM_CV.vshost.exe" />
     <Content Include="bin\Release\TSK_COMM_WC.pdb" />
     <Content Include="6_Log\CVlog4net.xml" />
-    <Content Include="s-sc.ico" />
+    <Content Include="sc.ico" />
   </ItemGroup>
   <ItemGroup>
     <BootstrapperPackage Include="Microsoft.Net.Client.3.5">

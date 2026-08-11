@@ -26,12 +26,43 @@ Tools\IconMaker\MakeIcon.cmd WCS_TASK_Display\disp.ico DISP #FF8C1A
 
 | 프로젝트 | 파일 | 텍스트 | 색상 |
 | --- | --- | --- | --- |
-| WCS_TASK_CV_* | `cv.ico` | `CV/1F` | `#56BAEA` 하늘색 |
+| WCS_TASK_CV_1F / _3F / _BOX | `cv.ico` | `CV/1F` 등 | `#56BAEA` 하늘색 |
+| WCS_TASK_CV_original | `cv.ico` | `CV` | `#56BAEA` 하늘색 |
 | WCS_TASK_SC_SINGLE | `s-sc.ico` | `S-SC` | `#B5E61D` 연두 |
 | WCS_TASK_SC_TWIN | `t-sc.ico` | `T-SC` | `#B5E61D` 연두 |
+| WCS_TASK_SC_Original | `sc.ico` | `SC` | `#B5E61D` 연두 |
 | WCS_TASK_Display | `disp.ico` | `DISP` | `#FF8C1A` 주황 |
 
 새 태스크를 추가할 때는 위와 겹치지 않는 색을 고른다.
+
+**합쳐 놓은 판(`*_Original`)에는 층/포크 표시를 넣지 않는다.**
+1F / 3F / BOX 를 다 다루고 SINGLE / TWIN 을 다 다루므로,
+아이콘에 `1F` 나 `S-` 가 붙어 있으면 어느 한쪽만 도는 것으로 오해하게 된다.
+
+## IO_SCH 계열 아이콘 - MakeIoIcon
+
+IO_SCH 는 예전부터 **파란 둥근 사각 + 흰 글자**라 위 규칙과 그림체가 다르다.
+그 그림체 그대로 찍어내는 별도 생성기를 둔다.
+
+```
+Tools\IconMaker\MakeIoIcon.cmd <출력.ico> <윗줄> [아랫줄]
+```
+
+```
+Tools\IconMaker\MakeIoIcon.cmd WCS_IO_SCH_Original\IO.ico I/O
+Tools\IconMaker\MakeIoIcon.cmd WCS_IO_SCH_1F\IO.ico       I/O 1F
+```
+
+- 아랫줄을 주면 노란색(`#FFD200`)으로 그린다. 층 표시가 그것이다.
+- 기존 아이콘에서 잰 값을 그대로 쓴다.
+  모서리 반경 15%, 테두리 1.6%(`#78A0DC`), 바탕 `#2B57AB` → `#142F69` 세로 그라데이션
+- `MakeIcon` 은 `/` 를 줄바꿈으로 쓰기 때문에 `I/O` 를 한 줄로 그릴 수 없다.
+  그래서 이쪽은 윗줄/아랫줄을 인자로 따로 받는다.
+
+| 프로젝트 | 파일 | 텍스트 |
+| --- | --- | --- |
+| WCS_IO_SCH_1F / _3F / _BOX | `IO.ico` | `I/O` + `1F` 등 |
+| WCS_IO_SCH_Original | `IO.ico` | `I/O` |
 
 ## 출력 형식
 
