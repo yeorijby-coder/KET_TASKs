@@ -236,7 +236,7 @@ namespace TSK_COMM_IOSCH
             cDefApi.GsGetInitPorFilePDB(ref cDefApp.GM_PDB_IP, ref cDefApp.GM_PDB_PORT, ref cDefApp.GM_PDB_DATABASE, ref cDefApp.GM_PDB_USER, ref cDefApp.GM_PDB_USER_PW, ref cDefApp.GM_LOG_PATH, ref cDefApp.GM_FILENAME, ref m_strRtnMsg);
             m_StrConnecString = "Server=" + cDefApp.GM_PDB_IP + ";Database=" + cDefApp.GM_PDB_DATABASE + ";User ID=" + cDefApp.GM_PDB_USER + ";Password=" + cDefApp.GM_PDB_USER_PW + ";";
 #endif
-            // @.1층 출고 : 결정대 비었을 때만 출발할지 (ENV_IOSCH.INI [1F_RET] DECIDE_WAIT)
+            // @.1층 출고 : 결정대가 비어야 출발할지 (ENV_IOSCH.INI [1F_RET] DECIDE_WAIT, 기본 N)
             cDefApp.GM_RET_DECIDE_WAIT = cDefApi.GsGetRetDecideWait();
             chkRetDecideWait.Checked = cDefApp.GM_RET_DECIDE_WAIT;
 
@@ -680,16 +680,15 @@ namespace TSK_COMM_IOSCH
 
 		#region[Event]chkRetDecideWait_CheckedChanged
         /*
-         * 1층 출고 : 결정대 비었을 때만 출발
+         * 1층 출고 : 결정대가 비어야 대기대에서 출발 (추가 제한)
          *
-         *   켬(기본) : 출고위치 결정대(트랙 232)가 비어 있고 그리로 가는 화물이
-         *              없을 때만 대기대에서 출발시킨다.
-         *              결정대는 한 자리이고, 열(230->232->233)과
-         *              행(207 출고H/S ->208->232)이 만나는 합류점이라
-         *              여기가 막히면 크레인 출고 쪽 흐름까지 같이 막힌다.
-         *   끔     : 결정대가 차 있어도 출발시킨다. 화물은 결정대 앞에서 기다렸다가
-         *            앞의 것이 배정되면 들어간다. 현장 컨베이어가 줄 세워 두는 것을
-         *            허용할 때만 쓴다.
+         *   끔(기본) : 결정대 상태를 보지 않고 대기대 자신의 조건으로만 출발시킨다.
+         *              대기대는 크레인 출고 H/S 바로 다음 트랙이라, 붙잡아 두면
+         *              크레인이 출고 H/S 를 못 비워 다음 출고를 시작하지 못한다.
+         *              루프 화물 수는 1층 출고 유량 제한이 따로 맡는다.
+         *   켬     : 출고위치 결정대(트랙 232)가 비어 있고 그리로 가는 화물이
+         *            없을 때만 출발시킨다. 결정대 앞에 줄 서는 것을 원치 않는
+         *            현장에서 쓴다.
          *
          *   바꾸면 바로 반영되고 ENV_IOSCH.INI 에 남아 다음 기동에도 이어진다.
          */
@@ -698,7 +697,7 @@ namespace TSK_COMM_IOSCH
             cDefApp.GM_RET_DECIDE_WAIT = chkRetDecideWait.Checked;
             cDefApi.GsSetRetDecideWait(cDefApp.GM_RET_DECIDE_WAIT);
 
-            PsMsgViewMain("1층 출고 : 결정대 비었을 때만 출발 = "
+            PsMsgViewMain("1층 출고 : 결정대가 비어야 출발 = "
                           + (cDefApp.GM_RET_DECIDE_WAIT ? "켬" : "끔"), 0);
 		}
 		#endregion

@@ -180,15 +180,16 @@
             //
             // chkRetDecideWait
             //
-            this.chkRetDecideWait.Anchor = System.Windows.Forms.AnchorStyles.Right;
+            this.chkRetDecideWait.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
             this.chkRetDecideWait.AutoSize = true;
-            this.chkRetDecideWait.Checked = true;
-            this.chkRetDecideWait.CheckState = System.Windows.Forms.CheckState.Checked;
-            this.chkRetDecideWait.Location = new System.Drawing.Point(476, 32);
+            this.chkRetDecideWait.Checked = false;
+            this.chkRetDecideWait.CheckState = System.Windows.Forms.CheckState.Unchecked;
+            this.chkRetDecideWait.Font = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.chkRetDecideWait.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(70)))), ((int)(((byte)(140)))));
+            this.chkRetDecideWait.Location = new System.Drawing.Point(95, 34);
             this.chkRetDecideWait.Name = "chkRetDecideWait";
-            this.chkRetDecideWait.Size = new System.Drawing.Size(240, 16);
             this.chkRetDecideWait.TabIndex = 819;
-            this.chkRetDecideWait.Text = "1층 출고 : 결정대 비었을 때만 출발";
+            this.chkRetDecideWait.Text = "1층 출고 : 결정대가 비어야 대기대에서 출발 (추가 제한)";
             this.chkRetDecideWait.UseVisualStyleBackColor = true;
             this.chkRetDecideWait.CheckedChanged += new System.EventHandler(this.chkRetDecideWait_CheckedChanged);
             //

@@ -67,21 +67,21 @@ namespace TSK_COMM_IOSCH
         static extern bool WritePrivateProfileString(string lpAppName, string lpKeyName, string lpString, string lpFileName);
 
         /*
-         * 1층 출고 : 결정대가 비었을 때만 출발시킬지 (ENV_IOSCH.INI [1F_RET] DECIDE_WAIT)
+         * 1층 출고 : 결정대가 비어야 출발시킬지 (ENV_IOSCH.INI [1F_RET] DECIDE_WAIT)
          *
-         *   키가 없으면 Y(비었을 때만 출발)로 본다. 기존 동작이 그것이다.
+         *   키가 없으면 N(결정대를 보지 않고 출발)으로 본다. 그것이 기본 동작이다.
          */
         public static bool GsGetRetDecideWait()
         {
             try
             {
                 StringBuilder sb = new StringBuilder(16);
-                GetPrivateProfileString("1F_RET", "DECIDE_WAIT", "Y", sb, sb.Capacity, cDefApp.GM_ENV_INI);
-                return (sb.ToString().Trim().ToUpper() != "N");
+                GetPrivateProfileString("1F_RET", "DECIDE_WAIT", "N", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                return (sb.ToString().Trim().ToUpper() == "Y");
             }
             catch
             {
-                return true;
+                return false;
             }
         }
 
