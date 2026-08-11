@@ -34,6 +34,13 @@
 			<Bit  desc="D550.1" Use ="1" tid="218" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 			<Bit  desc="D550.2" Use ="1" tid="224" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 			<Bit  desc="D550.3" Use ="1" tid="225" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D550.4" Use ="1" tid="204" desc2="901호기 출고 대기대 (SC_HS_DEF.WAIT_TRACK)"/>
+			<Bit  desc="D550.5" Use ="1" tid="208" desc2="902호기 출고 대기대 (SC_HS_DEF.WAIT_TRACK)"/>
+			<Bit  desc="D550.6" Use ="1" tid="216" desc2="903호기 출고 대기대 (SC_HS_DEF.WAIT_TRACK)"/>
+			<Bit  desc="D550.7" Use ="1" tid="220" desc2="904호기 출고 대기대 (SC_HS_DEF.WAIT_TRACK)"/>
+			<Bit  desc="D550.8" Use ="1" tid="259" desc2="905호기 출고 대기대 (SC_HS_DEF.WAIT_TRACK)"/>
+			<Bit  desc="D550.9" Use ="1" tid="249" desc2="906호기 출고 대기대 (SC_HS_DEF.WAIT_TRACK)"/>
+			<Bit  desc="D550.10" Use ="1" tid="232" desc2="1F 출고위치 결정대 (DEST_POS_DEF 171)"/>
 		</Area>	
 		<Area type="b" seq="0" name="RetStation" address="551">
 			<Bit  desc="D551.0" Use ="1" tid="206" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
@@ -41,9 +48,6 @@
 			<Bit  desc="D551.2" Use ="1" tid="218" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 			<Bit  desc="D551.3" Use ="1" tid="225" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>			
 			<Bit  desc="D551.4" Use ="1" tid="2101" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
-			<Bit  desc="D551.5" Use ="1" tid="218" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
-			<Bit  desc="D551.6" Use ="1" tid="224" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
-			<Bit  desc="D551.7" Use ="1" tid="225" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>			
 		</Area>
 		<Area type="b" seq="0" name="ScStoHS" address="552">
 			<Bit  desc="D552.0" Use ="1" tid="202" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
