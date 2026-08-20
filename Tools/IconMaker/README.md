@@ -50,7 +50,7 @@ Tools\IconMaker\MakeIoIcon.cmd <출력.ico> <윗줄> [아랫줄]
 
 ```
 Tools\IconMaker\MakeIoIcon.cmd WCS_IO_SCH_Original\IO.ico I/O
-Tools\IconMaker\MakeIoIcon.cmd WCS_IO_SCH_1F\IO.ico       I/O 1F
+Tools\IconMaker\MakeIoIcon.cmd WCS_IO_SCH_3F\IO.ico       I/O 3F
 ```
 
 - 아랫줄을 주면 노란색(`#FFD200`)으로 그린다. 층 표시가 그것이다.
@@ -61,8 +61,13 @@ Tools\IconMaker\MakeIoIcon.cmd WCS_IO_SCH_1F\IO.ico       I/O 1F
 
 | 프로젝트 | 파일 | 텍스트 |
 | --- | --- | --- |
-| WCS_IO_SCH_1F / _3F / _BOX | `IO.ico` | `I/O` + `1F` 등 |
 | WCS_IO_SCH_Original | `IO.ico` | `I/O` |
+| WCS_IO_SCH_1F | `IO.ico` | `I/O` |
+| WCS_IO_SCH_3F / _BOX | `IO.ico` | `I/O` + `3F` / `BOX` |
+
+**1F 는 층 표시를 넣지 않는다.** 현장에서 쓰는 것이 1층이라 `I/O` 만 있으면 되고,
+네 프로젝트가 모두 `IO_TASK_SEMI_FINISH.exe` 라는 같은 이름으로 나오므로
+아이콘으로 구분하려 들기보다 창 제목(`WCS_IO_SCH_1F` 등)을 보는 편이 확실하다.
 
 ## 출력 형식
 

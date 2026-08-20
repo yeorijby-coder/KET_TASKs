@@ -111,9 +111,11 @@ namespace TSK_COMM_IOSCH
                 Thread.Sleep(200);
 
                 // _pBdb null 안전 확인
-                if (_pBdb == null)
+                //  연결이 끊긴 것을 못 보면 "전송 연결에 데이터를 쓸 수 없습니다" 만 계속 나온다.
+                //  null 만 보지 말고 실제 연결 상태를 본다.
+                if (!IsDbAlive())
                 {
-                    try { IsDBOpen = false; DBOpen(); } catch { }
+                    if (!DBReopen()) Thread.Sleep(3000);
                     continue;
                 }
 

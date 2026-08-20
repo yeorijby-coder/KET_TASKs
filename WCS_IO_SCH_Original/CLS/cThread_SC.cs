@@ -122,7 +122,8 @@ namespace TSK_COMM_IOSCH
 
                     Thread.Sleep(100);
 
-                    if (_pBdb == null) { try { IsDBOpen = false; DBOpen(); } catch { } continue; }
+                    //  연결이 끊긴 것을 못 보면 "전송 연결에 데이터를 쓸 수 없습니다" 만 계속 나온다.
+                    if (!IsDbAlive()) { if (!DBReopen()) Thread.Sleep(3000); continue; }
 
                     _pBdb.mDtMain.Clear();
                     _pBdb.mDtMain.Reset();

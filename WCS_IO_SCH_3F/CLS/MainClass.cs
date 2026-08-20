@@ -20,6 +20,27 @@ namespace TSK_COMM_IOSCH
         /*
          * DBOpen
          */
+        /*
+         * IsDbAlive / DBReopen
+         *   원격이 연결을 끊어도(서버 재시작, 유휴 끊김 등) _pBdb 는 null 이 아니다.
+         *   그래서 null 만 보고 재연결을 판단하면 죽은 연결을 계속 붙들고
+         *   "전송 연결에 데이터를 쓸 수 없습니다" 만 끝없이 뱉는다.
+         *   실제 ConnectionState 를 보고, 끊겼으면 닫았다 다시 연다.
+         */
+        #region IsDbAlive / DBReopen
+        public bool IsDbAlive()
+        {
+            return (_pBdb != null && _pConObj != null && _pConObj.State == ConnectionState.Open);
+        }
+
+        public bool DBReopen()
+        {
+            try { DBClose(); } catch { }
+            IsDBOpen = false;
+            try { return DBOpen(); } catch { return false; }
+        }
+        #endregion IsDbAlive / DBReopen
+
         #region DBOpen
         public bool DBOpen()
         {
