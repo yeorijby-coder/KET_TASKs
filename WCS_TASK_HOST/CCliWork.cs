@@ -514,6 +514,64 @@ namespace TSK_HostCom
 
         // 설비에러상태변경정보 송신 전 Data 존재여부 Check.
         // 설비 내 Alarm 발생/해제시 Host로 Message 전송.
+        //------------------------------------------------------------------
+        //설명         : 에러가 아닌데 HOST_ERR_SEND_YN='N' 으로 서 있는 행을
+        //               상위에 보고하지 않고 'Y' 로만 내린다.
+        //                 SC : 상태가 에러(UCSTATUS_RD='4')가 아니거나 에러코드가 0
+        //                 CV : 에러코드가 0
+        //               원본 ECS 의 CSc::ErrorCheck 와 같은 규칙이다.
+        //------------------------------------------------------------------
+        private bool ClearNoErrorFlag(string strEQP_TYP)
+        {
+            string strTitle = "[ClearNoErrorFlag] .. ";
+
+            try
+            {
+                m_BDb.BeginTrans();
+                m_BDb.ParamsClear();
+
+                m_strSql = "";
+                if (strEQP_TYP == "SC")
+                {
+                    m_strSql += modDefApp.CRLF + " UPDATE SC_DATA                                              ";
+                    m_strSql += modDefApp.CRLF + "    SET HOST_ERR_SEND_YN = 'Y'                               ";
+                    m_strSql += modDefApp.CRLF + "  WHERE WH_TYP           = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+                    m_strSql += modDefApp.CRLF + "    AND HOST_ERR_SEND_YN = 'N'                               ";
+                    m_strSql += modDefApp.CRLF + "    AND (    " + modDefApp.NVL + "(ERR_CODE_RD, '0') IN ('0', '0000', '')  ";
+                    m_strSql += modDefApp.CRLF + "          OR " + modDefApp.NVL + "(UCSTATUS_RD, '0') <> '4' )              ";
+                }
+                else if (strEQP_TYP == "CV")
+                {
+                    m_strSql += modDefApp.CRLF + " UPDATE CV_DATA                                              ";
+                    m_strSql += modDefApp.CRLF + "    SET HOST_ERR_SEND_YN = 'Y'                               ";
+                    m_strSql += modDefApp.CRLF + "  WHERE WH_TYP           = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+                    m_strSql += modDefApp.CRLF + "    AND HOST_ERR_SEND_YN = 'N'                               ";
+                    m_strSql += modDefApp.CRLF + "    AND " + modDefApp.NVL + "(ERROR_CODE, '0') IN ('0', '0000', '')        ";
+                }
+                else
+                {
+                    m_BDb.RollbackTrans();
+                    return true;
+                }
+
+                if (m_BDb.ExcuteNonQry_Par(ref m_strSql) < 0)
+                {
+                    m_BDb.RollbackTrans();
+                    modCmWork.ShowMsgClient(strTitle + m_BDb.ErrMsg, modDefApp.MSG_ERR);
+                    return false;
+                }
+
+                m_BDb.CommitTrans();
+                return true;
+            }
+            catch (Exception ex)
+            {
+                modCmWork.ShowMsgClient(strTitle + "실행중 예외 발생! " + ex.Message, modDefApp.MSG_ERR);
+                return false;
+            }
+        }
+
+
         public int IsEquip_ERROR_Modified(string strEQP_TYP
                                     , ref string strDeviceNo
                                     , ref string strDeviceClass
@@ -536,7 +594,9 @@ namespace TSK_HostCom
 
                     // 1.ERROR CODE에 대해 존재여부확인.
                     m_strSql = "";
-                    m_strSql += modDefApp.CRLF + " SELECT " + modDefApp.NVL + "(B.EQP_ERR_CD, '0000') AS MC_ERR_CD  ";
+                    //  마스터에 없는 코드를 '0000'(정상)으로 바꿔 버리면 진짜 에러가 정상으로 보고된다.
+                    //  (SC 0141 은 EQP_ECD_MST 에 EQP_TYP='SC' 로 등록되어 있지 않다)
+                    m_strSql += modDefApp.CRLF + " SELECT " + modDefApp.NVL + "(B.EQP_ERR_CD, A.ERR_CODE_RD) AS MC_ERR_CD  ";
                     m_strSql += modDefApp.CRLF + "      , A.*                                                       ";
                     m_strSql += modDefApp.CRLF + "   FROM SC_DATA A                                                 ";
                     m_strSql += modDefApp.CRLF + "   LEFT OUTER JOIN EQP_ECD_MST B                                  ";
@@ -625,9 +685,11 @@ namespace TSK_HostCom
                 }
                 else if (strEQP_TYP == "CV")
                 {
+                    m_BDb.ParamsClear();
+
                     // 1.ERROR CODE에 대해 존재여부확인.
                     m_strSql = "";
-                    m_strSql += modDefApp.CRLF + " SELECT " + modDefApp.NVL + "(B.EQP_ERR_CD, '0000') AS MC_ERR_CD ";
+                    m_strSql += modDefApp.CRLF + " SELECT " + modDefApp.NVL + "(B.EQP_ERR_CD, A.ERROR_CODE) AS MC_ERR_CD ";
                     m_strSql += modDefApp.CRLF + "      , A.*           ";
                     m_strSql += modDefApp.CRLF + "   FROM CV_DATA A     ";
                     m_strSql += modDefApp.CRLF + "   LEFT OUTER JOIN EQP_ECD_MST B ";
@@ -1152,6 +1214,13 @@ namespace TSK_HostCom
             {
                 return false;
             }
+
+            //  에러가 아닌데 보고 대기('N')로 서 있는 행은 보고하지 않고 플래그만 내린다.
+            //  설비 스레드는 에러코드가 "바뀔 때마다" HOST_ERR_SEND_YN='N' 을 세운다.
+            //  그래서 에러가 풀릴 때(예: 0141 -> 0000)에도 서고, 씨앗 데이터도 'N' 으로 들어온다.
+            //  그것까지 보고하면 상위에는 코드 0000(정상)짜리 에러 보고가 끝없이 나간다.
+            //  원본 ECS(Sc.cpp CSc::ErrorCheck)는 상태가 ERROR 이고 코드가 0 이 아닐 때만 보고했다.
+            ClearNoErrorFlag(strEQP_TYP);
 
             int nJobType = 0;
 
