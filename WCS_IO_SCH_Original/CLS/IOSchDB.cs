@@ -7,6 +7,7 @@ using System.Data;
 using System.Data.OleDb;
 using System.Text;
 using System.Threading;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 
 namespace TSK_COMM_IOSCH
@@ -1557,19 +1558,26 @@ namespace TSK_COMM_IOSCH
         #region 화면 표시용.
         // ※ callPsMsgView / m_LogQ null 가드 (2026-07-11) :
         //    화면 델리게이트 연결 전(또는 미연결 상태)에 호출되어도 예외가 발생하지 않도록 한다.
-        public void MakeMsg(string msg)
+        //  strFile / strFunc 는 넘기지 않으면 컴파일러가 채운다.
+        //  이 함수를 부른 소스 파일 경로와 함수 이름이 그대로 들어와,
+        //  화면 로그의 FILE / FUNCTION 열에 찍힌다.
+        public void MakeMsg(string msg,
+                            [CallerFilePath] string strFile = "",
+                            [CallerMemberName] string strFunc = "")
         {
             try
             {
                 if (callPsMsgView == null) return;
-                callPsMsgView(msg, m_nId.ToString(), "", "", m_nId, cDefApp.eLogMsgType.MSG_NOR);
+                callPsMsgView(msg, m_nId.ToString(), "", "", m_nId, cDefApp.eLogMsgType.MSG_NOR, strFile, strFunc);
             }
             catch (Exception ex)
             {
                 return;
             }
         }
-        public void MakeMsg_Error_NoLog(string msg)
+        public void MakeMsg_Error_NoLog(string msg,
+                                        [CallerFilePath] string strFile = "",
+                                        [CallerMemberName] string strFunc = "")
         {
             //  DB 연결이 끊겨서 난 오류면 표시를 세운다.
             //  다음 주기에 IsDbAlive() 가 false 가 되어 다시 붙는다.
@@ -1578,7 +1586,7 @@ namespace TSK_COMM_IOSCH
             try
             {
                 if (callPsMsgView == null) return;
-                callPsMsgView(msg, m_nId.ToString(), "", "", m_nId, cDefApp.eLogMsgType.MSG_ERR);
+                callPsMsgView(msg, m_nId.ToString(), "", "", m_nId, cDefApp.eLogMsgType.MSG_ERR, strFile, strFunc);
             }
             catch (Exception ex)
             {
@@ -1586,14 +1594,16 @@ namespace TSK_COMM_IOSCH
             }
 
         }
-        public void MakeMsg_Error(string msg)
+        public void MakeMsg_Error(string msg,
+                                  [CallerFilePath] string strFile = "",
+                                  [CallerMemberName] string strFunc = "")
         {
             if (IsBrokenConnError(msg)) m_bDbBroken = true;
 
             try
             {
                 if (callPsMsgView != null)
-                    callPsMsgView(msg, m_nId.ToString(), "", "", m_nId, cDefApp.eLogMsgType.MSG_ERR);
+                    callPsMsgView(msg, m_nId.ToString(), "", "", m_nId, cDefApp.eLogMsgType.MSG_ERR, strFile, strFunc);
                 if (cDefApp.m_LogQ[m_nId] != null)
                     cDefApp.m_LogQ[m_nId].Enqueue(new LogParam(DateTime.Now, msg));
             }
@@ -1603,12 +1613,14 @@ namespace TSK_COMM_IOSCH
             }
 
         }
-        public void MakeMsg_Imp(string msg)
+        public void MakeMsg_Imp(string msg,
+                                [CallerFilePath] string strFile = "",
+                                [CallerMemberName] string strFunc = "")
         {
             try
             {
                 if (callPsMsgView != null)
-                    callPsMsgView(msg, m_nId.ToString(), "", "", m_nId, cDefApp.eLogMsgType.MSG_IMP);
+                    callPsMsgView(msg, m_nId.ToString(), "", "", m_nId, cDefApp.eLogMsgType.MSG_IMP, strFile, strFunc);
                 if (cDefApp.m_LogQ[m_nId] != null)
                     cDefApp.m_LogQ[m_nId].Enqueue(new LogParam(DateTime.Now, msg));
             }
