@@ -1571,6 +1571,10 @@ namespace TSK_COMM_IOSCH
         }
         public void MakeMsg_Error_NoLog(string msg)
         {
+            //  DB 연결이 끊겨서 난 오류면 표시를 세운다.
+            //  다음 주기에 IsDbAlive() 가 false 가 되어 다시 붙는다.
+            if (IsBrokenConnError(msg)) m_bDbBroken = true;
+
             try
             {
                 if (callPsMsgView == null) return;
@@ -1584,6 +1588,8 @@ namespace TSK_COMM_IOSCH
         }
         public void MakeMsg_Error(string msg)
         {
+            if (IsBrokenConnError(msg)) m_bDbBroken = true;
+
             try
             {
                 if (callPsMsgView != null)

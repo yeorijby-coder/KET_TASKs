@@ -28,15 +28,42 @@ namespace TSK_COMM_IOSCH
          *   실제 ConnectionState 를 보고, 끊겼으면 닫았다 다시 연다.
          */
         #region IsDbAlive / DBReopen
+        //  쿼리가 "전송 연결 ... 강제로 끊겼습니다" 로 실패한 뒤 세워지는 표시.
+        //  Npgsql 2.x 는 서버가 TCP 를 끊어도 NpgsqlConnection.State 가
+        //  한동안 Open 으로 남아 있어서 상태만 봐서는 못 잡는다.
+        //  그래서 실패한 사실 자체를 신호로 쓴다.
+        public bool m_bDbBroken = false;
+
         public bool IsDbAlive()
         {
+            if (m_bDbBroken) return false;
             return (_pBdb != null && _pConObj != null && _pConObj.State == ConnectionState.Open);
+        }
+
+        //  연결이 끊겨서 난 오류인지 글로 판단한다.
+        //  OS 언어에 따라 글이 달라져 한국어/영문 표시를 같이 본다.
+        public bool IsBrokenConnError(string strMsg)
+        {
+            if (string.IsNullOrEmpty(strMsg)) return false;
+
+            string s = strMsg.ToLower();
+            if (strMsg.Contains("전송 연결")) return true;
+            if (strMsg.Contains("강제로 끊")) return true;
+            if (strMsg.Contains("연결이 닫")) return true;
+            if (s.Contains("transport connection")) return true;
+            if (s.Contains("forcibly closed")) return true;
+            if (s.Contains("connection is broken")) return true;
+            if (s.Contains("connection is closed")) return true;
+            if (s.Contains("broken pipe")) return true;
+
+            return false;
         }
 
         public bool DBReopen()
         {
             try { DBClose(); } catch { }
             IsDBOpen = false;
+            m_bDbBroken = false;
             try { return DBOpen(); } catch { return false; }
         }
         #endregion IsDbAlive / DBReopen
