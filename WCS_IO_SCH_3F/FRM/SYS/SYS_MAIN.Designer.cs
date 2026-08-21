@@ -48,6 +48,8 @@
             this.CH01 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH02 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH03 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH_FILE = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH_FUNC = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH04 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.label1 = new System.Windows.Forms.Label();
             ((System.ComponentModel.ISupportInitialize)(this.picDbCn0)).BeginInit();
@@ -221,6 +223,8 @@
             this.CH01,
             this.CH02,
             this.CH03,
+            this.CH_FILE,
+            this.CH_FUNC,
             this.CH04});
             this.lsvR.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lsvR.FullRowSelect = true;
@@ -250,6 +254,19 @@
             //
             this.CH03.Text = "Command";
             this.CH03.Width = 80;
+            //
+            // CH04
+            //
+            //
+            // CH_FILE
+            //
+            this.CH_FILE.Text = "FILE";
+            this.CH_FILE.Width = 150;
+            //
+            // CH_FUNC
+            //
+            this.CH_FUNC.Text = "FUNCTION";
+            this.CH_FUNC.Width = 200;
             //
             // CH04
             //
@@ -310,6 +327,8 @@
         internal System.Windows.Forms.ColumnHeader CH01;
         internal System.Windows.Forms.ColumnHeader CH02;
         internal System.Windows.Forms.ColumnHeader CH03;
+        internal System.Windows.Forms.ColumnHeader CH_FILE;
+        internal System.Windows.Forms.ColumnHeader CH_FUNC;
         internal System.Windows.Forms.ColumnHeader CH04;
         internal System.Windows.Forms.CheckBox chkLogDelTest;
         private System.Windows.Forms.Label label1;

@@ -36,6 +36,8 @@
             this.ColumnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.ColumnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.ColumnHeader5 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH_FILE = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH_FUNC = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.txtMsg = new System.Windows.Forms.TextBox();
             this.txtTgm = new System.Windows.Forms.TextBox();
             this.splBodySkt = new System.Windows.Forms.SplitContainer();
@@ -75,6 +77,8 @@
             this.ColumnHeader1,
             this.ColumnHeader2,
             this.ColumnHeader3,
+            this.CH_FILE,
+            this.CH_FUNC,
             this.ColumnHeader4,
             this.ColumnHeader5});
             this.lsvCOMM1.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -105,6 +109,13 @@
             // 
             // ColumnHeader4
             // 
+            // 
+            // CH_FILE / CH_FUNC
+            // 
+            this.CH_FILE.Text = "FILE";
+            this.CH_FILE.Width = 150;
+            this.CH_FUNC.Text = "FUNCTION";
+            this.CH_FUNC.Width = 200;
             this.ColumnHeader4.Text = "Message";
             this.ColumnHeader4.Width = 500;
             // 
@@ -419,6 +430,8 @@
         internal System.Windows.Forms.ColumnHeader ColumnHeader1;
         internal System.Windows.Forms.ColumnHeader ColumnHeader2;
         internal System.Windows.Forms.ColumnHeader ColumnHeader3;
+        internal System.Windows.Forms.ColumnHeader CH_FILE;
+        internal System.Windows.Forms.ColumnHeader CH_FUNC;
         internal System.Windows.Forms.ColumnHeader ColumnHeader4;
         internal System.Windows.Forms.ColumnHeader ColumnHeader5;
         internal System.Windows.Forms.ToolTip ToolTip;

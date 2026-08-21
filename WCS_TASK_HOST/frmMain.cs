@@ -22,9 +22,17 @@ namespace TSK_HostCom
 {
 	public partial class frmMain : Form
 	{
+		// @.로그 열 보이기/숨기기
+		private ListViewColumnMenu m_ColMenuClient;
+		private ListViewColumnMenu m_ColMenuServer;
+
 		public frmMain()
 		{
 			InitializeComponent();
+
+			// @.로그 헤더를 오른쪽 클릭하면 열을 켜고 끌 수 있다.
+			m_ColMenuClient = new ListViewColumnMenu(this.lsvMsgClient);
+			m_ColMenuServer = new ListViewColumnMenu(this.lsvMsgServer);
 
             //this.Paint += new System.Windows.Forms.PaintEventHandler(this.frmMain_Gradient);
             //this.pnlTop.Paint += new System.Windows.Forms.PaintEventHandler(this.pnlTop_Gradient);
@@ -328,7 +336,7 @@ namespace TSK_HostCom
 			{
 				if (lsvMsgClient.SelectedItems.Count > 0)
 				{
-					txtDetail.Text = lsvMsgClient.SelectedItems[0].SubItems[1].Text;
+					txtDetail.Text = lsvMsgClient.SelectedItems[0].SubItems[3].Text;
 				}
 			}
 			catch (Exception ex)
@@ -344,7 +352,7 @@ namespace TSK_HostCom
 			{
 				if (lsvMsgServer.SelectedItems.Count > 0)
 				{
-					txtDetail2.Text = lsvMsgServer.SelectedItems[0].SubItems[1].Text;
+					txtDetail2.Text = lsvMsgServer.SelectedItems[0].SubItems[3].Text;
 				}
 			}
 			catch (Exception ex)

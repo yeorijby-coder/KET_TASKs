@@ -158,6 +158,8 @@ namespace TSK_COMM_IOSCH
             public string ID;
             public string MsgTyp;
             public string Com;
+            public string File;         // 이 로그를 남긴 소스 파일 이름
+            public string Func;         // 이 로그를 남긴 함수 이름
             public string Msg;
             public string Tgm;
             public void init()
@@ -166,6 +168,8 @@ namespace TSK_COMM_IOSCH
                 this.ID     = "";
                 this.MsgTyp = "";
                 this.Com    = "";
+                this.File   = "";
+                this.Func   = "";
                 this.Msg    = "";
                 this.Tgm    = "";
             }

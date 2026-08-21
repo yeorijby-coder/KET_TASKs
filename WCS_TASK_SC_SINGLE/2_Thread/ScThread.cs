@@ -8,6 +8,7 @@ using System.Data.OleDb;
 using log4net;
 using log4net.Config;
 using System.Windows.Forms;
+using System.Runtime.CompilerServices;
 using NpgsqlTypes;
 
 namespace WCS_TASK_SC
@@ -174,11 +175,13 @@ namespace WCS_TASK_SC
          * 화면 표시용
          */
         #region 화면 표시용.
-        private void MakeMsg(string msg, int nThGbn)
+        private void MakeMsg(string msg, int nThGbn,
+                                [CallerFilePath] string strFile = "",
+                                [CallerMemberName] string strFunc = "")
         {
             try
             {
-                m_frmMain.PsMsgView(msg, m_strPlc_No.ToString(), nThGbn);
+                m_frmMain.PsMsgView(msg, m_strPlc_No.ToString(), nThGbn, strFile, strFunc);
             }
             catch (Exception ex)
             {
@@ -186,11 +189,13 @@ namespace WCS_TASK_SC
             }
         }
 
-        private void MakeMsg_Error(string msg, int nThGbn)
+        private void MakeMsg_Error(string msg, int nThGbn,
+                                [CallerFilePath] string strFile = "",
+                                [CallerMemberName] string strFunc = "")
         {
             try
             {
-                m_frmMain.PsMsgView_Error(msg, m_strPlc_No.ToString(), nThGbn);
+                m_frmMain.PsMsgView_Error(msg, m_strPlc_No.ToString(), nThGbn, strFile, strFunc);
                 lock (cDefApp.m_LogQ[m_nThNo])
                 {
                     cDefApp.m_LogQ[m_nThNo].Enqueue(new LogParam(DateTime.Now, msg));
@@ -202,11 +207,13 @@ namespace WCS_TASK_SC
             }
         }
 
-        private void MakeMsg_Imp(string msg, int nThGbn)
+        private void MakeMsg_Imp(string msg, int nThGbn,
+                                [CallerFilePath] string strFile = "",
+                                [CallerMemberName] string strFunc = "")
         {
             try
             {
-                m_frmMain.PsMsgView_IMP(msg, m_strPlc_No.ToString(), nThGbn);
+                m_frmMain.PsMsgView_IMP(msg, m_strPlc_No.ToString(), nThGbn, strFile, strFunc);
                 lock (cDefApp.m_LogQ[m_nThNo])
                 {
                     cDefApp.m_LogQ[m_nThNo].Enqueue(new LogParam(DateTime.Now, msg));

@@ -43,6 +43,8 @@
             this.picCliCom = new System.Windows.Forms.PictureBox();
             this.lsvMsgClient = new System.Windows.Forms.ListView();
             this.ColumnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH_FILE_Cli = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH_FUNC_Cli = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.ColumnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.txtDetail = new System.Windows.Forms.TextBox();
             this.chkShowClient = new System.Windows.Forms.CheckBox();
@@ -53,6 +55,8 @@
             this.picSrvCom = new System.Windows.Forms.PictureBox();
             this.lsvMsgServer = new System.Windows.Forms.ListView();
             this.ColumnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH_FILE_Srv = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH_FUNC_Srv = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.ColumnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.imlLog = new System.Windows.Forms.ImageList(this.components);
             this.txtDetail2 = new System.Windows.Forms.TextBox();
@@ -205,6 +209,8 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.lsvMsgClient.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.ColumnHeader1,
+            this.CH_FILE_Cli,
+            this.CH_FUNC_Cli,
             this.ColumnHeader2});
             this.lsvMsgClient.Font = new System.Drawing.Font("돋움체", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.lsvMsgClient.FullRowSelect = true;
@@ -223,6 +229,10 @@
             // 
             // ColumnHeader2
             // 
+            this.CH_FILE_Cli.Text = "FILE";
+            this.CH_FILE_Cli.Width = 150;
+            this.CH_FUNC_Cli.Text = "FUNCTION";
+            this.CH_FUNC_Cli.Width = 200;
             this.ColumnHeader2.Text = "내용";
             this.ColumnHeader2.Width = 920;
             // 
@@ -315,6 +325,8 @@
                         | System.Windows.Forms.AnchorStyles.Right)));
             this.lsvMsgServer.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
             this.ColumnHeader3,
+            this.CH_FILE_Srv,
+            this.CH_FUNC_Srv,
             this.ColumnHeader4});
             this.lsvMsgServer.Font = new System.Drawing.Font("돋움체", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.lsvMsgServer.FullRowSelect = true;
@@ -334,6 +346,10 @@
             // 
             // ColumnHeader4
             // 
+            this.CH_FILE_Srv.Text = "FILE";
+            this.CH_FILE_Srv.Width = 150;
+            this.CH_FUNC_Srv.Text = "FUNCTION";
+            this.CH_FUNC_Srv.Width = 200;
             this.ColumnHeader4.Text = "내용";
             this.ColumnHeader4.Width = 920;
             // 
@@ -460,6 +476,8 @@
 		internal System.Windows.Forms.PictureBox picCliCom;
 		internal System.Windows.Forms.ListView lsvMsgClient;
 		internal System.Windows.Forms.ColumnHeader ColumnHeader1;
+		internal System.Windows.Forms.ColumnHeader CH_FILE_Cli;
+		internal System.Windows.Forms.ColumnHeader CH_FUNC_Cli;
 		internal System.Windows.Forms.ColumnHeader ColumnHeader2;
 		internal System.Windows.Forms.TextBox txtDetail;
 		internal System.Windows.Forms.CheckBox chkShowClient;
@@ -475,6 +493,8 @@
 		internal System.Windows.Forms.PictureBox picSrvCom;
 		internal System.Windows.Forms.ListView lsvMsgServer;
 		internal System.Windows.Forms.ColumnHeader ColumnHeader3;
+		internal System.Windows.Forms.ColumnHeader CH_FILE_Srv;
+		internal System.Windows.Forms.ColumnHeader CH_FUNC_Srv;
 		internal System.Windows.Forms.ColumnHeader ColumnHeader4;
 		internal System.Windows.Forms.ImageList imlLog;
 		internal System.Windows.Forms.TextBox txtDetail2;

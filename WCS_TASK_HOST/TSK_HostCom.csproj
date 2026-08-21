@@ -88,6 +88,8 @@
     <Compile Include="CSrvWork.cs" />
     <Compile Include="CUserDb.cs" />
     <Compile Include="modCmLib.cs" />
+    <Compile Include="CallerInfoShim.cs" />
+    <Compile Include="ListViewColumnMenu.cs" />
     <Compile Include="modCmWork.cs" />
     <Compile Include="modDateTime.cs" />
     <Compile Include="modDefAPI.cs" />

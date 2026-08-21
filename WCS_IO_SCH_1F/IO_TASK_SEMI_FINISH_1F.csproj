@@ -138,6 +138,8 @@
     <Compile Include="CLS\cDefApp.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="CLS\CallerInfoShim.cs" />
+    <Compile Include="CLS\ListViewColumnMenu.cs" />
     <Compile Include="CLS\CLogging.cs" />
     <!-- 기존 설비 스레드(cThread_CV/cThread_SC/cThread_R)는 현장 구성에서 제외 - DB 구조 참고용으로 파일만 보존, 빌드 제외 -->
     <Compile Include="CLS\Thread\cThread_SCH.cs" />

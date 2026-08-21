@@ -4,13 +4,25 @@ using System.Linq;
 using System.Text;
 using System.Windows.Forms;
 using System.Drawing;
+using System.Runtime.CompilerServices;
 
 namespace TSK_HostCom
 {
 	static class modCmWork
 	{
+		// @.[CallerFilePath] 는 빌드한 PC 의 전체 경로다. 열에는 파일 이름만 남긴다.
+		private static string ShortFileName(string strPath)
+		{
+		    if (string.IsNullOrEmpty(strPath)) return "";
+
+		    int nPos = strPath.LastIndexOfAny(new char[] { '\\', '/' });
+		    return (nPos < 0) ? strPath : strPath.Substring(nPos + 1);
+		}
+
 		//*** 메세지 표시 ***
-		public static void ShowMsgClient(string p_strMsg, string p_strMsgKind = modDefApp.MSG_NOR, bool p_blWriteLog = true)
+		public static void ShowMsgClient(string p_strMsg, string p_strMsgKind = modDefApp.MSG_NOR, bool p_blWriteLog = true,
+                                          [CallerFilePath] string p_strFile = "",
+                                          [CallerMemberName] string p_strFunc = "")
 		{
             try
             {
@@ -43,6 +55,9 @@ namespace TSK_HostCom
 
                 ListViewItem lvitem = new ListViewItem(LogMsg.g_strTime, 0);
 
+                // 이 로그를 남긴 자리. 값은 컴파일할 때 박힌다.
+                lvitem.SubItems.Add(ShortFileName(p_strFile));
+                lvitem.SubItems.Add(p_strFunc);
                 lvitem.SubItems.Add(p_strMsg);
                 switch (p_strMsgKind)
                 {
@@ -81,7 +96,9 @@ namespace TSK_HostCom
 		}
 
 
-		public static void ShowMsgServer(string p_strMsg, string p_strMsgKind = modDefApp.MSG_NOR, bool p_blWriteLog = true)
+		public static void ShowMsgServer(string p_strMsg, string p_strMsgKind = modDefApp.MSG_NOR, bool p_blWriteLog = true,
+                                          [CallerFilePath] string p_strFile = "",
+                                          [CallerMemberName] string p_strFunc = "")
 		{
             try
             {
@@ -114,6 +131,9 @@ namespace TSK_HostCom
 
                 ListViewItem lvitem = new ListViewItem(LogMsg.g_strTime, 0);
 
+                // 이 로그를 남긴 자리. 값은 컴파일할 때 박힌다.
+                lvitem.SubItems.Add(ShortFileName(p_strFile));
+                lvitem.SubItems.Add(p_strFunc);
                 lvitem.SubItems.Add(p_strMsg);
                 switch (p_strMsgKind)
                 {

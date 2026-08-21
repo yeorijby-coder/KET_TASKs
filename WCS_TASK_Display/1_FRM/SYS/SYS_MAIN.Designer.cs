@@ -48,6 +48,8 @@
             this.colTime = new System.Windows.Forms.ColumnHeader();
             this.colType = new System.Windows.Forms.ColumnHeader();
             this.colId = new System.Windows.Forms.ColumnHeader();
+            this.colFile = new System.Windows.Forms.ColumnHeader();
+            this.colFunc = new System.Windows.Forms.ColumnHeader();
             this.colMsg = new System.Windows.Forms.ColumnHeader();
             this.Thread_Timer = new System.Windows.Forms.Timer(this.components);
             this.ToolTip = new System.Windows.Forms.ToolTip(this.components);
@@ -270,6 +272,8 @@
             this.colTime,
             this.colType,
             this.colId,
+            this.colFile,
+            this.colFunc,
             this.colMsg});
             this.lvMsg.Dock = System.Windows.Forms.DockStyle.Fill;
             this.lvMsg.FullRowSelect = true;
@@ -298,6 +302,10 @@
             //
             // colMsg
             //
+            this.colFile.Text = "FILE";
+            this.colFile.Width = 150;
+            this.colFunc.Text = "FUNCTION";
+            this.colFunc.Width = 200;
             this.colMsg.Text = "Message";
             this.colMsg.Width = 480;
             //
@@ -348,6 +356,8 @@
         private System.Windows.Forms.ColumnHeader colTime;
         private System.Windows.Forms.ColumnHeader colType;
         private System.Windows.Forms.ColumnHeader colId;
+        private System.Windows.Forms.ColumnHeader colFile;
+        private System.Windows.Forms.ColumnHeader colFunc;
         private System.Windows.Forms.ColumnHeader colMsg;
         private System.Windows.Forms.Timer Thread_Timer;
         private System.Windows.Forms.ToolTip ToolTip;

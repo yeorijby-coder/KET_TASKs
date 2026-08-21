@@ -92,6 +92,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="3_Lib\ListViewColumnMenu.cs" />
     <Compile Include="3_Lib\cCmLib.cs" />
     <Compile Include="4_Static\DbLang.cs" />
     <Compile Include="5_DB\cDbBaseOra.cs" />

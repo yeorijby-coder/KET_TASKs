@@ -5,6 +5,7 @@ using System.Data;
 using System.IO;
 using System.Reflection;
 using System.Threading;
+using System.Runtime.CompilerServices;
 using System.Windows.Forms;
 using Npgsql;
 using NpgsqlTypes;
@@ -89,9 +90,29 @@ namespace WCS_TASK_Display
         private bool m_bCtrlSyncing = false;             // @.테이블->화면 반영중 이벤트 되먹임 방지
         #endregion
 
+        /*
+         * 로그 리스트뷰 열 순서. Designer 와 같이 간다.
+         *   Time | Type | PLC | FILE | FUNCTION | Message
+         * FILE / FUNCTION 은 그 로그를 남긴 소스 파일과 함수다. 값은 컴파일할 때
+         * [CallerFilePath] / [CallerMemberName] 로 박히므로 실행 중 비용이 없다.
+         * 헤더를 오른쪽 클릭하면 열을 켜고 끌 수 있다. (ListViewColumnMenu)
+         */
+        private const int COL_TIME = 0;
+        private const int COL_TYPE = 1;
+        private const int COL_PLC  = 2;
+        private const int COL_FILE = 3;
+        private const int COL_FUNC = 4;
+        private const int COL_MSG  = 5;
+
+        // @.로그 열 보이기/숨기기
+        private ListViewColumnMenu m_ColMenu;
+
         public SYS_MAIN()
         {
             InitializeComponent();
+
+            // @.헤더 오른쪽 클릭으로 열을 켜고 끈다.
+            m_ColMenu = new ListViewColumnMenu(this.lvMsg);
             PsSetFormIcon();    // @.창 제목표시줄 / 작업표시줄 아이콘
         }
 
@@ -389,15 +410,44 @@ namespace WCS_TASK_Display
         #endregion
 
         #region 메시지 출력 (ListView). CheckForIllegalCrossThreadCalls=false 로 스레드 제약을 푼다
-        public void PsMsgView(string pMsg, int nThGbn) { AddMsg("NOR", "", pMsg); }
-        public void PsMsgView_Error(string pMsg, int nThGbn) { AddMsg("ERR", "", pMsg); }
-        public void PsMsgView_IMP(string pMsg, int nThGbn) { AddMsg("IMP", "", pMsg); }
+        public void PsMsgView(string pMsg, int nThGbn,
+                              [CallerFilePath] string strFile = "",
+                              [CallerMemberName] string strFunc = "")
+        { AddMsg("NOR", "", pMsg, strFile, strFunc); }
+        public void PsMsgView_Error(string pMsg, int nThGbn,
+                              [CallerFilePath] string strFile = "",
+                              [CallerMemberName] string strFunc = "")
+        { AddMsg("ERR", "", pMsg, strFile, strFunc); }
+        public void PsMsgView_IMP(string pMsg, int nThGbn,
+                              [CallerFilePath] string strFile = "",
+                              [CallerMemberName] string strFunc = "")
+        { AddMsg("IMP", "", pMsg, strFile, strFunc); }
 
-        public void PsMsgView(string pMsg, string pObjID, int nThGbn) { AddMsg("NOR", pObjID, pMsg); }
-        public void PsMsgView_Error(string pMsg, string pObjID, int nThGbn) { AddMsg("ERR", pObjID, pMsg); }
-        public void PsMsgView_IMP(string pMsg, string pObjID, int nThGbn) { AddMsg("IMP", pObjID, pMsg); }
+        public void PsMsgView(string pMsg, string pObjID, int nThGbn,
+                              [CallerFilePath] string strFile = "",
+                              [CallerMemberName] string strFunc = "")
+        { AddMsg("NOR", pObjID, pMsg, strFile, strFunc); }
+        public void PsMsgView_Error(string pMsg, string pObjID, int nThGbn,
+                              [CallerFilePath] string strFile = "",
+                              [CallerMemberName] string strFunc = "")
+        { AddMsg("ERR", pObjID, pMsg, strFile, strFunc); }
+        public void PsMsgView_IMP(string pMsg, string pObjID, int nThGbn,
+                              [CallerFilePath] string strFile = "",
+                              [CallerMemberName] string strFunc = "")
+        { AddMsg("IMP", pObjID, pMsg, strFile, strFunc); }
 
-        private void AddMsg(string strType, string strId, string strMsg)
+                // @.[CallerFilePath] 는 빌드한 PC 의 전체 경로다. 열에는 파일 이름만 남긴다.
+        private static string ShortFileName(string strPath)
+        {
+            if (string.IsNullOrEmpty(strPath)) return "";
+
+            int nPos = strPath.LastIndexOfAny(new char[] { '\\', '/' });
+            return (nPos < 0) ? strPath : strPath.Substring(nPos + 1);
+        }
+
+        private void AddMsg(string strType, string strId, string strMsg,
+                            [CallerFilePath] string strFile = "",
+                            [CallerMemberName] string strFunc = "")
         {
             try
             {
@@ -407,6 +457,8 @@ namespace WCS_TASK_Display
                 ListViewItem item = new ListViewItem(DateTime.Now.ToString("yyyy/MM/dd HH:mm:ss.fff"));
                 item.SubItems.Add(strType);
                 item.SubItems.Add(strId);
+                item.SubItems.Add(ShortFileName(strFile));
+                item.SubItems.Add(strFunc);
                 item.SubItems.Add(strMsg);
                 if (strType == "ERR") item.ForeColor = Color.Red;
                 else if (strType == "IMP") item.ForeColor = Color.Blue;

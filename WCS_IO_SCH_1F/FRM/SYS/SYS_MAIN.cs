@@ -22,15 +22,34 @@ using log4net;
 using log4net.Config;
 using System.Collections;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 
 namespace TSK_COMM_IOSCH
 {
-    public delegate void PsMsgView(string pMsg, string pObjID, string pCommTyp, string pTgm, int nId, cDefApp.eLogMsgType pMsgTyp);
+    //  로그 한 줄이 어느 파일 / 어느 함수에서 나왔는지 같이 나른다.
+    //  strFile / strFunc 는 부르는 쪽에서 [CallerFilePath] / [CallerMemberName] 로 채워진다.
+    public delegate void PsMsgView(string pMsg, string pObjID, string pCommTyp, string pTgm, int nId, cDefApp.eLogMsgType pMsgTyp, string strFile, string strFunc);
 	public delegate void DelPsMsgLog(DateTime LogDate, string strMsg, int nId);
 
 	public partial class SYS_MAIN : Form
 	{
+        /*
+         * 로그 리스트뷰 열 순서. Designer 의 CH01~ 순서와 반드시 같이 간다.
+         *   TIMESTAMP | THREAD NO | Command | FILE | FUNCTION | Message
+         * FILE / FUNCTION 은 그 로그를 남긴 소스 파일과 함수다.
+         * 헤더를 오른쪽 클릭하면 열을 켜고 끌 수 있다. (ListViewColumnMenu)
+         */
+        private const int COL_TIME    = 0;
+        private const int COL_THREAD  = 1;
+        private const int COL_COMMAND = 2;
+        private const int COL_FILE    = 3;
+        private const int COL_FUNC    = 4;
+        private const int COL_MSG     = 5;
+
+        // @.로그 열 보이기/숨기기
+        private ListViewColumnMenu m_ColMenu;
+
 		private string m_StrConnecString; //DataBase Connection 문자열.
         // (기존 설비 스레드 cThread_CV/cThread_SC/cThread_R 은 현장 구성에서 제외됨 - 참고용으로만 보존)
         private cThread_SCH[] m_Thread_SCH = new cThread_SCH[1];
@@ -66,6 +85,9 @@ namespace TSK_COMM_IOSCH
 		public SYS_MAIN()
 		{
 			InitializeComponent();
+
+            // @.헤더 오른쪽 클릭으로 열을 켜고 끌 수 있게 한다.
+            m_ColMenu = new ListViewColumnMenu(this.lsvR);
 		}
 		#endregion
 
@@ -418,12 +440,23 @@ namespace TSK_COMM_IOSCH
 			}
 		}
 
+		// @.[CallerFilePath] 는 빌드한 PC 의 전체 경로다. 열에는 파일 이름만 남긴다.
+		private static string ShortFileName(string strPath)
+		{
+			if (string.IsNullOrEmpty(strPath)) return "";
+
+			int nPos = strPath.LastIndexOfAny(new char[] { '\\', '/' });
+			return (nPos < 0) ? strPath : strPath.Substring(nPos + 1);
+		}
+
 		private void PsMsgView(string pMsg,
 							   string pObjID,
 							   string pCommTyp,
 							   string pTgm,
 							   int nId,
-				  cDefApp.eLogMsgType pMsgTyp)
+				  cDefApp.eLogMsgType pMsgTyp,
+							   string strFile,
+							   string strFunc)
 		{
 			try
 			{
@@ -435,12 +468,16 @@ namespace TSK_COMM_IOSCH
 				LogMsg.MsgTyp = pMsgTyp.ToString();
 				LogMsg.ID = pObjID;
 				LogMsg.Com = pCommTyp;
+				LogMsg.File = ShortFileName(strFile);
+				LogMsg.Func = strFunc;
 				LogMsg.Msg = pMsg;
 				LogMsg.Tgm = pTgm;
 				if (chkStopLog.Checked) return;
 				ListViewItem vItem = new ListViewItem(LogMsg.Time, 0);
 				vItem.SubItems.Add(LogMsg.ID);
 				vItem.SubItems.Add(LogMsg.Com);
+				vItem.SubItems.Add(LogMsg.File);
+				vItem.SubItems.Add(LogMsg.Func);
 				vItem.SubItems.Add(LogMsg.Msg);
 				vItem.SubItems.Add(LogMsg.Tgm);
 
@@ -493,7 +530,8 @@ namespace TSK_COMM_IOSCH
 
             PsMsgView("1층 출고 : 결정대가 비어야 출발 = "
                       + (cDefApp.GM_RET_DECIDE_WAIT ? "켬" : "끔"),
-                      "SCH", "", "", (int)cDefApp.eThGbn.SCH_GR01, cDefApp.eLogMsgType.MSG_IMP);
+                      "SCH", "", "", (int)cDefApp.eThGbn.SCH_GR01, cDefApp.eLogMsgType.MSG_IMP,
+                      "SYS_MAIN.cs", "chkRetDecideWait_CheckedChanged");
 		}
 		#endregion
 
@@ -546,7 +584,7 @@ namespace TSK_COMM_IOSCH
 
 				ListView LvCtrl = (ListView)Ctrl;
 
-				this.txtMsg.Text = LvCtrl.SelectedItems[0].SubItems[3].Text;
+				this.txtMsg.Text = LvCtrl.SelectedItems[0].SubItems[COL_MSG].Text;
 			}
 			catch (Exception ex)
 			{

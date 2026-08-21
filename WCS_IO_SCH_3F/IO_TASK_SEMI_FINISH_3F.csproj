@@ -137,6 +137,8 @@
     <Compile Include="CLS\cDefApp.cs">
       <SubType>Code</SubType>
     </Compile>
+    <Compile Include="CLS\CallerInfoShim.cs" />
+    <Compile Include="CLS\ListViewColumnMenu.cs" />
     <Compile Include="CLS\CLogging.cs" />
     <!-- ���� ���� ������(cThread_CV/cThread_SC/cThread_R)�� ���� �������� ���� - DB ���� ��������� ���ϸ� ����, ��� ���� -->
     <Compile Include="CLS\Thread\cThread_SCH.cs" />
