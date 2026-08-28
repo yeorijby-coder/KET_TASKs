@@ -713,10 +713,10 @@ namespace TSK_COMM_IOSCH
         { return CV_ARRIVE_PLC(strWH_TYP, CV_PLC_1F_NEW, "[ArrivedCheck5]", ref pRTN_MSG); }
 
         public bool StoHsCheck2(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
-        { return SC_STO_CMD_PLC(strWH_TYP, CV_PLC_1F_OLD, "[StoHsCheck2]", ref pRTN_MSG); }
+        { return ScStoreRoutine(strWH_TYP, CV_PLC_1F_OLD, "[StoHsCheck2]", ref pRTN_MSG); }
 
         public bool StoHsCheck5(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
-        { return SC_STO_CMD_PLC(strWH_TYP, CV_PLC_1F_NEW, "[StoHsCheck5]", ref pRTN_MSG); }
+        { return ScStoreRoutine(strWH_TYP, CV_PLC_1F_NEW, "[StoHsCheck5]", ref pRTN_MSG); }
 
         /*
          * 크레인 진행/완료는 층에 속한 일이 아니라 작업에 속한 일이다.
@@ -733,7 +733,7 @@ namespace TSK_COMM_IOSCH
          * 1층은 '02' 다. 세 스레드가 겹치지 않도록 여기서만 돌린다.
          */
         public bool RetCmdCheck(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
-        { return SC_RET_CMD_PLC(strWH_TYP, HS_NO_RETRIEVE, "[RetCmdCheck]", ref pRTN_MSG); }
+        { return ScRetrieveRoutine(strWH_TYP, HS_NO_RETRIEVE, "[RetCmdCheck]", ref pRTN_MSG); }
 
         public bool ScCompleteCheck(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
         { return SC_COMP_CHK(strWH_TYP, "[ScCompleteCheck]", ref pRTN_MSG); }
@@ -1541,7 +1541,7 @@ namespace TSK_COMM_IOSCH
         //   입고 H/S 인지는 CV_DATA.STOHS_READY_RD 로 안다. 그 값은 CV 태스크가
         //   DeviceMap 의 ScStoHS 영역에서 읽어 채운다.
         // ─────────────────────────────────────────────────────────────────
-        private bool SC_STO_CMD_PLC(string strWH_TYP, string strCV_PLC, string strTitle, ref string pRTN_MSG)
+        private bool ScStoreRoutine(string strWH_TYP, string strCV_PLC, string strTitle, ref string pRTN_MSG)
         {
             try
             {
@@ -1567,10 +1567,9 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND CD.SENSOR0_DATA_RD  = '1'                         ";   // 재하
                 strSql += CRLF + "    AND CD.AUTO_MODE_RD     = '1'                         ";
                 strSql += CRLF + "    AND CD.ERROR_CODE       IN ('0','0000')               ";
-                strSql += CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')          ";
-                strSql += CRLF + "    AND SD.OD_RQ_YN         = 'N'                         ";   // 크레인이 지시를 받을 수 있는 상태
-                strSql += CRLF + "    AND SD.ERR_CODE_RD      = '0000'                      ";
-                strSql += CRLF + "    AND SD.AUTO_MODE_RD     = '1'                         ";
+                strSql += SQL_HS_NOT_PAUSED;            // 입고 H/S 가 멈춰 있지 않은가
+                strSql += SQL_SC_READY;                 // 크레인이 지시를 받을 수 있는 상태인가
+                strSql += SQL_SC_STO_NOT_SUSPEND;       // 입고 정지가 아닌가
                 strSql += CRLF + "  LIMIT 1                                                 ";
 
                 _pBdb.mComMain.CommandType = CommandType.Text;
@@ -1635,7 +1634,7 @@ namespace TSK_COMM_IOSCH
         //   이어받는 곳은 CV_RETHS_PLC 다. 그쪽이 JM.HS_TRACK_NO 로 트랙을 찾으므로
         //   여기서 그 값을 채워 준다.
         // ─────────────────────────────────────────────────────────────────
-        private bool SC_RET_CMD_PLC(string strWH_TYP, string strHS_NO, string strTitle, ref string pRTN_MSG)
+        private bool ScRetrieveRoutine(string strWH_TYP, string strHS_NO, string strTitle, ref string pRTN_MSG)
         {
             try
             {
@@ -1707,14 +1706,13 @@ namespace TSK_COMM_IOSCH
                     strSql += CRLF + "    AND CD.MC_NO            = SHD.HS_MC_NO                ";
                     strSql += CRLF + "  WHERE SD.WH_TYP           = :WH_TYP                     ";
                     strSql += CRLF + "    AND SD.SC_NO            = :SC_NO                      ";
-                    strSql += CRLF + "    AND SD.OD_RQ_YN         = 'N'                         ";   // 크레인이 지시를 받을 수 있다
-                    strSql += CRLF + "    AND SD.ERR_CODE_RD      = '0000'                      ";
-                    strSql += CRLF + "    AND SD.AUTO_MODE_RD     = '1'                         ";
+                    strSql += SQL_SC_READY;                 // 크레인이 지시를 받을 수 있는 상태인가
+                    strSql += SQL_SC_RET_NOT_SUSPEND;       // 출고 정지가 아닌가
                     strSql += CRLF + "    AND CD.SENSOR0_DATA_RD  = '0'                         ";   // 출고 H/S 가 비어 있다
                     strSql += CRLF + "    AND CD.LUGG_NO_RD       IN ('','0','0000')            ";
                     strSql += CRLF + "    AND CD.AUTO_MODE_RD     = '1'                         ";
                     strSql += CRLF + "    AND CD.ERROR_CODE       IN ('0','0000')               ";
-                    strSql += CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')          ";
+                    strSql += SQL_HS_NOT_PAUSED;            // 출고 H/S 가 멈춰 있지 않은가
 
                     _pBdb.mComMain.CommandType = CommandType.Text;
                     _pBdb.mComMain.Parameters.Clear();

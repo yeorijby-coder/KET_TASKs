@@ -1535,6 +1535,73 @@ namespace TSK_COMM_IOSCH
         public const string ST_SC_RUN = "21"; // SC 구동중 (지시가 나가 크레인이 움직인다)
         public const string ST_SC_DONE = "29"; // SC 구동완료 보고
 
+        /*
+         * 크레인 상태값 - 레거시 EcsEnv.h
+         *   ONLINE_MODE_RD  0 오프라인 / 1 온라인 / 2 리모트      (지상반)
+         *   AUTO_MODE_RD    1 자동 / 2 수동                       (기상반)
+         *   ACTIVE_MODE_RD  0 정지 / 1 액티브
+         *   UCSTATUS_RD     0 대기 / 1 아이들 / 2 이동중 / 4 에러
+         */
+        public const string SC_MODE_ONLINE = "1";
+        public const string SC_MODE_AUTO   = "1";
+        public const string SC_ACTIVE      = "1";
+        public const string SC_STA_WAIT    = "0";
+
+        /*
+         * 크레인이 지시를 받을 수 있는 상태인가 - 레거시 CScInfo::IsReadyToWork (ScInfo.cpp:1620)
+         *
+         *   지상반 온라인 / 기상반 자동 / 액티브 / 상태 대기 라야 낸다.
+         *   레거시는 이동중과 에러만 걸러 아이들(1)도 받았지만, 이 현장 크레인은
+         *   아이들을 쓰지 않으므로 대기(0)일 때만 낸다.
+         *
+         *   여기에 "크레인에 작업이 없어야" 를 더한다.
+         *     OD_RQ_YN='N'   앞 지시를 SC_TASK 가 이미 가져갔다
+         *     ITN_LUGG_FK1   크레인이 들고 있는 작업번호. 남아 있으면 앞 작업이 안 끝났다
+         *     LUGG_NO_FK1_RD 크레인이 읽어 준 포크1 작업번호
+         *     COMPLETE_RD    완료표시가 남아 있으면 ScCompleteCheck 가 아직 안 치웠다
+         *
+         *   에러코드는 '0000' 과 '0' 을 같이 본다. SC_TASK 는 네 자리로 쓰지만
+         *   초기 시드 행에는 '0' 으로 들어 있는 것이 있어 '0000' 만 보면 영영 안 나간다.
+         *
+         *   ※ 조회에서 SC_DATA 의 별칭은 SD 여야 한다.
+         */
+        public const string SQL_SC_READY =
+              cDefApp.CRLF + "    AND SD.OD_RQ_YN         = 'N'                          "
+            + cDefApp.CRLF + "    AND SD.ONLINE_MODE_RD   = '" + SC_MODE_ONLINE + "'      "
+            + cDefApp.CRLF + "    AND SD.AUTO_MODE_RD     = '" + SC_MODE_AUTO + "'        "
+            + cDefApp.CRLF + "    AND SD.ACTIVE_MODE_RD   = '" + SC_ACTIVE + "'           "
+            + cDefApp.CRLF + "    AND SD.UCSTATUS_RD      = '" + SC_STA_WAIT + "'         "
+            + cDefApp.CRLF + "    AND COALESCE(SD.ERR_CODE_RD,'0')    IN ('','0','0000')  "
+            + cDefApp.CRLF + "    AND COALESCE(SD.ITN_LUGG_FK1,'0')   IN ('','0','0000')  "
+            + cDefApp.CRLF + "    AND COALESCE(SD.LUGG_NO_FK1_RD,'0') IN ('','0','0000')  "
+            + cDefApp.CRLF + "    AND COALESCE(SD.COMPLETE_RD,'0')    IN ('','0')         ";
+
+        /*
+         * 입고/출고 정지 - 레거시 SC_INFO->m_bStoreSuspend / m_bRetrieveSuspend
+         *
+         *   SC_DATA.SUSPEND 하나에 두 비트를 담는다.
+         *     0 정지 없음 / 1 입고 정지 / 2 출고 정지 / 3 둘 다 정지
+         *   (WCS Client 의 ScSkinDlg 가 이 값으로 입고/출고 체크를 그린다)
+         */
+        public const string SQL_SC_STO_NOT_SUSPEND =
+            cDefApp.CRLF + "    AND COALESCE(SD.SUSPEND,'0') IN ('0','2')                 ";
+        public const string SQL_SC_RET_NOT_SUSPEND =
+            cDefApp.CRLF + "    AND COALESCE(SD.SUSPEND,'0') IN ('0','1')                 ";
+
+        /*
+         * H/S 트랙이 멈춰 있지 않은가.
+         *
+         *   TR_PAUSE_RD 는 PLC 가 알려 준 정지, TR_PAUSE_OD 는 우리가 내린 정지다.
+         *   둘 중 하나라도 서 있으면 그 H/S 로는 화물을 넣지도 빼지도 않는다.
+         *   USE_YN='N' 은 아예 쓰지 않는 자리다.
+         *
+         *   ※ 조회에서 CV_DATA 의 별칭은 CD 여야 한다.
+         */
+        public const string SQL_HS_NOT_PAUSED =
+              cDefApp.CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('','0')            "
+            + cDefApp.CRLF + "    AND COALESCE(CD.TR_PAUSE_OD,'0') IN ('','0')            "
+            + cDefApp.CRLF + "    AND COALESCE(CD.USE_YN,'Y')      = 'Y'                  ";
+
         // HOST_TASK 신규 작업 (WCS_TASK_HOST frmMain.InsertJobMst 가 '99' 로 INSERT)
         public const string ST_NEW = "99";
 
