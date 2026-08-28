@@ -32,6 +32,11 @@ namespace TSK_COMM_IOSCH
             strRtnValue = "NEXTVAL." + strVALUE;
             return strRtnValue;
         }
+        // @.비트 AND. 문자열 컬럼(STN_KIND 등)을 숫자로 보고 비트를 확인한다.
+        public static string BITAND(string strCOLUMN, int nBIT)
+        {
+            return "BITAND(TO_NUMBER(NVL(NULLIF(" + strCOLUMN + ",''),'0')), " + nBIT.ToString() + ")";
+        }
 #endif
 #if POSTGRESQL
         public const string NVL = "COALESCE";
@@ -55,6 +60,11 @@ namespace TSK_COMM_IOSCH
             string strRtnValue;
             strRtnValue = "NEXTVAL('" + strVALUE + "')";
             return strRtnValue;
+        }
+        // @.비트 AND. 문자열 컬럼(STN_KIND 등)을 숫자로 보고 비트를 확인한다.
+        public static string BITAND(string strCOLUMN, int nBIT)
+        {
+            return "((COALESCE(NULLIF(" + strCOLUMN + ",''),'0')::integer) & " + nBIT.ToString() + ")";
         }
         
 #endif

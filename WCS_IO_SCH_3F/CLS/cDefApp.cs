@@ -39,6 +39,31 @@ namespace TSK_COMM_IOSCH
         public static string GM_LOG_DEL_ADDVALUE = "0";
         public static string GM_LOG_DEL_ADDTYPE = "MINUTE";
 
+        /*
+         * 1층 출고 : 결정대가 비어야 대기대에서 출발시킬지 (추가 제한)
+         *
+         *   기본은 끔(false)이다. 즉 결정대 상태를 보지 않고 내보낸다.
+         *
+         *   대기대는 크레인 출고 H/S 바로 다음 트랙이다. 여기서 출발할지는
+         *   그 자리의 조건(재하 / 출발 준비 / 자동 / 무에러)으로 정할 일이지,
+         *   한참 떨어진 도착지(결정대)가 비었는지로 정할 일이 아니다.
+         *   도착지를 보고 붙잡아 두면 대기대가 안 비고, 그러면 크레인이
+         *   출고 H/S 를 못 비워 다음 출고를 시작하지 못한다.
+         *   비싼 설비인 크레인을 컨베이어 사정으로 세우는 셈이다.
+         *
+         *   루프에 화물이 몇 대까지 도느냐는 이미 1층 출고 유량 제한이 맡는다.
+         *   (EQP_MST CV_RET_CNT 합계 vs DEL_HIS_SETTING '1f_ret_rimit')
+         *   그것이 제대로 된 제어이고, 결정대 검사는 그 위에 덧댄 것이었다.
+         *   결정대 앞에 줄이 서는 것은 컨베이어가 알아서 할 일이다.
+         *
+         *   그래도 현장에서 결정대 앞에 줄 서는 것을 원치 않으면 켤 수 있게 남겼다.
+         *   켜면 결정대(작업대 171 = 트랙 232)가 비고 그리로 가는 화물이 없을 때만
+         *   출발시킨다.
+         *
+         *   메인 폼의 체크박스로 켜고 끄며, ENV_IOSCH.INI [1F_RET] DECIDE_WAIT 에 남는다.
+         */
+        public static bool GM_RET_DECIDE_WAIT = false;
+
         // @@.응용프로그램 타임아웃 설정
         public static int GM_COMM_SND_TIME_OUT = 500;
         public static int GM_COMM_RCV_TIME_OUT = 500;
@@ -110,6 +135,29 @@ namespace TSK_COMM_IOSCH
             }
         }
 
+        /*
+         * @@.CV_DATA.STN_KIND 비트
+         *
+         *   한 트랙이 여러 역할을 겸할 수 있어 비트로 겹쳐 쓴다.
+         *   51(0b0110011) = 입출고대 처럼 여러 비트가 같이 선다.
+         *
+         *   도착대(ARV)는 이번에 새로 뺀 것이다. 예전에는 IsValidStartStation 이
+         *   (STN_KIND & 0x03) 을 도착대라고 읽었는데, 그건 "입고대이거나 출고대" 라는
+         *   뜻이지 도착대라는 뜻이 아니었다. 실제 도착대(예: 1F Size Checker)는
+         *   EcsDefine.xml 에 ArvStation 으로 따로 정의돼 있다.
+         *
+         *   도착대는 출고대와 같은 준비신호(RET_READY_RD)를 쓴다.
+         *   WCS Client 도 ArvStation 을 RetStation 과 같은 칸에서 처리한다.
+         *   (ClientNSim/Ecs/TrackInfo.cpp 의 enStatusArvSTReady)
+         */
+        public const int STN_KIND_STO    = 0x01;    // 입고대
+        public const int STN_KIND_RET    = 0x02;    // 출고대
+        public const int STN_KIND_SC_IN  = 0x04;    // SC 입고 H/S
+        public const int STN_KIND_SC_OUT = 0x08;    // SC 출고 H/S
+        public const int STN_KIND_RTV_DEP = 0x10;   // RTV 출발
+        public const int STN_KIND_RTV_ARV = 0x20;   // RTV 도착
+        public const int STN_KIND_ARV    = 0x40;    // 도착대 (RET_READY_RD 를 본다)
+
         // @@.DB Err 정의
         public const int DB_ERR = -1;      // @.DB 오류
         public const int DB_LOCK = -2;     // @.DB 오류로 DB Lock
@@ -126,7 +174,10 @@ namespace TSK_COMM_IOSCH
             CV_GR06 = 6, CV_GR07 = 7, CV_GR08 = 8, CV_GR09 = 9, CV_GR10 = 10,
             CV_GR11 = 11, CV_GR12 = 12, CV_GR13 = 13, CV_GR14 = 14, CV_GR15 = 15,
             SC_GR22 = 22,
-            SCH_GR01 = 50   
+            // @.통합판 : 층별 스케줄러 스레드 3개
+            SCH_GR01 = 50,      // 1층(1F)
+            SCH_GR02 = 51,      // 3층(3F)
+            SCH_GR03 = 52       // BOX
         };  // @.eThGbn[0 ,1:CV, 2:RTV, 3:SC, 4:SCH]
 
 

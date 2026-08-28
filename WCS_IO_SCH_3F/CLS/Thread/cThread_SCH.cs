@@ -1,4 +1,7 @@
 ﻿// 작성자   : WCS Scheduler
+// 층별판   : WCS_IO_SCH_Original(통합판) 의 같은 층 클래스를 클래스 이름만 바꿔 쓴다.
+//            두 벌이 어긋나지 않도록 손볼 때는 통합판을 고치고 여기로 옮긴다.
+//            원본 :  3층(3F) 담당 스케줄러 스레드
 // 작성일   : 2026-06-23 (2026-06-27 기존 JOB_MST 스키마 통합)
 // 수정일   : 2026-07-09 KET(한국단자) 3층(3F) 자동운전 로직 추가
 //            - HOST 신규작업('99') 접수 → S/C·홈스탠드 결정 → CV↔SC  체이닝
@@ -35,7 +38,7 @@ namespace TSK_COMM_IOSCH
 {
     /// <summary>
     /// KET 물류창고 자동 반송 Scheduler Thread (JOB_MST 스키마)
-    /// - C/V 구동 : 입고대/출고대 팔레트 + 구동대기 작업(JOB_STATUS='10') → CV 명령 지시
+    /// - C/V 구동 : 입고대/출고대 팔레트 + 구동대기 작업(JOB_STATUS='99') → CV 명령 지시
     /// - S/C 반송 : 구동대기 작업(JOB_STATUS='20') + 유휴 S/C → 이송 명령 지시
     /// </summary>
     public class cThread_SCH : IOSchDB
@@ -47,6 +50,16 @@ namespace TSK_COMM_IOSCH
         //     여전히 null 인 기반 필드를 참조하여 NullReferenceException 발생 → 중복 선언 제거)
         private bool     m_Open;
         public  bool     IsOpen       { get { return m_Open; } set { m_Open = value; } }
+
+        /*
+         * 수동 중지 지시.
+         *
+         *   화면의 스레드 상태 표시를 눌러 "스레드 중지" 를 고르면 참이 된다.
+         *   - 스레드 본체(Thread_Doing)는 이 플래그를 보고 루프를 빠져나와 종료한다.
+         *   - 메인폼의 Thread_Tick 은 이 플래그가 선 스레드를 재기동하지 않는다.
+         *   UI 스레드가 쓰고 스케줄러 스레드가 읽으므로 volatile 로 가시성을 보장한다.
+         */
+        public volatile bool m_bManualStop = false;
         public  string   m_strLogName = "";
 
         // 설비별 직전 지시 작업 추적 (동일 작업 중복 지시 방지)
@@ -87,6 +100,9 @@ namespace TSK_COMM_IOSCH
             // DB 연결이 성공할 때까지 재시도 (연결 전에 처리 메서드가 호출되지 않도록)
             while (!IsDBOpen)
             {
+                // @.DB 연결을 기다리는 중에도 중지 지시에 반응한다.
+                if (m_bManualStop) { MakeMsg("[SCH] 중지 지시로 스레드를 종료합니다."); m_Thread = null; return; }
+
                 try
                 {
                     if (DBOpen())
@@ -106,7 +122,7 @@ namespace TSK_COMM_IOSCH
                 Thread.Sleep(5000);
             }
 
-            while (true)
+            while (!m_bManualStop)
             {
                 Thread.Sleep(200);
 
@@ -184,6 +200,12 @@ namespace TSK_COMM_IOSCH
                     RunSchFunc(MovingTrackCheckPlc3);   // 3F 구라인 픽킹 레인 진입 제한
                     RunSchFunc(MovingTrackCheckPlc6);   // 3F 신라인 픽킹 레인 진입 제한
 
+                    // ── 크레인(SC) : 레거시 CSc::StoreRoutine(RANK_3) / RetrieveRoutine(RANK_4)
+                    RunSchFunc(StoHsCheck3);            // 3F 구라인 입고 H/S -> 크레인 입고 지시
+                    RunSchFunc(StoHsCheck6);            // 3F 신라인 입고 H/S -> 크레인 입고 지시
+                    RunSchFunc(RetCmdCheck);            // 3F 출고 지시 20 -> 21
+                    RunSchFunc(ScCompleteCheck);        // 크레인 작업 완료 -> 29
+
                     ////// 중복인듯 하지만 NEW_JOB_INVOKE_FOR_CV 이놈은 예외로 처리해줘야할지도...
                     //RunSchFunc(NEW_JOB_INVOKE_FOR_CV);  // CV 구동대기 작업이 있는지 확인 후 신규 작업 지시
                     //RunSchFunc(NEW_JOB_ORDER);          // 입고대에서 출발 하기
@@ -208,7 +230,14 @@ namespace TSK_COMM_IOSCH
                     catch { }
                 }
             }
-        }
+        
+            // @.중지 지시로 루프를 빠져나온 경우의 정리.
+            //   m_Thread 를 비워야 메인폼이 "중지됨" 으로 인식하고,
+            //   시작 지시가 오면 새 스레드를 만들 수 있다.
+            MakeMsg("[SCH] 중지 지시로 스레드를 종료했습니다.");
+            IsOpen = false;
+            m_Thread = null;
+}
         #endregion
 
         #region 기존 함수들
@@ -325,16 +354,16 @@ namespace TSK_COMM_IOSCH
                 strSql += cDefApp.CRLF + " SELECT CD.*, JM.*                            ";
                 strSql += cDefApp.CRLF + "   FROM CV_DATA CD                            ";
                 strSql += cDefApp.CRLF + "  INNER JOIN JOB_MST JM                       ";
-                strSql += cDefApp.CRLF + "     ON CD.MC_NO = JM.START_POS               ";
-                strSql += cDefApp.CRLF + "    AND JM.JOB_STATUS = '10'                  ";
-                strSql += cDefApp.CRLF + "  WHERE CD.LUGG_NO_RD 	= '0'               ";
+                strSql += cDefApp.CRLF + "     ON CD.HOST_STN_NO = JM.START_POS         ";
+                strSql += cDefApp.CRLF + "    AND JM.JOB_STATUS = '" + ST_CV_WAIT + "'      ";   // 10 = CV 구동대기. 신규('99')는 1F 스레드의 JOB_ACCEPT 가 나눈다
+                strSql += cDefApp.CRLF + "  WHERE CD.LUGG_NO_RD    IN ('','0','0000')   ";
                 strSql += cDefApp.CRLF + "    AND CD.STO_READY_RD 	= '1'               ";
                 strSql += cDefApp.CRLF + "    AND CD.SENSOR0_DATA_RD = '1'              ";
                 strSql += cDefApp.CRLF + "    AND CD.AUTO_MODE_RD 	= '1'               ";
                 strSql += cDefApp.CRLF + "    AND CD.ERROR_CODE		IN ('0','0000')     ";
                 strSql += cDefApp.CRLF + "    AND CD.OD_RQ_YN		= 'N'               ";
                 strSql += cDefApp.CRLF + "    AND CD.OD_RQ_FLAG		= 'N'               ";
-                strSql += cDefApp.CRLF + "    AND CD.TR_PAUSE_RD    = '0'               ";
+                strSql += cDefApp.CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')               ";
                 strSql += cDefApp.CRLF + "    AND CD.WH_TYP		    = :WH_TYP           ";
                 strSql += cDefApp.CRLF + "    AND 0 = (SELECT COUNT(*)                  ";
                 strSql += cDefApp.CRLF + "               FROM JOB_MST                   ";
@@ -375,7 +404,7 @@ namespace TSK_COMM_IOSCH
                     strPLC_NO = "" + _pBdb.mDtMain.Rows[i]["PLC_NO"].ToString() == "" ? "0" : _pBdb.mDtMain.Rows[i]["PLC_NO"].ToString();
 
                     // 설비타스크에 작업지시
-                    if (UPDATE_CV_DATA(nJobType.ToString(), strPRODUCT_SIZE, "0", strJOB_DEST_POS, "0", strLUGG_NO, strWH_TYP, strPLC_NO, strJOB_START_POS, "", ref pRTN_MSG) == false)
+                    if (UPDATE_CV_DATA(nJobType.ToString(), strPRODUCT_SIZE, "0", strJOB_DEST_POS, "0", strLUGG_NO, strWH_TYP, strPLC_NO, strTRACK_NO, "", ref pRTN_MSG) == false)
                     {
                         m_strRtnMsg = pRTN_MSG;
                         _pBdb.Rollback();
@@ -422,14 +451,14 @@ namespace TSK_COMM_IOSCH
                 strSql += cDefApp.CRLF + "   FROM CV_DATA CD                                ";
                 strSql += cDefApp.CRLF + "  INNER JOIN JOB_MST JM                           ";
                 strSql += cDefApp.CRLF + "     ON CD.WH_TYP             = JM.WH_TYP 	    ";
-                strSql += cDefApp.CRLF + "    AND CD.MC_NO              = JM.DEST_POS 	    ";
+                strSql += cDefApp.CRLF + "    AND CD.HOST_STN_NO       = JM.DEST_POS 	    ";
                 strSql += cDefApp.CRLF + "    AND CD.LUGG_NO_RD         = JM.LUGG_NO        ";
                 // ※ PLC_NO 필터 제거 (2026-07-11) : 스케줄러는 전체 PLC 를 관장한다.
                 strSql += cDefApp.CRLF + "  WHERE CD.WH_TYP		        = :pWH_TYP          ";
                 strSql += cDefApp.CRLF + "    AND CD.RET_READY_RD 	    = '1'               ";   // 출고대 READY ON
                 strSql += cDefApp.CRLF + "    AND CD.AUTO_MODE_RD 	    = '1'               ";   // 자동모드
                 strSql += cDefApp.CRLF + "    AND CD.OD_RQ_YN		    = 'N'               ";
-                strSql += cDefApp.CRLF + "    AND JM.JOB_STATUS 	    IN ('11','15')     ";   // CV 구동중 (지시 '11' 호환)
+                strSql += cDefApp.CRLF + "    AND JM.JOB_STATUS 	    = '11'             ";   // 11 = CV 구동중
                 strSql += cDefApp.CRLF + "    AND JM.DEST_POS Is not null                   ";
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
@@ -561,7 +590,7 @@ namespace TSK_COMM_IOSCH
                 // ※ PLC_NO 필터 제거 (2026-07-11) : 스케줄러는 전체 PLC 를 관장한다.
                 //    (기존에는 스레드 ID(SCH_GR01=50)가 :PLC_NO 로 전달되어 무동작이었음)
                 strSql += CRLF + "  WHERE  CD.WH_TYP             = :WH_TYP            ";
-                strSql += CRLF + "    AND  CD.TR_PAUSE_RD        = '0'                ";    // 트랙 일시정지가 아니어야 함! - 안보는게 나을듯!
+                strSql += CRLF + "    AND  COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')                ";    // 트랙 일시정지가 아니어야 함! - 안보는게 나을듯!
                 strSql += CRLF + "    AND  CD.SENSOR0_DATA_RD    = '1'                ";
                 strSql += CRLF + "    AND  JM.JOB_STATUS 	     = '29'               ";    // 도착 보고 완료
                 _pBdb.mComMain.CommandType = CommandType.Text;
@@ -710,7 +739,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND  CD.AUTO_MODE_RD       = '1'                    ";
                 strSql += CRLF + "    AND  CD.OD_RQ_YN           = 'N'                    ";
                 strSql += CRLF + "    AND  CD.OD_RQ_FLAG         = 'N'                    ";
-                strSql += CRLF + "    AND  CD.TR_PAUSE_RD        = '0'                    ";
+                strSql += CRLF + "    AND  COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')                    ";
                 strSql += CRLF + "    AND  CD.ERROR_CODE        IN ('0','00','000','0000')";
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
@@ -929,8 +958,28 @@ namespace TSK_COMM_IOSCH
 
         // ─────────────────────────────────────────────────────────────────
         // 공통 코어 1 : 3층 입고대 출발 (ECS StartInvokeCheck3/6 - NEW_JOB_ORDER 의 PLC 한정판)
-        //   해당 PLC 입고대(START_POS)에 재하 + 구동대기('10') 작업 → CV 지시 + 상태 '15'
+        //   해당 PLC 입고대(START_POS)에 재하 + 구동대기('99') 작업 → CV 지시 + 상태 '15'
         // ─────────────────────────────────────────────────────────────────
+        /*
+         * GfCvDestPos :: CV 에 실을 목적지 번호
+         *
+         *   크레인이 목적지일 때 JOB_MST.DEST_POS 는 WCS 표기인 9NN(901~911)이다.
+         *   CV 레지스터의 목적지 자리는 한 바이트라 904 를 넣으면 136(904 & 0xFF)으로
+         *   잘린다. 설비가 쓰는 번호는 호기 번호 1~11 이므로 그것으로 바꿔 넘긴다.
+         *   (상위는 1~11 로 주고, HOST 태스크가 9NN 으로 저장한다.
+         *    WCS_TASK_HOST/CSrvWork.cs 의 Convert S/C No)
+         */
+        private string GfCvDestPos(string strDestPos)
+        {
+            int nDest = 0;
+            Int32.TryParse((strDestPos == null) ? "" : strDestPos.Trim(), out nDest);
+
+            if (nDest > 900 && nDest < 1000)
+                return (nDest - 900).ToString("000");
+
+            return strDestPos;
+        }
+
         private bool CV_STO_START_PLC(string strWH_TYP, string strCV_PLC, string strTitle, ref string pRTN_MSG)
         {
             try
@@ -944,17 +993,18 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + " SELECT CD.*, JM.*                            ";
                 strSql += CRLF + "   FROM CV_DATA CD                            ";
                 strSql += CRLF + "  INNER JOIN JOB_MST JM                       ";
-                strSql += CRLF + "     ON CD.MC_NO = JM.START_POS               ";
-                strSql += CRLF + "    AND JM.JOB_STATUS = '10'                  ";
+                strSql += CRLF + "     ON CD.HOST_STN_NO = JM.START_POS         ";
+                strSql += CRLF + "    AND JM.JOB_STATUS = '" + ST_CV_WAIT + "'      ";   // 10 = CV 구동대기. 신규('99')는 1F 스레드의 JOB_ACCEPT 가 나눈다
                 strSql += CRLF + "  WHERE CD.PLC_NO         = :CV_PLC           ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
-                strSql += CRLF + "    AND CD.LUGG_NO_RD 	= '0'               ";
-                strSql += CRLF + "    AND CD.STO_READY_RD 	= '1'               ";
+                strSql += CRLF + "    AND (   (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_STO) + " <> 0 AND CD.STO_READY_RD = '1'   ";
+                strSql += CRLF + "             AND CD.LUGG_NO_RD IN ('','0','0000'))                                                        ";
+                strSql += CRLF + "         OR (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_ARV) + " <> 0 AND CD.RET_READY_RD = '1') )  ";
                 strSql += CRLF + "    AND CD.SENSOR0_DATA_RD = '1'              ";
                 strSql += CRLF + "    AND CD.AUTO_MODE_RD 	= '1'               ";
                 strSql += CRLF + "    AND CD.ERROR_CODE		IN ('0','0000')     ";
                 strSql += CRLF + "    AND CD.OD_RQ_YN		= 'N'               ";
                 strSql += CRLF + "    AND CD.OD_RQ_FLAG		= 'N'               ";
-                strSql += CRLF + "    AND CD.TR_PAUSE_RD    = '0'               ";
+                strSql += CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')               ";
                 strSql += CRLF + "    AND CD.WH_TYP		    = :WH_TYP           ";
                 strSql += CRLF + "    AND 0 = (SELECT COUNT(*)                  ";
                 strSql += CRLF + "               FROM JOB_MST                   ";
@@ -982,12 +1032,20 @@ namespace TSK_COMM_IOSCH
                 string strTRAY_LEV = "" + _pBdb.mDtMain.Rows[0]["TRAY_LEV"].ToString() == "" ? "0" : _pBdb.mDtMain.Rows[0]["TRAY_LEV"].ToString();
                 string strJOB_DEST_POS = "" + _pBdb.mDtMain.Rows[0]["DEST_POS"].ToString() == "" ? "0" : _pBdb.mDtMain.Rows[0]["DEST_POS"].ToString();
                 string strJOB_START_POS = "" + _pBdb.mDtMain.Rows[0]["START_POS"].ToString() == "" ? "0" : _pBdb.mDtMain.Rows[0]["START_POS"].ToString();
+
+                // @.CV 에 지시할 때는 물리 트랙번호(CV_DATA.MC_NO)를 써야 한다.
+                //   START_POS 는 HOST 가 쓰는 스테이션 번호(101)이고, 설비를 움직이는
+                //   번호는 MC_NO(217)다. 조회를 HOST_STN_NO 로 맞춰 뒀으므로 여기서
+                //   같은 행의 MC_NO 를 꺼내 쓴다. (예전에는 101 로 UPDATE 해서 0건이
+                //   갱신되고 "설비 미준비" 로 조용히 재시도만 반복했다)
+                string strCV_MC_NO = _pBdb.mDtMain.Rows[0]["MC_NO"].ToString();
+                if (strCV_MC_NO == "") strCV_MC_NO = strJOB_START_POS;
                 string strIS_TURN = "" + _pBdb.mDtMain.Rows[0]["TURN"].ToString() == "" ? "0" : _pBdb.mDtMain.Rows[0]["TURN"].ToString();
 
                 _pBdb.BeginTrans();
 
-                if (UPDATE_CV_DATA(strJOB_TYP, strPRODUCT_SIZE, strTRAY_LEV, strJOB_DEST_POS, strIS_TURN,
-                                   strLUGG_NO, strWH_TYP, strCV_PLC, strJOB_START_POS, "", ref pRTN_MSG) == false)
+                if (UPDATE_CV_DATA(strJOB_TYP, strPRODUCT_SIZE, strTRAY_LEV, GfCvDestPos(strJOB_DEST_POS), strIS_TURN,
+                                   strLUGG_NO, strWH_TYP, strCV_PLC, strCV_MC_NO, "", ref pRTN_MSG) == false)
                 {
                     _pBdb.Rollback();
                     pRTN_MSG = "";
@@ -1040,7 +1098,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND  SHD.HS_USE_YN         = 'Y'                 ";
                 strSql += CRLF + "  WHERE  CD.WH_TYP             = :WH_TYP             ";
                 strSql += CRLF + "    AND  CD.PLC_NO             = :CV_PLC             ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
-                strSql += CRLF + "    AND  CD.TR_PAUSE_RD        = '0'                 ";
+                strSql += CRLF + "    AND  COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')                 ";
                 strSql += CRLF + "    AND  CD.SENSOR0_DATA_RD    = '1'                 ";   // 재하 (ECS IsOnSensorIO(0))
                 strSql += CRLF + "    AND  CD.OD_RQ_YN           = 'N'                 ";
                 strSql += CRLF + "    AND  JM.JOB_STATUS 	     = '29'                ";   // S/C 반출 완료 (CV 요구)
@@ -1125,14 +1183,15 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "   FROM CV_DATA CD                                ";
                 strSql += CRLF + "  INNER JOIN JOB_MST JM                           ";
                 strSql += CRLF + "     ON CD.WH_TYP             = JM.WH_TYP 	    ";
-                strSql += CRLF + "    AND CD.MC_NO              = JM.DEST_POS 	    ";
+                strSql += CRLF + "    AND CD.HOST_STN_NO       = JM.DEST_POS 	    ";
                 strSql += CRLF + "    AND CD.LUGG_NO_RD         = JM.LUGG_NO        ";
                 strSql += CRLF + "  WHERE CD.WH_TYP		        = :WH_TYP           ";
                 strSql += CRLF + "    AND CD.PLC_NO             = :CV_PLC           ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
+                strSql += CRLF + "    AND (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_RET | cDefApp.STN_KIND_ARV) + " <> 0)  ";
                 strSql += CRLF + "    AND CD.RET_READY_RD 	    = '1'               ";
                 strSql += CRLF + "    AND CD.AUTO_MODE_RD 	    = '1'               ";
                 strSql += CRLF + "    AND CD.OD_RQ_YN		    = 'N'               ";
-                strSql += CRLF + "    AND JM.JOB_STATUS 	    IN ('11','15')      ";
+                strSql += CRLF + "    AND JM.JOB_STATUS 	    = '11'              ";
                 strSql += CRLF + "    AND JM.DEST_POS Is not null                   ";
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
@@ -1158,16 +1217,32 @@ namespace TSK_COMM_IOSCH
                 {
                     strLUGG_NO = "" + _pBdb.mDtMain.Rows[i]["LUGG_NO"].ToString() == "" ? "0" : _pBdb.mDtMain.Rows[i]["LUGG_NO"].ToString();
                     strMC_NO = "" + _pBdb.mDtMain.Rows[i]["MC_NO"].ToString() == "" ? "" : _pBdb.mDtMain.Rows[i]["MC_NO"].ToString();
+                    string strJOB_TYP = "" + _pBdb.mDtMain.Rows[i]["JOB_TYP"].ToString() == "" ? "1" : _pBdb.mDtMain.Rows[i]["JOB_TYP"].ToString();
 
-                    // 상위 TASK에 도착 보고
+                    // 상위 TASK에 도착 보고 (LFC 인터페이스 테이블)
                     if (UPDATE_IF_LUGG_STA(strWH_TYP, strLUGG_NO, "90", ref pRTN_MSG) == false)
                     {
                         _pBdb.Rollback();
                         return false;
                     }
 
-                    // 도착보고가 성공하면 - 작업 삭제
-                    if (DELETE_JOB_DATA(strLUGG_NO, strWH_TYP, ref pRTN_MSG) == false)
+                    /*
+                     * 여기서 작업을 지우면 안 된다.
+                     *
+                     *   HOST 태스크는 JOB_MST 의 상태로 보고 대상을 고른다.
+                     *     GetJobCompleteReport(19)  출고작업 완료 보고(CV 완료)
+                     *     GetJobCompleteReport(29)  입고작업 완료 보고(SC 완료)
+                     *   행을 지워 버리면 보고할 것이 없어져 완료보고(F)가 나가지 않는다.
+                     *   상위는 그 작업이 끝난 줄 모르니 다음 작업도 만들지 않아,
+                     *   이동 -> 입고 -> 출고 순환이 첫 단계에서 멈췄다.
+                     *
+                     *   원본 참고 구현(CLS/cThread_CV.cs)도 같은 자리에 이렇게 적어 두었다.
+                     *     "목적지 이동완료 (도착보고시 기존작업삭제 후 MES에서 새작업을
+                     *      생성하기에 JOB_STATUS = '19' 로 처리한다."
+                     *   거기서도 DELETE_JOB_DATA 는 주석 처리돼 있다.
+                     *   실제 삭제는 HOST 태스크가 완료보고를 보낸 뒤에 한다.
+                     */
+                    if (UPDATE_JOB_DATA(ST_CV_DONE, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG) == false)
                     {
                         _pBdb.Rollback();
                         return false;
@@ -1520,7 +1595,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "      , UPD_USER_ID  = '" + OD_USER + "' ";
                 strSql += CRLF + "  WHERE WH_TYP       = :WH_TYP         ";
                 strSql += CRLF + "    AND LUGG_NO      = :LUGG_NO        ";
-                strSql += CRLF + "    AND JOB_STATUS   = '" + ST_NEW + "' ";
+                strSql += CRLF + "    AND JOB_STATUS   = '" + ST_CV_WAIT + "' ";
 
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
@@ -1645,14 +1720,557 @@ namespace TSK_COMM_IOSCH
             catch (Exception ex) { strRtn += ex.Message; return false; }
         }
 
+        // ─────────────────────────────────────────────────────────────────
+        // 3층(3F) 크레인 지시 - 레거시 ECS CSc::StoreRoutine(RANK_3) / RetrieveRoutine(RANK_4)
+        //
+        //   크레인 한 대가 1층과 3층을 같이 본다. 층은 이름이 아니라 H/S 자리 번호(RANK)로
+        //   구분한다. 레거시 CSc::GetScSelfStoHS / GetScSelfRetHS (Sc.cpp) 는 랭크를 그대로
+        //   돌려주고, 그 값이 Melsec D176(입고 출발 H/S) / D180(출고 도착 H/S) 에 실린다.
+        //
+        //     RANK_1 = 1층 입고 H/S     RANK_2 = 1층 출고 H/S
+        //     RANK_3 = 3층 입고 H/S     RANK_4 = 3층 출고 H/S
+        //
+        //   여기는 3층이므로 RANK_3 / RANK_4 다. To-Be 는 PLC 를 직접 쓰지 않고 SC_DATA 의
+        //   _OD 컬럼에 실어 SC_TASK 가 대신 쓰므로, START_HSPOS_FK1_OD 에 3,
+        //   DEST_HSPOS_FK1_OD 에 4 를 넣는다. (1층 판은 1 과 2 를 넣는다)
+        //
+        //   출고 작업이 어느 층으로 나갈지는 도착 작업대 하나로 정해진다.
+        //   레거시 CLib::GetRank (Lib.cpp:2343) 를 그대로 옮긴 것이 STN_3F_PLT 다.
+        //   호기간 이동(레거시 JOB_PATTERN_AISLE)만 예외로 목적지를 보지 않고 3층으로 뺀다.
+        //   (CJobItem::GetRank / CJob::FetchScRetJobByScNumberNPriority 의
+        //    2011.02.06 "RTV->C/V 교체건 - S/C 호기 이동시 3층으로 출고" 수정을 따른다)
+        // ─────────────────────────────────────────────────────────────────
+        #region 3층(3F) 크레인 지시
+
+        // SC_HS_DEF.HS_NO : 3층 출고 H/S (1층은 '02', 3층은 '04')
+        private const string HS_NO_RET_3F = "04";
+
+        // SC_DATA 에 실을 H/S 자리 번호 = 레거시 RANK 값 그대로
+        private const string HSPOS_STO_3F = "3";   // RANK_3 (D176 입고 출발 H/S)
+        private const string HSPOS_RET_3F = "4";   // RANK_4 (D180 출고 도착 H/S)
+
+        // 3층 PLT 출고 작업대 - 레거시 CLib::GetRank 가 RANK_4 를 돌려주는 자리
+        //   200~209 (구라인) + 212~215 (신라인)
+        //   211/221/222/231/241/242/251 은 BOX 라인이라 여기서 잡지 않는다. (BOX 스레드 몫)
+        private static readonly string[] STN_3F_PLT =
+            { "200", "201", "202", "203", "204", "205", "206", "207",
+              "208", "209", "212", "213", "214", "215" };
+
+        // 202 피킹대 쏠림 제한에 쓰는 작업대
+        private const string STN_202 = "202";
+        private const string STN_201 = "201";
+        private const string STN_203 = "203";
+
+        // ── ECS *3/*6 대응 크레인 공개 함수 ──
+        public bool StoHsCheck3(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return SC_STO_CMD_PLC(strWH_TYP, CV_PLC_3F_OLD, "[StoHsCheck3]", ref pRTN_MSG); }
+        public bool StoHsCheck6(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return SC_STO_CMD_PLC(strWH_TYP, CV_PLC_3F_NEW, "[StoHsCheck6]", ref pRTN_MSG); }
+        public bool RetCmdCheck(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return SC_RET_CMD_PLC(strWH_TYP, HS_NO_RET_3F, "[RetCmdCheck]", ref pRTN_MSG); }
+        public bool ScCompleteCheck(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return SC_COMP_CHK(strWH_TYP, "[ScCompleteCheck]", ref pRTN_MSG); }
+
+        // ─────────────────────────────────────────────────────────────────
+        // 3층 입고 H/S 도착 -> 크레인 입고 지시 (레거시 CSc::StoreRoutine(RANK_3) + Store)
+        //   화물이 3층 입고 H/S 에 올라오면 그 크레인에 입고를 지시한다.
+        //     지시 대상 크레인 : JOB_MST.DEST_POS (901~911)
+        //     넣을 랙 위치     : JOB_MST.DEST_LOCATION (상위가 준 값)
+        //   입고 H/S 인지는 CV_DATA.STOHS_READY_RD 로 안다. 그 값은 CV 태스크가
+        //   레거시 ParsingExtraFrame 워드 +4 비트에 해당하는 자리에서 읽어 채운다.
+        //   1층 판과 다른 것은 CV PLC(03/06)와 START_HSPOS(=3) 둘뿐이다.
+        // ─────────────────────────────────────────────────────────────────
+        private bool SC_STO_CMD_PLC(string strWH_TYP, string strCV_PLC, string strTitle, ref string pRTN_MSG)
+        {
+            try
+            {
+                int nSelCnt = 0;
+                string strSql = "";
+
+                pRTN_MSG = strTitle;
+
+                strSql = "";
+                strSql += CRLF + " SELECT JM.LUGG_NO, JM.JOB_TYP, JM.DEST_POS, JM.DEST_LOCATION, CD.MC_NO  ";
+                strSql += CRLF + "   FROM JOB_MST JM                                        ";
+                strSql += CRLF + "  INNER JOIN CV_DATA CD                                   ";
+                strSql += CRLF + "     ON CD.WH_TYP           = JM.WH_TYP                   ";
+                strSql += CRLF + "    AND CD.LUGG_NO_RD       = JM.LUGG_NO                  ";
+                strSql += CRLF + "  INNER JOIN SC_DATA SD                                   ";
+                strSql += CRLF + "     ON SD.WH_TYP           = JM.WH_TYP                   ";
+                strSql += CRLF + "    AND SD.SC_NO            = JM.DEST_POS                 ";
+                strSql += CRLF + "  WHERE JM.WH_TYP           = :WH_TYP                     ";
+                strSql += CRLF + "    AND JM.JOB_TYP          = '" + JT_STO + "'            ";
+                strSql += CRLF + "    AND JM.JOB_STATUS       = '" + ST_CV_RUN + "'         ";   // CV 구동중
+                strSql += CRLF + "    AND CD.PLC_NO           = :CV_PLC                     ";
+                strSql += CRLF + "    AND CD.STOHS_READY_RD   = '1'                         ";   // 입고 H/S 준비
+                strSql += CRLF + "    AND CD.SENSOR0_DATA_RD  = '1'                         ";   // 재하
+                strSql += CRLF + "    AND CD.AUTO_MODE_RD     = '1'                         ";
+                strSql += CRLF + "    AND CD.ERROR_CODE       IN ('0','0000')               ";
+                strSql += CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')          ";
+                strSql += CRLF + "    AND SD.OD_RQ_YN         = 'N'                         ";   // 크레인이 지시를 받을 수 있는 상태
+                strSql += CRLF + "    AND SD.ERR_CODE_RD      = '0000'                      ";
+                strSql += CRLF + "    AND SD.AUTO_MODE_RD     = '1'                         ";
+                strSql += CRLF + "  LIMIT 1                                                 ";
+
+                _pBdb.mComMain.CommandType = CommandType.Text;
+                _pBdb.mComMain.Parameters.Clear();
+                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+                _pBdb.mComMain.Parameters.Add("CV_PLC", DbLang.VARCHAR).Value = strCV_PLC;
+
+                nSelCnt = _pBdb.ExcuteQry(strSql);
+                if (nSelCnt < 0)
+                {
+                    pRTN_MSG += _pBdb.ErrMsg;
+                    return false;
+                }
+                if (nSelCnt == 0)
+                {
+                    pRTN_MSG = "";
+                    return true;
+                }
+
+                string strLUGG_NO  = _pBdb.mDtMain.Rows[0]["LUGG_NO"].ToString();
+                string strSC_NO    = _pBdb.mDtMain.Rows[0]["DEST_POS"].ToString();
+                string strDEST_LOC = _pBdb.mDtMain.Rows[0]["DEST_LOCATION"].ToString();
+                string strMC_NO    = _pBdb.mDtMain.Rows[0]["MC_NO"].ToString();
+
+                _pBdb.BeginTrans();
+
+                if (UpdateScData(strSC_NO, JT_STO, strLUGG_NO, "", strDEST_LOC,
+                                 HSPOS_STO_3F, HSPOS_RET_3F, ref pRTN_MSG) == false)
+                {
+                    _pBdb.Rollback();
+                    pRTN_MSG = "";
+                    return true;    // 크레인 미준비 - 다음 사이클 재시도
+                }
+
+                if (UPDATE_JOB_DATA(ST_SC_RUN, strLUGG_NO, strWH_TYP, JT_STO, ref pRTN_MSG) == false)
+                {
+                    _pBdb.Rollback();
+                    return false;
+                }
+
+                pRTN_MSG = strTitle + "TRACK " + strMC_NO + "번[3층 입고 H/S]에서 SC_TASK를 통해서 "
+                         + strSC_NO + "호기에 입고 지시하였습니다. [작업번호:" + strLUGG_NO + "][도착LOC:" + strDEST_LOC + "]";
+                _pBdb.Commit();
+                InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_SC_RUN, strMC_NO, strSC_NO);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                pRTN_MSG = strTitle + ex.ToString();
+                _pBdb.Rollback();
+                return false;
+            }
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // 3층 출고 지시 (20 -> 21) - 레거시 CSc::RetrieveRoutine(RANK_4) + Retrieve
+        //   상위가 넣은 출고 작업 중 3층으로 나갈 것만 골라 크레인에 넘긴다.
+        //     꺼낼 곳     : JM.START_LOCATION (랙 위치)
+        //     내려놓을 곳 : 그 호기의 3층 출고 H/S (SC_HS_DEF.HS_NO='04')
+        //     크레인      : JM.START_POS (출고 작업은 출발지가 호기다)
+        //   출고 H/S 가 비어 있어야 크레인이 내려놓을 수 있다.
+        //   이어받는 곳은 CV_RETHS_PLC 다. 그쪽이 JM.HS_TRACK_NO 로 트랙을 찾으므로
+        //   여기서 그 값을 채워 준다.
+        // ─────────────────────────────────────────────────────────────────
+        private bool SC_RET_CMD_PLC(string strWH_TYP, string strHS_NO, string strTitle, ref string pRTN_MSG)
+        {
+            try
+            {
+                int nSelCnt = 0;
+                string strSql = "";
+
+                pRTN_MSG = strTitle;
+
+                // ── 1) 3층으로 나갈 출고 작업만 고른다 (호기는 아직 모른다)
+                //      레거시 CLib::GetRank 가 RANK_4 를 주는 작업대 + 호기간 이동
+                strSql = "";
+                strSql += CRLF + " SELECT LUGG_NO, JOB_TYP, START_POS, START_LOCATION, DEST_POS ";
+                strSql += CRLF + "   FROM JOB_MST                                            ";
+                strSql += CRLF + "  WHERE WH_TYP           = :WH_TYP                         ";
+                strSql += CRLF + "    AND JOB_STATUS       = '" + ST_SC_WAIT + "'            ";   // 20 = SC 구동요구
+                strSql += CRLF + "    AND ( DEST_POS IN (" + SqlInList(STN_3F_PLT) + ")      ";
+                strSql += CRLF + "       OR JOB_TYP  = '" + JT_A2A + "' )                    ";   // 호기간 이동은 3층으로
+                strSql += CRLF + "  ORDER BY JOB_PRIORITY DESC, LUGG_NO                      ";
+
+                _pBdb.mComMain.CommandType = CommandType.Text;
+                _pBdb.mComMain.Parameters.Clear();
+                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+
+                nSelCnt = _pBdb.ExcuteQry(strSql);
+                if (nSelCnt < 0)
+                {
+                    pRTN_MSG += _pBdb.ErrMsg;
+                    return false;
+                }
+                if (nSelCnt == 0)
+                {
+                    pRTN_MSG = "";
+                    return true;
+                }
+
+                DataTable dtJob = _pBdb.mDtMain.Copy();
+
+                // ── 2) 202 피킹대 쏠림 제한에 쓸 개수를 미리 센다
+                //      (레거시 CJob::FetchScRetJobByScNumberNPriority 의 앞부분)
+                int nCnt202 = 0, nCntEtc = 0;
+                if (Count202Picking(strWH_TYP, ref nCnt202, ref nCntEtc, ref pRTN_MSG) == false)
+                    return false;
+                int nLimit202 = cDefApi.GsGetLimitStn202Picking();
+
+                string strLUGG_NO = "", strJOB_TYP = "", strSC_NO = "", strSTART_LOC = "";
+                string strDEST_POS = "", strHS_MC_NO = "";
+                bool bFound = false;
+
+                for (int i = 0; i < dtJob.Rows.Count; i++)
+                {
+                    strLUGG_NO   = dtJob.Rows[i]["LUGG_NO"].ToString();
+                    strJOB_TYP   = dtJob.Rows[i]["JOB_TYP"].ToString();
+                    strSTART_LOC = dtJob.Rows[i]["START_LOCATION"].ToString();
+                    strDEST_POS  = dtJob.Rows[i]["DEST_POS"].ToString();
+
+                    if (IsRetJobType(strJOB_TYP) == false)
+                        continue;
+
+                    // 202 로 갈 작업인데 201/203 에도 대기가 있고 진행 중인 202 가 한도 이상이면 건너뛴다
+                    if ((strDEST_POS == STN_202) && (nCntEtc > 0) && (nCnt202 >= nLimit202))
+                        continue;
+
+                    // ── 3) 호기를 정한다. 상위가 호기를 줬으면 그대로, 아니면 랙 뱅크에서 구한다.
+                    strSC_NO = dtJob.Rows[i]["START_POS"].ToString();
+                    if (IsScNo(strSC_NO) == false)
+                    {
+                        if (GetScNoByLocation(strSTART_LOC, ref strSC_NO) == false)
+                            continue;
+                    }
+
+                    // ── 4) 그 호기와 3층 출고 H/S 가 지시를 받을 수 있는 상태인지 본다
+                    strSql = "";
+                    strSql += CRLF + " SELECT SHD.HS_MC_NO                                      ";
+                    strSql += CRLF + "   FROM SC_DATA SD                                        ";
+                    strSql += CRLF + "  INNER JOIN SC_HS_DEF SHD                                ";
+                    strSql += CRLF + "     ON SHD.WH_TYP          = SD.WH_TYP                   ";
+                    strSql += CRLF + "    AND SHD.SC_NO           = SD.SC_NO                    ";
+                    strSql += CRLF + "    AND SHD.HS_NO           = :HS_NO                      ";   // 3층 출고 H/S
+                    strSql += CRLF + "    AND SHD.HS_USE_YN       = 'Y'                         ";
+                    strSql += CRLF + "  INNER JOIN CV_DATA CD                                   ";
+                    strSql += CRLF + "     ON CD.WH_TYP           = SD.WH_TYP                   ";
+                    strSql += CRLF + "    AND CD.MC_NO            = SHD.HS_MC_NO                ";
+                    strSql += CRLF + "  WHERE SD.WH_TYP           = :WH_TYP                     ";
+                    strSql += CRLF + "    AND SD.SC_NO            = :SC_NO                      ";
+                    strSql += CRLF + "    AND SD.OD_RQ_YN         = 'N'                         ";   // 크레인이 지시를 받을 수 있다
+                    strSql += CRLF + "    AND SD.ERR_CODE_RD      = '0000'                      ";
+                    strSql += CRLF + "    AND SD.AUTO_MODE_RD     = '1'                         ";
+                    strSql += CRLF + "    AND CD.SENSOR0_DATA_RD  = '0'                         ";   // 출고 H/S 가 비어 있다
+                    strSql += CRLF + "    AND CD.LUGG_NO_RD       IN ('','0','0000')            ";
+                    strSql += CRLF + "    AND CD.AUTO_MODE_RD     = '1'                         ";
+                    strSql += CRLF + "    AND CD.ERROR_CODE       IN ('0','0000')               ";
+                    strSql += CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')          ";
+
+                    _pBdb.mComMain.CommandType = CommandType.Text;
+                    _pBdb.mComMain.Parameters.Clear();
+                    _pBdb.mComMain.Parameters.Add("HS_NO",  DbLang.VARCHAR).Value = strHS_NO;
+                    _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+                    _pBdb.mComMain.Parameters.Add("SC_NO",  DbLang.VARCHAR).Value = strSC_NO;
+
+                    nSelCnt = _pBdb.ExcuteQry(strSql);
+                    if (nSelCnt < 0)
+                    {
+                        pRTN_MSG += _pBdb.ErrMsg;
+                        return false;
+                    }
+                    if (nSelCnt == 0)
+                        continue;   // 아직 받을 수 없다
+
+                    strHS_MC_NO = _pBdb.mDtMain.Rows[0]["HS_MC_NO"].ToString();
+                    bFound = true;
+                    break;
+                }
+
+                if (bFound == false)
+                {
+                    pRTN_MSG = "";
+                    return true;
+                }
+
+                _pBdb.BeginTrans();
+
+                if (UpdateScData(strSC_NO, JT_RET, strLUGG_NO, strSTART_LOC, "",
+                                 HSPOS_STO_3F, HSPOS_RET_3F, ref pRTN_MSG) == false)
+                {
+                    _pBdb.Rollback();
+                    pRTN_MSG = "";
+                    return true;    // 크레인 미준비 - 다음 사이클 재시도
+                }
+
+                // 이어받을 CV_RETHS_PLC 가 HS_TRACK_NO 로 3층 출고 H/S 트랙을 찾는다
+                if (UPDATE_JOB_DATA(ST_SC_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG,
+                                    "0", "0", strHS_MC_NO) == false)
+                {
+                    _pBdb.Rollback();
+                    return false;
+                }
+
+                pRTN_MSG = strTitle + strSC_NO + "호기에 3층 출고를 지시하였습니다. [작업번호:" + strLUGG_NO
+                         + "][출발LOC:" + strSTART_LOC + "][출고H/S:" + strHS_MC_NO + "][도착지:" + strDEST_POS + "]";
+                _pBdb.Commit();
+                InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_SC_RUN, strHS_MC_NO, strSC_NO);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                pRTN_MSG = strTitle + ex.ToString();
+                _pBdb.Rollback();
+                return false;
+            }
+        }
+
         /*
+         * Count202Picking :: 202 피킹대 쏠림 제한에 쓰는 두 개수를 센다.
+         *
+         *   레거시 CJob::FetchScRetJobByScNumberNPriority (Job.cpp:1002) 앞부분 그대로다.
+         *     nCount202 : 도착지가 202 인 피킹 작업 중 "이미 진행 중인" 것
+         *                 (레거시는 상태가 JOB_STA_SC_OPER_REQUEST 가 아닌 것 = 여기서는 20 이 아닌 것)
+         *                 + 202 트랙에 작업목록에 없는 피킹 화물이 얹혀 있으면 하나 더
+         *     nCountEtc : 도착지가 201 또는 203 인 피킹 작업 수
+         *   둘 다 피킹(JOB_TYP='3') 작업만 센다.
+         */
+        private bool Count202Picking(string strWH_TYP, ref int nCnt202, ref int nCntEtc, ref string pRTN_MSG)
+        {
+            nCnt202 = 0;
+            nCntEtc = 0;
+
+            string strSql = "";
+            strSql += CRLF + " SELECT                                                        ";
+            strSql += CRLF + "   ( SELECT COUNT(*) FROM JOB_MST J                            ";
+            strSql += CRLF + "      WHERE J.WH_TYP     = :WH_TYP                             ";
+            strSql += CRLF + "        AND J.JOB_TYP    = '" + JT_PICK + "'                   ";
+            strSql += CRLF + "        AND J.DEST_POS   = '" + STN_202 + "'                   ";
+            strSql += CRLF + "        AND J.JOB_STATUS <> '" + ST_SC_WAIT + "' )             ";
+            strSql += CRLF + " + ( SELECT COUNT(*) FROM CV_DATA CD                           ";
+            strSql += CRLF + "      WHERE CD.WH_TYP    = :WH_TYP                             ";
+            strSql += CRLF + "        AND CD.MC_NO     = '" + STN_202 + "'                   ";
+            strSql += CRLF + "        AND CD.JOB_TYP_RD = '" + JT_PICK + "'                  ";
+            strSql += CRLF + "        AND COALESCE(CD.LUGG_NO_RD,'0') NOT IN ('','0','0000') ";
+            strSql += CRLF + "        AND NOT EXISTS ( SELECT 1 FROM JOB_MST J2              ";
+            strSql += CRLF + "                          WHERE J2.WH_TYP  = CD.WH_TYP         ";
+            strSql += CRLF + "                            AND J2.LUGG_NO = CD.LUGG_NO_RD ) ) AS CNT202 ";
+            strSql += CRLF + " , ( SELECT COUNT(*) FROM JOB_MST J                            ";
+            strSql += CRLF + "      WHERE J.WH_TYP     = :WH_TYP                             ";
+            strSql += CRLF + "        AND J.JOB_TYP    = '" + JT_PICK + "'                   ";
+            strSql += CRLF + "        AND J.DEST_POS   IN ('" + STN_201 + "','" + STN_203 + "') ) AS CNTETC ";
+
+            _pBdb.mComMain.CommandType = CommandType.Text;
+            _pBdb.mComMain.Parameters.Clear();
+            _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+
+            int nSelCnt = _pBdb.ExcuteQry(strSql);
+            if (nSelCnt < 0)
+            {
+                pRTN_MSG += _pBdb.ErrMsg;
+                return false;
+            }
+            if (nSelCnt == 0) return true;
+
+            int.TryParse(GetVal(_pBdb.mDtMain.Rows[0], "cnt202"), out nCnt202);
+            int.TryParse(GetVal(_pBdb.mDtMain.Rows[0], "cntetc"), out nCntEtc);
+            return true;
+        }
+
+        // ─────────────────────────────────────────────────────────────────
+        // 크레인 작업 완료 -> 작업 29(SC 구동완료 보고) - 레거시 CSc::CompleteCheck
+        //   COMPLETE_RD(레거시 D110)가 0 이 아니면 완료다. (1=포크1, 2=포크2, 3=전체)
+        //   어느 크레인인지는 ITN_LUGG_FK1 로 안다. 작업대 번호로 찾으면 안 된다 -
+        //   출고 작업은 출발지가 '000' 이고 도착지는 출고대라 크레인이 아니다.
+        //   입고는 29 가 최종이라 HOST_TASK 가 완료보고(F)를 보내고 작업을 지운다.
+        //   출고는 29 이후 CV 구간(11 -> 19)이 남는다.
+        //   완료를 확인했으면 포크 데이터를 지워 크레인을 다음 작업에 쓸 수 있게 한다.
+        //
+        //   ※ 이 함수는 층을 가리지 않는다. 크레인 한 대가 두 층을 같이 보므로
+        //      1층 스레드의 같은 함수와 겹칠 수 있다. 먼저 잡은 쪽이 상태를 29 로
+        //      바꾸므로 나중 쪽은 WHERE JOB_STATUS='21' 에서 걸러져 아무것도 안 한다.
+        // ─────────────────────────────────────────────────────────────────
+        private bool SC_COMP_CHK(string strWH_TYP, string strTitle, ref string pRTN_MSG)
+        {
+            try
+            {
+                int nSelCnt = 0;
+                string strSql = "";
+
+                pRTN_MSG = strTitle;
+
+                strSql = "";
+                strSql += CRLF + " SELECT JM.LUGG_NO, JM.JOB_TYP, SD.SC_NO, SD.COMPLETE_RD ";
+                strSql += CRLF + "   FROM JOB_MST JM                                       ";
+                strSql += CRLF + "  INNER JOIN SC_DATA SD                                  ";
+                strSql += CRLF + "     ON SD.WH_TYP           = JM.WH_TYP                  ";
+                strSql += CRLF + "    AND SD.ITN_LUGG_FK1     = JM.LUGG_NO                 ";   // 이 작업을 들고 있는 크레인
+                strSql += CRLF + "  WHERE JM.WH_TYP           = :WH_TYP                    ";
+                strSql += CRLF + "    AND JM.JOB_STATUS       = '" + ST_SC_RUN + "'        ";
+                strSql += CRLF + "    AND COALESCE(SD.COMPLETE_RD,'0') NOT IN ('','0')     ";   // 작업완료표시
+                strSql += CRLF + "    AND SD.READ_UPD_DT      > SD.WRITE_UPD_DT            ";   // 지시를 쓴 뒤에 읽은 값이어야 한다
+                strSql += CRLF + "    AND SD.ERR_CODE_RD      = '0000'                     ";
+                strSql += CRLF + "  ORDER BY JM.LUGG_NO                                    ";
+
+                _pBdb.mComMain.CommandType = CommandType.Text;
+                _pBdb.mComMain.Parameters.Clear();
+                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+
+                nSelCnt = _pBdb.ExcuteQry(strSql);
+                if (nSelCnt < 0)
+                {
+                    pRTN_MSG += _pBdb.ErrMsg;
+                    return false;
+                }
+                if (nSelCnt == 0)
+                {
+                    pRTN_MSG = "";
+                    return true;
+                }
+
+                string strLUGG_NO = _pBdb.mDtMain.Rows[0]["LUGG_NO"].ToString();
+                string strJOB_TYP = _pBdb.mDtMain.Rows[0]["JOB_TYP"].ToString();
+                string strSC_NO   = _pBdb.mDtMain.Rows[0]["SC_NO"].ToString();
+
+                _pBdb.BeginTrans();
+
+                if (UPDATE_JOB_DATA(ST_SC_DONE, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG) == false)
+                {
+                    _pBdb.Rollback();
+                    return false;
+                }
+
+                if (ClearScFork1(strSC_NO, ref pRTN_MSG) == false)
+                {
+                    _pBdb.Rollback();
+                    return false;
+                }
+
+                pRTN_MSG = strTitle + strSC_NO + "호기가 작업을 완료했습니다. [작업번호:" + strLUGG_NO + "]";
+                _pBdb.Commit();
+                InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_SC_DONE, "", strSC_NO);
+                return true;
+            }
+            catch (Exception ex)
+            {
+                pRTN_MSG = strTitle + ex.ToString();
+                _pBdb.Rollback();
+                return false;
+            }
+        }
+
+        /*
+         * ClearScFork1 :: 완료한 크레인의 포크#1 데이터를 지운다.
+         *
+         *   SC 태스크가 CMD_RQ_YN='Y' 를 보고 CMD_RQ_ID 별로 PLC 에 명령을 쓴다.
+         *   DELFK1 은 D199=16(포크#1 데이터 삭제)이고, 기록 뒤 SC 태스크가
+         *   ITN_LUGG_FK1 을 '0' 으로 되돌린다. 이 현장은 SINGLE 포크라 FK1 만 쓴다.
+         */
+        private bool ClearScFork1(string strScNo, ref string strRtn)
+        {
+            try
+            {
+                string strSql = "";
+                strSql += CRLF + " UPDATE SC_DATA                        ";
+                strSql += CRLF + "    SET CMD_RQ_YN  = 'Y'               ";
+                strSql += CRLF + "      , CMD_RQ_ID  = 'DELFK1'          ";
+                strSql += CRLF + "      , OD_USER_ID = '" + OD_USER + "' ";
+                strSql += CRLF + "  WHERE WH_TYP     = :WH_TYP           ";
+                strSql += CRLF + "    AND SC_NO      = :SC_NO            ";
+
+                _pBdb.mComMain.CommandType = CommandType.Text;
+                _pBdb.mComMain.Parameters.Clear();
+                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = SCH_WH_TYP;
+                _pBdb.mComMain.Parameters.Add("SC_NO",  DbLang.VARCHAR).Value = strScNo;
+
+                int n = _pBdb.ExcuteNonQry(strSql);
+                if (n < 0) { strRtn += "SC_DATA 포크 삭제 지시 오류:" + _pBdb.ErrMsg; return false; }
+                return true;
+            }
+            catch (Exception ex) { strRtn += ex.Message; return false; }
+        }
+
+        /*
+         * SqlInList :: 문자열 배열을 IN 절 목록으로 만든다. ('200','201',...)
+         *   값이 전부 코드표에서 온 숫자 문자열이라 따옴표만 붙인다.
+         */
+        private static string SqlInList(string[] arr)
+        {
+            string s = "";
+            for (int i = 0; i < arr.Length; i++)
+                s += (i == 0 ? "'" : ",'") + arr[i] + "'";
+            return s;
+        }
+
+        /*
+         * IsScNo :: 크레인 번호(901~911) 형태인가.
+         *   상위가 출발지에 호기를 주는 현장도 있고 '000' 을 주는 현장도 있다.
+         */
+        private bool IsScNo(string strPos)
+        {
+            int nPos;
+            if (int.TryParse(strPos, out nPos) == false) return false;
+            return ((nPos > 900) && (nPos < 1000));
+        }
+
+        /*
+         * GetScNoByLocation :: 랙 위치에서 담당 호기를 구한다.
+         *
+         *   호기 = (뱅크 + 1) / 2      뱅크 1,2 -> 1호기 / 3,4 -> 2호기 / ...
+         *   WCS_TASK_HOST 의 modDefApp.GetStackerNum 과 같은 식이다.
+         */
+        private bool GetScNoByLocation(string strLoc, ref string strScNo)
+        {
+            string strBank = "", strBay = "", strLev = "";
+            if (ParseLocation(strLoc, ref strBank, ref strBay, ref strLev) == false)
+                return false;
+
+            int nBank;
+            if (int.TryParse(strBank, out nBank) == false) return false;
+            if (nBank < 1) return false;
+
+            strScNo = (900 + ((nBank + 1) / 2)).ToString();
+            return true;
+        }
+
+        /*
+         * ParseLocation :: 랙 위치 문자열을 뱅크/베이/단으로 나눈다.
+         *
+         *   상위가 주는 형식이 현장마다 다르다. "07-001-01" 처럼 구분자를 넣기도 하고
+         *   "0700101" 처럼 붙여 쓰기도 한다. 숫자만 뽑아 2/3/2 로 자른다.
+         *   (레거시 LOCATION_LEN=7 : BANK 2 + BAY 3 + LEVEL 2)
+         */
+        private bool ParseLocation(string strLoc, ref string strBank, ref string strBay, ref string strLev)
+        {
+            if (strLoc == null)
+                return false;
+
+            string strDigit = "";
+            foreach (char ch in strLoc)
+            {
+                if ((ch >= '0') && (ch <= '9'))
+                    strDigit += ch;
+            }
+
+            if (strDigit.Length != 7)
+                return false;
+
+            strBank = strDigit.Substring(0, 2);
+            strBay  = strDigit.Substring(2, 3);
+            strLev  = strDigit.Substring(5, 2);
+            return true;
+        }
+
         /// <summary>
         /// SC_DATA 이송 명령 지시 (레거시 ECS CSc::Store / CSc::Retrieve 의 명령 데이터 포팅)
         ///   레거시 Melsec 명령 D171~D192 : 명령(1=입고/2=출고), 화물번호, BANK/BAY/LEVEL, HS(=랭크)
-        ///   - 입고(Store)    : 출발 = 입고 HS(랭크1), 도착 = 랙 위치(DEST_LOCATION 분해)
-        ///   - 출고(Retrieve) : 출발 = 랙 위치(START_LOCATION 분해), 도착 = 출고 HS(랭크2)
+        ///   - 입고(Store)    : 출발 = 입고 H/S(strStoHsPos), 도착 = 랙 위치(DEST_LOCATION 분해)
+        ///   - 출고(Retrieve) : 출발 = 랙 위치(START_LOCATION 분해), 도착 = 출고 H/S(strRetHsPos)
         ///   위치 문자열 = BANK(2) + BAY(3) + LEVEL(2)  (레거시 LOCATION_LEN=7)
-        ///   FK1 단일포크 사용(SC_DATA.SC_TYP='SINGLE'), WRITE_FLAG_OD='1' = 명령 기록 완료 플래그.
+        ///   H/S 자리 번호는 곧 랭크다. 1층이면 1/2, 3층이면 3/4 를 넣는다.
+        ///   (레거시 CSc::GetScSelfStoHS / GetScSelfRetHS 가 랭크를 그대로 돌려준다)
+        ///   FK1 단일포크 사용, WRITE_FLAG_OD='1' = 명령 기록 완료 플래그.
         /// </summary>
         private bool UpdateScData(
                     string strScNo
@@ -1660,6 +2278,8 @@ namespace TSK_COMM_IOSCH
             ,       string strLuggNo
             ,       string strStartLoc
             ,       string strDestLoc
+            ,       string strStoHsPos
+            ,       string strRetHsPos
             , ref   string strRtn
             )
         {
@@ -1688,7 +2308,11 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "      , DEST_BAY_FK1_OD     = :DEST_BAY                ";
                 strSql += CRLF + "      , DEST_LEVEL_FK1_OD   = :DEST_LEVEL              ";
                 strSql += CRLF + "      , DEST_HSPOS_FK1_OD   = :DEST_HSPOS              ";
-                strSql += CRLF + "      , USE_FK_OD           = '1'                      ";   // FK1 사용 (SINGLE 포크)
+                //   사용 포크 : 0 = 포크1 / 1 = 포크1,2(양쪽) / 2 = 포크2
+                //   이 현장 PLT 크레인은 전부 SINGLE 이므로 0 이다.
+                //   1 을 주면 크레인이 양포크 작업으로 돌아 한 건을 끝내도
+                //   적재 표시가 다 안 내려가고, 다음 작업이 집기부터 시작하지 못한다.
+                strSql += CRLF + "      , USE_FK_OD           = '0'                      ";   // 포크1 사용 (SINGLE 포크)
                 strSql += CRLF + "      , WRITE_FLAG_OD       = '1'                      ";   // 명령 기록 완료 (레거시 D191=1)
                 strSql += CRLF + "      , OD_RQ_YN            = 'Y'                      ";
                 strSql += CRLF + "      , OD_USER_ID          = '" + OD_USER + "'        ";
@@ -1705,11 +2329,11 @@ namespace TSK_COMM_IOSCH
                 _pBdb.mComMain.Parameters.Add("START_BANK",     DbLang.VARCHAR).Value = bStore ? "0" : strBank;
                 _pBdb.mComMain.Parameters.Add("START_BAY",      DbLang.VARCHAR).Value = bStore ? "0" : strBay;
                 _pBdb.mComMain.Parameters.Add("START_LEVEL",    DbLang.VARCHAR).Value = bStore ? "0" : strLev;
-                _pBdb.mComMain.Parameters.Add("START_HSPOS",    DbLang.VARCHAR).Value = bStore ? "1" : "0";   // 입고 = 입고HS(랭크1) 출발
+                _pBdb.mComMain.Parameters.Add("START_HSPOS",    DbLang.VARCHAR).Value = bStore ? strStoHsPos : "0";
                 _pBdb.mComMain.Parameters.Add("DEST_BANK",      DbLang.VARCHAR).Value = bStore ? strBank : "0";
                 _pBdb.mComMain.Parameters.Add("DEST_BAY",       DbLang.VARCHAR).Value = bStore ? strBay  : "0";
                 _pBdb.mComMain.Parameters.Add("DEST_LEVEL",     DbLang.VARCHAR).Value = bStore ? strLev  : "0";
-                _pBdb.mComMain.Parameters.Add("DEST_HSPOS",     DbLang.VARCHAR).Value = bStore ? "0" : "2";   // 출고 = 출고HS(랭크2) 도착
+                _pBdb.mComMain.Parameters.Add("DEST_HSPOS",     DbLang.VARCHAR).Value = bStore ? "0" : strRetHsPos;
                 _pBdb.mComMain.Parameters.Add("WH_TYP",         DbLang.VARCHAR).Value = SCH_WH_TYP;
                 _pBdb.mComMain.Parameters.Add("SC_NO",          DbLang.VARCHAR).Value = strScNo;
                 int n = _pBdb.ExcuteNonQry(strSql);
@@ -1719,7 +2343,7 @@ namespace TSK_COMM_IOSCH
             }
             catch (Exception ex) { strRtn += ex.Message; return false; }
         }
-        //*/
+        #endregion
         /// <summary>DataRow 값 추출 (null/공백 안전, Trim)</summary>
         private string GetVal(DataRow row, string col)
         {

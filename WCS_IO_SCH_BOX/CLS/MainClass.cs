@@ -236,7 +236,8 @@ namespace TSK_COMM_IOSCH
          * 한 트랙정보를 읽어옴.
          * GetTrackNo(MC_STA_MST)
          */
-        #region GetTrackNo
+        #region GetTrackNo  이거는 사용안하므로 주석처리
+        /*
         public bool GetTrackNo(int TrackNo, ref int nSelCnt)
         {
             return GetTrackNo(ref this._pBdb, TrackNo, ref nSelCnt);
@@ -252,7 +253,6 @@ namespace TSK_COMM_IOSCH
             return GetTrackNoImpl(pBdb, TrackNo, ref nSelCnt);
         }
 #endif
-
         // DB 종류별 래퍼가 공통으로 사용하는 구현
         private bool GetTrackNoImpl(object pBdbObj, int TrackNo, ref int nSelCnt)
         {
@@ -472,7 +472,6 @@ namespace TSK_COMM_IOSCH
             }
             return false;
         }
-
         public DataTable GetTrackNoToDataTable(int TrackNo, ref int nSelCnt)
         {
             try
@@ -610,6 +609,7 @@ namespace TSK_COMM_IOSCH
         {
             return TRACK_NO.ToString("000");
         }
+        //*/
         #endregion GetTrackNo
 
         /* 

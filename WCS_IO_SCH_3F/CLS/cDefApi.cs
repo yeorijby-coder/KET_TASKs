@@ -62,6 +62,66 @@ namespace TSK_COMM_IOSCH
             pRtnMsg = "[GsGetInitPorFileDB]Error::" + pRtnMsg;
         }
 
+        // @@@.INI파일에 문자형 데이터를 씀.
+        [DllImport("kernel32.dll")]
+        static extern bool WritePrivateProfileString(string lpAppName, string lpKeyName, string lpString, string lpFileName);
+
+        /*
+         * 1층 출고 : 결정대가 비어야 출발시킬지 (ENV_IOSCH.INI [1F_RET] DECIDE_WAIT)
+         *
+         *   키가 없으면 N(결정대를 보지 않고 출발)으로 본다. 그것이 기본 동작이다.
+         */
+        public static bool GsGetRetDecideWait()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(16);
+                GetPrivateProfileString("1F_RET", "DECIDE_WAIT", "N", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                return (sb.ToString().Trim().ToUpper() == "Y");
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /*
+         * 3층 202 피킹대 쏠림 제한 (ENV_IOSCH.INI [3F_RET] LIMIT_STN202_PICKING)
+         *
+         *   레거시 ECS 의 Config m_nLimitStn202Picking2 와 같은 값이다.
+         *     m_nLimitStn202Picking2 = GetPrivateProfileInt("Main", "LimitStn202Picking2", 0, ...)
+         *   201/203 에 피킹 대기가 있는 동안, 진행 중인 202 작업이 이 수 이상이면
+         *   새 202 출고를 내지 않는다. 레거시 기본값이 0 이라 여기도 0 으로 둔다.
+         *   (0 이면 201/203 에 대기가 있는 동안은 202 를 아예 새로 내지 않는다)
+         */
+        public static int GsGetLimitStn202Picking()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(16);
+                GetPrivateProfileString("3F_RET", "LIMIT_STN202_PICKING", "0", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+
+                int nLimit;
+                if (int.TryParse(sb.ToString().Trim(), out nLimit) == false) return 0;
+                return (nLimit < 0) ? 0 : nLimit;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        public static void GsSetRetDecideWait(bool bWait)
+        {
+            try
+            {
+                WritePrivateProfileString("1F_RET", "DECIDE_WAIT", bWait ? "Y" : "N", cDefApp.GM_ENV_INI);
+            }
+            catch
+            {
+            }
+        }
+
         // @@@.GsGetInitPorFileLogDel
         public static void GsGetInitPorFileLogDel(ref string pYear,
                                                   ref string pMonth,

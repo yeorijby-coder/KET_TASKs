@@ -85,6 +85,32 @@ namespace TSK_COMM_IOSCH
             }
         }
 
+        /*
+         * 3층 202 피킹대 쏠림 제한 (ENV_IOSCH.INI [3F_RET] LIMIT_STN202_PICKING)
+         *
+         *   레거시 ECS 의 Config m_nLimitStn202Picking2 와 같은 값이다.
+         *     m_nLimitStn202Picking2 = GetPrivateProfileInt("Main", "LimitStn202Picking2", 0, ...)
+         *   201/203 에 피킹 대기가 있는 동안, 진행 중인 202 작업이 이 수 이상이면
+         *   새 202 출고를 내지 않는다. 레거시 기본값이 0 이라 여기도 0 으로 둔다.
+         *   (0 이면 201/203 에 대기가 있는 동안은 202 를 아예 새로 내지 않는다)
+         */
+        public static int GsGetLimitStn202Picking()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(16);
+                GetPrivateProfileString("3F_RET", "LIMIT_STN202_PICKING", "0", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+
+                int nLimit;
+                if (int.TryParse(sb.ToString().Trim(), out nLimit) == false) return 0;
+                return (nLimit < 0) ? 0 : nLimit;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
         public static void GsSetRetDecideWait(bool bWait)
         {
             try
