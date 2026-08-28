@@ -76,6 +76,8 @@
     <Compile Include="4_Static\DbLang.cs" />
     <Compile Include="5_DB\cCbBasePost.cs" />
     <Compile Include="5_DB\cDbPostUse.cs" />
+    <Compile Include="3_Lib\CallerInfoShim.cs" />
+    <Compile Include="3_Lib\ListViewColumnMenu.cs" />
     <Compile Include="3_Lib\cCmLib.cs" />
     <Compile Include="5_DB\cDbBaseOra.cs" />
     <Compile Include="5_DB\cDbUse.cs" />

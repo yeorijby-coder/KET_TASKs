@@ -10,6 +10,7 @@ using System.Net.Sockets;
 using log4net;
 using log4net.Config;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace WCS_TASK_CV
 {
@@ -41,9 +42,30 @@ namespace WCS_TASK_CV
         public bool IsAscii { get { return m_bAscii; } set { m_bAscii = value; } }
 
         #region@@@.생성자
+        /*
+         * 로그 리스트뷰 열 순서. 디자이너와 동적 생성부가 같이 따라간다.
+         *   Timestamp | Thread No | Cmd | FILE | FUNCTION | Message | Telegram
+         * FILE / FUNCTION 은 그 로그를 남긴 소스 파일과 함수다. 값은 컴파일할 때
+         * [CallerFilePath] / [CallerMemberName] 로 박히므로 실행 중 비용이 없다.
+         * 헤더를 오른쪽 클릭하면 열을 켜고 끌 수 있다. (ListViewColumnMenu)
+         */
+        private const int COL_TIME   = 0;
+        private const int COL_THREAD = 1;
+        private const int COL_CMD    = 2;
+        private const int COL_FILE   = 3;
+        private const int COL_FUNC   = 4;
+        private const int COL_MSG    = 5;
+        private const int COL_TGM    = 6;
+
+        // @.로그 열 메뉴. 탭이 동적으로 늘어나므로 목록으로 들고 있는다.
+        private readonly List<ListViewColumnMenu> m_ColMenus = new List<ListViewColumnMenu>();
+
         public SYS_MAIN()
         {
             InitializeComponent();
+
+            // @.헤더 오른쪽 클릭으로 열을 켜고 끈다. (디자이너에 있는 첫 탭)
+            m_ColMenus.Add(new ListViewColumnMenu(this.lsvCOMM1));
         }
         #endregion
 
@@ -190,10 +212,16 @@ namespace WCS_TASK_CV
                 ColumnHeader ColumnHeader3 = new System.Windows.Forms.ColumnHeader();
                 ColumnHeader ColumnHeader4 = new System.Windows.Forms.ColumnHeader();
                 ColumnHeader ColumnHeader5 = new System.Windows.Forms.ColumnHeader();
+                ColumnHeader ColumnHeaderFile = new System.Windows.Forms.ColumnHeader();
+                ColumnHeader ColumnHeaderFunc = new System.Windows.Forms.ColumnHeader();
                 ColumnHeader1.Text = "Timestamp";
                 ColumnHeader1.Width = 120;
                 ColumnHeader2.Text = "Thread No";
                 ColumnHeader3.Text = "Cmd";
+                ColumnHeaderFile.Text = "FILE";
+                ColumnHeaderFile.Width = 150;
+                ColumnHeaderFunc.Text = "FUNCTION";
+                ColumnHeaderFunc.Width = 200;
                 ColumnHeader4.Text = "Message";
                 ColumnHeader4.Width = 500;
                 ColumnHeader5.Text = "Telegram";
@@ -208,6 +236,8 @@ namespace WCS_TASK_CV
                 ColumnHeader1,
                 ColumnHeader2,
                 ColumnHeader3,
+                ColumnHeaderFile,
+                ColumnHeaderFunc,
                 ColumnHeader4,
                 ColumnHeader5});
                 lsvCOMM.Dock = System.Windows.Forms.DockStyle.Fill;
@@ -221,6 +251,7 @@ namespace WCS_TASK_CV
                 lsvCOMM.UseCompatibleStateImageBehavior = false;
                 lsvCOMM.View = System.Windows.Forms.View.Details;
                 lsvCOMM.Click += new System.EventHandler(this.lsvMsg_Click);
+                m_ColMenus.Add(new ListViewColumnMenu(lsvCOMM));
 
                 //=======================================================================================================================
                 // 탭페이지 작성
@@ -515,56 +546,89 @@ namespace WCS_TASK_CV
 		}
 
         //@@@.PsMsgView[화면에 로깅...]
-		public void PsMsgView(string pMsg, int nThGbn)
+		public void PsMsgView(string pMsg, int nThGbn,
+                                  [CallerFilePath] string strFile = "",
+                                  [CallerMemberName] string strFunc = "")
         {
-			PsMsgView(pMsg, "", "", "", cDefApp.eLogMsgType.MSG_NOR, nThGbn);
+			PsMsgView(pMsg, "", "", "", cDefApp.eLogMsgType.MSG_NOR, nThGbn, strFile, strFunc);
         }
-		public void PsMsgView_Error(string pMsg, int nThGbn)
+		public void PsMsgView_Error(string pMsg, int nThGbn,
+                                  [CallerFilePath] string strFile = "",
+                                  [CallerMemberName] string strFunc = "")
         {
-			PsMsgView(pMsg, "", "", "", cDefApp.eLogMsgType.MSG_ERR, nThGbn);
+			PsMsgView(pMsg, "", "", "", cDefApp.eLogMsgType.MSG_ERR, nThGbn, strFile, strFunc);
         }
-		public void PsMsgView_IMP(string pMsg, int nThGbn)
+		public void PsMsgView_IMP(string pMsg, int nThGbn,
+                                  [CallerFilePath] string strFile = "",
+                                  [CallerMemberName] string strFunc = "")
         {
-			PsMsgView(pMsg, "", "", "", cDefApp.eLogMsgType.MSG_IMP, nThGbn);
+			PsMsgView(pMsg, "", "", "", cDefApp.eLogMsgType.MSG_IMP, nThGbn, strFile, strFunc);
         }
-		public void PsMsgView(string pMsg, string pObjID, int nThGbn)
+		public void PsMsgView(string pMsg, string pObjID, int nThGbn,
+                                  [CallerFilePath] string strFile = "",
+                                  [CallerMemberName] string strFunc = "")
         {
-			PsMsgView(pMsg, pObjID, "", "", cDefApp.eLogMsgType.MSG_NOR, nThGbn);
+			PsMsgView(pMsg, pObjID, "", "", cDefApp.eLogMsgType.MSG_NOR, nThGbn, strFile, strFunc);
         }
-		public void PsMsgView_Error(string pMsg, string pObjID, int nThGbn)
+		public void PsMsgView_Error(string pMsg, string pObjID, int nThGbn,
+                                  [CallerFilePath] string strFile = "",
+                                  [CallerMemberName] string strFunc = "")
         {
-			PsMsgView(pMsg, pObjID, "", "", cDefApp.eLogMsgType.MSG_ERR, nThGbn);
+			PsMsgView(pMsg, pObjID, "", "", cDefApp.eLogMsgType.MSG_ERR, nThGbn, strFile, strFunc);
         }
-		public void PsMsgView_IMP(string pMsg, string pObjID, int nThGbn)
+		public void PsMsgView_IMP(string pMsg, string pObjID, int nThGbn,
+                                  [CallerFilePath] string strFile = "",
+                                  [CallerMemberName] string strFunc = "")
         {
-			PsMsgView(pMsg, pObjID, "", "", cDefApp.eLogMsgType.MSG_IMP, nThGbn);
+			PsMsgView(pMsg, pObjID, "", "", cDefApp.eLogMsgType.MSG_IMP, nThGbn, strFile, strFunc);
         }
-        public void PsMsgView(string pMsg, string pObjID, string pCommTyp, int nThGbn)
+        public void PsMsgView(string pMsg, string pObjID, string pCommTyp, int nThGbn,
+                                  [CallerFilePath] string strFile = "",
+                                  [CallerMemberName] string strFunc = "")
         {
-            PsMsgView(pMsg, pObjID, pCommTyp, "", cDefApp.eLogMsgType.MSG_NOR, nThGbn);
+            PsMsgView(pMsg, pObjID, pCommTyp, "", cDefApp.eLogMsgType.MSG_NOR, nThGbn, strFile, strFunc);
         }
-        public void PsMsgView_Error(string pMsg, string pObjID, string pCommTyp, int nThGbn)
+        public void PsMsgView_Error(string pMsg, string pObjID, string pCommTyp, int nThGbn,
+                                  [CallerFilePath] string strFile = "",
+                                  [CallerMemberName] string strFunc = "")
         {
-            PsMsgView(pMsg, pObjID, pCommTyp, "", cDefApp.eLogMsgType.MSG_ERR, nThGbn);
+            PsMsgView(pMsg, pObjID, pCommTyp, "", cDefApp.eLogMsgType.MSG_ERR, nThGbn, strFile, strFunc);
         }
-		public void PsMsgView(string pMsg, string pObjID, string pCommTyp, string pTgm, int nThGbn)
+		public void PsMsgView(string pMsg, string pObjID, string pCommTyp, string pTgm, int nThGbn,
+                                  [CallerFilePath] string strFile = "",
+                                  [CallerMemberName] string strFunc = "")
         {
-			PsMsgView(pMsg, pObjID, pCommTyp, pTgm, cDefApp.eLogMsgType.MSG_NOR, nThGbn);
+			PsMsgView(pMsg, pObjID, pCommTyp, pTgm, cDefApp.eLogMsgType.MSG_NOR, nThGbn, strFile, strFunc);
         }
-		public void PsMsgView_Error(string pMsg, string pObjID, string pCommTyp, string pTgm, int nThGbn)
+		public void PsMsgView_Error(string pMsg, string pObjID, string pCommTyp, string pTgm, int nThGbn,
+                                  [CallerFilePath] string strFile = "",
+                                  [CallerMemberName] string strFunc = "")
         {
-			PsMsgView(pMsg, pObjID, pCommTyp, pTgm, cDefApp.eLogMsgType.MSG_ERR, nThGbn);
+			PsMsgView(pMsg, pObjID, pCommTyp, pTgm, cDefApp.eLogMsgType.MSG_ERR, nThGbn, strFile, strFunc);
         }
-		public void PsMsgView_IMP(string pMsg, string pObjID, string pCommTyp, string pTgm, int nThGbn)
+		public void PsMsgView_IMP(string pMsg, string pObjID, string pCommTyp, string pTgm, int nThGbn,
+                                  [CallerFilePath] string strFile = "",
+                                  [CallerMemberName] string strFunc = "")
         {
-			PsMsgView(pMsg, pObjID, pCommTyp, pTgm, cDefApp.eLogMsgType.MSG_IMP, nThGbn);
+			PsMsgView(pMsg, pObjID, pCommTyp, pTgm, cDefApp.eLogMsgType.MSG_IMP, nThGbn, strFile, strFunc);
         }
+        // @.[CallerFilePath] 는 빌드한 PC 의 전체 경로다. 열에는 파일 이름만 남긴다.
+        private static string ShortFileName(string strPath)
+        {
+            if (string.IsNullOrEmpty(strPath)) return "";
+
+            int nPos = strPath.LastIndexOfAny(new char[] { '\\', '/' });
+            return (nPos < 0) ? strPath : strPath.Substring(nPos + 1);
+        }
+
         private void PsMsgView(string pMsg, 
                                string pObjID, 
                                string pCommTyp, 
                                string pTgm, 
                   cDefApp.eLogMsgType pMsgTyp,
-							   int nThGbn)
+							   int nThGbn,
+                               string strFile,
+                               string strFunc)
         {
             try
             {
@@ -576,12 +640,16 @@ namespace WCS_TASK_CV
                 LogMsg.MsgTyp =  pMsgTyp.ToString(); 
                 LogMsg.ID = pObjID;
                 LogMsg.Com = pCommTyp;
+                LogMsg.File = ShortFileName(strFile);
+                LogMsg.Func = strFunc;
                 LogMsg.Msg = pMsg;
                 LogMsg.Tgm = pTgm;
                 if( chkStopLog.Checked) return;
                 ListViewItem vItem = new ListViewItem(LogMsg.Time, 0);
                 vItem.SubItems.Add(LogMsg.ID);
                 vItem.SubItems.Add(LogMsg.Com);
+                vItem.SubItems.Add(LogMsg.File);
+                vItem.SubItems.Add(LogMsg.Func);
                 vItem.SubItems.Add(LogMsg.Msg);
                 vItem.SubItems.Add(LogMsg.Tgm);
                 switch (pMsgTyp)
@@ -638,8 +706,8 @@ namespace WCS_TASK_CV
                  ListView lsv = sender as ListView;
                  if (lsv == null || lsv.SelectedItems.Count == 0) return;
 
-                 this.txtMsg.Text = lsv.SelectedItems[0].SubItems[3].Text;
-                 this.txtTgm.Text = lsv.SelectedItems[0].SubItems[4].Text;
+                 this.txtMsg.Text = lsv.SelectedItems[0].SubItems[COL_MSG].Text;
+                 this.txtTgm.Text = lsv.SelectedItems[0].SubItems[COL_TGM].Text;
             }
             catch(Exception ex)
             {

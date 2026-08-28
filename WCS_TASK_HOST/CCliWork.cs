@@ -572,8 +572,20 @@ namespace TSK_HostCom
         }
 
 
+        /*
+         * 상위에 보낼 에러 정보를 하나 집어 온다.
+         *
+         *   strDeviceNo   : DB 를 다시 찾을 때 쓰는 열쇠(SC_DATA/CV_DATA 의 MC_NO)
+         *   strHostDevNo  : 상위에 실제로 보낼 장비번호.
+         *                   이 둘이 다르다. 상태 보고(IV.3)는 이미 구분해 쓰고 있었는데
+         *                   에러 보고(IV.4)만 MC_NO 를 그대로 보내고 있었다.
+         *                     S/C : DB 는 901~911, 상위는 호기번호 1~11
+         *                     C/V : DB 는 트랙번호(358), 상위는 작업대번호(209)
+         *                   같은 설비가 전문마다 다른 번호로 나가고 있었다.
+         */
         public int IsEquip_ERROR_Modified(string strEQP_TYP
                                     , ref string strDeviceNo
+                                    , ref string strHostDevNo
                                     , ref string strDeviceClass
                                     , ref string strErrorCode
                                     , ref string strErrorKind
@@ -618,6 +630,15 @@ namespace TSK_HostCom
                     strLuggNo = "" + m_BDb.dtMain.Rows[0]["LUGG_NO_FK1_RD"].ToString();
                     strErrorCode = "" + m_BDb.dtMain.Rows[0]["MC_ERR_CD"].ToString();
 
+                    // @.상위에 보낼 장비번호는 호기번호다. DB 의 9xx 에서 900 을 뺀다.
+                    //   (상태 보고 GetStatusReport 가 하는 것과 같다)
+                    string strScNo = "" + m_BDb.dtMain.Rows[0]["SC_NO"].ToString().Trim();
+                    if (strScNo.Length == 0) strScNo = strDeviceNo;
+
+                    int nScNo = 0; int.TryParse(strScNo, out nScNo);
+                    if (nScNo > 900) nScNo -= 900;
+                    strHostDevNo = nScNo.ToString();
+
 
                     string strSBank = "" + m_BDb.dtMain.Rows[0]["START_BANK_FK1_RD"].ToString();
                     string strSBay = "" + m_BDb.dtMain.Rows[0]["START_BAY_FK1_RD"].ToString();
@@ -630,19 +651,31 @@ namespace TSK_HostCom
                     strBay = "000";
                     strLevel = "00";
                     
-                    if ((strSBank != "0" && strSBay != "0" && strSLevel != "0") &&
-                        (strSBank != "00" && strSBay != "000" && strSLevel != "00"))
+                    /*
+                     * 위치는 지금 들고 있는 작업의 것이다.
+                     *
+                     *   START_*_FK1_RD / DEST_*_FK1_RD 는 크레인이 마지막으로 읽어 준 값이라
+                     *   작업이 끝난 뒤에도 그대로 남아 있다. 작업번호가 없는데 그 값을 실어
+                     *   보내면 상위는 있지도 않은 작업의 위치에서 에러가 난 것으로 받는다.
+                     *   (원본 CHostCl::Error 도 위치는 작업에서 가져온다)
+                     */
+                    int nScLugg = 0; int.TryParse(strLuggNo.Trim(), out nScLugg);
+                    if (nScLugg > 0)
                     {
-                        strBank = strSBank;
-                        strBay = strSBay;
-                        strLevel = strSLevel;
-                    }
-                    if ((strDBank != "0" && strDBay != "0" && strDLevel != "0") &&
-                        (strDBank != "00" && strDBay != "000" && strDLevel != "00"))
-                    {
-                        strBank = strDBank;
-                        strBay = strDBay;
-                        strLevel = strDLevel;
+                        if ((strSBank != "0" && strSBay != "0" && strSLevel != "0") &&
+                            (strSBank != "00" && strSBay != "000" && strSLevel != "00"))
+                        {
+                            strBank = strSBank;
+                            strBay = strSBay;
+                            strLevel = strSLevel;
+                        }
+                        if ((strDBank != "0" && strDBay != "0" && strDLevel != "0") &&
+                            (strDBank != "00" && strDBay != "000" && strDLevel != "00"))
+                        {
+                            strBank = strDBank;
+                            strBay = strDBay;
+                            strLevel = strDLevel;
+                        }
                     }
 
                     strErrorKind = "0";         // 기계적 에러 
@@ -711,6 +744,11 @@ namespace TSK_HostCom
                     strDeviceNo = "" + m_BDb.dtMain.Rows[0]["MC_NO"].ToString();
                     strLuggNo = "" + m_BDb.dtMain.Rows[0]["LUGG_NO_RD"].ToString();
                     strErrorCode = "" + m_BDb.dtMain.Rows[0]["MC_ERR_CD"].ToString();
+
+                    // @.상위에 보낼 장비번호는 작업대번호다. 트랙번호(MC_NO)가 아니다.
+                    //   매칭은 CV_DATA.HOST_STN_NO 에 있다. (상태 보고와 같은 자리)
+                    strHostDevNo = "" + m_BDb.dtMain.Rows[0]["HOST_STN_NO"].ToString().Trim();
+                    if (strHostDevNo.Length == 0) strHostDevNo = strDeviceNo;
                     strErrorKind = "0";         // 기계적 에러 
                     strDeviceClass = "2";       // CV
                     strBank = "00";
@@ -1191,6 +1229,18 @@ namespace TSK_HostCom
         //최초작성자	: BASE(정복열)
         //작성일		: 20200519
         //설명		    : 에러 보고  
+        /*
+         * GfToInt :: 설비가 준 문자열을 숫자로. 빈 값이나 숫자가 아니면 0 이다.
+         *   전문 자리에 넣을 값을 만들 때만 쓴다. 여기서 예외가 나면 스레드가 죽는다.
+         */
+        private static int GfToInt(string strValue)
+        {
+            int nValue = 0;
+            if (strValue == null) return 0;
+            int.TryParse(strValue.Trim(), out nValue);
+            return nValue;
+        }
+
         private void GetErrorReport()
         {
             string[] strMC_TYP = new string[] { "CV", "SC" };
@@ -1227,6 +1277,7 @@ namespace TSK_HostCom
             #region 에러 보고해야할 작업이 있는지?
 
             string strDeviceNo = "";
+            string strHostDevNo = "";
             string strDeviceClass = "";
             string strErrorCode = "";
             string strErrorKind = "";
@@ -1235,7 +1286,7 @@ namespace TSK_HostCom
             string strBay = "";
             string strLevel = "";
 
-            int nResult = IsEquip_ERROR_Modified(strEQP_TYP, ref strDeviceNo, ref strDeviceClass, ref strErrorCode, ref strErrorKind, ref strLuggNo, ref strBank, ref strBay, ref strLevel);
+            int nResult = IsEquip_ERROR_Modified(strEQP_TYP, ref strDeviceNo, ref strHostDevNo, ref strDeviceClass, ref strErrorCode, ref strErrorKind, ref strLuggNo, ref strBank, ref strBay, ref strLevel);
             if (nResult == 0)
             {
                 // 이미 함수내에서 리스트 박스에 디스플레이함!    - 작업해야 할 부분 
@@ -1258,11 +1309,22 @@ namespace TSK_HostCom
              *       + 작업번호(4) + Bank(2) + Bay(3) + Level(2) + ETX      (본문 22자)
              *   예전 코드는 창고구분이 빠져 뒤 항목이 전부 한 칸씩 밀려 있었다.
              */
+            /*
+             * @.Convert.ToInt32 를 쓰면 안 된다.
+             *
+             *   설비가 아직 값을 안 채운 칸은 빈 문자열로 들어온다.
+             *   (크레인 LUGG_NO_FK1_RD 가 대표적이다)
+             *   Convert.ToInt32("") 는 FormatException 을 던지고, 이 함수에는 try 가
+             *   없어 그대로 위로 올라가 통신 스레드가 통째로 죽었다.
+             *   화면에는 "입력 문자열의 형식이 잘못되었습니다" 만 찍히고 곧바로
+             *   "이상 발생. DB Logout" 뒤 재접속 - 이것이 끝없이 돌았다.
+             *   못 읽는 칸은 0 으로 둔다. 보고를 못 하는 것보다 낫다.
+             */
             strTemp = string.Format("E{0}{1:0}{2:000}{3:0}{4:0000}{5:0000}{6:00}{7:000}{8:00}",
                 modDefApp.WH_DEF,
-                Convert.ToInt32(strDeviceClass), Convert.ToInt32(strDeviceNo), Convert.ToInt32(strErrorKind), 
-                Convert.ToInt32(strErrorCode), Convert.ToInt32(strLuggNo), 
-                Convert.ToInt32(strBank), Convert.ToInt32(strBay), Convert.ToInt32(strLevel));
+                GfToInt(strDeviceClass), GfToInt(strHostDevNo), GfToInt(strErrorKind),
+                GfToInt(strErrorCode), GfToInt(strLuggNo),
+                GfToInt(strBank), GfToInt(strBay), GfToInt(strLevel));
 
             int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
             //MSG_ORDER_CNT
