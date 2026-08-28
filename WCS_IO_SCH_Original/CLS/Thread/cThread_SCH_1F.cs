@@ -646,6 +646,28 @@ namespace TSK_COMM_IOSCH
         private const string CV_PLC_1F_OLD = "02";   // 1F 구라인 CV PLC
         private const string CV_PLC_1F_NEW = "05";   // 1F 신라인 CV PLC
 
+        /*
+         * 1층 출고 작업대 - 레거시 CLib::GetRank (Lib.cpp:2343) 가 RANK_2 를 돌려주는 자리.
+         *
+         *   출고 작업이 1층으로 나갈지 3층으로 나갈지는 도착 작업대 하나로 정해진다.
+         *   3층 PLT(200~209, 212~215)와 BOX(211,221,222,231,241,242,251)는
+         *   각각 cThread_SCH_3F / cThread_SCH_BOX 가 맡는다. 여기서 집으면 안 된다.
+         *   호기간 이동은 목적지를 보지 않고 3층으로 뺀다 (레거시 2011.02.06 수정).
+         */
+        private static readonly string[] STN_1F_PLT = { "103", "104", "105" };
+
+        /*
+         * SqlInList :: 문자열 배열을 IN 절 목록으로 만든다. ('103','104',...)
+         *   값이 전부 코드표에서 온 숫자 문자열이라 따옴표만 붙인다.
+         */
+        private static string SqlInList(string[] arr)
+        {
+            string s = "";
+            for (int i = 0; i < arr.Length; i++)
+                s += (i == 0 ? "'" : ",'") + arr[i] + "'";
+            return s;
+        }
+
         // 구↔신 라인 이음새 트랙 (레거시 CopyTrackData2/5 : 2064→5031, 5056→2050)
         private const string SEAM_FROM_2 = "264";
         private const string SEAM_TO_2 = "531";
@@ -1628,6 +1650,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "   FROM JOB_MST                                            ";
                 strSql += CRLF + "  WHERE WH_TYP           = :WH_TYP                         ";
                 strSql += CRLF + "    AND JOB_STATUS       = '" + ST_SC_WAIT + "'            ";   // 20 = SC 구동요구
+                strSql += CRLF + "    AND DEST_POS IN (" + SqlInList(STN_1F_PLT) + ")            ";   // 1층으로 나갈 것만
                 strSql += CRLF + "  ORDER BY JOB_PRIORITY DESC, LUGG_NO                      ";
 
                 _pBdb.mComMain.CommandType = CommandType.Text;
