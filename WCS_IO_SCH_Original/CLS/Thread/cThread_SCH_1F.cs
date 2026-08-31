@@ -1086,7 +1086,7 @@ namespace TSK_COMM_IOSCH
                     strSql += SQL_SC_READY;                 // 크레인이 지시를 받을 수 있는 상태인가
                     strSql += SQL_SC_RET_NOT_SUSPEND;       // 출고 정지가 아닌가
                     strSql += CRLF + "    AND CD.SENSOR0_DATA_RD  = '0'                         ";   // 출고 H/S 가 비어 있다
-                    strSql += CRLF + "    AND CD.LUGG_NO_RD       IN ('','0','0000')            ";
+                    strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.LUGG_NO_RD, " + SQL_WS + "), ''), '0')       IN ('0','0000')            ";
                     strSql += CRLF + "    AND CD.AUTO_MODE_RD     = '1'                         ";
                     strSql += CRLF + "    AND CD.ERROR_CODE       IN ('0','0000')               ";
                     strSql += SQL_HS_NOT_PAUSED;            // 출고 H/S 가 멈춰 있지 않은가

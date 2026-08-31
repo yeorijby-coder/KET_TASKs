@@ -1566,17 +1566,30 @@ namespace TSK_COMM_IOSCH
          *
          *   ※ 조회에서 SC_DATA 의 별칭은 SD 여야 한다.
          */
+        /*
+         * 공백 관용 - 값이 비어 있는지 볼 때 쓰는 트림 문자 목록.
+         *
+         *   PLC 나 시드 데이터에 공백 한 칸이 들어 있는 경우가 있어
+         *   IN ('','0','0000') 처럼 '' 만 봐서는 걸러지지 않는다.
+         *   (실제로 SC_DATA.ITN_LUGG_FK1 이 ' ' 라 크레인이 영영 안 잡혔다)
+         *
+         *   BTRIM 으로 스페이스/탭/개행을 걷어내고 남은 것이 없으면 '0' 으로 접는다.
+         *     COALESCE(NULLIF(BTRIM(컬럼, SQL_WS), ''), '0') IN ('0','0000')
+         *   빈 값이 '0' 이 되므로 목록에서 '' 는 뺐다. 나머지 값의 판정은 이전과 같다.
+         */
+        public const string SQL_WS = "' ' || CHR(9) || CHR(10) || CHR(13)";
+
         public const string SQL_SC_READY =
               cDefApp.CRLF + "    AND SD.OD_RQ_YN         = 'N'                          "
             + cDefApp.CRLF + "    AND SD.ONLINE_MODE_RD   = '" + SC_MODE_ONLINE + "'      "
             + cDefApp.CRLF + "    AND SD.AUTO_MODE_RD     = '" + SC_MODE_AUTO + "'        "
             + cDefApp.CRLF + "    AND SD.ACTIVE_MODE_RD   = '" + SC_ACTIVE + "'           "
             //            + cDefApp.CRLF + "    AND SD.UCSTATUS_RD      = '" + SC_STA_WAIT + "'         "
-            + cDefApp.CRLF + "    AND COALESCE(SD.UCSTATUS_RD,'0')    IN ('','" + SC_STA_IDLE + "','" + SC_STA_WAIT + "')"
-            + cDefApp.CRLF + "    AND COALESCE(SD.ERR_CODE_RD,'0')    IN ('','0','0000')  "
-            + cDefApp.CRLF + "    AND COALESCE(SD.ITN_LUGG_FK1,'0')   IN ('','0','0000')  "
-            + cDefApp.CRLF + "    AND COALESCE(SD.LUGG_NO_FK1_RD,'0') IN ('','0','0000')  ";
-//            + cDefApp.CRLF + "    AND COALESCE(SD.COMPLETE_RD,'0')    IN ('','0')         ";      // 이건 보지 말자
+            + cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.UCSTATUS_RD, " + SQL_WS + "), ''), '0')    IN ('" + SC_STA_IDLE + "','" + SC_STA_WAIT + "')"
+            + cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.ERR_CODE_RD, " + SQL_WS + "), ''), '0')    IN ('0','0000')  "
+            + cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.ITN_LUGG_FK1, " + SQL_WS + "), ''), '0')   IN ('0','0000')  "
+            + cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.LUGG_NO_FK1_RD, " + SQL_WS + "), ''), '0') IN ('0','0000')  ";
+//            + cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.COMPLETE_RD, " + SQL_WS + "), ''), '0')    IN ('0')         ";      // 이건 보지 말자
         /*
          * 입고/출고 정지 - 레거시 SC_INFO->m_bStoreSuspend / m_bRetrieveSuspend
          *
@@ -1599,8 +1612,8 @@ namespace TSK_COMM_IOSCH
          *   ※ 조회에서 CV_DATA 의 별칭은 CD 여야 한다.
          */
         public const string SQL_HS_NOT_PAUSED =
-              cDefApp.CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('','0')            "
-            + cDefApp.CRLF + "    AND COALESCE(CD.TR_PAUSE_OD,'0') IN ('','0')            "
+              cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.TR_PAUSE_RD, " + SQL_WS + "), ''), '0') IN ('0')            "
+            + cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.TR_PAUSE_OD, " + SQL_WS + "), ''), '0') IN ('0')            "
             //+ cDefApp.CRLF + "    AND COALESCE(CD.USE_YN,'Y')      = 'Y'                  "
             ;
 
@@ -3494,7 +3507,7 @@ namespace TSK_COMM_IOSCH
                 strSql += cDefApp.CRLF + "  INNER JOIN JOB_MST JM                       ";
                 strSql += cDefApp.CRLF + "     ON CD.HOST_STN_NO = JM.START_POS         ";
                 strSql += cDefApp.CRLF + "    AND JM.JOB_STATUS = '" + ST_CV_WAIT + "'      ";   // 10 = CV 구동대기. 신규('99')는 JOB_ACCEPT 가 10/20 으로 나눈다
-                strSql += cDefApp.CRLF + "  WHERE CD.LUGG_NO_RD    IN ('','0','0000')   ";
+                strSql += cDefApp.CRLF + "  WHERE COALESCE(NULLIF(BTRIM(CD.LUGG_NO_RD, " + SQL_WS + "), ''), '0')    IN ('0','0000')   ";
                 strSql += cDefApp.CRLF + "    AND CD.STO_READY_RD 	= '1'               ";
                 strSql += cDefApp.CRLF + "    AND CD.SENSOR0_DATA_RD = '1'              ";
                 strSql += cDefApp.CRLF + "    AND CD.AUTO_MODE_RD 	= '1'               ";
@@ -3864,7 +3877,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND JM.JOB_STATUS = '" + ST_CV_WAIT + "'      ";   // 10 = CV 구동대기. 신규('99')는 JOB_ACCEPT 가 10/20 으로 나눈다
                 strSql += CRLF + "  WHERE CD.PLC_NO         = :CV_PLC           ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
                 strSql += CRLF + "    AND (   (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_STO) + " <> 0 AND CD.STO_READY_RD = '1'   ";
-                strSql += CRLF + "             AND CD.LUGG_NO_RD IN ('','0','0000'))                                                        ";
+                strSql += CRLF + "             AND COALESCE(NULLIF(BTRIM(CD.LUGG_NO_RD, " + SQL_WS + "), ''), '0') IN ('0','0000'))                                                        ";
                 strSql += CRLF + "         OR (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_ARV) + " <> 0 AND CD.RET_READY_RD = '1') )  ";
                 strSql += CRLF + "    AND CD.SENSOR0_DATA_RD = '1'              ";
                 strSql += CRLF + "    AND CD.AUTO_MODE_RD 	= '1'               ";
@@ -4148,7 +4161,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND SD.ITN_LUGG_FK1     = JM.LUGG_NO                 ";   // 이 작업을 들고 있는 크레인
                 strSql += CRLF + "  WHERE JM.WH_TYP           = :WH_TYP                    ";
                 strSql += CRLF + "    AND JM.JOB_STATUS       = '" + ST_SC_RUN + "'        ";
-                strSql += CRLF + "    AND COALESCE(SD.COMPLETE_RD,'0') NOT IN ('','0')     ";   // 작업완료표시
+                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.COMPLETE_RD, " + SQL_WS + "), ''), '0') NOT IN ('0')     ";   // 작업완료표시
                 strSql += CRLF + "    AND SD.READ_UPD_DT      > SD.WRITE_UPD_DT            ";   // 지시를 쓴 뒤에 읽은 값이어야 한다
                 strSql += CRLF + "    AND SD.ERR_CODE_RD      = '0000'                     ";
                 strSql += CRLF + "  ORDER BY JM.LUGG_NO                                    ";
@@ -4262,9 +4275,9 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "     ON JM.WH_TYP = CDF.WH_TYP AND JM.LUGG_NO = CDF.LUGG_NO_RD   ";
                 strSql += CRLF + "  WHERE CDF.WH_TYP = :WH_TYP                                     ";
                 strSql += CRLF + "    AND CDF.MC_NO  = :FROM_MC                                    ";
-                strSql += CRLF + "    AND CDF.LUGG_NO_RD NOT IN ('','0','0000')                    ";
+                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CDF.LUGG_NO_RD, " + SQL_WS + "), ''), '0') NOT IN ('0','0000')                    ";
                 strSql += CRLF + "    AND CDF.SENSOR0_DATA_RD  = '0'                               ";   // FROM 센서 이탈 (이음새 통과 중)
-                strSql += CRLF + "    AND CDT.LUGG_NO_RD IN ('','0','0000')                        ";   // TO 데이터 비어있음
+                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CDT.LUGG_NO_RD, " + SQL_WS + "), ''), '0') IN ('0','0000')                        ";   // TO 데이터 비어있음
                 strSql += CRLF + "    AND CDT.STO_READY_RD     = '1'                               ";
                 strSql += CRLF + "    AND CDT.SENSOR0_DATA_RD  = '1'                               ";   // TO 에 물리 도착
                 strSql += CRLF + "    AND CDT.OD_RQ_YN         = 'N'                               ";
