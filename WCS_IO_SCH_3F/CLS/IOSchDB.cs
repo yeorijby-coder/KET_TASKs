@@ -1545,7 +1545,8 @@ namespace TSK_COMM_IOSCH
         public const string SC_MODE_ONLINE = "1";
         public const string SC_MODE_AUTO   = "1";
         public const string SC_ACTIVE      = "1";
-        public const string SC_STA_WAIT    = "0";
+        public const string SC_STA_IDLE    = "0";
+        public const string SC_STA_WAIT    = "1";
 
         /*
          * 크레인이 지시를 받을 수 있는 상태인가 - 레거시 CScInfo::IsReadyToWork (ScInfo.cpp:1620)
@@ -1570,12 +1571,12 @@ namespace TSK_COMM_IOSCH
             + cDefApp.CRLF + "    AND SD.ONLINE_MODE_RD   = '" + SC_MODE_ONLINE + "'      "
             + cDefApp.CRLF + "    AND SD.AUTO_MODE_RD     = '" + SC_MODE_AUTO + "'        "
             + cDefApp.CRLF + "    AND SD.ACTIVE_MODE_RD   = '" + SC_ACTIVE + "'           "
-            + cDefApp.CRLF + "    AND SD.UCSTATUS_RD      = '" + SC_STA_WAIT + "'         "
+            //            + cDefApp.CRLF + "    AND SD.UCSTATUS_RD      = '" + SC_STA_WAIT + "'         "
+            + cDefApp.CRLF + "    AND COALESCE(SD.UCSTATUS_RD,'0')    IN ('','" + SC_STA_IDLE + "','" + SC_STA_WAIT + "')"
             + cDefApp.CRLF + "    AND COALESCE(SD.ERR_CODE_RD,'0')    IN ('','0','0000')  "
             + cDefApp.CRLF + "    AND COALESCE(SD.ITN_LUGG_FK1,'0')   IN ('','0','0000')  "
-            + cDefApp.CRLF + "    AND COALESCE(SD.LUGG_NO_FK1_RD,'0') IN ('','0','0000')  "
-            + cDefApp.CRLF + "    AND COALESCE(SD.COMPLETE_RD,'0')    IN ('','0')         ";
-
+            + cDefApp.CRLF + "    AND COALESCE(SD.LUGG_NO_FK1_RD,'0') IN ('','0','0000')  ";
+//            + cDefApp.CRLF + "    AND COALESCE(SD.COMPLETE_RD,'0')    IN ('','0')         ";      // 이건 보지 말자
         /*
          * 입고/출고 정지 - 레거시 SC_INFO->m_bStoreSuspend / m_bRetrieveSuspend
          *
@@ -1600,7 +1601,8 @@ namespace TSK_COMM_IOSCH
         public const string SQL_HS_NOT_PAUSED =
               cDefApp.CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('','0')            "
             + cDefApp.CRLF + "    AND COALESCE(CD.TR_PAUSE_OD,'0') IN ('','0')            "
-            + cDefApp.CRLF + "    AND COALESCE(CD.USE_YN,'Y')      = 'Y'                  ";
+            //+ cDefApp.CRLF + "    AND COALESCE(CD.USE_YN,'Y')      = 'Y'                  "
+            ;
 
         // HOST_TASK 신규 작업 (WCS_TASK_HOST frmMain.InsertJobMst 가 '99' 로 INSERT)
         public const string ST_NEW = "99";

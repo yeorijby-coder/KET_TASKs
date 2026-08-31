@@ -781,10 +781,28 @@ namespace TSK_COMM_IOSCH
                     string strIS_TURN = "" + dtHs.Rows[i]["TURN"].ToString() == "" ? "0" : dtHs.Rows[i]["TURN"].ToString();
                     string strLUGG_NO = "" + dtHs.Rows[i]["LUGG_NO"].ToString() == "" ? "0" : dtHs.Rows[i]["LUGG_NO"].ToString();
                     string strHS_MC = "" + dtHs.Rows[i]["MC_NO"].ToString() == "" ? "0" : dtHs.Rows[i]["MC_NO"].ToString();
+                    string strHS_TRACK_NO = "" + dtHs.Rows[i]["HS_TRACK_NO"].ToString() == "" ? "0" : dtHs.Rows[i]["HS_TRACK_NO"].ToString();
+                    //string strSTART_LOC = "" + dtHs.Rows[i]["START_LOC"].ToString() == "" ? "0" : dtHs.Rows[i]["START_LOC"].ToString();
+                    string strSC_NO = "" + dtHs.Rows[i]["START_POS"].ToString() == "" ? "0" : dtHs.Rows[i]["START_POS"].ToString();     // 출고작업일거니까 크래인 PLC 번호로 들어옴
+                    //if (IsScNo(strSC_NO) == false)
+                    //{
+                    //    if (GetScNoByLocation(strSTART_LOC, ref strSC_NO) == false)
+                    //        continue;
+                    //}
+
 
                     // 출고 계열 작업만 대상 (CHECK_CV_RETHS 와 동일 기준)
                     if (IsRetJobType(strJOB_TYP) == false)
                         continue;
+
+                    if (strDEST_POS == "105")
+                    {
+                        int nDEST = 150;    // 1층일때 
+
+                        
+                        strDEST_POS = (Convert.ToInt32(strSC_NO) + nDEST).ToString();
+                    }
+
 
                     _pBdb.BeginTrans();
 
