@@ -436,7 +436,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND  CD.OD_RQ_YN           = 'N'                                 ";
                 strSql += CRLF + "    AND  CD.OD_RQ_FLAG         = 'N'                                 ";
                 strSql += CRLF + "    AND  COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')                                 ";
-                strSql += CRLF + "    AND  CD.ERROR_CODE        IN ('0','00','000','0000')             ";
+                strSql += CRLF + "    AND  COALESCE(NULLIF(BTRIM(CD.ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')             ";
                 strSql += CRLF + "    AND  JM.JOB_STATUS         = '" + ST_CV_RUN + "'                 ";   // CV 구동중 (출고HS→대기대 도착)
                 strSql += CRLF + "  ORDER  BY JM.UPD_DT ASC                                            ";   // 가장 빨리 도착한 화물부터
                 _pBdb.mComMain.CommandType = CommandType.Text;
@@ -481,7 +481,7 @@ namespace TSK_COMM_IOSCH
                     strSql += CRLF + "    AND CD.MC_NO            = :MC_NO                                 ";
                     strSql += CRLF + "    AND CD.SENSOR0_DATA_RD  = '0'                                    ";   // 빈 상태
                     strSql += CRLF + "    AND CD.AUTO_MODE_RD     = '1'                                    ";
-                    strSql += CRLF + "    AND CD.ERROR_CODE      IN ('0','00','000','0000')                ";
+                    strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')                ";
                     strSql += CRLF + "    AND 0 = (SELECT COUNT(*) FROM CV_DATA CD2                        ";   // 결정대로 진입중인 화물 없음
                     strSql += CRLF + "              WHERE CD2.WH_TYP      = :WH_TYP2                       ";
                     strSql += CRLF + "                AND CD2.DEST_POS_OD = :MC_NO2                        ";
@@ -631,7 +631,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND  CD.OD_RQ_YN           = 'N'                                 ";
                 strSql += CRLF + "    AND  CD.OD_RQ_FLAG         = 'N'                                 ";
                 strSql += CRLF + "    AND  COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')                                 ";
-                strSql += CRLF + "    AND  CD.ERROR_CODE        IN ('0','0000')                        ";
+                strSql += CRLF + "    AND  COALESCE(NULLIF(BTRIM(CD.ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')                        ";
                 strSql += CRLF + "    AND  JM.JOB_STATUS         = '" + ST_CV_RUN + "'                 ";   // CV 구동중
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
@@ -943,7 +943,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND CD.STOHS_READY_RD   = '1'                         ";   // 입고 H/S 준비
                 strSql += CRLF + "    AND CD.SENSOR0_DATA_RD  = '1'                         ";   // 재하
                 strSql += CRLF + "    AND CD.AUTO_MODE_RD     = '1'                         ";
-                strSql += CRLF + "    AND CD.ERROR_CODE       IN ('0','0000')               ";
+                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')               ";
                 strSql += SQL_HS_NOT_PAUSED;            // 입고 H/S 가 멈춰 있지 않은가
                 strSql += SQL_SC_READY;                 // 크레인이 지시를 받을 수 있는 상태인가
                 strSql += SQL_SC_STO_NOT_SUSPEND;       // 입고 정지가 아닌가
@@ -1088,7 +1088,7 @@ namespace TSK_COMM_IOSCH
                     strSql += CRLF + "    AND CD.SENSOR0_DATA_RD  = '0'                         ";   // 출고 H/S 가 비어 있다
                     strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.LUGG_NO_RD, " + SQL_WS + "), ''), '0')       IN ('0','0000')            ";
                     strSql += CRLF + "    AND CD.AUTO_MODE_RD     = '1'                         ";
-                    strSql += CRLF + "    AND CD.ERROR_CODE       IN ('0','0000')               ";
+                    strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')               ";
                     strSql += SQL_HS_NOT_PAUSED;            // 출고 H/S 가 멈춰 있지 않은가
 
                     _pBdb.mComMain.CommandType = CommandType.Text;
@@ -1180,7 +1180,7 @@ namespace TSK_COMM_IOSCH
         //        strSql += CRLF + "    AND DLZ.CUR_POS LIKE :PFX                                   ";   // '3%' / '6%' (해당 층 라인)
         //        strSql += CRLF + "    AND CD.SENSOR0_DATA_RD = '1'                                ";   // 게이트에 화물 재하
         //        strSql += CRLF + "    AND CD.AUTO_MODE_RD    = '1'                                ";
-        //        strSql += CRLF + "    AND CD.ERROR_CODE     IN ('0','0000')                       ";
+        //        strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')                       ";
         //        strSql += CRLF + "    AND COALESCE(CD.DEST_POS_RD,'') = DLZ.CUR_DEST_POS          ";   // 화물 목적지 = 레인 방향
         //        _pBdb.mComMain.CommandType = CommandType.Text;
         //        _pBdb.mComMain.Parameters.Clear();
@@ -1276,7 +1276,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND CD.MC_NO            = :ENTRY_MC                              ";   // 레인 진입 자리
                 strSql += CRLF + "    AND CD.SENSOR0_DATA_RD  = '0'                                    ";
                 strSql += CRLF + "    AND CD.AUTO_MODE_RD     = '1'                                    ";
-                strSql += CRLF + "    AND CD.ERROR_CODE      IN ('0','0000')                           ";
+                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')                           ";
                 strSql += CRLF + "    AND 0 = (SELECT COUNT(*) FROM CV_DATA CD2                        ";   // 그 레인으로 가는 중인 화물 없음
                 strSql += CRLF + "              WHERE CD2.WH_TYP      = :WH_TYP2                       ";
                 strSql += CRLF + "                AND CD2.DEST_POS_OD = :MC_NO2                        ";
@@ -1401,7 +1401,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "  WHERE WH_TYP              = :WH_TYP                  ";
                 strSql += CRLF + "    AND SC_NO               = :SC_NO                   ";
                 strSql += CRLF + "    AND OD_RQ_YN            = 'N'                      ";
-                strSql += CRLF + "    AND ERR_CODE_RD         = '0000'                   ";
+                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(ERR_CODE_RD, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')                   ";
 
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();

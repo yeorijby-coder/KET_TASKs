@@ -2140,7 +2140,7 @@ namespace TSK_COMM_IOSCH
                 }
                 else
                 {
-                    strSql += CRLF + "    AND ERROR_CODE_RD       = '0000'              ";
+                    strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(ERROR_CODE_RD, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')              ";
                 }
                 #endregion
 
@@ -3401,7 +3401,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND PLC_NO             = :PLC_NO         ";
                 strSql += CRLF + "    AND MC_NO              = :TRACK_NO       ";
                 strSql += CRLF + "    AND OD_RQ_YN           = 'N'             ";
-                strSql += CRLF + "    AND (ERROR_CODE = '0' OR  ERROR_CODE = '0000')";
+                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')";
 
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
@@ -3511,7 +3511,7 @@ namespace TSK_COMM_IOSCH
                 strSql += cDefApp.CRLF + "    AND CD.STO_READY_RD 	= '1'               ";
                 strSql += cDefApp.CRLF + "    AND CD.SENSOR0_DATA_RD = '1'              ";
                 strSql += cDefApp.CRLF + "    AND CD.AUTO_MODE_RD 	= '1'               ";
-                strSql += cDefApp.CRLF + "    AND CD.ERROR_CODE		IN ('0','0000')     ";
+                strSql += cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')     ";
                 strSql += cDefApp.CRLF + "    AND CD.OD_RQ_YN		= 'N'               ";
                 strSql += cDefApp.CRLF + "    AND CD.OD_RQ_FLAG		= 'N'               ";
                 strSql += cDefApp.CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')               ";
@@ -3881,7 +3881,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "         OR (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_ARV) + " <> 0 AND CD.RET_READY_RD = '1') )  ";
                 strSql += CRLF + "    AND CD.SENSOR0_DATA_RD = '1'              ";
                 strSql += CRLF + "    AND CD.AUTO_MODE_RD 	= '1'               ";
-                strSql += CRLF + "    AND CD.ERROR_CODE		IN ('0','0000')     ";
+                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')     ";
                 strSql += CRLF + "    AND CD.OD_RQ_YN		= 'N'               ";
                 strSql += CRLF + "    AND CD.OD_RQ_FLAG		= 'N'               ";
                 strSql += CRLF + "    AND COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')               ";
@@ -4079,7 +4079,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND DLZ.CUR_POS LIKE :PFX                                   ";   // '3%' / '6%' (해당 층 라인)
                 strSql += CRLF + "    AND CD.SENSOR0_DATA_RD = '1'                                ";   // 게이트에 화물 재하
                 strSql += CRLF + "    AND CD.AUTO_MODE_RD    = '1'                                ";
-                strSql += CRLF + "    AND CD.ERROR_CODE     IN ('0','0000')                       ";
+                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')                       ";
                 strSql += CRLF + "    AND COALESCE(CD.DEST_POS_RD,'') = DLZ.CUR_DEST_POS          ";   // 화물 목적지 = 레인 방향
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
@@ -4163,7 +4163,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND JM.JOB_STATUS       = '" + ST_SC_RUN + "'        ";
                 strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.COMPLETE_RD, " + SQL_WS + "), ''), '0') NOT IN ('0')     ";   // 작업완료표시
                 strSql += CRLF + "    AND SD.READ_UPD_DT      > SD.WRITE_UPD_DT            ";   // 지시를 쓴 뒤에 읽은 값이어야 한다
-                strSql += CRLF + "    AND SD.ERR_CODE_RD      = '0000'                     ";
+                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.ERR_CODE_RD, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')                     ";
                 strSql += CRLF + "  ORDER BY JM.LUGG_NO                                    ";
 
                 _pBdb.mComMain.CommandType = CommandType.Text;
@@ -4680,7 +4680,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND PLC_NO      = :PLC_NO                   ";
                 strSql += CRLF + "    AND MC_NO       = :TRACK_NO                 ";
                 strSql += CRLF + "    AND OD_RQ_YN    = 'N'                       ";
-                strSql += CRLF + "    AND (ERROR_CODE = '0' OR ERROR_CODE = '0000' OR ERROR_CODE IS NULL)";
+                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')";
 
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
