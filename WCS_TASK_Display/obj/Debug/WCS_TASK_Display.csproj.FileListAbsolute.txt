@@ -35,8 +35,8 @@ D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_Displa
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_Display\obj\Debug\WCS_TASK_Display.Properties.Resources.resources
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_Display\obj\Debug\WCS_TASK_Display.csproj.GenerateResource.cache
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_Display\obj\Debug\WCS_TASK_Display.csproj.CoreCompileInputs.cache
-D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_Display\obj\Debug\WCS_TASK.66E05005.Up2Date
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_Display\obj\Debug\WCS_TASK_Display.exe
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_Display\obj\Debug\WCS_TASK_Display.pdb
 C:\Users\USER\AppData\Local\Temp\claude\D------------ReNewal-KET-Renewal-TASKs-KET-TASKs\c416b0b1-7f69-4a5d-a83b-d7a1c1cb6372\scratchpad\tmpbuild\Debug\WCS_TASK_Display.exe
 C:\Users\USER\AppData\Local\Temp\claude\D------------ReNewal-KET-Renewal-TASKs-KET-TASKs\c416b0b1-7f69-4a5d-a83b-d7a1c1cb6372\scratchpad\tmpbuild\Debug\WCS_TASK_Display.pdb
+D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_Display\obj\Debug\WCS_TASK_Display.csproj.CopyComplete

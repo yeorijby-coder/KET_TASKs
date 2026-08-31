@@ -56,6 +56,14 @@ namespace WCS_TASK_Display
         //   전광판별로 나누지 않고 여기 하나만 둔다.
         private int m_nColor = DisplayProtocol.COLOR_YELLOW;
 
+        // @.통신 하트비트.
+        //   전광판은 표시할 내용이 없으면 전송이 없어 EQP_MST.UPD_DT 가 멈춘다.
+        //   CvThread/ScThread 는 PLC 읽기 주기마다 Communication("Y") 를 불러 UPD_DT 를
+        //   갱신하는데 전광판만 접속 직후 1회뿐이라, WCS Client 의 NOW()-UPD_DT 판정이
+        //   성립하지 않았다. 폴링 루프가 200ms 라 DB 부하를 피해 1초로 제한한다.
+        private const int HEARTBEAT_MS = 1000;
+        private int m_nLastHeartbeat = 0;
+
         string strSql = "";
         string CRLF = "\r\n";
         int nSelCnt = 0;
@@ -183,6 +191,7 @@ namespace WCS_TASK_Display
                     IsOpen = true;
                     MakeMsg_Imp("DB login Ok!", m_nthNo);
                     Communication("Y", m_strWh_typ, m_strEqmt_typ, m_strPlc_No);
+                    m_nLastHeartbeat = Environment.TickCount;
 
                     while (true)
                     {
@@ -194,6 +203,16 @@ namespace WCS_TASK_Display
 
                         if (!DispManual()) goto EXIT_LBL; // @.Client 수동지령을 먼저 처리
                         if (!DispAuto()) goto EXIT_LBL;   // @.트랙 변경에 따른 자동 표시
+
+                        // @.표시할 내용이 없어도 1초마다 EQP_MST.UPD_DT 를 갱신해
+                        //   통신이 살아 있음을 WCS Client 에 알린다.
+                        //   여기까지 왔다는 것은 DispManual/DispAuto 가 실패하지 않았다는 뜻이다.
+                        //   (TickCount 는 약 49.7일마다 순환하므로 unchecked 뺄셈으로 비교한다)
+                        if (unchecked(Environment.TickCount - m_nLastHeartbeat) >= HEARTBEAT_MS)
+                        {
+                            m_nLastHeartbeat = Environment.TickCount;
+                            Communication("Y", m_strWh_typ, m_strEqmt_typ, m_strPlc_No);
+                        }
 
                         Thread.Sleep(200);
                     }
