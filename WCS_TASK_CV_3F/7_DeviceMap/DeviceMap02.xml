@@ -182,6 +182,9 @@
     			</ExtraTable>
 		</Area>
 
+		<Area type="b" seq="0" name="RetStation" address="554" desc="출고위치 결정대(트랙 232)에는 출고대 비트가 따로 없다. Logic.xml 의 ArvStation 규칙이 도착 신호를 RetStation 이름으로 세우는데 그 이름으로 걸린 비트가 없어서 신호가 갈 곳이 없었다. 여기 출발 H/S 비트(D554.0)가 곧 출고 준비라 RetStation 이름으로도 걸어 둔다. 204/208/216/220/249/259 를 D558 에 걸어 둔 것과 같은 방식이다.">
+			<Bit  desc="D554.0" Use ="1" tid="232" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+		</Area>
 	</SeparatelyETC>
 
 	<FlantEquip use="0"/>

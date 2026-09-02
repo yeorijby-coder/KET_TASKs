@@ -51,14 +51,13 @@
 				<condition CNum="6"  CKeyWord="RetStation"/>
 				<condition CNum="15" CKeyWord="5"/>
 			</conditions>
-			<actions desc ="Track Data 삭제, StartFlagOff">
-				<action ANum="52" AKeyWord="Auto"/>
+			<actions desc ="Track Data 삭제, StartFlagOff (Auto OFF 는 뺐다 - 구역 비트라 지게차가 가져갈 때마다 PLC 전체가 수동으로 떨어졌다)">
 				<action ANum="57" AKeyWord="LuggNum"/>
 				<action ANum="57" AKeyWord="DestPos"/>
-				<action ANum="57" AKeyWord="D10n+2"/>
-				<action ANum="57" AKeyWord="D10n+3"/>
-				<action ANum="57" AKeyWord="D10n+4"/>
-				<action ANum="57" AKeyWord="D2n+1"/>
+				<action ANum="57" AKeyWord="D5n+1"/>
+				<action ANum="57" AKeyWord="SensorData"/>
+				<action ANum="57" AKeyWord="ErrorCode"/>
+				<action ANum="57" AKeyWord="D5n+4"/>
 				<action ANum="55" AKeyWord="StartFlag"/>
 			</actions>
 		</Logic>
@@ -136,11 +135,11 @@
 				<action ANum="51" AKeyWord="RetStation"/>
 			</actions>
 		</Logic>
-		<Logic id="2" desc="OR 조건으로 들어가야 하는거 아닌가?">
-			<conditions desc="작번 無, 목적지 無, 수동, 화물 OFF, 출고대 ON">
+		<Logic id="2" desc="도착대가 비었으면 출고 신호를 내린다">
+			<conditions desc="작번 無, 목적지 無, 자동, 화물 OFF, 출고대 ON">
 				<condition CNum="3" CKeyWord="LuggNum"/>
 				<condition CNum="3" CKeyWord="DestPos"/>
-				<condition CNum="0" CKeyWord="Auto"/>
+				<condition CNum="1" CKeyWord="Auto"/>
 				<condition CNum="0" CKeyWord="ProductSensor"/>
 				<condition CNum="1" CKeyWord="RetStation"/>
 				<condition CNum="6" CKeyWord="ArvStation"/>
