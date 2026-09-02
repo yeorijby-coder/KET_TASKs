@@ -333,14 +333,23 @@ namespace TSK_COMM_IOSCH
         //          EQP_MST의 CV 2호기/5호기 CV_RET_CNT 합계(PLC가 보고하는 1층 출고 루프상
         //          화물 갯수) 가 DEL_HIS_SETTING(TABLE_NAME='1f_ret_rimit')의 CYCLE 값보다
         //          크면 출발하지 않는다 (return false)
-        //   출발 규칙 :
-        //          - 출발 크레인이 1호기(SC_HS_DEF.SC_NO='901')면 목적지 = 출고대#2(스테이션 104)
-        //          - 그 외는 대기 화물 중 가장 빨리 도착한 것부터 목적지 = 출고위치 결정대(스테이션 171)
-        //            (사이클당 1건만 출발 - 유량 제한을 사이클마다 다시 계산하기 때문)
+        //   출발 규칙 (대기 화물 중 가장 빨리 도착한 것부터, 사이클당 1건) :
+        //          - 출고대 레인의 진입 자리(205 / 211)가 비어 있으면 그 출고대로 직행
+        //            (205 비었으면 출고대#1(103=206), 아니면 211 비었으면 출고대#2(104=212))
+        //          - 둘 다 차 있으면 출고위치 결정대(스테이션 171=232) 경유
+        //   목적지를 출고대로 확정할 때는 JOB_MST.DEST_POS 도 같이 바꾼다.
+        //   (도착 매칭이 CD.HOST_STN_NO = JM.DEST_POS 라 작업정보의 도착지가 안 바뀌면
+        //    화물이 출고대에 닿아도 도착 보고가 안 붙는다)
+        //
+        //   목적지를 정하는 기준은 출고대 자체가 아니라 그 앞 진입 자리다. 출고대에
+        //   화물이 있어도 진입 자리가 비어 있으면 한 대 더 보낼 수 있고, 지게차가 앞의
+        //   것을 가져가면 목적지가 출고대이므로 저절로 밀려 들어간다.
+        //   (CHECK_RET_LANE_READY / GET_RET_LANE_ENTRY - 출고대 트랙 - 1)
+        //
         //   출발 여부는 대기대 자신의 조건과 위 유량 제한으로만 정한다.
         //   도착지(결정대)가 비었는지는 보지 않는다. 붙잡아 두면 대기대가 안 비어
         //   크레인이 출고 H/S 를 못 비운다. (원하면 폼 체크박스로 켤 수 있다)
-        //   스테이션(104/171) → 실트랙(MC) 변환은 DEST_POS_DEF(TRACK_NO→MC_NO) 데이터 사용.
+        //   스테이션(103/104/171) → 실트랙(MC) 변환은 DEST_POS_DEF(TRACK_NO→MC_NO) 데이터 사용.
         // ─────────────────────────────────────────────────────────────────
         private bool m_bRetLimitHold = false;   // 유량 제한 보류 상태 (메시지 1회 출력용)
 
@@ -408,9 +417,11 @@ namespace TSK_COMM_IOSCH
                 // ── 2) 스테이션 → 실트랙(MC) 변환 (DEST_POS_DEF)
                 //   트랙 번호는 대기대/결정대의 상태를 볼 때만 쓴다.
                 //   CV 에 넘기는 목적지는 작업대 번호다. (CvSim 의 DestCode 와 같다)
-                string strMC_RET2 = "";     // 출고대#1 트랙 (스테이션 103)
-                string strMC_DECIDE = "";   // 출고위치 결정대 트랙 (스테이션 171)
-                if (GET_DEST_POS_MC(strWH_TYP, "103", ref strMC_RET2, ref pRTN_MSG) == false) return false;
+                string strMC_RET1 = "";     // 출고대#1 트랙 (스테이션 103 = 206)
+                string strMC_RET2 = "";     // 출고대#2 트랙 (스테이션 104 = 212)
+                string strMC_DECIDE = "";   // 출고위치 결정대 트랙 (스테이션 171 = 232)
+                if (GET_DEST_POS_MC(strWH_TYP, "103", ref strMC_RET1, ref pRTN_MSG) == false) return false;
+                if (GET_DEST_POS_MC(strWH_TYP, "104", ref strMC_RET2, ref pRTN_MSG) == false) return false;
                 if (GET_DEST_POS_MC(strWH_TYP, "171", ref strMC_DECIDE, ref pRTN_MSG) == false) return false;
 
                 // ── 3) 출고 대기 트랙(WAIT_TRACK)에 재하된 출발 대상 작업 조회 (도착 오래된 순)
@@ -431,7 +442,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND  COALESCE(SHD.WAIT_TRACK,'') <> ''                           ";
                 strSql += CRLF + "    AND  SHD.HS_USE_YN         = 'Y'                                 ";
                 strSql += CRLF + "    AND  CD.SENSOR0_DATA_RD    = '1'                                 ";   // 재하
-                strSql += CRLF + "    AND  CD.RET_READY_RD       = '1'                                 ";   // 출발 준비
+                strSql += CRLF + "    AND  CD.RET_READY_RD       = '1'                                 ";   // 출발 준비 (중간 도착대는 출고 준비 신호를 쓴다)
                 strSql += CRLF + "    AND  CD.AUTO_MODE_RD       = '1'                                 ";
                 strSql += CRLF + "    AND  CD.OD_RQ_YN           = 'N'                                 ";
                 strSql += CRLF + "    AND  CD.OD_RQ_FLAG         = 'N'                                 ";
@@ -497,7 +508,18 @@ namespace TSK_COMM_IOSCH
                         bDecideReady = Convert.ToInt32(_pBdb.mDtMain.Rows[0]["READY_CNT"]) > 0;
                 }
 
-                // ── 5) 출발 지시
+                // ── 5) 출고대 레인 가용 확인  (출고대가 아니라 그 앞 진입 자리 205 / 211 을 본다)
+                //      진입 자리가 비어 있고 그 레인으로 가는 중인 화물이 없으면 그리로 직행한다.
+                //      한 사이클에 1건만 출발시키므로 루프 밖에서 한 번만 조회한다.
+                bool bRet1Ready = CHECK_RET_LANE_READY(strWH_TYP, strMC_RET1, "103");
+                bool bRet2Ready = CHECK_RET_LANE_READY(strWH_TYP, strMC_RET2, "104");
+
+                string strDestStn = "";    // CV / JOB_MST 에 쓰는 목적지 (작업대 번호)
+                string strDestNm = "";
+                if (bRet1Ready == true) { strDestStn = "103"; strDestNm = "출고대#1"; }
+                else if (bRet2Ready == true) { strDestStn = "104"; strDestNm = "출고대#2"; }
+
+                // ── 6) 출발 지시
                 string strJOB_TYP = "";
                 string strTRAY_TYP = "";
                 string strTRAY_LEV = "";
@@ -523,34 +545,34 @@ namespace TSK_COMM_IOSCH
                     if (IsRetJobType(strJOB_TYP) == false)
                         continue;
 
-                    if (strHS_SC_NO == "901")
+                    if (strDestStn != "")
                     {
-                        // 출발 크레인이 1호기 → 출고대#1(스테이션 103) 직행
+                        // 출고대 레인 진입 자리(205 / 211)가 비어 있다 → 그 출고대로 직행
                         //   (최종 목적지 확정이므로 JOB_MST.DEST_POS 도 함께 변경 - ARRIVE_CV 도착 매칭용)
                         //   CV 목적지와 JOB_MST.DEST_POS 둘 다 작업대 번호를 쓴다.
                         //   CV 는 목적지를 작업대 번호(DestCode)로 읽고, 도착 매칭은
                         //   CD.HOST_STN_NO = JM.DEST_POS 로 맞추기 때문이다.
-                        strDestMc = strMC_RET2;
+                        strDestMc = (strDestStn == "103") ? strMC_RET1 : strMC_RET2;
 
                         _pBdb.BeginTrans();
-                        if (UPDATE_CV_DATA(strJOB_TYP, strTRAY_TYP, strTRAY_LEV, "103", strIS_TURN,
+                        if (UPDATE_CV_DATA(strJOB_TYP, strTRAY_TYP, strTRAY_LEV, strDestStn, strIS_TURN,
                                            strLUGG_NO, strWH_TYP, strCV_PLC, strWAIT_MC, "", ref pRTN_MSG) == false)
                         {
                             _pBdb.Rollback();
                             continue;
                         }
-                        if (UPDATE_JOB_DATA(ST_CV_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG, "103") == false)
+                        if (UPDATE_JOB_DATA(ST_CV_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG, strDestStn) == false)
                         {
                             _pBdb.Rollback();
                             continue;
                         }
-                        pRTN_MSG = strFunction + "TRACK " + strWAIT_MC + "번[출고 대기대]에서 출고대#2(" + strDestMc + ")로 출발 지시하였습니다. [작업번호:" + strLUGG_NO + "]";
+                        pRTN_MSG = strFunction + "TRACK " + strWAIT_MC + "번[출고 대기대]에서 " + strDestNm + "(" + strDestMc + ")로 출발 지시하였습니다. [진입 자리 비었음 / 크레인:" + strHS_SC_NO + " / 작업번호:" + strLUGG_NO + "]";
                         _pBdb.Commit();
                         InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_CV_RUN, strWAIT_MC, strDestMc);
                         return true;
                     }
 
-                    // 1호기 외 → 출고위치 결정대(스테이션 171)로 선착순 1건 출발
+                    // 두 레인 다 진입 자리가 차 있다 → 출고위치 결정대(스테이션 171)로 선착순 1건 출발
                     if (bDecideReady == false)
                         continue;   // 결정대 검사를 켠 경우만 - 사용중이면 다음 사이클 재시도
 
@@ -564,7 +586,7 @@ namespace TSK_COMM_IOSCH
                         continue;
                     }
                     //   (결정대는 경유지이므로 JOB_MST.DEST_POS 는 변경하지 않음 - 최종 목적지는
-                    //    CHECK_CV_RET_RESTART 가 출고대#1/#2 중에서 결정한다)
+                    //    CHECK_CV_RET_RESTART 가 진입 자리(205 / 211)를 다시 보고 결정한다)
                     if (UPDATE_JOB_DATA(ST_CV_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG) == false)
                     {
                         _pBdb.Rollback();
@@ -626,7 +648,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "  WHERE  CD.WH_TYP             = :WH_TYP                             ";
                 strSql += CRLF + "    AND  CD.MC_NO              = :MC_NO                              ";   // 결정대(171 = 232)
                 strSql += CRLF + "    AND  CD.SENSOR0_DATA_RD    = '1'                                 ";   // 재하
-                strSql += CRLF + "    AND  CD.STO_READY_RD       = '1'                                 ";   // 출발 준비
+                strSql += CRLF + "    AND  CD.RET_READY_RD       = '1'                                 ";   // 출발 준비 (도착대/출고대 계열은 출고 준비 신호를 쓴다)
                 strSql += CRLF + "    AND  CD.AUTO_MODE_RD       = '1'                                 ";
                 strSql += CRLF + "    AND  CD.OD_RQ_YN           = 'N'                                 ";
                 strSql += CRLF + "    AND  CD.OD_RQ_FLAG         = 'N'                                 ";
