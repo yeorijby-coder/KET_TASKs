@@ -1,0 +1,494 @@
+﻿using System;
+using System.Collections.Generic;
+using System.Text;
+using System.Runtime.InteropServices;
+using System.Data;
+using NpgsqlTypes;
+
+namespace TSK_COMM_IOSCH
+{
+    class cDefApi
+    {
+        // @@@.INI파일에서 정수형 데이터를 읽어옴.
+         [DllImport("kernel32.dll")]
+        static extern int GetPrivateProfileInt(string lpApplicationName, string lpKeyName, int nDefault, string lpFileName);
+
+        // @@@.INI파일에서 문자형 데이터를 읽어옴.
+        [DllImport("kernel32.dll")]
+        static extern uint GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, StringBuilder lpReturnedString, int nSize, string lpFileName);
+
+        // @@@.GsGetInitPorFileDB
+        public static void GsGetInitPorFileDB(ref string pHost,
+                                              ref string pServiceName,
+                                              ref string pUserID,
+                                              ref string pPassword,
+                                              ref string pPort,
+                                              ref string pRtnMsg)
+        {
+            StringBuilder sb = new StringBuilder(1000);
+
+            if (!System.IO.File.Exists(cDefApp.GM_ENV_INI))
+            {
+                pRtnMsg = "[GsGetInitPorFileDB]::Not Found File";
+                return;
+            }
+
+            try
+            {
+                pRtnMsg = "";
+
+                GetPrivateProfileString("DB", "HOST", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pHost = sb.ToString();
+
+                GetPrivateProfileString("DB", "SERVICENAME", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pServiceName = sb.ToString();
+
+                GetPrivateProfileString("DB", "USERID", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pUserID = sb.ToString();
+
+                GetPrivateProfileString("DB", "PASSWORD", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pPassword = sb.ToString();
+
+                GetPrivateProfileString("DB", "PORT", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pPort = sb.ToString();
+
+                pRtnMsg = "[GsGetInitPorFileDB]::Sucess";
+                return;
+            }
+            catch (Exception ex)
+            {
+                pRtnMsg = ex.Message;
+            }
+            pRtnMsg = "[GsGetInitPorFileDB]Error::" + pRtnMsg;
+        }
+
+        // @@@.INI파일에 문자형 데이터를 씀.
+        [DllImport("kernel32.dll")]
+        static extern bool WritePrivateProfileString(string lpAppName, string lpKeyName, string lpString, string lpFileName);
+
+        /*
+         * 1층 출고 : 결정대가 비어야 출발시킬지 (ENV_IOSCH.INI [1F_RET] DECIDE_WAIT)
+         *
+         *   키가 없으면 N(결정대를 보지 않고 출발)으로 본다. 그것이 기본 동작이다.
+         */
+        public static bool GsGetRetDecideWait()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(16);
+                GetPrivateProfileString("1F_RET", "DECIDE_WAIT", "N", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                return (sb.ToString().Trim().ToUpper() == "Y");
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /*
+         * 3층 202 피킹대 쏠림 제한 (ENV_IOSCH.INI [3F_RET] LIMIT_STN202_PICKING)
+         *
+         *   레거시 ECS 의 Config m_nLimitStn202Picking2 와 같은 값이다.
+         *     m_nLimitStn202Picking2 = GetPrivateProfileInt("Main", "LimitStn202Picking2", 0, ...)
+         *   201/203 에 피킹 대기가 있는 동안, 진행 중인 202 작업이 이 수 이상이면
+         *   새 202 출고를 내지 않는다. 레거시 기본값이 0 이라 여기도 0 으로 둔다.
+         *   (0 이면 201/203 에 대기가 있는 동안은 202 를 아예 새로 내지 않는다)
+         */
+        public static int GsGetLimitStn202Picking()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(16);
+                GetPrivateProfileString("3F_RET", "LIMIT_STN202_PICKING", "0", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+
+                int nLimit;
+                if (int.TryParse(sb.ToString().Trim(), out nLimit) == false) return 0;
+                return (nLimit < 0) ? 0 : nLimit;
+            }
+            catch
+            {
+                return 0;
+            }
+        }
+
+        public static void GsSetRetDecideWait(bool bWait)
+        {
+            try
+            {
+                WritePrivateProfileString("1F_RET", "DECIDE_WAIT", bWait ? "Y" : "N", cDefApp.GM_ENV_INI);
+            }
+            catch
+            {
+            }
+        }
+
+        // @@@.GsGetInitPorFileLogDel
+        public static void GsGetInitPorFileLogDel(ref string pYear,
+                                                  ref string pMonth,
+                                                  ref string pDay,
+                                                  ref string pHour,
+                                                  ref string pMinute,
+                                                  ref string pSecond,
+                                                  ref string pAddValue,
+                                                  ref string pAddType,
+                                                  ref string pRtnMsg)
+        {
+            StringBuilder sb = new StringBuilder(1000);
+
+            if (!System.IO.File.Exists(cDefApp.GM_ENV_INI))
+            {
+                pRtnMsg = "[GsGetInitPorFileLogDel]::Not Found File";
+                return;
+            }
+
+            try
+            {
+                pRtnMsg = "";
+
+                GetPrivateProfileString("LOG_DEL", "YEAR", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pYear = sb.ToString();
+
+                GetPrivateProfileString("LOG_DEL", "MONTH", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pMonth = sb.ToString();
+
+                GetPrivateProfileString("LOG_DEL", "DAY", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pDay = sb.ToString();
+
+                GetPrivateProfileString("LOG_DEL", "HOUR", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pHour = sb.ToString();
+
+                GetPrivateProfileString("LOG_DEL", "MINUTE", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pMinute = sb.ToString();
+
+                GetPrivateProfileString("LOG_DEL", "SECOND", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pSecond = sb.ToString();
+
+                GetPrivateProfileString("LOG_DEL", "ADDVALUE", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pAddValue = sb.ToString();
+
+                GetPrivateProfileString("LOG_DEL", "ADDTYPE", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pAddType = sb.ToString();
+
+                pRtnMsg = "[GsGetInitPorFileLogDel]::Sucess";
+                return;
+            }
+            catch (Exception ex)
+            {
+                pRtnMsg = ex.Message;
+            }
+            pRtnMsg = "[GsGetInitPorFileLogDel]Error::" + pRtnMsg;
+        }
+
+        // @@@.GsGetInitPorFilePDB
+        public static void GsGetInitPorFilePDB(ref string pIP,
+                                              ref string pPORT,
+                                              ref string pDatabase,
+                                              ref string pUserID,
+                                              ref string pPassword,
+                                              ref string pLogpath,
+                                              ref string pFilename,
+                                              ref string pRtnMsg)
+        {
+            StringBuilder sb = new StringBuilder(1000);
+
+            if (!System.IO.File.Exists(cDefApp.GM_ENV_INI))
+            {
+                pRtnMsg = "[GsGetInitPorFilePDB]::Not Found File";
+                return;
+            }
+
+            try
+            {
+                pRtnMsg = "";
+
+                GetPrivateProfileString("P_DB", "IP", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pIP = sb.ToString();
+
+                GetPrivateProfileString("P_DB", "PORT", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pPORT = sb.ToString();
+
+
+                GetPrivateProfileString("P_DB", "DATABASE", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pDatabase = sb.ToString();
+
+                GetPrivateProfileString("P_DB", "USER", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pUserID = sb.ToString();
+
+                GetPrivateProfileString("P_DB", "USER_PW", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pPassword = sb.ToString();
+
+                GetPrivateProfileString("P_DB", "LOGPATH", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pLogpath = sb.ToString();
+
+                GetPrivateProfileString("P_DB", "FILENAME", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pFilename = sb.ToString();
+
+                pRtnMsg = "[GsGetInitPorFilePDB]::Sucess";
+                return;
+            }
+            catch (Exception ex)
+            {
+                pRtnMsg = ex.Message;
+            }
+            pRtnMsg = "[GsGetInitPorFilePDB]Error::" + pRtnMsg;
+        }
+
+        // @@@.GsGetInitPorFileDB
+        public static void GsGetInitPorFileDB(ref string pProvider,
+                                              ref string pAlias,
+                                              ref string pUserID,
+                                              ref string pPassword,
+                                              ref string pLogpath,
+                                              ref string pFilename,
+                                              ref string pRtnMsg)
+        {
+            StringBuilder sb = new StringBuilder(1000);
+
+            if (!System.IO.File.Exists(cDefApp.GM_ENV_INI))
+            {
+                pRtnMsg = "[GsGetInitPorFileDB]::Not Found File"; 
+                return ;
+            } 
+
+            try
+            {
+                pRtnMsg = "";
+
+                GetPrivateProfileString("DB", "PROVIDER", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pProvider = sb.ToString();
+
+                GetPrivateProfileString("DB", "ALIAS", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pAlias = sb.ToString();
+
+
+                GetPrivateProfileString("DB", "USERID", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pUserID = sb.ToString();
+
+                GetPrivateProfileString("DB", "PASSWORD", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pPassword = sb.ToString();
+
+                GetPrivateProfileString("DB", "LOGPATH", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pLogpath = sb.ToString();
+
+                GetPrivateProfileString("DB", "FILENAME", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pFilename = sb.ToString();
+
+                pRtnMsg = "[GsGetInitPorFileDB]::Sucess";
+                return;
+            }
+            catch (Exception ex)
+            {
+                pRtnMsg = ex.Message;
+            }
+            pRtnMsg = "[GsGetInitPorFileDB]Error::" + pRtnMsg;
+        }
+
+        // @@@.GsReadInitProfileCom
+        public static bool GsReadInitProfileCom(string pAppNm,
+                                            ref string pCvNo,
+                                            ref string pCommIP,
+                                            ref    int pComPort,
+                                            ref string pWcType,
+                                            ref string pRtnMsg)
+        {
+            StringBuilder sb = new StringBuilder(1000);
+
+            if (!System.IO.File.Exists(cDefApp.GM_ENV_INI))
+            {
+                pRtnMsg = "[GsReadInitProfileCom]::Not Found File"; 
+                return false;
+            } 
+
+            try
+            {
+                pRtnMsg = "";
+
+                GetPrivateProfileString(pAppNm, "CVNO", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pCvNo = sb.ToString();
+
+                GetPrivateProfileString(pAppNm, "IP", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pCommIP = sb.ToString();
+
+                pComPort = GetPrivateProfileInt(pAppNm, "PORT", pComPort, cDefApp.GM_ENV_INI);
+
+                GetPrivateProfileString(pAppNm, "WCTYPE", null, sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                pWcType = sb.ToString();
+
+                pRtnMsg = "[GsReadInitProfileCom]::Sucess";
+                return true;
+            }
+            catch (Exception ex)
+            {
+                pRtnMsg = ex.Message;
+            }
+            pRtnMsg = "[GsGetInitPorFileDB]Error::" + pRtnMsg;
+            return false;
+        }
+
+        // @@@.GsReadInitProfileDelay
+        public static void GsReadInitProfileDelay(string pDelayTyp, ref int pDelay, ref string pRtnMsg)
+        {
+            if (!System.IO.File.Exists(cDefApp.GM_ENV_INI))
+            {
+                pRtnMsg = "[GsReadInitProfileDelay]::Not Found File";
+                return;
+            }
+
+            try
+            {
+                pRtnMsg = "";
+                pDelay = GetPrivateProfileInt("DELAY", pDelayTyp, pDelay, cDefApp.GM_ENV_INI);
+                pRtnMsg = "[GsReadInitProfileDelay]::Sucess";
+                return;
+            }
+            catch (Exception ex)
+            {
+                pRtnMsg = ex.Message;
+            }
+            pRtnMsg = "[GsReadInitProfileDelay]Error::" + pRtnMsg;
+        }
+
+
+        public static string GetBankWH(cDefApp.eWHTYP eWHTYP, string strBANK)
+        {
+            int nBank = Convert.ToInt32(strBANK);
+            if (nBank < 1)
+            {
+                return "0";
+            }
+
+            if ((int)eWHTYP == 10 || (int)eWHTYP == 30)
+            {
+                int nTemp = nBank % 4;
+                if (nTemp == 0)
+                {
+                    nTemp = 4;
+                }
+                return string.Format("{0:00}", nTemp);
+            }
+
+            if ((int)eWHTYP == 20 || (int)eWHTYP == 40)
+            {
+                int nTemp = nBank % 2;
+                if (nTemp == 0)
+                {
+                    nTemp = 2;
+                }
+                return string.Format("{0:00}", nTemp);
+            }
+
+            return "";
+        }
+
+#if ORACLE
+        public static bool CHECK_ENTER_DEAD_LOCK_ZONE(cDbUse _pBdb
+                                                        , string strWH_TYP
+                                                        , string strTRACK_NO
+                                                        , string strDEST_POS
+                                                    , ref string pRTN_MSG)
+#elif POSTGRESQL || SQL
+        public static bool CHECK_ENTER_DEAD_LOCK_ZONE(cDbPostUse _pBdb
+                                                        , string strWH_TYP
+                                                        , string strTRACK_NO
+                                                        , string strDEST_POS
+                                                    , ref string pRTN_MSG
+                                                    , ref DataTable pdtDeadLock)
+#endif
+        {
+            try
+            {
+                int nJobCnt = 0;
+                int nSelCnt = 0;
+                string strSql = "";
+                string CRLF = "\r\n";
+
+                pRTN_MSG = "CHECK_ENTER_DEAD_LOCK_ZONE::";
+
+                // 목적지에 도착한 상태정보
+                strSql = "";
+                strSql += CRLF + " SELECT *                                    ";
+                strSql += CRLF + "   FROM DEAD_LOCK_ZONE_DEF                   ";
+                strSql += CRLF + "  WHERE WH_TYP		    = :WH_TYP          ";
+                strSql += CRLF + "    AND CUR_POS           = :CUR_POS         ";
+                strSql += CRLF + "    AND CUR_DEST_POS 	    = :CUR_DEST_POS    ";
+                strSql += CRLF + "    AND USE_YN     	    = 'Y'              ";
+
+                _pBdb.mComMain.CommandType = CommandType.Text;
+                _pBdb.mComMain.Parameters.Clear();
+                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+                _pBdb.mComMain.Parameters.Add("CUR_POS", DbLang.VARCHAR).Value = strTRACK_NO;
+                _pBdb.mComMain.Parameters.Add("CUR_DEST_POS", DbLang.VARCHAR).Value = strDEST_POS;
+
+                nJobCnt = _pBdb.ExcuteQry(pdtDeadLock, strSql);
+                if (nJobCnt < 0)
+                {
+                    pRTN_MSG += _pBdb.ErrMsg;
+                    return false;
+                }
+
+                if (nJobCnt == 0)
+                {
+                    //_pBdb.mDtMain.Dispose();
+                    pRTN_MSG = "";
+                    return true;
+                }
+
+                string strBUFFERS = "" + pdtDeadLock.Rows[0]["BUFFERS"].ToString() == "" ? "" : pdtDeadLock.Rows[0]["BUFFERS"].ToString();
+                string strCHK_DEST_POS = "" + pdtDeadLock.Rows[0]["CHK_DEST_POS"].ToString() == "" ? "" : pdtDeadLock.Rows[0]["CHK_DEST_POS"].ToString();
+                string strCOUNT = "" + pdtDeadLock.Rows[0]["COUNT"].ToString() == "" ? "" : pdtDeadLock.Rows[0]["COUNT"].ToString();
+                string strEQP_STA_CHK_TR = "" + pdtDeadLock.Rows[0]["EQP_STA_CHK_TR"].ToString() == "" ? "" : pdtDeadLock.Rows[0]["EQP_STA_CHK_TR"].ToString();
+                int nDeadLockCount = Convert.ToInt32(strCOUNT);
+
+                // 해당 정보에 해당하는 작업이 존재하는지 Check
+                strSql = "";
+                strSql += CRLF + " SELECT *                          ";
+                strSql += CRLF + "   FROM CV_DATA                    ";
+                strSql += CRLF + "  WHERE WH_TYP	 =   '" + strWH_TYP + "'     ";
+                strSql += CRLF + "    AND MC_NO      IN (" + strBUFFERS + ")     ";
+
+                if (strEQP_STA_CHK_TR != "")
+                {
+                    strSql += CRLF + "    AND (DEST_POS_RD IN (" + strCHK_DEST_POS + ")    OR    WAIT_SC_RET_JOB_RD = '1')  ";
+                }
+                else
+                {
+                    strSql += CRLF + "    AND  DEST_POS_RD IN (" + strCHK_DEST_POS + ") ";
+                }
+
+                //_pBdb.mComMain.CommandType = CommandType.Text;
+                //_pBdb.mComMain.Parameters.Clear();
+                //_pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+                //_pBdb.mComMain.Parameters.Add("MC_NO", DbLang.VARCHAR).Value = strBUFFERS;
+                //_pBdb.mComMain.Parameters.Add("DEST_POS", DbLang.VARCHAR).Value = strCHK_DEST_POS;
+
+                nJobCnt = _pBdb.ExcuteQry(strSql);
+                if (nJobCnt < 0)
+                {
+                    pRTN_MSG += _pBdb.ErrMsg;
+                    return false;
+                }
+
+                if (nJobCnt == 0)
+                {
+                    //_pBdb.mDtMain.Dispose();
+                    pRTN_MSG = "";
+                    return true;
+                }
+
+                if (nDeadLockCount <= nJobCnt)
+                {
+                    pRTN_MSG = "작업 갯수가 DeadLock Count 보다 많아서 화물을 대기시킵니다. [현재위치:" + strTRACK_NO + "][목적지:" + strDEST_POS + "]";
+                    return false;
+                }
+
+                return true;
+            }
+            catch (Exception ex)
+            {
+                pRTN_MSG += ex.ToString();
+                _pBdb.Rollback();
+                return false;
+            }
+        }
+    }
+}

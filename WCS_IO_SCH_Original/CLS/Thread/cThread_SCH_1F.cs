@@ -408,9 +408,9 @@ namespace TSK_COMM_IOSCH
                 // ── 2) 스테이션 → 실트랙(MC) 변환 (DEST_POS_DEF)
                 //   트랙 번호는 대기대/결정대의 상태를 볼 때만 쓴다.
                 //   CV 에 넘기는 목적지는 작업대 번호다. (CvSim 의 DestCode 와 같다)
-                string strMC_RET2 = "";     // 출고대#2 트랙 (스테이션 104)
+                string strMC_RET2 = "";     // 출고대#1 트랙 (스테이션 103)
                 string strMC_DECIDE = "";   // 출고위치 결정대 트랙 (스테이션 171)
-                if (GET_DEST_POS_MC(strWH_TYP, "104", ref strMC_RET2, ref pRTN_MSG) == false) return false;
+                if (GET_DEST_POS_MC(strWH_TYP, "103", ref strMC_RET2, ref pRTN_MSG) == false) return false;
                 if (GET_DEST_POS_MC(strWH_TYP, "171", ref strMC_DECIDE, ref pRTN_MSG) == false) return false;
 
                 // ── 3) 출고 대기 트랙(WAIT_TRACK)에 재하된 출발 대상 작업 조회 (도착 오래된 순)
@@ -431,7 +431,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND  COALESCE(SHD.WAIT_TRACK,'') <> ''                           ";
                 strSql += CRLF + "    AND  SHD.HS_USE_YN         = 'Y'                                 ";
                 strSql += CRLF + "    AND  CD.SENSOR0_DATA_RD    = '1'                                 ";   // 재하
-                strSql += CRLF + "    AND  CD.STO_READY_RD       = '1'                                 ";   // 출발 준비
+                strSql += CRLF + "    AND  CD.RET_READY_RD       = '1'                                 ";   // 출발 준비
                 strSql += CRLF + "    AND  CD.AUTO_MODE_RD       = '1'                                 ";
                 strSql += CRLF + "    AND  CD.OD_RQ_YN           = 'N'                                 ";
                 strSql += CRLF + "    AND  CD.OD_RQ_FLAG         = 'N'                                 ";
@@ -525,7 +525,7 @@ namespace TSK_COMM_IOSCH
 
                     if (strHS_SC_NO == "901")
                     {
-                        // 출발 크레인이 1호기 → 출고대#2(스테이션 104) 직행
+                        // 출발 크레인이 1호기 → 출고대#1(스테이션 103) 직행
                         //   (최종 목적지 확정이므로 JOB_MST.DEST_POS 도 함께 변경 - ARRIVE_CV 도착 매칭용)
                         //   CV 목적지와 JOB_MST.DEST_POS 둘 다 작업대 번호를 쓴다.
                         //   CV 는 목적지를 작업대 번호(DestCode)로 읽고, 도착 매칭은
@@ -533,13 +533,13 @@ namespace TSK_COMM_IOSCH
                         strDestMc = strMC_RET2;
 
                         _pBdb.BeginTrans();
-                        if (UPDATE_CV_DATA(strJOB_TYP, strTRAY_TYP, strTRAY_LEV, "104", strIS_TURN,
+                        if (UPDATE_CV_DATA(strJOB_TYP, strTRAY_TYP, strTRAY_LEV, "103", strIS_TURN,
                                            strLUGG_NO, strWH_TYP, strCV_PLC, strWAIT_MC, "", ref pRTN_MSG) == false)
                         {
                             _pBdb.Rollback();
                             continue;
                         }
-                        if (UPDATE_JOB_DATA(ST_CV_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG, "104") == false)
+                        if (UPDATE_JOB_DATA(ST_CV_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG, "103") == false)
                         {
                             _pBdb.Rollback();
                             continue;
