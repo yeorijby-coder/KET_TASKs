@@ -340,14 +340,16 @@ namespace TSK_COMM_IOSCH
         //   갈라 보던 것과 같은 짜임이다.
         //
         //   목적지 결정 (사이클당 1건 - 유량을 사이클마다 다시 계산하기 때문) :
-        //     출고대 레인의 진입 자리(205 / 211)가 비어 있으면 그 출고대로 직행.
-        //       205 비었으면 출고대#1(103 = 206), 아니면 211 비었으면 출고대#2(104 = 212).
-        //       최종 목적지이므로 JOB_MST.DEST_POS 도 같이 바꾼다. 도착 매칭이
-        //       CD.HOST_STN_NO = JM.DEST_POS 라 작업정보의 도착지를 안 바꾸면
-        //       화물이 출고대에 닿아도 도착 보고가 안 붙는다.
-        //     둘 다 차 있으면 출고위치 결정대(171)로 보낸다. 결정대는 경유지라
-        //       JOB_MST.DEST_POS 는 그대로 둔다.
-        //     이미 결정대에 있는 화물은 갈 곳이 없으니 그대로 기다린다.
+        //     중간 도착대 151 : 설비 구조상 결정대를 거칠 수 없다. 출고대#1(103 = 206) 직행.
+        //     중간 도착대 152~160 : 출고위치 결정대(171 = 232)로 보낸다.
+        //     출고위치 결정대 171 : 출고대 레인의 진입 자리를 보고 최종 출고대를 정한다.
+        //       TR 205 비었으면 출고대#1(103 = 206),
+        //       TR 211 비었으면 출고대#2(104 = 212),
+        //       둘 다 차 있으면 그대로 기다린다 (다음 사이클 재시도).
+        //
+        //   출고대로 확정할 때는 JOB_MST.DEST_POS 도 같이 바꾼다. 도착 매칭이
+        //   CD.HOST_STN_NO = JM.DEST_POS 라 작업정보의 도착지를 안 바꾸면 화물이
+        //   출고대에 닿아도 도착 보고가 안 붙는다. 결정대는 경유지라 그대로 둔다.
         //
         //   출고대 자체가 아니라 그 앞 진입 자리를 보는 이유는 CHECK_RET_LANE_READY
         //   주석과 같다. 출고대에 화물이 있어도 진입 자리가 비어 있으면 한 대 더
@@ -364,7 +366,7 @@ namespace TSK_COMM_IOSCH
         //     예전에는 두 호출이 PLC 를 안 보고 같은 질의를 돌려 한 사이클에
         //     같은 자리에서 두 번 출발시켰다.
         //
-        //   스테이션(103/104/171) → 실트랙(MC) 변환은 DEST_POS_DEF(TRACK_NO→MC_NO) 사용.
+        //   스테이션(103/104/151/171) → 실트랙(MC) 변환은 DEST_POS_DEF(TRACK_NO→MC_NO) 사용.
         // ─────────────────────────────────────────────────────────────────
         private bool m_bRetLimitHold = false;   // 유량 제한 보류 상태 (메시지 1회 출력용)
 
@@ -411,9 +413,11 @@ namespace TSK_COMM_IOSCH
                 string strMC_RET1 = "";     // 출고대#1 트랙 (스테이션 103 = 206)
                 string strMC_RET2 = "";     // 출고대#2 트랙 (스테이션 104 = 212)
                 string strMC_DECIDE = "";   // 출고위치 결정대 트랙 (스테이션 171 = 232)
+                string strMC_WAIT1 = "";    // 중간 도착대 #1 트랙 (스테이션 151 = 204)
                 if (GET_DEST_POS_MC(strWH_TYP, "103", ref strMC_RET1, ref pRTN_MSG) == false) return false;
                 if (GET_DEST_POS_MC(strWH_TYP, "104", ref strMC_RET2, ref pRTN_MSG) == false) return false;
                 if (GET_DEST_POS_MC(strWH_TYP, "171", ref strMC_DECIDE, ref pRTN_MSG) == false) return false;
+                if (GET_DEST_POS_MC(strWH_TYP, "151", ref strMC_WAIT1, ref pRTN_MSG) == false) return false;
 
                 // ── 2) 1층 출고 유량 확인
                 //      현재 PLC 상 화물 갯수(CV 2호기 + 5호기의 CV_RET_CNT 합) > 제한(cycle)
@@ -544,15 +548,11 @@ namespace TSK_COMM_IOSCH
                 }
 
                 // ── 5) 출고대 레인 가용 확인  (출고대가 아니라 그 앞 진입 자리 205 / 211 을 본다)
-                //      진입 자리가 비어 있고 그 레인으로 가는 중인 화물이 없으면 그리로 직행한다.
+                //      결정대(171)에서 최종 출고대를 고를 때만 쓴다.
+                //      진입 자리가 비어 있고 그 레인으로 가는 중인 화물이 없어야 가용이다.
                 //      한 사이클에 1건만 출발시키므로 루프 밖에서 한 번만 조회한다.
                 bool bRet1Ready = CHECK_RET_LANE_READY(strWH_TYP, strMC_RET1, "103");
                 bool bRet2Ready = CHECK_RET_LANE_READY(strWH_TYP, strMC_RET2, "104");
-
-                string strDestStn = "";    // CV / JOB_MST 에 쓰는 목적지 (작업대 번호)
-                string strDestNm = "";
-                if (bRet1Ready == true) { strDestStn = "103"; strDestNm = "출고대#1"; }
-                else if (bRet2Ready == true) { strDestStn = "104"; strDestNm = "출고대#2"; }
 
                 // ── 6) 출발 지시
                 string strJOB_TYP = "";
@@ -581,16 +581,35 @@ namespace TSK_COMM_IOSCH
                         continue;
 
                     bool bAtDecide = (strWAIT_MC == strMC_DECIDE);
+                    bool bAtWait1 = (strWAIT_MC == strMC_WAIT1);
                     string strFromNm = bAtDecide ? "출고위치 결정대" : "출고 대기대";
 
                     // 유량 제한은 루프에 새로 넣는 대기대에만 건다 (결정대는 이미 루프 안)
                     if (bLoopFull == true && bAtDecide == false)
                         continue;
 
+                    // ── 목적지 결정 : 어디에 서 있느냐로 갈린다
+                    string strDestStn = "";    // CV / JOB_MST 에 쓰는 목적지 (작업대 번호)
+                    string strDestNm = "";
+                    string strWhy = "";
+                    if (bAtDecide == true)
+                    {
+                        // 결정대 : 출고대 레인의 진입 자리(205 / 211)를 보고 고른다
+                        if (bRet1Ready == true) { strDestStn = "103"; strDestNm = "출고대#1"; strWhy = "진입 자리 비었음"; }
+                        else if (bRet2Ready == true) { strDestStn = "104"; strDestNm = "출고대#2"; strWhy = "진입 자리 비었음"; }
+                        else
+                            continue;   // 두 레인 다 진입 자리가 차 있다 - 그대로 대기 (다음 사이클 재시도)
+                    }
+                    else if (bAtWait1 == true)
+                    {
+                        // 중간 도착대 #1(151) : 설비 구조상 결정대를 거칠 수 없다 - 출고대#1 직행
+                        strDestStn = "103"; strDestNm = "출고대#1"; strWhy = "설비 구조상 직행";
+                    }
+                    // 그 외 중간 도착대(152~160) 는 아래에서 출고위치 결정대(171)로 보낸다
+
                     if (strDestStn != "")
                     {
-                        // 출고대 레인 진입 자리(205 / 211)가 비어 있다 → 그 출고대로 직행
-                        //   (최종 목적지 확정이므로 JOB_MST.DEST_POS 도 함께 변경 - ARRIVE_CV 도착 매칭용)
+                        // 최종 목적지 확정 → JOB_MST.DEST_POS 도 함께 변경 (ARRIVE_CV 도착 매칭용)
                         //   CV 목적지와 JOB_MST.DEST_POS 둘 다 작업대 번호를 쓴다.
                         //   CV 는 목적지를 작업대 번호(DestCode)로 읽고, 도착 매칭은
                         //   CD.HOST_STN_NO = JM.DEST_POS 로 맞추기 때문이다.
@@ -608,15 +627,13 @@ namespace TSK_COMM_IOSCH
                             _pBdb.Rollback();
                             continue;
                         }
-                        pRTN_MSG = strFunction + "TRACK " + strWAIT_MC + "번[" + strFromNm + "]에서 " + strDestNm + "(" + strDestMc + ")로 출발 지시하였습니다. [진입 자리 비었음 / 크레인:" + strHS_SC_NO + " / 작업번호:" + strLUGG_NO + "]";
+                        pRTN_MSG = strFunction + "TRACK " + strWAIT_MC + "번[" + strFromNm + "]에서 " + strDestNm + "(" + strDestMc + ")로 출발 지시하였습니다. [" + strWhy + " / 크레인:" + strHS_SC_NO + " / 작업번호:" + strLUGG_NO + "]";
                         _pBdb.Commit();
                         InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_CV_RUN, strWAIT_MC, strDestMc);
                         return true;
                     }
 
-                    // 두 레인 다 진입 자리가 차 있다
-                    if (bAtDecide == true)
-                        continue;           // 결정대 화물은 갈 곳이 없다 - 다음 사이클 재시도
+                    // 중간 도착대 152~160 → 출고위치 결정대(171) 경유
                     if (bDecideReady == false)
                         continue;           // 결정대 검사를 켠 경우만 - 사용중이면 다음 사이클 재시도
 
@@ -630,7 +647,7 @@ namespace TSK_COMM_IOSCH
                         continue;
                     }
                     //   (결정대는 경유지이므로 JOB_MST.DEST_POS 는 변경하지 않음 - 최종 목적지는
-                    //    다음 사이클에 진입 자리(205 / 211)를 다시 보고 결정한다)
+                    //    결정대에 도착한 뒤 진입 자리(205 / 211)를 보고 정한다)
                     if (UPDATE_JOB_DATA(ST_CV_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG) == false)
                     {
                         _pBdb.Rollback();
