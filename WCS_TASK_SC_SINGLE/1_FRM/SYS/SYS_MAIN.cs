@@ -116,6 +116,9 @@ namespace WCS_TASK_SC
 
         private void SYS_MAIN_Load(object sender, EventArgs e)
         {
+            // @.INI 열기 버튼 (맨 처음 참조하는 INI 를 메모장으로 연다)
+            cIniOpener.Attach(this, cDefApp.GM_ENV_INI);
+
             //중복실행을 방지하는 함수.
             if (cCmLib.GfPrevInstance() == true)
             {

@@ -134,6 +134,9 @@ namespace TSK_HostCom
 		//---------------------------------------------
 		private void frmMain_Load(object sender, EventArgs e)
 		{
+            // @.INI 열기 버튼 (맨 처음 참조하는 INI 를 메모장으로 연다)
+            cIniOpener.Attach(this, modDefApp.MAIN_INI);
+
 			int i;
 			StatusBar1.Panels[0].Text = modUpdate.__UPDATE_DATE__;
 			modDefApp.g_blIsAppExit = false;

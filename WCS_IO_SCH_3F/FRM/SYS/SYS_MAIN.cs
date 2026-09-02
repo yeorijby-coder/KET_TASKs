@@ -95,6 +95,9 @@ namespace TSK_COMM_IOSCH
 		#region[Event]SYS_MAIN_Load
 		private void SYS_MAIN_Load(object sender, EventArgs e)
 		{
+            // @.INI 열기 버튼 (맨 처음 참조하는 INI 를 메모장으로 연다)
+            cIniOpener.Attach(this, cDefApp.GM_ENV_INI);
+
             //MainThread가 시작되었다는것을 나타내는 Bool값.
 			cDefApp.GM_STAT_MAIN = true;
 

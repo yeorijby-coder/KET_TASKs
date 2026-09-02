@@ -123,6 +123,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="CLS\AlarmInfo.cs" />
+    <Compile Include="CLS\cIniOpener.cs" />
     <Compile Include="CLS\cCbBasePost.cs" />
     <Compile Include="CLS\cCmLib.cs">
       <SubType>Code</SubType>

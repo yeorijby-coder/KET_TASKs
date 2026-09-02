@@ -53,6 +53,6 @@ D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_SC_SIN
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_SC_SINGLE\obj\Debug\WCS_TASK_SC.Properties.Resources.resources
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_SC_SINGLE\obj\Debug\WCS_TASK_SC_SINGLE.csproj.GenerateResource.cache
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_SC_SINGLE\obj\Debug\WCS_TASK_SC_SINGLE.csproj.CoreCompileInputs.cache
-D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_SC_SINGLE\obj\Debug\WCS_TASK.673E23F8.Up2Date
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_SC_SINGLE\obj\Debug\WCS_TASK_SC_SINGLE.exe
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_SC_SINGLE\obj\Debug\WCS_TASK_SC_SINGLE.pdb
+D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_SC_SINGLE\obj\Debug\WCS_TASK_SC_SINGLE.csproj.CopyComplete

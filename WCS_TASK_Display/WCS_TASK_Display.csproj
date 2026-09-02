@@ -75,6 +75,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="3_Lib\CallerInfoShim.cs" />
+    <Compile Include="3_Lib\cIniOpener.cs" />
     <Compile Include="3_Lib\ListViewColumnMenu.cs" />
     <Compile Include="3_Lib\cCmLib.cs" />
     <Compile Include="4_Static\DbLang.cs" />
