@@ -33,6 +33,6 @@ D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_CV_BOX
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_CV_BOX\obj\Debug\WCS_TASK_CV.Properties.Resources.resources
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_CV_BOX\obj\Debug\WCS_TASK_CV_BOX.csproj.GenerateResource.cache
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_CV_BOX\obj\Debug\WCS_TASK_CV_BOX.csproj.CoreCompileInputs.cache
-D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_CV_BOX\obj\Debug\WCS_TASK.C82C487D.Up2Date
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_CV_BOX\obj\Debug\WCS_TASK_CV_BOX.exe
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_CV_BOX\obj\Debug\WCS_TASK_CV_BOX.pdb
+D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_CV_BOX\obj\Debug\WCS_TASK_CV_BOX.csproj.CopyComplete

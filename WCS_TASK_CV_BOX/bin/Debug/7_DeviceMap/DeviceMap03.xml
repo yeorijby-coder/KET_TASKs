@@ -155,6 +155,18 @@
 			<Bit  desc="D558.4" Use ="1" tid="346" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 			<Bit  desc="D558.5" Use ="1" tid="349" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 		</Area>
+		<!-- 레거시 ECS 는 이 워드를 읽어 SetStartToMove() 에서 m_bStartToMove 와
+		     m_bRetStationReady 를 같이 세웠다. 출발신호 비트가 곧 출고대 준비다.
+		     키워드로 신호를 찾는 구조라 같은 주소를 RetStation 이름으로도 걸어 둔다.
+		     (D551 에 이미 있는 트랙은 그대로 D551 을 쓴다 - 조회가 트랙번호로 갈린다) -->
+		<Area type="b" seq="0" name="RetStation" address="558">
+			<Bit  desc="D558.0" Use ="1" tid="318" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D558.1" Use ="1" tid="323" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D558.2" Use ="1" tid="333" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D558.3" Use ="1" tid="337" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>			
+			<Bit  desc="D558.4" Use ="1" tid="346" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D558.5" Use ="1" tid="349" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+		</Area>
 	</SeparatelyETC>
 
 	<FlantEquip use="0"/>
