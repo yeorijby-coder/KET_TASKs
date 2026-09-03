@@ -380,6 +380,18 @@ namespace TSK_COMM_IOSCH
          *   준비 신호로 STO_READY_RD 가 아니라 RET_READY_RD 를 보는 이유 :
          *   여기는 입고대가 아니라 도착대·출고대 계열이다. 도착대는 출고대와 같은
          *   준비 신호를 쓴다. (cDefApp.STN_KIND_ARV 주석 참고)
+         *
+         *   같은 화물에 두 번 지시하지 않기 (LUGG_NO_OD <> LUGG_NO_RD) :
+         *   OD_RQ_YN / OD_RQ_FLAG 만으로는 재지시를 못 막는다. 지시를 넣으면
+         *   OD_RQ_YN='Y' 가 되고, CV 타스크가 PLC 에 쓰면서 OD_RQ_YN='N' /
+         *   OD_RQ_FLAG='Y' 로 바꾼다. 그런데 그 다음 읽기 주기에 UpdateCvData 가
+         *   OD_RQ_FLAG='N' 으로 되돌린다. 화물이 실제로 그 자리를 뜨는 데는 몇 초가
+         *   걸리니, 그 사이 자리는 '재하 + 출고 준비 + 지시 없음' 으로 다시 보여
+         *   같은 화물에 지시가 한 번 더 나갔다. (208 → 결정대, 232 → 출고대#1 이
+         *   각각 두 번 찍히던 증상)
+         *   LUGG_NO_OD 는 그 자리에서 마지막으로 지시한 화물이다. 지금 올라와 있는
+         *   화물(LUGG_NO_RD)과 같으면 이미 내보낸 것이므로 건드리지 않는다.
+         *   화물이 빠지고 다음 화물이 오면 두 값이 달라져 다시 지시된다.
          */
         private string SQL_RET_DEPART_COND(string strCd, string strJm)
         {
@@ -392,6 +404,9 @@ namespace TSK_COMM_IOSCH
             strSql += CRLF + "    AND  COALESCE(" + strCd + ".TR_PAUSE_RD,'0') IN ('0','')                  ";
             strSql += CRLF + "    AND  COALESCE(NULLIF(BTRIM(" + strCd + ".ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')  ";
             strSql += CRLF + "    AND  " + strJm + ".JOB_STATUS         = '" + ST_CV_RUN + "'               ";   // CV 구동중
+            // 이 자리에서 이 화물에 이미 지시했으면 다시 하지 않는다 (위 주석 참고)
+            strSql += CRLF + "    AND  COALESCE(NULLIF(BTRIM(" + strCd + ".LUGG_NO_OD, " + SQL_WS + "), ''), '0')  ";
+            strSql += CRLF + "      <> COALESCE(NULLIF(BTRIM(" + strCd + ".LUGG_NO_RD, " + SQL_WS + "), ''), '0')  ";
             return strSql;
         }
 
