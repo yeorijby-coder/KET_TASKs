@@ -201,7 +201,11 @@ namespace TSK_COMM_IOSCH
                     //RunSchFunc(NEW_JOB_ORDER);          // 입고대에서 출발 하기
                     //RunSchFunc(ARRIVE_CV);              // 도착완료
                     //RunSchFunc(CHECK_CV_RETHS);         // 출고HS 목적지 쓰기
-                    //RunSchFunc(CHECK_PM_STO_REQUEST);   // 팔렛트 매거진 입고 요청
+                    // @.팔렛트 매거진(트랙 301 = 스테이션 207) 공파레트 입고 요청.
+                    //   질의가 없는 컬럼(CD.STN_NO)을 짚고 있어 돌 수 없었고 호출도 막아
+                    //   두었다. 컬럼을 HOST_STN_NO 로 바로잡고 다시 태운다.
+                    //   IF_REQ_MST 에 그 스테이션의 요청 슬롯이 있어야 걸린다.
+                    RunSchFunc(CHECK_PM_STO_REQUEST);   // 팔렛트 매거진 입고 요청
 
                 }
                 catch (Exception ex)
@@ -337,11 +341,13 @@ namespace TSK_COMM_IOSCH
                 string strFunction = pRTN_MSG = "[CHECK_PM_STO_REQUEST]";
 
                 strSql = "";
-                strSql += CRLF + " SELECT  CD.MC_NO, CD.PLC_NO, CD.STN_N                  ";
+                // @.CV_DATA 에는 STN_NO 가 없다. 상위 스테이션 번호는 HOST_STN_NO 다.
+                //   (트랙 301 = 스테이션 207) 예전 질의는 없는 컬럼을 짚어 아예 돌지 않았다.
+                strSql += CRLF + " SELECT  CD.MC_NO, CD.PLC_NO, CD.HOST_STN_NO            ";
                 strSql += CRLF + "   FROM  CV_DATA CD                                     ";
                 strSql += CRLF + "  INNER  JOIN IF_REQ_MST IRM                            ";
                 strSql += CRLF + "     ON  IRM.WH_TYP            = CD.WH_TYP              ";
-                strSql += CRLF + "    AND  IRM.STN_NO            = CD.STN_NO              ";
+                strSql += CRLF + "    AND  IRM.STN_NO            = CD.HOST_STN_NO         ";
                 strSql += CRLF + "    AND  IRM.MSG_TYP           = 'N'                    ";
                 strSql += CRLF + "    AND  IRM.IF_STATUS        <> 'N'                    ";
                 strSql += CRLF + "  WHERE  CD.WH_TYP             = '10'                   ";   // Pallet 창고
@@ -372,13 +378,15 @@ namespace TSK_COMM_IOSCH
                 string strDestMc = "";
                 string strDestNm = "";
 
-                string strJOB_TYP = dtDecide.Rows[0]["JOB_TYP"].ToString() == "" ? "0" : dtDecide.Rows[0]["JOB_TYP"].ToString();
-                string strTRAY_TYP = "" + dtDecide.Rows[0]["PRODUCT_SIZE"].ToString() == "" ? "0" : dtDecide.Rows[0]["PRODUCT_SIZE"].ToString();
-                string strTRAY_LEV = "" + dtDecide.Rows[0]["TRAY_LEV"].ToString() == "" ? "0" : dtDecide.Rows[0]["TRAY_LEV"].ToString();
-                string strIS_TURN = "" + dtDecide.Rows[0]["TURN"].ToString() == "" ? "0" : dtDecide.Rows[0]["TURN"].ToString();
-                string strLUGG_NO = "" + dtDecide.Rows[0]["LUGG_NO"].ToString() == "" ? "0" : dtDecide.Rows[0]["LUGG_NO"].ToString();
-                string strCV_PLC = "" + dtDecide.Rows[0]["PLC_NO"].ToString() == "" ? "0" : dtDecide.Rows[0]["PLC_NO"].ToString();
-                string strSTN_NO = "" + dtDecide.Rows[0]["STN_NO"].ToString() == "" ? "0" : dtDecide.Rows[0]["STN_NO"].ToString();
+                // @.조회한 칸만 읽는다. 예전에는 JOB_TYP / PRODUCT_SIZE 처럼 SELECT 에 없는
+                //   칸을 읽어, 질의가 돌더라도 여기서 예외가 났다. 요청에 필요한 것은
+                //   스테이션 번호 하나뿐이다.
+                string strSTN_NO = dtDecide.Rows[0]["HOST_STN_NO"].ToString().Trim();
+                if (strSTN_NO == "")
+                {
+                    pRTN_MSG = strFunction + "TRACK " + strMC_DECIDE + " 에 상위 스테이션 번호(HOST_STN_NO)가 없습니다.";
+                    return false;
+                }
 
                 _pBdb.BeginTrans();
                 //// 상위로 입고 요청을 하기 위한 테이블에 요청 
