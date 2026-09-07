@@ -41,9 +41,6 @@
 			<Bit  desc="D551.2" Use ="1" tid="218" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 			<Bit  desc="D551.3" Use ="1" tid="225" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>			
 			<Bit  desc="D551.4" Use ="1" tid="2101" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
-			<Bit  desc="D551.5" Use ="1" tid="218" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
-			<Bit  desc="D551.6" Use ="1" tid="224" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
-			<Bit  desc="D551.7" Use ="1" tid="225" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>			
 		</Area>
 		<Area type="b" seq="0" name="ScStoHS" address="552">
 			<Bit  desc="D552.0" Use ="1" tid="202" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
