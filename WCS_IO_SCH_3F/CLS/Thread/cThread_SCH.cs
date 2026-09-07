@@ -782,7 +782,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND JOB_STATUS       = '" + ST_SC_WAIT + "'            ";   // 20 = SC 구동요구
                 strSql += CRLF + "    AND ( DEST_POS IN (" + SqlInList(STN_3F_PLT) + ")      ";
                 strSql += CRLF + "       OR JOB_TYP  = '" + JT_A2A + "' )                    ";   // 호기간 이동은 3층으로
-                strSql += CRLF + "  ORDER BY JOB_PRIORITY DESC, LUGG_NO                      ";
+                strSql += CRLF + "  ORDER BY " + SQL_JOB_PRIORITY("") + " DESC, LUGG_NO      ";
 
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();

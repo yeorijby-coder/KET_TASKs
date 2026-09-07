@@ -508,7 +508,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND  CD.PLC_NO             = :CV_PLC                             ";   // 자기 PLC 것만
                 strSql += CRLF + "    AND  (SHD.WAIT_TRACK IS NOT NULL OR CD.MC_NO = :MC_DECIDE)       ";   // 대기대 또는 결정대
                 strSql += SQL_RET_DEPART_COND("CD", "JM");
-                strSql += CRLF + "  ORDER  BY JM.UPD_DT ASC                                            ";   // 가장 빨리 도착한 화물부터
+                strSql += CRLF + "  ORDER  BY " + SQL_JOB_PRIORITY("JM") + " DESC, JM.UPD_DT ASC        ";   // 우선순위 높은 것 먼저, 같으면 빨리 도착한 것부터
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
                 _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
@@ -1019,7 +1019,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "  WHERE WH_TYP           = :WH_TYP                         ";
                 strSql += CRLF + "    AND JOB_STATUS       = '" + ST_SC_WAIT + "'            ";   // 20 = SC 구동요구
                 strSql += CRLF + "    AND DEST_POS IN (" + SqlInList(STN_1F_PLT) + ")            ";   // 1층으로 나갈 것만
-                strSql += CRLF + "  ORDER BY JOB_PRIORITY DESC, LUGG_NO                      ";
+                strSql += CRLF + "  ORDER BY " + SQL_JOB_PRIORITY("") + " DESC, LUGG_NO      ";
 
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();

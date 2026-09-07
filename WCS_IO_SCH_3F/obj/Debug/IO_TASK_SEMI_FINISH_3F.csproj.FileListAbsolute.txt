@@ -59,4 +59,4 @@ D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_3F\o
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_3F\obj\Debug\IO_TASK_SEMI_FINISH_3F.csproj.CoreCompileInputs.cache
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_3F\obj\Debug\IO_TASK_SEMI_FINISH.exe
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_3F\obj\Debug\IO_TASK_SEMI_FINISH.pdb
-D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_3F\obj\Debug\IO_TASK_SEMI_FINISH_3F.csproj.CopyComplete
+D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_3F\obj\Debug\IO_TASK_.F5A4A7E4.Up2Date
