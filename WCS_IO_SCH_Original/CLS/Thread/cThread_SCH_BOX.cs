@@ -551,7 +551,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "     ON SD.WH_TYP           = JM.WH_TYP                   ";
                 strSql += CRLF + "    AND SD.SC_NO            = JM.DEST_POS                 ";
                 strSql += CRLF + "  WHERE JM.WH_TYP           = :WH_TYP                     ";
-                strSql += CRLF + "    AND JM.JOB_TYP          = '" + JT_STO + "'            ";
+                strSql += CRLF + "    AND JM.JOB_TYP          IN (" + JT_IN_STO + ")          ";   // @.반자동 입고(11)도 크레인이 받는다
                 strSql += CRLF + "    AND JM.JOB_STATUS       = '" + ST_CV_RUN + "'         ";   // CV 구동중
                 strSql += CRLF + "    AND CD.PLC_NO           = :CV_PLC                     ";
                 strSql += CRLF + "    AND CD.STOHS_READY_RD   = '1'                         ";   // 입고 H/S 준비

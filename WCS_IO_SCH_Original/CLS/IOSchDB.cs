@@ -1647,6 +1647,33 @@ namespace TSK_COMM_IOSCH
         public const string JT_R2R = "4";
         public const string JT_A2A = "5";
         public const string JT_MOVE = "6";
+
+        /*
+         * 작업구분은 정상과 반자동이 짝을 이룬다.
+         *
+         *     입고   1 / 11      출고       2 / 12      픽킹출고 3 / 13
+         *     랙투랙 4 / 14      호기간이동 5 / 15      이동     6 / 10
+         *
+         * 그런데 곳곳에서 정상 번호 하나만 비교해 반자동 작업이 통째로 걸러졌다.
+         * 반자동 입고(11)는 크레인 지시 질의가 JOB_TYP = '1' 이라 아예 안 잡혀,
+         * CV 까지는 와도 크레인이 작업을 받지 않았다.
+         *
+         * 비교는 번호 하나가 아니라 짝으로 한다.
+         *   SQL  : JOB_TYP IN (JT_IN_STO) 처럼 목록을 쓴다
+         *   코드 : IsStoJobType / IsMoveJobType 처럼 패턴으로 본다
+         */
+        public const string JT_IN_STO  = "'1','11'";
+        public const string JT_IN_RET  = "'2','12'";
+        public const string JT_IN_PICK = "'3','13'";
+        public const string JT_IN_R2R  = "'4','14'";
+        public const string JT_IN_A2A  = "'5','15'";
+        public const string JT_IN_MOVE = "'6','10'";
+
+        protected bool IsStoJobType(string strJOB_TYP)  { return ConvertJobTypeToPattern(strJOB_TYP) == EN_JOB_PATTERN.enJobPatternSto; }
+        protected bool IsMoveJobType(string strJOB_TYP) { return ConvertJobTypeToPattern(strJOB_TYP) == EN_JOB_PATTERN.enJobPatternMove; }
+        protected bool IsPickJobType(string strJOB_TYP) { return ConvertJobTypeToPattern(strJOB_TYP) == EN_JOB_PATTERN.enJobPatternPR; }
+        protected bool IsA2AJobType(string strJOB_TYP)  { return ConvertJobTypeToPattern(strJOB_TYP) == EN_JOB_PATTERN.enJobPatternW2W; }
+        protected bool IsR2RJobType(string strJOB_TYP)  { return ConvertJobTypeToPattern(strJOB_TYP) == EN_JOB_PATTERN.enJobPatternR2R; }
         // SC PLC 명령 JOB_TYP_OD (레거시 SC_JOB_TYPE_* : 1=Store, 2=Retrieve)
         public const string SC_CMD_STORE = "1";
         public const string SC_CMD_RETRIEVE = "2";
@@ -2563,7 +2590,11 @@ namespace TSK_COMM_IOSCH
         }
         public EN_JOB_PATTERN ConvertJobTypeToPattern(string strJobTyp)
         {
-            int nJobType = Convert.ToInt32(strJobTyp);
+            // @.숫자가 아니거나 비어 있어도 죽지 않게 한다. (예전에는 Convert.ToInt32 라 던졌다)
+            int nJobType;
+            if (int.TryParse((strJobTyp == null ? "" : strJobTyp).Trim(), out nJobType) == false)
+                return EN_JOB_PATTERN.enJobPatternNone;
+
             switch (nJobType)
             {
                 case (int)EN_JOB_TYPE.enJobTypeAutoSto:

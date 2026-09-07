@@ -876,7 +876,8 @@ namespace TSK_COMM_IOSCH
                     string strJOB_TYP = _pBdb.mDtMain.Rows[i]["JOB_TYP"].ToString();
 
                     // CV 에서 시작하는 작업인가
-                    bool bCvFirst = (strJOB_TYP == JT_STO) || (strJOB_TYP == JT_MOVE);
+                    // @.입고 / 이동은 CV 에서 시작한다. 반자동(11 / 10)도 같다.
+                    bool bCvFirst = IsStoJobType(strJOB_TYP) || IsMoveJobType(strJOB_TYP);
                     string strNext = bCvFirst ? ST_CV_WAIT : ST_SC_WAIT;
 
                     if (UPDATE_JOB_DATA(strNext, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG) == false)
@@ -929,7 +930,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "     ON SD.WH_TYP           = JM.WH_TYP                   ";
                 strSql += CRLF + "    AND SD.SC_NO            = JM.DEST_POS                 ";
                 strSql += CRLF + "  WHERE JM.WH_TYP           = :WH_TYP                     ";
-                strSql += CRLF + "    AND JM.JOB_TYP          = '" + JT_STO + "'            ";
+                strSql += CRLF + "    AND JM.JOB_TYP          IN (" + JT_IN_STO + ")          ";   // @.반자동 입고(11)도 크레인이 받는다
                 strSql += CRLF + "    AND JM.JOB_STATUS       = '" + ST_CV_RUN + "'         ";   // CV 구동중
                 strSql += CRLF + "    AND CD.PLC_NO           = :CV_PLC                     ";
                 strSql += CRLF + "    AND CD.STOHS_READY_RD   = '1'                         ";   // 입고 H/S 준비

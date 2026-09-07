@@ -252,8 +252,7 @@ namespace TSK_COMM_IOSCH
                 strSql += cDefApp.CRLF + " SELECT *                                 ";
                 strSql += cDefApp.CRLF + "   FROM JOB_MST                           ";
                 strSql += cDefApp.CRLF + "  WHERE WH_TYP	    = :WH_TYP           ";
-                strSql += cDefApp.CRLF + "    AND (JOB_TYP = '1' OR JOB_TYP = '6')  ";  // 반자동 작업이 없으면
-//                strSql += cDefApp.CRLF + "    AND JOB_TYP  IN ('1','6','10','11')   ";  // 반자동 작업이 있으면
+                strSql += cDefApp.CRLF + "    AND JOB_TYP IN (" + JT_IN_STO + "," + JT_IN_MOVE + ")  ";   // @.입고 / 이동 - 반자동(11 / 10) 포함
                 strSql += cDefApp.CRLF + "    AND JOB_STATUS 	= '99'              ";
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
@@ -690,7 +689,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "     ON SD.WH_TYP           = JM.WH_TYP                   ";
                 strSql += CRLF + "    AND SD.SC_NO            = JM.DEST_POS                 ";
                 strSql += CRLF + "  WHERE JM.WH_TYP           = :WH_TYP                     ";
-                strSql += CRLF + "    AND JM.JOB_TYP          = '" + JT_STO + "'            ";
+                strSql += CRLF + "    AND JM.JOB_TYP          IN (" + JT_IN_STO + ")          ";   // @.반자동 입고(11)도 크레인이 받는다
                 strSql += CRLF + "    AND JM.JOB_STATUS       = '" + ST_CV_RUN + "'         ";   // CV 구동중
                 strSql += CRLF + "    AND CD.PLC_NO           = :CV_PLC                     ";
                 strSql += CRLF + "    AND CD.STOHS_READY_RD   = '1'                         ";   // 입고 H/S 준비
@@ -781,7 +780,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "  WHERE WH_TYP           = :WH_TYP                         ";
                 strSql += CRLF + "    AND JOB_STATUS       = '" + ST_SC_WAIT + "'            ";   // 20 = SC 구동요구
                 strSql += CRLF + "    AND ( DEST_POS IN (" + SqlInList(STN_3F_PLT) + ")      ";
-                strSql += CRLF + "       OR JOB_TYP  = '" + JT_A2A + "' )                    ";   // 호기간 이동은 3층으로
+                strSql += CRLF + "       OR JOB_TYP  IN (" + JT_IN_A2A + ") )                  ";   // 호기간 이동은 3층으로 (반자동 15 포함)
                 strSql += CRLF + "  ORDER BY " + SQL_JOB_PRIORITY("") + " DESC, LUGG_NO      ";
 
                 _pBdb.mComMain.CommandType = CommandType.Text;
@@ -934,20 +933,20 @@ namespace TSK_COMM_IOSCH
             strSql += CRLF + " SELECT                                                        ";
             strSql += CRLF + "   ( SELECT COUNT(*) FROM JOB_MST J                            ";
             strSql += CRLF + "      WHERE J.WH_TYP     = :WH_TYP                             ";
-            strSql += CRLF + "        AND J.JOB_TYP    = '" + JT_PICK + "'                   ";
+            strSql += CRLF + "        AND J.JOB_TYP    IN (" + JT_IN_PICK + ")                 ";
             strSql += CRLF + "        AND J.DEST_POS   = '" + STN_202 + "'                   ";
             strSql += CRLF + "        AND J.JOB_STATUS <> '" + ST_SC_WAIT + "' )             ";
             strSql += CRLF + " + ( SELECT COUNT(*) FROM CV_DATA CD                           ";
             strSql += CRLF + "      WHERE CD.WH_TYP    = :WH_TYP                             ";
             strSql += CRLF + "        AND CD.MC_NO     = '" + STN_202 + "'                   ";
-            strSql += CRLF + "        AND CD.JOB_TYP_RD = '" + JT_PICK + "'                  ";
+            strSql += CRLF + "        AND CD.JOB_TYP_RD IN (" + JT_IN_PICK + ")                ";
             strSql += CRLF + "        AND COALESCE(NULLIF(BTRIM(CD.LUGG_NO_RD, " + SQL_WS + "), ''), '0') NOT IN ('0','0000') ";
             strSql += CRLF + "        AND NOT EXISTS ( SELECT 1 FROM JOB_MST J2              ";
             strSql += CRLF + "                          WHERE J2.WH_TYP  = CD.WH_TYP         ";
             strSql += CRLF + "                            AND J2.LUGG_NO = CD.LUGG_NO_RD ) ) AS CNT202 ";
             strSql += CRLF + " , ( SELECT COUNT(*) FROM JOB_MST J                            ";
             strSql += CRLF + "      WHERE J.WH_TYP     = :WH_TYP                             ";
-            strSql += CRLF + "        AND J.JOB_TYP    = '" + JT_PICK + "'                   ";
+            strSql += CRLF + "        AND J.JOB_TYP    IN (" + JT_IN_PICK + ")                 ";
             strSql += CRLF + "        AND J.DEST_POS   IN ('" + STN_201 + "','" + STN_203 + "') ) AS CNTETC ";
 
             _pBdb.mComMain.CommandType = CommandType.Text;
