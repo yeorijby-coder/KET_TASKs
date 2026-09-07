@@ -2,7 +2,7 @@
 <DeviceMap>
 	<EquipType desc="생략가능-CV로만 사용될것이므로">CV</EquipType>
     <CommMethod desc="Ethernet(TCP):1,Ethernet(UDP):2,Serial:3,XCom:4,RFC:5">1</CommMethod>
-    <CPU desc="MelsecQ:1,AB:2,Simens:3,Fara:5">1</CPU>
+    <CPU desc="MelsecQ:1,AB:2,Simens:3,Xgt:4,Fara:5">1</CPU>
 
     <!--<WordPerTrack desc="한 트랙당 워드수(2,4,5,10)">10</WordPerTrack>-->
     <AddressArea desc="D:1,R:2">1</AddressArea>
@@ -84,14 +84,14 @@
 				<TrList>419</TrList>
 				<TrList>420</TrList>
 			</Bit>
-			<Bit  desc="D257.4" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
+			<Bit  desc="D257.4" Use ="0" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
 				<TrList>421</TrList>
 				<TrList>422</TrList>
 				<TrList>423</TrList>
 				<TrList>424</TrList>
 				<TrList>425</TrList>
 			</Bit>
-			<Bit  desc="D257.5" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
+			<Bit  desc="D257.5" Use ="0" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
 				<TrList>426</TrList>
 				<TrList>427</TrList>
 				<TrList>428</TrList>

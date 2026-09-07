@@ -2,7 +2,7 @@
 <DeviceMap>
 	<EquipType desc="생략가능-CV로만 사용될것이므로">CV</EquipType>
     <CommMethod desc="Ethernet(TCP):1,Ethernet(UDP):2,Serial:3,XCom:4,RFC:5">1</CommMethod>
-    <CPU desc="MelsecQ:1,AB:2,Simens:3,Fara:5">1</CPU>
+    <CPU desc="MelsecQ:1,AB:2,Simens:3,Xgt:4,Fara:5">1</CPU>
 
     <!--<WordPerTrack desc="한 트랙당 워드수(2,4,5,10)">10</WordPerTrack>-->
     <AddressArea desc="D:1,R:2">1</AddressArea>
@@ -170,18 +170,6 @@
 			<Bit  desc="D558.4" Use ="1" tid="249" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 			<Bit  desc="D558.5" Use ="1" tid="259" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 		</Area>
- 		<Area type="W" name="RetCnt"  address="570"> 
-    			<ExtraTable>
-         			<Table name="eqp_mst">
-		  			<cndtnFields>
-						<Field>eqp_typ</Field>
-						<Field>plc_no</Field>
-		  			</cndtnFields>
-		  			<valueField>cv_ret-cnt</valueField>
-        			</Table>
-    			</ExtraTable>
-		</Area>
-
 		<Area type="b" seq="0" name="RetStation" address="554" desc="출고위치 결정대(트랙 232)에는 출고대 비트가 따로 없다. Logic.xml 의 ArvStation 규칙이 도착 신호를 RetStation 이름으로 세우는데 그 이름으로 걸린 비트가 없어서 신호가 갈 곳이 없었다. 여기 출발 H/S 비트(D554.0)가 곧 출고 준비라 RetStation 이름으로도 걸어 둔다. 204/208/216/220/249/259 를 D558 에 걸어 둔 것과 같은 방식이다.">
 			<Bit  desc="D554.0" Use ="1" tid="232" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 		</Area>

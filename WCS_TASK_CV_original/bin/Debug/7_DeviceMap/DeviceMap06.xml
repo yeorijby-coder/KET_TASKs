@@ -2,7 +2,7 @@
 <DeviceMap>
 	<EquipType desc="생략가능-CV로만 사용될것이므로">CV</EquipType>
     <CommMethod desc="Ethernet(TCP):1,Ethernet(UDP):2,Serial:3,XCom:4,RFC:5">1</CommMethod>
-    <CPU desc="MelsecQ:1,AB:2,Simens:3,Fara:5">1</CPU>
+    <CPU desc="MelsecQ:1,AB:2,Simens:3,Xgt:4,Fara:5">1</CPU>
 
     <!--<WordPerTrack desc="한 트랙당 워드수(2,4,5,10)">10</WordPerTrack>-->
     <AddressArea desc="D:1,R:2">1</AddressArea>
@@ -106,6 +106,12 @@
 			</Bit>
 		</Area>
 		<Area type="b" seq="0" name="CvCheckPos" address="558">
+			<Bit  desc="D558.0" Use ="1" tid="606" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D558.1" Use ="1" tid="612" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D558.2" Use ="1" tid="618" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+			<Bit  desc="D558.3" Use ="1" tid="624" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
+		</Area>
+		<Area type="b" seq="0" name="RetStation" address="558" desc="레거시 ECS 가 SetStartToMove() 에서 m_bStartToMove 와 m_bRetStationReady 를 같이 세웠다. 출발신호 비트가 곧 출고대 준비라 CvCheckPos 와 같은 주소를 RetStation 이름으로도 걸어 둔다.">
 			<Bit  desc="D558.0" Use ="1" tid="606" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 			<Bit  desc="D558.1" Use ="1" tid="612" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 			<Bit  desc="D558.2" Use ="1" tid="618" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
