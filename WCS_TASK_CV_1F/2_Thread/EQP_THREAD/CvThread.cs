@@ -425,6 +425,12 @@ namespace WCS_TASK_CV
                     foreach (string strSkip in m_devMap.SkippedAreas)
                         MakeMsg_Imp("[DeviceMap] 상태영역 스킵: " + strSkip, m_nthNo);
 
+                    // @.CvSim 원본과 어긋났는지 본다. (INI [DEVICEMAP] REF_PATH 를 적었을 때만)
+                    //   한쪽만 고치면 읽지 않는 비트가 생기고 DB 에 값이 아예 안 들어온다.
+                    string strRefMsg = cDeviceMapRuntime.CheckReference(m_strPlc_No);
+                    if (strRefMsg != "")
+                        MakeMsg_Error("[DeviceMap] " + strRefMsg, m_nthNo);
+
                     //XML 에 정의된 dbcol 컬럼이 CV_DATA 에 없으면 생성
                     if (!EnsureCvDataColumns()) goto EXIT_LBL;
 
