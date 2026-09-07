@@ -72,6 +72,12 @@ namespace TSK_COMM_IOSCH
             (int)cDefApp.eThGbn.SCH_GR02,
             (int)cDefApp.eThGbn.SCH_GR03 };
 
+        // @.ENV_IOSCH.INI [SCH] 에서 읽는 슬롯별 사용여부 키 이름
+        private static readonly string[] SCH_USEKEY = new string[] { "USE_1F", "USE_3F", "USE_BOX" };
+
+        // @.실제로 기동할 슬롯인지. (WrkThStart 에서 INI 를 읽어 채운다)
+        private bool[] m_bSchUse = new bool[SCH_CNT] { true, true, true };
+
         // @.슬롯의 스레드 객체를 얻는다. (없으면 null = 중지 상태)
         private Thread GetSchThread(int slot)
         {
@@ -299,6 +305,10 @@ namespace TSK_COMM_IOSCH
             m_Sch3F  = new cThread_SCH_3F (SCH_THGBN[1]);
             m_SchBOX = new cThread_SCH_BOX(SCH_THGBN[2]);
 
+            // @.슬롯별 사용여부를 INI 에서 읽는다. (키가 없으면 Y = 기존 동작)
+            for (int slot = 0; slot < SCH_CNT; slot++)
+                m_bSchUse[slot] = cDefApi.GsGetSchUse(SCH_USEKEY[slot]);
+
             m_Sch1F.ConnectionString  = m_StrConnecString;
             m_Sch3F.ConnectionString  = m_StrConnecString;
             m_SchBOX.ConnectionString = m_StrConnecString;
@@ -316,6 +326,17 @@ namespace TSK_COMM_IOSCH
                 m_thLogging[thGbn] = new cLogThread(cDefApp.GM_LOG_PATH
                                                   , cDefApp.GM_FILENAME + getFileName(thGbn)
                                                   , thGbn);
+
+                // @.INI 에서 N 인 슬롯은 기동하지 않고 수동 중지로 둔다.
+                //   (Thread_Tick 이 수동 중지 슬롯은 되살리지 않는다)
+                if (m_bSchUse[slot] == false)
+                {
+                    SetSchStop(slot, true);
+                    SetDisplay(pnlTop, slot, "picDbCn" + slot.ToString(), "D");
+                    PsMsgViewMain("[설정 중지] " + SCH_NAME[slot] + " 스레드는 ENV_IOSCH.INI [SCH] "
+                                + SCH_USEKEY[slot] + "=N 이라 기동하지 않습니다.", slot);
+                    continue;
+                }
 
                 StartSchThread(slot);
             }

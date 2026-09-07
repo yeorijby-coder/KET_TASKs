@@ -71,6 +71,27 @@ namespace TSK_COMM_IOSCH
          *
          *   키가 없으면 N(결정대를 보지 않고 출발)으로 본다. 그것이 기본 동작이다.
          */
+        /*
+         * 층별 스케줄러 스레드를 쓸지 (ENV_IOSCH.INI [SCH] USE_1F / USE_3F / USE_BOX)
+         *
+         *   키가 없으면 Y(사용)로 본다. 그것이 기존 동작이다.
+         *   N 으로 두면 그 슬롯은 기동하지 않고 수동 중지 상태로 남는다.
+         *   (Thread_Tick 이 수동 중지 슬롯은 되살리지 않으므로 계속 꺼져 있다)
+         */
+        public static bool GsGetSchUse(string pKey)
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(16);
+                GetPrivateProfileString("SCH", pKey, "Y", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                return (sb.ToString().Trim().ToUpper() != "N");
+            }
+            catch
+            {
+                return true;
+            }
+        }
+
         public static bool GsGetRetDecideWait()
         {
             try
