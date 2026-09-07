@@ -28,7 +28,6 @@ D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_Orig
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_Original\bin\Debug\zh-CN\Npgsql.resources.dll
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_Original\obj\Debug\IO_TASK_SEMI_FINISH.exe
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_Original\obj\Debug\IO_TASK_SEMI_FINISH.pdb
-D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_Original\obj\Debug\IO_TASK_SEMI_FINISH.csproj.CopyComplete
 D:\project\한국단자\Renewal\TASK\WCS_IO_SCH_Original\bin\Debug\IO_TASK_SEMI_FINISH.exe.config
 D:\project\한국단자\Renewal\TASK\WCS_IO_SCH_Original\bin\Debug\IO_TASK_SEMI_FINISH.exe
 D:\project\한국단자\Renewal\TASK\WCS_IO_SCH_Original\bin\Debug\IO_TASK_SEMI_FINISH.pdb
@@ -60,3 +59,4 @@ D:\project\한국단자\Renewal\TASK\WCS_IO_SCH_Original\obj\Debug\IO_TASK_SEMI_
 D:\project\한국단자\Renewal\TASK\WCS_IO_SCH_Original\obj\Debug\IO_TASK_.B7A1D3A6.Up2Date
 D:\project\한국단자\Renewal\TASK\WCS_IO_SCH_Original\obj\Debug\IO_TASK_SEMI_FINISH.exe
 D:\project\한국단자\Renewal\TASK\WCS_IO_SCH_Original\obj\Debug\IO_TASK_SEMI_FINISH.pdb
+D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_Original\obj\Debug\IO_TASK_.B7A1D3A6.Up2Date

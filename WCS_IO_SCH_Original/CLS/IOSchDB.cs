@@ -4474,6 +4474,47 @@ namespace TSK_COMM_IOSCH
             }
         }
 
+        /// <summary>
+        /// 실트랙(MC_NO) → 스테이션 번호 변환 (DEST_POS_DEF.MC_NO → TRACK_NO)
+        ///
+        ///   GET_DEST_POS_MC 의 반대 방향이다. PLC 에 쓰는 목적지(DEST_POS_OD)는
+        ///   실트랙이 아니라 스테이션 번호라, 토폴로지 표(SC_HS_DEF.WAIT_TRACK 등)가
+        ///   실트랙으로 들고 있는 자리를 지시로 바꿀 때 이 변환이 필요하다.
+        /// </summary>
+        protected bool GET_DEST_POS_STATION(string strWH_TYP, string strMC, ref string strSTATION, ref string pRTN_MSG)
+        {
+            try
+            {
+                string strSql = "";
+                strSql += CRLF + " SELECT DPD.TRACK_NO                       ";
+                strSql += CRLF + "   FROM DEST_POS_DEF DPD                   ";
+                strSql += CRLF + "  WHERE DPD.WH_TYP   = :WH_TYP             ";
+                strSql += CRLF + "    AND DPD.MC_NO    = :MC_NO              ";
+                _pBdb.mComMain.CommandType = CommandType.Text;
+                _pBdb.mComMain.Parameters.Clear();
+                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+                _pBdb.mComMain.Parameters.Add("MC_NO",  DbLang.VARCHAR).Value = strMC;
+                int nSelCnt = _pBdb.ExcuteQry(strSql);
+                if (nSelCnt <= 0)
+                {
+                    pRTN_MSG += "DEST_POS_DEF 에 실트랙(" + strMC + ") 정의가 없습니다.";
+                    return false;
+                }
+                strSTATION = _pBdb.mDtMain.Rows[0]["TRACK_NO"].ToString();
+                if (strSTATION == "")
+                {
+                    pRTN_MSG += "DEST_POS_DEF 실트랙(" + strMC + ")의 TRACK_NO 가 비어 있습니다.";
+                    return false;
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                pRTN_MSG += ex.Message;
+                return false;
+            }
+        }
+
         /*
          * GfCvDestPos :: CV 에 실을 목적지 번호
          *

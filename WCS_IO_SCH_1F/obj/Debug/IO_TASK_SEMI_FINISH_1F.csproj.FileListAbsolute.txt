@@ -28,4 +28,4 @@ D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_1F\b
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_1F\bin\Debug\fr\Npgsql.resources.dll
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_1F\bin\Debug\ja\Npgsql.resources.dll
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_1F\bin\Debug\zh-CN\Npgsql.resources.dll
-D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_1F\obj\Debug\IO_TASK_SEMI_FINISH_1F.csproj.CopyComplete
+D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_IO_SCH_1F\obj\Debug\IO_TASK_.F5A4C066.Up2Date

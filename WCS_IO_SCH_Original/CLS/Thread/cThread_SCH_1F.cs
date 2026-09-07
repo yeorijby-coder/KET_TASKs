@@ -705,7 +705,7 @@ namespace TSK_COMM_IOSCH
                 pRTN_MSG = strTitle;
 
                 strSql = "";
-                strSql += CRLF + " SELECT  JM.*, CD.*                                  ";
+                strSql += CRLF + " SELECT  JM.*, CD.*, SHD.WAIT_TRACK                  ";
                 strSql += CRLF + "   FROM  JOB_MST JM                                  ";
                 strSql += CRLF + "  INNER  JOIN CV_DATA CD                             ";
                 strSql += CRLF + "     ON  JM.WH_TYP             = CD.WH_TYP           ";
@@ -749,25 +749,46 @@ namespace TSK_COMM_IOSCH
                     string strLUGG_NO = "" + dtHs.Rows[i]["LUGG_NO"].ToString() == "" ? "0" : dtHs.Rows[i]["LUGG_NO"].ToString();
                     string strHS_MC = "" + dtHs.Rows[i]["MC_NO"].ToString() == "" ? "0" : dtHs.Rows[i]["MC_NO"].ToString();
                     string strHS_TRACK_NO = "" + dtHs.Rows[i]["HS_TRACK_NO"].ToString() == "" ? "0" : dtHs.Rows[i]["HS_TRACK_NO"].ToString();
-                    //string strSTART_LOC = "" + dtHs.Rows[i]["START_LOC"].ToString() == "" ? "0" : dtHs.Rows[i]["START_LOC"].ToString();
-                    string strSC_NO = "" + dtHs.Rows[i]["START_POS"].ToString() == "" ? "0" : dtHs.Rows[i]["START_POS"].ToString();     // 출고작업일거니까 크래인 PLC 번호로 들어옴
-                    //if (IsScNo(strSC_NO) == false)
-                    //{
-                    //    if (GetScNoByLocation(strSTART_LOC, ref strSC_NO) == false)
-                    //        continue;
-                    //}
 
 
                     // 출고 계열 작업만 대상 (CHECK_CV_RETHS 와 동일 기준)
                     if (IsRetJobType(strJOB_TYP) == false)
                         continue;
 
+                    /*
+                     * 그룹 출고대(105)는 가상 자리다 - 실제 자리를 여기서 정한다.
+                     *
+                     *   상위는 "1층으로 빼라"만 말하고(DEST_POS=105, DEST_POS_DEF 상 MC 2101),
+                     *   어느 크레인의 출고 대기대로 갈지는 WCS 가 정해야 한다. 대기대는
+                     *   화물을 내려놓은 그 출고 H/S 의 짝이므로 SC_HS_DEF.WAIT_TRACK 에 있다.
+                     *   (이 질의는 이미 SHD 를 HS_MC_NO 로 조인해 두었다)
+                     *
+                     *   전에는 JOB_MST.START_POS 를 호기로 보고 150 을 더했다. 두 군데가 틀렸다.
+                     *     - START_POS 는 출고작업에서 000 으로 들어오는 일이 있다 (랙 위치는
+                     *       START_LOCATION 에 있다). 그러면 0+150 = 150 이 나온다.
+                     *     - 호기 표기는 9NN(901~911)이라, 값이 제대로 와도 904+150 = 1054 다.
+                     *       150+n 은 호기가 1~10 일 때만 맞는 식이었다.
+                     *   대기대 자리는 이미 데이터(SC_HS_DEF.WAIT_TRACK)에 있으니 계산하지 않는다.
+                     *
+                     *   WAIT_TRACK 은 실트랙(220)이고 PLC 에 쓸 목적지는 스테이션(154)이라
+                     *   DEST_POS_DEF 로 되돌린다.
+                     */
                     if (strDEST_POS == "105")
                     {
-                        int nDEST = 150;    // 1층일때 
+                        string strWAIT_MC = dtHs.Rows[i]["WAIT_TRACK"].ToString().Trim();
+                        if (strWAIT_MC == "")
+                        {
+                            pRTN_MSG = strTitle + "출고 H/S(" + strHS_MC + ")에 대기대(SC_HS_DEF.WAIT_TRACK)가 없습니다. [작업번호:" + strLUGG_NO + "]";
+                            InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, "", strHS_MC, "");
+                            continue;
+                        }
 
-                        
-                        strDEST_POS = (Convert.ToInt32(strSC_NO) + nDEST).ToString();
+                        if (GET_DEST_POS_STATION(strWH_TYP, strWAIT_MC, ref strDEST_POS, ref pRTN_MSG) == false)
+                        {
+                            pRTN_MSG = strTitle + pRTN_MSG + " [작업번호:" + strLUGG_NO + "]";
+                            InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, "", strHS_MC, strWAIT_MC);
+                            continue;
+                        }
                     }
 
 
