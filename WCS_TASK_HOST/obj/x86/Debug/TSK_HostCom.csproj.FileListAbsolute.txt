@@ -217,4 +217,4 @@ D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_HOST\o
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_HOST\obj\x86\Debug\TSK_HostCom.csproj.CoreCompileInputs.cache
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_HOST\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.exe
 D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_HOST\obj\x86\Debug\TASK_LFC10_G1_ECSCOM.pdb
-D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_HOST\obj\x86\Debug\TSK_HostCom.csproj.CopyComplete
+D:\인수인계\한국단자\ReNewal\KET_Renewal\TASKs\KET_TASKs\WCS_TASK_HOST\obj\x86\Debug\TSK_Host.FC1A0B1A.Up2Date

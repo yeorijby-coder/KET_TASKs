@@ -429,6 +429,8 @@ namespace TSK_HostCom
                 switch (nJobType)
                 {
                     // 입고
+                    // @.입고 - 반자동(11)도 같이 받는다
+                    case 11:
                     case 1:
                         strSPosition = m_BDb.dtMain.Rows[0]["START_POS"].ToString();
                         strDPosition = m_BDb.dtMain.Rows[0]["DEST_LOCATION"].ToString();
@@ -441,6 +443,8 @@ namespace TSK_HostCom
                         break;
 
                     // 출고
+                    // @.출고 - 반자동(12)도 같이 받는다
+                    case 12:
                     case 2:
                         strSPosition = m_BDb.dtMain.Rows[0]["START_LOCATION"].ToString();
                         //strSPosition = strTemp.Substring(0, 2) + strTemp.Substring(4, 2) + strTemp.Substring(7, 2);
@@ -457,6 +461,8 @@ namespace TSK_HostCom
                     //   PICKING(3) 은 UNIT_RET(2) 와 같은 JOB_PATTERN_RET 로 묶여 있다.
                     //   원본 CJobItem::GetLog 의 RET 패턴도 출발=[창고][위치][로케이션] 도착=[창고][위치] 이므로
                     //   출고(case 2)와 똑같이 출발은 로케이션, 도착은 스테이션을 쓴다.
+                    // @.피킹출고 - 반자동(13)도 같이 받는다
+                    case 13:
                     case 3:
                         strSPosition = m_BDb.dtMain.Rows[0]["START_LOCATION"].ToString();
                         strDPosition = m_BDb.dtMain.Rows[0]["DEST_POS"].ToString();
@@ -468,6 +474,8 @@ namespace TSK_HostCom
                         break;
 
                     // RACK TO RACK (호기내)
+                    // @.랙투랙 - 반자동(14)도 같이 받는다
+                    case 14:
                     case 4:
                         strSPosition = m_BDb.dtMain.Rows[0]["START_LOCATION"].ToString();
                         //strSPosition = strTemp.Substring(0, 2) + strTemp.Substring(4, 2) + strTemp.Substring(7, 2);
@@ -477,6 +485,8 @@ namespace TSK_HostCom
                         break;
 
                     // RACK TO RACK (호기간 출고)
+                    // @.호기간이동 - 반자동(15)도 같이 받는다
+                    case 15:
                     case 5:
                         strSPosition = m_BDb.dtMain.Rows[0]["START_LOCATION"].ToString();
                         //strSPosition = strTemp.Substring(0, 2) + strTemp.Substring(4, 2) + strTemp.Substring(7, 2);
@@ -493,6 +503,8 @@ namespace TSK_HostCom
                             strSPosition = m_BDb.dtMain.Rows[0]["HS_TRACK_NO"].ToString();
                         }
                         break;
+                    // @.이동 - 반자동(10)도 같이 받는다
+                    case 10:
                     case 6:
                         strSPosition = m_BDb.dtMain.Rows[0]["START_POS"].ToString();
                         strDPosition = m_BDb.dtMain.Rows[0]["DEST_POS"].ToString();
@@ -1397,11 +1409,14 @@ namespace TSK_HostCom
             /*
              * 29(SC 구동완료)가 최종인 것은 입고다.
              * 출고/픽킹은 29 뒤에 컨베이어 구간(11 → 19)이 남으므로 여기서 보고하면 안 된다.
-             *   이동(6)   99 → 10 → 11 → 19
-             *   입고(1)   99 → 10 → 11 → 21 → 29
-             *   출고(2,3) 99 → 20 → 21 → 29 → 11 → 19
+             *   이동(6/10)     99 → 10 → 11 → 19
+             *   입고(1/11)     99 → 10 → 11 → 21 → 29
+             *   출고(2,3/12,13) 99 → 20 → 21 → 29 → 11 → 19
+             *
+             * @.반자동도 짝으로 뺀다. 12/13 이 빠져 있어 반자동 출고·픽킹이 29 에서
+             *   완료보고 대상으로 잡혔다. (뒤에 남은 CV 구간을 건너뛰게 된다)
              */
-            string strJobTypNotIn = (nJobStatus == 29) ? "'2','3'" : "";
+            string strJobTypNotIn = (nJobStatus == 29) ? "'2','3','12','13'" : "";
 
             int nJobType = 0;
             string strUserID = "";
@@ -1472,11 +1487,23 @@ namespace TSK_HostCom
              */
             switch (nJobType)
             {
+                // @.입고 - 반자동(11)도 같이 받는다
+                case 11:
                 case 1: nStation = Convert.ToInt16(strSPosition); nClass = 1;  break;
+                // @.출고 - 반자동(12)도 같이 받는다
+                case 12:
                 case 2: nStation = Convert.ToInt16(strDPosition); nClass = 2;  break;
+                // @.피킹출고 - 반자동(13)도 같이 받는다
+                case 13:
                 case 3: nStation = Convert.ToInt16(strDPosition); nClass = 2;  break; // @.피킹. 원본에서 출고(JOB_PATTERN_RET)와 동일
+                // @.랙투랙 - 반자동(14)도 같이 받는다
+                case 14:
                 case 4: nStation = 0;                             nClass = 3; break; //랙투랙 부분 조한성 수정 0608
+                // @.호기간이동 - 반자동(15)도 같이 받는다
+                case 15:
                 case 5: nStation = 0;                             nClass = 3; break;
+                // @.이동 - 반자동(10)도 같이 받는다
+                case 10:
                 case 6: nStation = Convert.ToInt32(strDPosition); nClass = 3; break;
                 default:
                     m_strLog = "작업정보는 존재하지만 잘못된 작업 정보입니다.[작업 타입:" + nJobType.ToString() + "]";
@@ -1527,6 +1554,8 @@ namespace TSK_HostCom
                 int nNewJobType = 0;
                 switch (nJobType)
                 {
+                    // @.입고 - 반자동(11)도 같이 받는다
+                    case 11:
                     case 1:                        
                         #region 기존 작업 삭제
                         if (modDefApp.g_frmForm.DeleteJobMst(m_BDb, false, strLuggNum) == false)
@@ -1559,6 +1588,8 @@ namespace TSK_HostCom
 
                         #endregion
                         break;
+                    // @.출고 - 반자동(12)도 같이 받는다
+                    case 12:
                     case 2:      
                         #region 입고 작업 생성
                         nNewJobType = 1;
@@ -2028,11 +2059,23 @@ namespace TSK_HostCom
             int nClass = 0;
             switch (nJobType)
             {
+                // @.입고 - 반자동(11)도 같이 받는다
+                case 11:
                 case 1: nStation = Convert.ToInt16(strSPosition); nClass = 1; break;
+                // @.출고 - 반자동(12)도 같이 받는다
+                case 12:
                 case 2: nStation = Convert.ToInt16(strDPosition); nClass = 2; break;
+                // @.피킹출고 - 반자동(13)도 같이 받는다
+                case 13:
                 case 3: nStation = Convert.ToInt16(strDPosition); nClass = 2; break; // @.피킹은 출고와 동일
+                // @.랙투랙 - 반자동(14)도 같이 받는다
+                case 14:
                 case 4: nStation = 0;                             nClass = 3; break;
+                // @.호기간이동 - 반자동(15)도 같이 받는다
+                case 15:
                 case 5: nStation = 0;                             nClass = 3; break;
+                // @.이동 - 반자동(10)도 같이 받는다
+                case 10:
                 case 6: nStation = Convert.ToInt32(strDPosition); nClass = 3; break;
                 default:
                     m_strLog = "작업정보는 존재하지만 잘못된 작업 정보입니다.[작업 타입:" + nJobType.ToString() + "]";
