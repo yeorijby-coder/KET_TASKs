@@ -1582,19 +1582,20 @@ namespace TSK_COMM_IOSCH
         /*
          * 우선순위 정렬식 - 값이 큰 것이 먼저다.
          *
-         *   JOB_MST.JOB_PRIORITY 는 varchar(4) 다. 그냥 ORDER BY 하면 문자열 순서라
-         *   자릿수가 다를 때 뒤집힌다. 예를 들어 '90' 이 '150' 보다 위로 온다.
-         *   실제 값도 0 / 000 / 100 / 110 / 150 처럼 자릿수가 섞여 있다.
+         *   우선순위는 3자리로 정의되어 있다. 그런데 JOB_MST.JOB_PRIORITY 는
+         *   varchar 라 그냥 ORDER BY 하면 문자열 순서고, 자릿수를 안 채워 넣은 값이
+         *   섞이면 뒤집힌다. '90' 이 '150' 보다 위로 온다.
+         *   실제로도 0 / 000 / 100 / 110 / 150 처럼 섞여 들어와 있다.
          *
-         *   4자리로 0 을 채워 비교하면 문자열 순서가 곧 숫자 순서가 된다.
-         *     0 -> 0000    90 -> 0090    100 -> 0100    150 -> 0150
+         *   3자리로 0 을 채워 비교하면 문자열 순서가 곧 숫자 순서가 된다.
+         *     0 -> 000     90 -> 090     100 -> 100     150 -> 150
          *   숫자로 캐스팅하지 않는 것은, 값에 숫자 아닌 것이 들어와도 질의가
          *   죽지 않게 하려는 것이다. 비어 있으면 '0' 으로 접어 맨 뒤로 보낸다.
          */
         public static string SQL_JOB_PRIORITY(string strAlias)
         {
             string strCol = ((strAlias == "") ? "" : strAlias + ".") + "JOB_PRIORITY";
-            return "LPAD(COALESCE(NULLIF(BTRIM(" + strCol + ", " + SQL_WS + "), ''), '0'), 4, '0')";
+            return "LPAD(COALESCE(NULLIF(BTRIM(" + strCol + ", " + SQL_WS + "), ''), '0'), 3, '0')";
         }
 
         public const string SQL_SC_READY =

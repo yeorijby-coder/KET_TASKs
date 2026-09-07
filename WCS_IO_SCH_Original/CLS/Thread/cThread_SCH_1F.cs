@@ -506,7 +506,7 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND  CD.PLC_NO             = :CV_PLC                             ";   // 자기 PLC 것만
                 strSql += CRLF + "    AND  (SHD.WAIT_TRACK IS NOT NULL OR CD.MC_NO = :MC_DECIDE)       ";   // 대기대 또는 결정대
                 strSql += SQL_RET_DEPART_COND("CD", "JM");
-                strSql += CRLF + "  ORDER  BY " + SQL_JOB_PRIORITY("JM") + " DESC, JM.UPD_DT ASC        ";   // 우선순위 높은 것 먼저, 같으면 빨리 도착한 것부터
+                strSql += CRLF + "  ORDER  BY JM.UPD_DT ASC                                            ";   // 가장 빨리 도착한 화물부터
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
                 _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
