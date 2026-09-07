@@ -802,11 +802,34 @@ namespace WCS_TASK_CV
 
                     int nWord = (byRxBuff[1] << 8) + byRxBuff[0];
 
+                    /*
+                     * @.한 영역 안에서 같은 트랙이 여러 비트에 걸려 있을 수 있다.
+                     *   (DeviceMap02 의 RetStation D551 은 218 과 225 가 두 번씩 적혀 있다)
+                     *   비트를 하나씩 바로 쓰면 뒤 비트가 앞 비트를 덮어써, 설비가 실제로
+                     *   세우는 비트가 가려져 신호가 사라진다. 그래서 트랙별로 모아
+                     *   하나라도 서 있으면 선 것으로 본다.
+                     */
+                    Dictionary<int, int> dicTrackVal = new Dictionary<int, int>();
+
                     foreach (cDeviceMapRuntime.EtcBit bit in area.Bits)
                     {
-                        string strVal = ((nWord >> bit.Pos) & 0x01).ToString();
+                        int nBitVal = (nWord >> bit.Pos) & 0x01;
 
                         foreach (int nCvNo in bit.Tracks)
+                        {
+                            int nHave;
+                            if (dicTrackVal.TryGetValue(nCvNo, out nHave))
+                                dicTrackVal[nCvNo] = nHave | nBitVal;
+                            else
+                                dicTrackVal[nCvNo] = nBitVal;
+                        }
+                    }
+
+                    foreach (KeyValuePair<int, int> kv in dicTrackVal)
+                    {
+                        int    nCvNo  = kv.Key;
+                        string strVal = kv.Value.ToString();
+
                         {
                             if (!CvDic.ContainsKey(nCvNo))
                                 CvDic.Add(nCvNo, new CVData());
