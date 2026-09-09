@@ -1589,6 +1589,13 @@ namespace TSK_HostCom
                         #endregion
                         break;
                     // @.출고 - 반자동(12)도 같이 받는다
+                    // @.피킹출고(3 / 반자동 13)도 같이 받는다.
+                    //   원본 CLib::ConvertJobTypeToPattern 에서 피킹은 출고와 같은
+                    //   JOB_PATTERN_RET 로 묶여 있고, 앞의 IsJobExist 도 case 3 을
+                    //   case 2 와 똑같이 채운다. 여기만 빠져 있어 피킹출고를
+                    //   완료하면 다음 작업이 생기지 않아 순환이 거기서 멈췄다.
+                    case 13:
+                    case 3:
                     case 12:
                     case 2:      
                         #region 입고 작업 생성
@@ -1678,6 +1685,11 @@ namespace TSK_HostCom
 
                         modCmWork.ShowMsgClient(strTitle + "SIM MODE 작업 추가 되었습니다.[작업번호:" + strLuggNum + "]", modDefApp.MSG_NOR);
                         #endregion
+                        break;
+                    // @.다루지 않는 작업구분이 오면 열어 둔 트랜잭션을 닫는다.
+                    //   전에는 그대로 return 해 버려 트랜잭션이 떠 있었다.
+                    default:
+                        m_BDb.RollbackTrans();
                         break;
                 }
                 return true;
