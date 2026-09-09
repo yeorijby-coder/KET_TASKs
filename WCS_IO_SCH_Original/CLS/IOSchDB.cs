@@ -3530,6 +3530,106 @@ namespace TSK_COMM_IOSCH
             Thread.Sleep(10);
         }
 
+        // ─────────────────────────────────────────────────────────────────
+        // 공통 코어 0 : 신규 작업 접수 (99 → 10 / 20)
+        //   상위가 넣은 신규('99')를 어느 설비 구간에서 시작할지 정한다.
+        //     이동(6)/입고(1) : CV 에서 시작한다  → 10(CV 구동대기)
+        //     그 밖(출고 등)  : 크레인에서 시작한다 → 20(SC 구동요구)
+        //
+        //   층이 아니라 작업 단위의 일이라 한 주기에 한 스레드만 돌리면 된다.
+        //   전에는 1F 스레드의 private 함수라 거기서만 돌았고, ENV_IOSCH.INI 의
+        //   USE_1F 를 'N' 으로 두면 3층·BOX 는 작업이 '99' 에 그대로 남아 통째로
+        //   멈췄다. 1층을 끄고 3층만 돌리는 구성이 그래서 안 됐다.
+        //   여기(공통)로 올리고, 세 스레드가 같은 행을 동시에 집지 않도록
+        //   잠금을 잡은 스레드만 이번 주기의 접수를 맡게 한다.
+        // ─────────────────────────────────────────────────────────────────
+        // @.접수를 이번 주기에 누가 맡는지 가리는 잠금. 층별 스레드가 한 프로세스
+        //   안에 같이 뜨므로 static 하나면 된다.
+        private static readonly object m_objJobAcceptLock = new object();
+
+        protected bool JOB_ACCEPT(string strWH_TYP, string strTitle, ref string pRTN_MSG)
+        {
+            // @.다른 층 스레드가 이미 접수 중이면 이번 주기는 건너뛴다.
+            //   (기다리지 않는다. 어차피 200ms 뒤에 다시 온다)
+            if (!Monitor.TryEnter(m_objJobAcceptLock))
+            {
+                pRTN_MSG = "";
+                return true;
+            }
+
+            try
+            {
+                try
+                {
+                    int nSelCnt = 0;
+                    string strSql = "";
+
+                    pRTN_MSG = strTitle;
+
+                    strSql = "";
+                    strSql += CRLF + " SELECT LUGG_NO, JOB_TYP        ";
+                    strSql += CRLF + "   FROM JOB_MST                 ";
+                    strSql += CRLF + "  WHERE WH_TYP     = :WH_TYP    ";
+                    strSql += CRLF + "    AND JOB_STATUS = '" + ST_NEW + "' ";
+                    strSql += CRLF + "  ORDER BY LUGG_NO              ";
+
+                    _pBdb.mComMain.CommandType = CommandType.Text;
+                    _pBdb.mComMain.Parameters.Clear();
+                    _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+
+                    nSelCnt = _pBdb.ExcuteQry(strSql);
+                    if (nSelCnt < 0)
+                    {
+                        pRTN_MSG += _pBdb.ErrMsg;
+                        return false;
+                    }
+                    if (nSelCnt == 0)
+                    {
+                        pRTN_MSG = "";
+                        return true;
+                    }
+
+                    string strMsg = "";
+                    _pBdb.BeginTrans();
+
+                    for (int i = 0; i < nSelCnt; i++)
+                    {
+                        string strLUGG_NO = _pBdb.mDtMain.Rows[i]["LUGG_NO"].ToString();
+                        string strJOB_TYP = _pBdb.mDtMain.Rows[i]["JOB_TYP"].ToString();
+
+                        // CV 에서 시작하는 작업인가
+                        // @.입고 / 이동은 CV 에서 시작한다. 반자동(11 / 10)도 같다.
+                        bool bCvFirst = IsStoJobType(strJOB_TYP) || IsMoveJobType(strJOB_TYP);
+                        string strNext = bCvFirst ? ST_CV_WAIT : ST_SC_WAIT;
+
+                        if (UPDATE_JOB_DATA(strNext, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG) == false)
+                        {
+                            _pBdb.Rollback();
+                            return false;
+                        }
+
+                        strMsg += (strMsg == "" ? "" : ", ") + strLUGG_NO + "→" + strNext;
+                        InsertLog(SCH_WH_TYP, strTitle + "작업 " + strLUGG_NO + " 접수 (상태 " + strNext + ")",
+                                  "", "", strLUGG_NO, strNext, "", "", false);
+                    }
+
+                    pRTN_MSG = strTitle + "신규 작업을 접수했습니다. [" + strMsg + "]";
+                    _pBdb.Commit();
+                    return true;
+                }
+                catch (Exception ex)
+                {
+                    pRTN_MSG = strTitle + ex.ToString();
+                    _pBdb.Rollback();
+                    return false;
+                }
+            }
+            finally
+            {
+                Monitor.Exit(m_objJobAcceptLock);
+            }
+        }
+
         public bool NEW_JOB_ORDER(string strWH_TYP,
                                  string strPLC_NO,
                              ref string pRTN_MSG)

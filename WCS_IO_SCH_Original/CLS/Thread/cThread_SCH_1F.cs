@@ -286,9 +286,10 @@ namespace TSK_COMM_IOSCH
         { return ScStoreRoutine(strWH_TYP, CV_PLC_1F_NEW, "[StoHsCheck5]", ref pRTN_MSG); }
 
         /*
-         * 크레인 진행/완료는 층에 속한 일이 아니라 작업에 속한 일이다.
-         * SC_HS_DEF 를 보면 모든 호기가 1층 H/S(HS_NO 02)와 3층 H/S(03/04)를 다 가진다.
-         * 세 스레드(1F/3F/BOX)가 같은 작업을 중복해서 잡지 않도록 여기서만 돌린다.
+         * 신규 작업 접수(99 → 10 / 20)는 층이 아니라 작업 단위의 일이라
+         * 본체를 공통(IOSchDB.JOB_ACCEPT)으로 올렸다. 세 스레드가 다 이 래퍼를
+         * 갖고, 한 주기에는 잠금을 먼저 잡은 하나만 실제로 접수한다.
+         * (전에는 1F 에만 있어 USE_1F=N 이면 3층·BOX 가 통째로 멈췄다)
          */
         public bool JobAccept(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
         { return JOB_ACCEPT(strWH_TYP, "[JobAccept]", ref pRTN_MSG); }
@@ -825,81 +826,6 @@ namespace TSK_COMM_IOSCH
 
 
 
-
-        // ─────────────────────────────────────────────────────────────────
-        // 공통 코어 0 : 신규 작업 접수 (99 → 10 / 20)
-        //   상위가 넣은 신규('99')를 어느 설비 구간에서 시작할지 정한다.
-        //     이동(6)/입고(1) : CV 에서 시작한다  → 10(CV 구동대기)
-        //     그 밖(출고 등)  : 크레인에서 시작한다 → 20(SC 구동요구)
-        //   층이 아니라 작업 단위의 일이라 1F 스레드에서 한 번만 돌린다.
-        // ─────────────────────────────────────────────────────────────────
-        private bool JOB_ACCEPT(string strWH_TYP, string strTitle, ref string pRTN_MSG)
-        {
-            try
-            {
-                int nSelCnt = 0;
-                string strSql = "";
-
-                pRTN_MSG = strTitle;
-
-                strSql = "";
-                strSql += CRLF + " SELECT LUGG_NO, JOB_TYP        ";
-                strSql += CRLF + "   FROM JOB_MST                 ";
-                strSql += CRLF + "  WHERE WH_TYP     = :WH_TYP    ";
-                strSql += CRLF + "    AND JOB_STATUS = '" + ST_NEW + "' ";
-                strSql += CRLF + "  ORDER BY LUGG_NO              ";
-
-                _pBdb.mComMain.CommandType = CommandType.Text;
-                _pBdb.mComMain.Parameters.Clear();
-                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
-
-                nSelCnt = _pBdb.ExcuteQry(strSql);
-                if (nSelCnt < 0)
-                {
-                    pRTN_MSG += _pBdb.ErrMsg;
-                    return false;
-                }
-                if (nSelCnt == 0)
-                {
-                    pRTN_MSG = "";
-                    return true;
-                }
-
-                string strMsg = "";
-                _pBdb.BeginTrans();
-
-                for (int i = 0; i < nSelCnt; i++)
-                {
-                    string strLUGG_NO = _pBdb.mDtMain.Rows[i]["LUGG_NO"].ToString();
-                    string strJOB_TYP = _pBdb.mDtMain.Rows[i]["JOB_TYP"].ToString();
-
-                    // CV 에서 시작하는 작업인가
-                    // @.입고 / 이동은 CV 에서 시작한다. 반자동(11 / 10)도 같다.
-                    bool bCvFirst = IsStoJobType(strJOB_TYP) || IsMoveJobType(strJOB_TYP);
-                    string strNext = bCvFirst ? ST_CV_WAIT : ST_SC_WAIT;
-
-                    if (UPDATE_JOB_DATA(strNext, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG) == false)
-                    {
-                        _pBdb.Rollback();
-                        return false;
-                    }
-
-                    strMsg += (strMsg == "" ? "" : ", ") + strLUGG_NO + "→" + strNext;
-                    InsertLog(SCH_WH_TYP, strTitle + "작업 " + strLUGG_NO + " 접수 (상태 " + strNext + ")",
-                              "", "", strLUGG_NO, strNext, "", "", false);
-                }
-
-                pRTN_MSG = strTitle + "신규 작업을 접수했습니다. [" + strMsg + "]";
-                _pBdb.Commit();
-                return true;
-            }
-            catch (Exception ex)
-            {
-                pRTN_MSG = strTitle + ex.ToString();
-                _pBdb.Rollback();
-                return false;
-            }
-        }
 
         // ─────────────────────────────────────────────────────────────────
         // 공통 코어 5 : 입고 H/S 도착 -> 크레인 입고 지시 (레거시 ECS CSc::Store)

@@ -176,6 +176,8 @@ namespace TSK_COMM_IOSCH
                     Thread.Sleep(10);
                     //*/
                     // ── 3층(3F) 처리 : ECS *4 함수 포팅 (구라인 PLC 03 / 신라인 PLC 06)
+                    RunSchFunc(JobAccept);              // 신규 작업 접수 99 -> 10 / 20
+
                     RunSchFunc(StartInvokeCheck4);      // 3F BOX 라인 입고대 출발
                     RunSchFunc(RetInvokeCheck4);        // 3F BOX 라인 출고HS → 픽킹대 지시
                     RunSchFunc(ArrivedCheck4);          // 3F BOX 라인 피킹대 도착보고
@@ -269,6 +271,15 @@ namespace TSK_COMM_IOSCH
 
 
         // ── ECS *4 대응 공개 함수 (기존 함수들과 동일 시그니처) ──
+        /*
+         * 신규 작업 접수(99 → 10 / 20)는 층이 아니라 작업 단위의 일이라
+         * 본체를 공통(IOSchDB.JOB_ACCEPT)으로 올렸다. 세 스레드가 다 이 래퍼를
+         * 갖고, 한 주기에는 잠금을 먼저 잡은 하나만 실제로 접수한다.
+         * (전에는 1F 에만 있어 USE_1F=N 이면 3층·BOX 가 통째로 멈췄다)
+         */
+        public bool JobAccept(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return JOB_ACCEPT(strWH_TYP, "[JobAccept]", ref pRTN_MSG); }
+
         public bool StartInvokeCheck4(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
         { return CV_STO_START_PLC(strWH_TYP, CV_PLC_3F_BOX, "[StartInvokeCheck4]", ref pRTN_MSG); }
         public bool RetInvokeCheck4(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
