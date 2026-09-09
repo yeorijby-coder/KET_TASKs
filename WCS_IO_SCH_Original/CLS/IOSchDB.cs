@@ -3513,6 +3513,139 @@ namespace TSK_COMM_IOSCH
 
         #region 층 공통 - 함수
 
+        /*
+         * ReportOnChange :: 같은 말을 200ms 마다 쏟지 않게, 바뀔 때만 알린다.
+         *   스케줄러는 한 주기에 같은 자리를 계속 지나므로, 막힌 사유는 상태가
+         *   바뀌는 순간에만 한 줄 나오면 된다. 풀리면 "풀렸다" 도 한 줄 낸다.
+         */
+        private readonly Dictionary<string, string> m_dicLastReport = new Dictionary<string, string>();
+
+        protected void ReportOnChange(string strKey, string strMsg)
+        {
+            string strPrev;
+            if (m_dicLastReport.TryGetValue(strKey, out strPrev) && strPrev == strMsg)
+                return;
+
+            m_dicLastReport[strKey] = strMsg;
+            if (strMsg != "") MakeMsg_Error_NoLog(strMsg);
+        }
+
+        protected void ClearReport(string strKey, string strMsg)
+        {
+            string strPrev;
+            if (m_dicLastReport.TryGetValue(strKey, out strPrev) == false || strPrev == "")
+                return;
+
+            m_dicLastReport[strKey] = "";
+            MakeMsg(strMsg);
+        }
+
+        /*
+         * REPORT_CV_START_BLOCKED :: CV 출발 지시가 왜 안 나가는지 한 줄로 알린다.
+         *
+         *   CV_STO_START_PLC 의 조회는 설비 조건을 전부 AND 로 건다. 하나만 어긋나도
+         *   0 건이 되어 조용히 다음 주기로 넘어가고, 무엇이 어긋났는지 볼 자리가 없었다.
+         *   "지시는 받았는데 작업대에 쓰지를 못한다" 가 여기서 났다.
+         *
+         *   대기 중인 작업(10)의 출발 작업대를 그대로 읽어 어느 칸이 막고 있는지 적는다.
+         *   화물이 아직 안 왔을 뿐인 정상 대기도 여기 걸리므로, 바뀔 때만 남긴다.
+         */
+        protected void REPORT_CV_START_BLOCKED(string strWH_TYP, string strCV_PLC, string strTitle)
+        {
+            string strKey = "CVSTART_" + strCV_PLC;
+
+            try
+            {
+                string strSql = "";
+                strSql += CRLF + " SELECT JM.LUGG_NO, JM.JOB_TYP, JM.START_POS, CD.MC_NO, CD.STN_KIND ";
+                strSql += CRLF + "      , CD.STO_READY_RD, CD.RET_READY_RD, CD.SENSOR0_DATA_RD        ";
+                strSql += CRLF + "      , CD.AUTO_MODE_RD, CD.OD_RQ_YN, CD.OD_RQ_FLAG                 ";
+                strSql += CRLF + "      , CD.TR_PAUSE_RD, CD.ERROR_CODE, CD.LUGG_NO_RD                ";
+                strSql += CRLF + "   FROM JOB_MST JM                                                  ";
+                strSql += CRLF + "  INNER JOIN CV_DATA CD                                             ";
+                strSql += CRLF + "     ON CD.WH_TYP = JM.WH_TYP AND CD.HOST_STN_NO = JM.START_POS     ";
+                strSql += CRLF + "  WHERE JM.WH_TYP     = :WH_TYP                                     ";
+                strSql += CRLF + "    AND JM.JOB_STATUS = '" + ST_CV_WAIT + "'                        ";
+                strSql += CRLF + "    AND CD.PLC_NO     = :CV_PLC                                     ";
+                strSql += CRLF + "  ORDER BY JM.LUGG_NO                                               ";
+                strSql += CRLF + "  LIMIT 1                                                           ";
+
+                _pBdb.mComMain.CommandType = CommandType.Text;
+                _pBdb.mComMain.Parameters.Clear();
+                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+                _pBdb.mComMain.Parameters.Add("CV_PLC", DbLang.VARCHAR).Value = strCV_PLC;
+
+                int nCnt = _pBdb.ExcuteQry(strSql);
+                if (nCnt <= 0)
+                {
+                    // 기다리는 작업이 없다. 막힌 것이 아니라 할 일이 없는 것이다.
+                    ClearReport(strKey, strTitle + "출발 대기가 풀렸다.");
+                    return;
+                }
+
+                DataRow r = _pBdb.mDtMain.Rows[0];
+                string strLugg   = GetVal(r, "lugg_no");
+                string strStn    = GetVal(r, "start_pos");
+                string strMc     = GetVal(r, "mc_no");
+                string strLuggRd = GetVal(r, "lugg_no_rd").Trim();
+
+                int nKind = 0;
+                int.TryParse(GetVal(r, "stn_kind"), out nKind);
+
+                bool bSto = (nKind & cDefApp.STN_KIND_STO) != 0;
+                bool bArv = (nKind & cDefApp.STN_KIND_ARV) != 0;
+
+                List<string> lstWhy = new List<string>();
+
+                // 출발 자격 : 입고대(트래킹이 비어 있어야 한다) 이거나 도착대(출고 준비)
+                if (bSto == false && bArv == false)
+                {
+                    lstWhy.Add("STN_KIND=" + nKind + " 에 입고대(0x01)도 도착대(0x40)도 없다");
+                }
+                else
+                {
+                    bool bLuggEmpty = (strLuggRd == "" || strLuggRd == "0" || strLuggRd == "0000");
+                    bool bStoOk = bSto && GetVal(r, "sto_ready_rd") == "1" && bLuggEmpty;
+                    bool bArvOk = bArv && GetVal(r, "ret_ready_rd") == "1";
+
+                    if (bStoOk == false && bArvOk == false)
+                    {
+                        if (bSto && GetVal(r, "sto_ready_rd") != "1")
+                            lstWhy.Add("입고대인데 STO_READY_RD=" + GetVal(r, "sto_ready_rd"));
+                        if (bSto && GetVal(r, "sto_ready_rd") == "1" && bLuggEmpty == false)
+                            lstWhy.Add("입고대인데 앞 작업번호가 남아 있다 LUGG_NO_RD=" + strLuggRd);
+                        if (bArv)
+                            lstWhy.Add("도착대인데 RET_READY_RD=" + GetVal(r, "ret_ready_rd"));
+                    }
+                }
+
+                if (GetVal(r, "sensor0_data_rd") != "1") lstWhy.Add("화물이 없다 SENSOR0_DATA_RD=" + GetVal(r, "sensor0_data_rd"));
+                if (GetVal(r, "auto_mode_rd")    != "1") lstWhy.Add("자동모드가 아니다 AUTO_MODE_RD=" + GetVal(r, "auto_mode_rd"));
+                if (GetVal(r, "od_rq_yn")        != "N") lstWhy.Add("앞 명령을 아직 안 가져갔다 OD_RQ_YN=" + GetVal(r, "od_rq_yn"));
+                if (GetVal(r, "od_rq_flag")      != "N") lstWhy.Add("OD_RQ_FLAG=" + GetVal(r, "od_rq_flag"));
+
+                string strPause = GetVal(r, "tr_pause_rd");
+                if (strPause != "" && strPause != "0") lstWhy.Add("진입 대기 TR_PAUSE_RD=" + strPause);
+
+                string strErr = GetVal(r, "error_code").Trim();
+                if (strErr != "" && strErr.TrimStart('0') != "") lstWhy.Add("설비 오류 ERROR_CODE=" + strErr);
+
+                if (lstWhy.Count == 0)
+                {
+                    // 여기 조건은 다 맞는데 조회가 0 건이었다. 남은 것은 트래킹 겹침뿐이다.
+                    lstWhy.Add("작업목록에 LUGG_NO_RD(" + strLuggRd + ") 와 같은 번호의 작업이 남아 있다");
+                }
+
+                ReportOnChange(strKey,
+                               strTitle + "출발 지시를 못 낸다. [작업번호:" + strLugg + "][출발:" + strStn
+                             + "][TRACK:" + strMc + "] - " + string.Join(" / ", lstWhy.ToArray()));
+            }
+            catch (Exception ex)
+            {
+                ReportOnChange(strKey, strTitle + "출발 막힌 사유를 읽지 못했다. " + ex.Message);
+            }
+        }
+
         protected void RunSchFunc(SchFunc fn)
         {
             if (!fn(SCH_WH_TYP, m_nId.ToString(), ref strRTN_MSG))
@@ -4052,6 +4185,9 @@ namespace TSK_COMM_IOSCH
                 }
                 if (nSelCnt == 0)
                 {
+                    // @.설비 조건이 전부 AND 라 하나만 어긋나도 0건이 된다.
+                    //   기다리는 작업이 있는데도 0건이면 어느 칸이 막는지 알린다.
+                    REPORT_CV_START_BLOCKED(strWH_TYP, strCV_PLC, strTitle);
                     pRTN_MSG = "";
                     return true;
                 }
@@ -4077,7 +4213,14 @@ namespace TSK_COMM_IOSCH
                 if (UPDATE_CV_DATA(strJOB_TYP, strPRODUCT_SIZE, strTRAY_LEV, GfCvDestPos(strJOB_DEST_POS), strIS_TURN,
                                    strLUGG_NO, strWH_TYP, strCV_PLC, strCV_MC_NO, "", ref pRTN_MSG) == false)
                 {
+                    // @.골라 놓고 쓰지를 못했다. 고르는 조건과 쓰는 조건이 달라
+                    //   그 사이에 설비가 바뀌었거나, MC_NO 가 어긋나거나, 오류가 서 있다.
+                    //   전에는 사유 없이 재시도만 반복했다.
                     _pBdb.Rollback();
+                    ReportOnChange("CVSTART_UPD_" + strCV_PLC,
+                                   strTitle + "TRACK " + strCV_MC_NO + " 에 지시를 쓰지 못했다(0건 갱신). "
+                                 + "[작업번호:" + strLUGG_NO + "][출발:" + strJOB_START_POS + "] "
+                                 + "OD_RQ_YN / ERROR_CODE / MC_NO 를 보십시오.");
                     pRTN_MSG = "";
                     return true;    // 설비 미준비 - 다음 사이클 재시도
                 }
