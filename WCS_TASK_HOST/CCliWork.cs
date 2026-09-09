@@ -1522,7 +1522,7 @@ namespace TSK_HostCom
              *   그냥 붙여 두어, 받는 쪽이 작업번호부터 어긋나게 읽었다.
              */
             strTemp = string.Format("F{0:0}{1}{2:0000}{3:0}{4:0}{5:000}",
-                                    nJobType, modDefApp.WH_DEF, nLuggNum, nClass,
+                                    modDefApp.GsJobDefineOfReport(nJobType), modDefApp.WH_DEF, nLuggNum, nClass,
                                     modDefApp.STEP_FIRST, nStation);
 
             int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
@@ -2096,7 +2096,7 @@ namespace TSK_HostCom
             }
 
             strTemp = string.Format("F{0:0}{1}{2:0000}{3:0}{4:0}{5:000}",
-                                    nJobType, modDefApp.WH_DEF, nLuggNum, nClass,
+                                    modDefApp.GsJobDefineOfReport(nJobType), modDefApp.WH_DEF, nLuggNum, nClass,
                                     modDefApp.STEP_FINAL, nStation);
 
             int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;

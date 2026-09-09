@@ -231,7 +231,11 @@ public static frmMain g_frmForm;
         {
             enJobTypeNone = 0,
             enJobTypeAutoSto = 1, enJobTypeAutoRet = 2, enJobTypeAutoPR = 3, enJobTypeAutoR2R = 4, enJobTypeAutoW2W = 5, enJobTypeAutoMove = 6,
-            enJobTypeSemiSto = 11, enJobTypeSemiRet = 12, enJobTypeSemiPR = 13, enJobTypeSemiR2R = 14, enJobTypeSemiW2W = 15, enJobTypeSemiMove = 16,
+            // @.반자동 이동은 16 이 아니라 10 이다. IO_TASK(IOSchDB.EN_JOB_TYPE)와
+            //   DB 규약(JT_IN_MOVE = '6','10')이 10 을 쓴다. 여기만 16 이라
+            //   ConvertJobPattern(10) 이 enJobPatternNone 을 돌려 반자동 이동이
+            //   작업대 검증에서 거절되고, 완료·도착 보고의 case 10 은 죽어 있었다.
+            enJobTypeSemiSto = 11, enJobTypeSemiRet = 12, enJobTypeSemiPR = 13, enJobTypeSemiR2R = 14, enJobTypeSemiW2W = 15, enJobTypeSemiMove = 10,
             enJobTypeManual = 21
         };
         public enum EN_JOB_PATTERN : int
@@ -319,6 +323,31 @@ public static frmMain g_frmForm;
         #endregion
 
         #region 작업정보 처리 함수들
+        /*
+         * GsJobDefineOfReport :: 완료·도착 보고 전문의 작업구분 한 자리.
+         *
+         *   문서 IV.5 의 작업구분은 1자리다. 전에는 JOB_MST.JOB_TYP 을 그대로
+         *   넣어, 반자동(10~15)이면 "12" 처럼 두 자리가 되어 전문 전체가 한 칸
+         *   밀렸다. 받는 쪽은 작업번호부터 어긋나게 읽어 어느 슬롯과도 맞지 않고,
+         *   그러면 조용히 버려진다. (이쪽은 보냈고 작업까지 지웠으므로 순환이 끊긴다)
+         *
+         *   반자동은 짝이 되는 정상 구분으로 내려 보낸다. 상위가 보는 것은
+         *   입고/출고/이동 이지 그것을 사람이 냈는지 아니지가 아니다.
+         */
+        public static int GsJobDefineOfReport(int nJobType)
+        {
+            switch (nJobType)
+            {
+                case (int)EN_JOB_TYPE.enJobTypeSemiSto:  return (int)EN_JOB_TYPE.enJobTypeAutoSto;
+                case (int)EN_JOB_TYPE.enJobTypeSemiRet:  return (int)EN_JOB_TYPE.enJobTypeAutoRet;
+                case (int)EN_JOB_TYPE.enJobTypeSemiPR:   return (int)EN_JOB_TYPE.enJobTypeAutoPR;
+                case (int)EN_JOB_TYPE.enJobTypeSemiR2R:  return (int)EN_JOB_TYPE.enJobTypeAutoR2R;
+                case (int)EN_JOB_TYPE.enJobTypeSemiW2W:  return (int)EN_JOB_TYPE.enJobTypeAutoW2W;
+                case (int)EN_JOB_TYPE.enJobTypeSemiMove: return (int)EN_JOB_TYPE.enJobTypeAutoMove;
+            }
+            return nJobType;
+        }
+
         public static int ConvertJobPattern(int nJobType)
         {
             switch (nJobType)
@@ -330,6 +359,12 @@ public static frmMain g_frmForm;
                 case (int)EN_JOB_TYPE.enJobTypeAutoRet:
                 case (int)EN_JOB_TYPE.enJobTypeSemiRet:
                     return (int)EN_JOB_PATTERN.enJobPatternRet;
+
+                // @.피킹출고. 매핑이 빠져 있어 enJobPatternNone 이 나왔고, 작업대 검증을
+                //   켜면 곧바로 거절되는 상태였다. 검증에서는 출고와 같은 자리를 탄다.
+                case (int)EN_JOB_TYPE.enJobTypeAutoPR:
+                case (int)EN_JOB_TYPE.enJobTypeSemiPR:
+                    return (int)EN_JOB_PATTERN.enJobPatternPR;
 
                 case (int)EN_JOB_TYPE.enJobTypeAutoR2R:
                 case (int)EN_JOB_TYPE.enJobTypeSemiR2R:
