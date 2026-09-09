@@ -820,9 +820,18 @@ namespace TSK_COMM_IOSCH
 
                 // ── 2) 202 피킹대 쏠림 제한에 쓸 개수를 미리 센다
                 //      (레거시 CJob::FetchScRetJobByScNumberNPriority 의 앞부분)
+                //
+                // @.쏠림 제한은 부수 판정이다. 개수를 못 셌다고 3층 출고 지시를
+                //   통째로 접지 않는다. 전에는 여기서 바로 return false 라, 이 현장에서
+                //   발동하지도 않는 제한(피킹 작업 0건)의 DB 오류 하나가 그 주기의
+                //   3층 출고를 통째로 멈췄다. 사유만 남기고 제한 없이 간다.
                 int nCnt202 = 0, nCntEtc = 0;
-                if (Count202Picking(strWH_TYP, ref nCnt202, ref nCntEtc, ref pRTN_MSG) == false)
-                    return false;
+                bool bLimitOk = Count202Picking(strWH_TYP, ref nCnt202, ref nCntEtc, ref pRTN_MSG);
+                if (bLimitOk == false)
+                {
+                    MakeMsg_Error_NoLog(pRTN_MSG + " - 202 제한을 세지 못했다. 이번 주기는 제한 없이 간다");
+                    pRTN_MSG = strTitle;
+                }
                 int nLimit202 = cDefApi.GsGetLimitStn202Picking();
 
                 string strLUGG_NO = "", strJOB_TYP = "", strSC_NO = "", strSTART_LOC = "";
@@ -840,7 +849,9 @@ namespace TSK_COMM_IOSCH
                         continue;
 
                     // 202 로 갈 작업인데 201/203 에도 대기가 있고 진행 중인 202 가 한도 이상이면 건너뛴다
-                    if ((strDEST_POS == STN_202) && (nCntEtc > 0) && (nCnt202 >= nLimit202))
+                    //   (개수를 못 센 주기에는 걸지 않는다. 한도 기본값이 0 이라
+                    //    0 으로 두고 넘어가면 202 출고가 오히려 전부 막힌다)
+                    if (bLimitOk && (strDEST_POS == STN_202) && (nCntEtc > 0) && (nCnt202 >= nLimit202))
                         continue;
 
                     // ── 3) 호기를 정한다. 상위가 호기를 줬으면 그대로, 아니면 랙 뱅크에서 구한다.
