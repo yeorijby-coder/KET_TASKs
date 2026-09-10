@@ -4418,7 +4418,7 @@ namespace TSK_COMM_IOSCH
                     return false;
                 }
 
-                pRTN_MSG = strTitle + "TRACK " + strJOB_START_POS + "번[1층 입고대]에서 CV_TASK를 통해서 작업 지시하였습니다. [작업번호:" + strLUGG_NO + "]";
+                pRTN_MSG = strTitle + "TRACK " + strJOB_START_POS + "번[출발 작업대]에서 CV_TASK를 통해서 작업 지시하였습니다. [작업번호:" + strLUGG_NO + "]";
                 _pBdb.Commit();
                 InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_CV_RUN, strJOB_START_POS, strJOB_DEST_POS);
                 return true;
@@ -4432,7 +4432,10 @@ namespace TSK_COMM_IOSCH
         }
 
         // ─────────────────────────────────────────────────────────────────
-        // 공통 코어 3 : 1층 도착보고 (ECS ArrivedCheck2/5 - ARRIVE_CV 의 PLC 한정판)
+        // 공통 코어 3 : 도착보고 (ECS ArrivedCheck2/5 - ARRIVE_CV 의 PLC 한정판)
+        //   1층 / 3층 / BOX 가 같이 쓴다. 로그에 층을 박지 않는다 - 앞머리의
+        //   [ArrivedCheck3] / [ArrivedCheck6] 가 어느 라인인지를 이미 말해 준다.
+        //   (전에는 "1층 출고대" 로 박혀 있어 3층 도착을 1층이라고 찍어 햷갈릴 수 있었다)
         //   목적지 트랙 도착(RET_READY + 작업번호 일치) → 상위 보고 + 작업 삭제(HIS 이관)
         // ─────────────────────────────────────────────────────────────────
         protected bool CV_ARRIVE_PLC(string strWH_TYP, string strCV_PLC, string strTitle, ref string pRTN_MSG)
@@ -4515,7 +4518,7 @@ namespace TSK_COMM_IOSCH
                     }
                 }
 
-                pRTN_MSG = strTitle + "TRACK " + strMC_NO + "번[1층 출고대]에서 HOST_TASK를 통해서 완료보고 요청하였습니다. [작업번호:" + strLUGG_NO + "]";
+                pRTN_MSG = strTitle + "TRACK " + strMC_NO + "번[도착 작업대]에서 HOST_TASK를 통해서 완료보고 요청하였습니다. [작업번호:" + strLUGG_NO + "]";
                 _pBdb.Commit();
                 InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_CV_DONE);
                 return true;
