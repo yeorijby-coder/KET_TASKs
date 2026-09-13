@@ -395,27 +395,11 @@ namespace WCS_TASK_SC
         {
             try
             {
-                string strCtrlName = "";
-                if (eThGbn == cDefApp.eLogWriteGbn.COMM1)
-                    strCtrlName = "lsvCOMM1";
-                else if (eThGbn == cDefApp.eLogWriteGbn.COMM2)
-                    strCtrlName = "lsvCOMM2";
-                else if (eThGbn == cDefApp.eLogWriteGbn.COMM3)
-                    strCtrlName = "lsvCOMM3";
-                else if (eThGbn == cDefApp.eLogWriteGbn.COMM4)
-                    strCtrlName = "lsvCOMM4";
-                else if (eThGbn == cDefApp.eLogWriteGbn.COMM5)
-                    strCtrlName = "lsvCOMM5";
-                else if (eThGbn == cDefApp.eLogWriteGbn.COMM6)
-                    strCtrlName = "lsvCOMM6";
-                else if (eThGbn == cDefApp.eLogWriteGbn.COMM7)
-                    strCtrlName = "lsvCOMM7";
-                else if (eThGbn == cDefApp.eLogWriteGbn.COMM8)
-                    strCtrlName = "lsvCOMM8";
-                else if (eThGbn == cDefApp.eLogWriteGbn.COMM9)
-                    strCtrlName = "lsvCOMM9";
-                else
-                    strCtrlName = "";
+                // @.호기 번호(0부터)로 리스트 이름을 만든다. 탭은 SetVisableListView 가
+                //   lsvCOMM{ii+1} 로 만든다. 전에는 COMM1~COMM9 를 if 로 나열해 두어,
+                //   10호기(lsvCOMM10)·11호기(lsvCOMM11)는 이름이 "" 가 되어 탭은 있는데 로그가 버려졌다.
+                //   (호기 수는 WCS_DB.INI [PROCESS] CNT 를 따른다)
+                string strCtrlName = "lsvCOMM" + ((int)eThGbn + 1).ToString();
 
                 Control Ctrl = PfCtlFind1(splBodySkt.Panel1, strCtrlName);
 
