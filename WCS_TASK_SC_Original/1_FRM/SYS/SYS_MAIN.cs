@@ -116,6 +116,9 @@ namespace WCS_TASK_SC
 
         private void SYS_MAIN_Load(object sender, EventArgs e)
         {
+            // @.INI 열기 버튼 (맨 처음 참조하는 INI 를 메모장으로 연다)
+            cIniOpener.Attach(this, cDefApp.GM_ENV_INI);
+
             //중복실행을 방지하는 함수.
             if (cCmLib.GfPrevInstance() == true)
             {
@@ -395,12 +398,32 @@ namespace WCS_TASK_SC
         {
             try
             {
-                // @.호기 번호(0부터)로 리스트 이름을 만든다. 탭은 SetVisableListView 가
-                //   lsvCOMM{ii+1} 로 만든다. 전에는 COMM1~COMM9 를 if 로 나열해 두어,
-                //   10호기(lsvCOMM10)·11호기(lsvCOMM11)는 이름이 "" 가 되어 탭은 있는데 로그가 버려졌다.
-                //   (호기 수는 WCS_DB.INI [PROCESS] CNT 를 따른다)
-                string strCtrlName = "lsvCOMM" + ((int)eThGbn + 1).ToString();
+                string strCtrlName = "";
+                //if (eThGbn == cDefApp.eLogWriteGbn.COMM1)
+                //    strCtrlName = "lsvCOMM1";
+                //else if (eThGbn == cDefApp.eLogWriteGbn.COMM2)
+                //    strCtrlName = "lsvCOMM2";
+                //else if (eThGbn == cDefApp.eLogWriteGbn.COMM3)
+                //    strCtrlName = "lsvCOMM3";
+                //else if (eThGbn == cDefApp.eLogWriteGbn.COMM4)
+                //    strCtrlName = "lsvCOMM4";
+                //else if (eThGbn == cDefApp.eLogWriteGbn.COMM5)
+                //    strCtrlName = "lsvCOMM5";
+                //else if (eThGbn == cDefApp.eLogWriteGbn.COMM6)
+                //    strCtrlName = "lsvCOMM6";
+                //else if (eThGbn == cDefApp.eLogWriteGbn.COMM7)
+                //    strCtrlName = "lsvCOMM7";
+                //else if (eThGbn == cDefApp.eLogWriteGbn.COMM8)
+                //    strCtrlName = "lsvCOMM8";
+                //else if (eThGbn == cDefApp.eLogWriteGbn.COMM9)
+                //    strCtrlName = "lsvCOMM9";
+                //else
+                //    strCtrlName = "";
 
+
+                string strTemp = "";
+                strTemp = ((int)eThGbn + 1).ToString();
+                strCtrlName = "lsvCOMM" + strTemp;
                 Control Ctrl = PfCtlFind1(splBodySkt.Panel1, strCtrlName);
 
                 if (Ctrl == null) return;

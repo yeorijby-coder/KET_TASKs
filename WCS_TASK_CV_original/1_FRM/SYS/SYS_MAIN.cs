@@ -110,7 +110,10 @@ namespace WCS_TASK_CV
 
         private void SYS_MAIN_Load(object sender, EventArgs e)
         {
-			m_nProcessCnt = 0;
+            // @.INI 열기 버튼 (맨 처음 참조하는 INI 를 메모장으로 연다)
+            cIniOpener.Attach(this, cDefApp.GM_ENV_INI);
+
+            m_nProcessCnt = 0;
 
             this.Width = 600;
             this.Height = 600;
@@ -618,28 +621,32 @@ namespace WCS_TASK_CV
 			try
 			{
 				string strCtrlName = "";
-				if (eThGbn == cDefApp.eLogWriteGbn.COMM1)
-					strCtrlName = "lsvCOMM1";
-				else if (eThGbn == cDefApp.eLogWriteGbn.COMM2)
-					strCtrlName = "lsvCOMM2";
-                else if (eThGbn == cDefApp.eLogWriteGbn.COMM3)
-                    strCtrlName = "lsvCOMM3";
-                else if (eThGbn == cDefApp.eLogWriteGbn.COMM4)
-                    strCtrlName = "lsvCOMM4";
-                else if (eThGbn == cDefApp.eLogWriteGbn.COMM5)
-                    strCtrlName = "lsvCOMM5";
-                else if (eThGbn == cDefApp.eLogWriteGbn.COMM6)
-                    strCtrlName = "lsvCOMM6";
-                else if (eThGbn == cDefApp.eLogWriteGbn.COMM7)
-                    strCtrlName = "lsvCOMM7";
-                else if (eThGbn == cDefApp.eLogWriteGbn.COMM8)
-                    strCtrlName = "lsvCOMM8";
-                else if (eThGbn == cDefApp.eLogWriteGbn.COMM9)
-                    strCtrlName = "lsvCOMM9";
-				else
-					strCtrlName = "";
+				//if (eThGbn == cDefApp.eLogWriteGbn.COMM1)
+				//	strCtrlName = "lsvCOMM1";
+				//else if (eThGbn == cDefApp.eLogWriteGbn.COMM2)
+				//	strCtrlName = "lsvCOMM2";
+    //            else if (eThGbn == cDefApp.eLogWriteGbn.COMM3)
+    //                strCtrlName = "lsvCOMM3";
+    //            else if (eThGbn == cDefApp.eLogWriteGbn.COMM4)
+    //                strCtrlName = "lsvCOMM4";
+    //            else if (eThGbn == cDefApp.eLogWriteGbn.COMM5)
+    //                strCtrlName = "lsvCOMM5";
+    //            else if (eThGbn == cDefApp.eLogWriteGbn.COMM6)
+    //                strCtrlName = "lsvCOMM6";
+    //            else if (eThGbn == cDefApp.eLogWriteGbn.COMM7)
+    //                strCtrlName = "lsvCOMM7";
+    //            else if (eThGbn == cDefApp.eLogWriteGbn.COMM8)
+    //                strCtrlName = "lsvCOMM8";
+    //            else if (eThGbn == cDefApp.eLogWriteGbn.COMM9)
+    //                strCtrlName = "lsvCOMM9";
+				//else
+				//	strCtrlName = "";
 
-				Control Ctrl = PfCtlFind1(splBodySkt.Panel1, strCtrlName);
+                string strTemp = "";
+                strTemp = ((int)eThGbn + 1).ToString();
+                strCtrlName = "lsvCOMM" + strTemp;
+
+                Control Ctrl = PfCtlFind1(splBodySkt.Panel1, strCtrlName);
 
 				if (Ctrl == null) return;
 

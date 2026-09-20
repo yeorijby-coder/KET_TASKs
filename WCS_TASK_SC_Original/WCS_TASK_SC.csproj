@@ -82,6 +82,7 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="4_Static\cIniOpener.cs" />
     <Compile Include="4_Static\DbLang.cs" />
     <Compile Include="5_DB\cCbBasePost.cs" />
     <Compile Include="5_DB\cDbPostUse.cs" />
