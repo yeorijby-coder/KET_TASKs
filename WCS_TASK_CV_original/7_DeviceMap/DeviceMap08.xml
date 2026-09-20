@@ -2,7 +2,7 @@
 <DeviceMap>
 	<EquipType desc="생략가능-CV로만 사용될것이므로">CV</EquipType>
     <CommMethod desc="Ethernet(TCP):1,Ethernet(UDP):2,Serial:3,XCom:4,RFC:5">1</CommMethod>
-    <CPU desc="MelsecQ:1,AB:2,Simens:3,Xgt:4,Fara:5">1</CPU>
+    <CPU desc="MelsecQ:1,AB:2,Simens:3,Fara:5">1</CPU>
 
     <!--<WordPerTrack desc="한 트랙당 워드수(2,4,5,10)">10</WordPerTrack>-->
     <AddressArea desc="D:1,R:2">1</AddressArea>
@@ -36,7 +36,7 @@
 		<Area type="b" seq="0" name="RtvDepartHS" address="204"/>
 		<Area type="b" seq="0" name="RtvArriveHS" address="205"/>
 		<Area type="b" seq="0" name="Emergency" address="206"/>
-		<Area type="b" seq="1" name="Auto" address="207">
+		<Area type="b" seq="1" name="Auto" address="207" style="NEW">
 			<Bit  desc="D207.0" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
 				<TrList>801</TrList>
 				<TrList>802</TrList>
@@ -70,6 +70,54 @@
 				<TrList>830</TrList>
 				<TrList>831</TrList>
 				<TrList>832</TrList>
+				<TrList>833</TrList>
+				<TrList>834</TrList>
+				<TrList>835</TrList>
+			</Bit>
+		</Area>
+		<!-- @.구 ECS(C++ EcsSv) 형식의 자동/수동. WCS_DB.INI [DEVICEMAP] AUTO_MODE_STYLE=OLD 일 때만 읽는다.
+		     구 EcsSv 는 8호기만 따로 갈라 OpBox 비트로 자동/수동을 봤다(Cv.cpp 의 m_nNum==7 분기).
+		     주석으로 남아 있던 원래 구성은 OpBox 3개이고, 담당 트랙이 아래와 같이 나뉜다.
+		       OpBox0 → 801~815   OpBox1 → 816~831   OpBox2 → 833~835   (832 는 원본에도 빠져 있다)
+		     ※ 이 주소(D203)가 실제 8호기 PLC 의 자동/수동 자리인지는 현장 확인이 필요하다.
+		        현재 형식(NEW)은 다른 호기와 같은 규칙인 base+7 = D207 을 쓴다. -->
+		<Area type="b" seq="1" name="Auto" address="203" style="OLD">
+			<Bit  desc="D203.0" Use ="1" tid="0" desc2="OpBox0">
+				<TrList>801</TrList>
+				<TrList>802</TrList>
+				<TrList>803</TrList>
+				<TrList>804</TrList>
+				<TrList>805</TrList>
+				<TrList>806</TrList>
+				<TrList>807</TrList>
+				<TrList>808</TrList>
+				<TrList>809</TrList>
+				<TrList>810</TrList>
+				<TrList>811</TrList>
+				<TrList>812</TrList>
+				<TrList>813</TrList>
+				<TrList>814</TrList>
+				<TrList>815</TrList>
+			</Bit>
+			<Bit  desc="D203.1" Use ="1" tid="0" desc2="OpBox1">
+				<TrList>816</TrList>
+				<TrList>817</TrList>
+				<TrList>818</TrList>
+				<TrList>819</TrList>
+				<TrList>820</TrList>
+				<TrList>821</TrList>
+				<TrList>822</TrList>
+				<TrList>823</TrList>
+				<TrList>824</TrList>
+				<TrList>825</TrList>
+				<TrList>826</TrList>
+				<TrList>827</TrList>
+				<TrList>828</TrList>
+				<TrList>829</TrList>
+				<TrList>830</TrList>
+				<TrList>831</TrList>
+			</Bit>
+			<Bit  desc="D203.2" Use ="1" tid="0" desc2="OpBox2">
 				<TrList>833</TrList>
 				<TrList>834</TrList>
 				<TrList>835</TrList>

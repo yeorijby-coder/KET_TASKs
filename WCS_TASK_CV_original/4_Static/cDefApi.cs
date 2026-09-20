@@ -19,6 +19,33 @@ namespace WCS_TASK_CV
         [DllImport("kernel32.dll")]
         public static extern uint WritePrivateProfileString(string section, string key, string val, string filePath);
 
+        /*
+         * GsGetAutoModeStyle :: 자동/수동 표시를 어느 형식으로 읽을지.
+         *
+         *   WCS_DB.INI [DEVICEMAP] AUTO_MODE_STYLE
+         *     NEW : 현재 형식. DeviceMap 의 Auto 영역을 그대로 쓴다. (8호기는 D207.0 한 비트)
+         *     OLD : 구 ECS(C++ EcsSv) 형식. 8호기 자동/수동을 D203 의 OpBox 비트로 읽는다.
+         *
+         *   DeviceMap 의 <Area> 에 style 속성이 붙어 있으면 이 값과 같은 것만 읽는다.
+         *   속성이 없는 영역은 형식과 무관하게 항상 읽는다.
+         *   키가 없으면 NEW 다. (지금까지 돌던 방식)
+         */
+        public static string GsGetAutoModeStyle()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(32);
+                GetPrivateProfileString("DEVICEMAP", "AUTO_MODE_STYLE", "NEW", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+
+                string strStyle = sb.ToString().Trim().ToUpper();
+                return (strStyle == "OLD") ? "OLD" : "NEW";
+            }
+            catch
+            {
+                return "NEW";
+            }
+        }
+
         // @@@.GsGetInitPorFileDB
         public static void GsGetInitPorFileDB(ref string pHost,
                                               ref string pServiceName,

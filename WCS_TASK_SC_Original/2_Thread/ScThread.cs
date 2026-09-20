@@ -826,7 +826,16 @@ namespace WCS_TASK_SC
 
                             strWriteMsg = "ACTIVE 명령";
                             break;
+                        ////CALLTOHOME
+                        //case "CTH":
+                        //    nODVal = 2;
+                        //    nWriteLen = 1;
+                        //    nWriteAddr = 199;
+                        //    byTxBuff[0] = (byte)(nODVal >> 0);
+                        //    byTxBuff[1] = (byte)(nODVal >> 8);
 
+                        //    strWriteMsg = "CALLTOHOME 명령";
+                        //    break;
                         //PAUSE
                         case "PAUSE":
                             nODVal = 4;
@@ -928,12 +937,18 @@ namespace WCS_TASK_SC
                             }
                             return true;
                         default:
-                            //ㅇ로그 남기기
-                            m_strLogMsg = strTitle + " SC_NO : [" + m_strScNo + "] CMD_RQ_ID : [" + strCMD_RQ_ID + "] 미정의된 CMD.";
+                            /*
+                             * @.모르는 명령은 로그만 남기고 끝냈는데, 그러면 CMD_RQ_YN 이
+                             *   Y 로 남아 다음 주기에 또 걸린다. 같은 로그가 쌓이고,
+                             *   뒤이어 누른 다른 버튼도 이 자리에 막힌다.
+                             *   사유는 남기되 요청은 내려 준다.
+                             */
+                            m_strLogMsg = strTitle + " SC_NO : [" + m_strScNo + "] CMD_RQ_ID : [" + strCMD_RQ_ID + "] 정의되지 않은 CMD. 요청을 내린다.";
                             if (!InsertWcsLogPgr(m_strScNo, m_strLogMsg))
                             {
                                 return false;
                             }
+                            UpdateSC_CMD_RQ_YN(strCMD_RQ_ID);
                             return true;
                     }
 

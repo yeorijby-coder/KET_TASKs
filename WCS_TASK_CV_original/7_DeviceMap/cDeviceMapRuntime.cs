@@ -1,6 +1,5 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
-using System.Runtime.InteropServices;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Xml;
@@ -99,6 +98,7 @@ namespace WCS_TASK_CV
             { "RtvDepartHS",   new ColDef("RTV_DEPARTHS_READY_RD", "",     true)  },
             { "RtvArriveHS",   new ColDef("RTV_ARRIVEHS_READY_RD", "",     true)  },
             { "Emergency",     new ColDef("EMERGENCY_RD",          "",     true)  },
+            { "RetCnt",     new ColDef("CV_RET_CNT",          "",     true)  },
         };
         #endregion
 
@@ -203,9 +203,39 @@ namespace WCS_TASK_CV
             }
         }
 
+        // @.자동/수동 표시 형식. 한 번만 읽어 둔다. (WCS_DB.INI [DEVICEMAP] AUTO_MODE_STYLE)
+        private static string m_strAutoModeStyle = null;
+
+        private static string AutoModeStyle
+        {
+            get
+            {
+                if (m_strAutoModeStyle == null)
+                    m_strAutoModeStyle = cDefApi.GsGetAutoModeStyle();
+                return m_strAutoModeStyle;
+            }
+        }
+
         private static void LoadEtcArea(cDeviceMapRuntime map, XmlNode area)
         {
             string strName = GetAttr(area, "name");
+
+            /*
+             * @.같은 영역을 두 형식으로 정의해 두고 INI 로 고른다.
+             *
+             *   <Area name="Auto" address="207" style="NEW"> ... </Area>   현재 형식
+             *   <Area name="Auto" address="203" style="OLD"> ... </Area>   구 ECS 형식
+             *
+             *   style 이 없으면 형식과 무관한 영역이라 항상 읽는다.
+             *   DeviceMap 파일을 형식별로 복제하면 한쪽만 고쳐져 조용히 어긋난다.
+             *   (2026-09-07 작업보고 §3-1 의 D551 건이 그것이다) 그래서 한 파일에 둔다.
+             */
+            string strStyle = GetAttr(area, "style").Trim().ToUpper();
+            if (strStyle != "" && strStyle != AutoModeStyle)
+            {
+                map.SkippedAreas.Add(strName + "(형식 " + strStyle + " - 지금은 " + AutoModeStyle + ")");
+                return;
+            }
 
             EtcArea etc = new EtcArea();
             etc.Name = strName;
@@ -387,104 +417,6 @@ namespace WCS_TASK_CV
                 return true;
             }
             return false;
-        }
-        #endregion
-
-        #region CheckReference() - CvSim 원본 DeviceMap 과 어긋났는지 본다
-        /*
-         * DeviceMap 은 CvSim(설비를 흉내내는 쪽)과 CV_TASK(읽는 쪽)가 같은 정의를
-         * 각자 복사해 쓴다. 한쪽만 고치면 조용히 어긋나고, 어긋난 자리는 읽지 않는
-         * 비트가 되어 DB 에 값이 아예 안 들어온다. NULL 이라 눈에도 잘 안 띈다.
-         *
-         * 실제로 CvSim 에만 RetStation 영역(D558 / D554)을 넣고 CV_TASK 사본을
-         * 그대로 두어, 출고 대기대의 RET_READY_RD 가 늘 NULL 이었다. 화물이 대기대에
-         * 도착해도 출발 조건이 성립하지 않아 출고 루프가 멈춰 있었다.
-         *
-         * 그래서 기동할 때 한 번 대조한다. 원본 위치는 INI 에 적는다.
-         *
-         *     [DEVICEMAP]
-         *     REF_PATH = D:\\...\\ClientNSim\\CvSim
-         *
-         * 값이 없으면 대조하지 않는다(종전과 같다). 파일이 없거나 내용이 다르면
-         * 화면과 로그에 남긴다. 자동으로 덮어쓰지는 않는다 - 어느 쪽이 옳은지는
-         * 사람이 판단할 일이다.
-         */
-        [DllImport("kernel32.dll", CharSet = CharSet.Auto)]
-        private static extern uint GetPrivateProfileString(string lpAppName, string lpKeyName,
-                                                           string lpDefault, StringBuilder lpReturned,
-                                                           int nSize, string lpFileName);
-
-        private static string Md5Of(string strPath)
-        {
-            using (var md5 = System.Security.Cryptography.MD5.Create())
-            using (var fs = System.IO.File.OpenRead(strPath))
-                return BitConverter.ToString(md5.ComputeHash(fs)).Replace("-", "");
-        }
-
-        /// <summary>
-        /// CvSim 원본과 대조한다. 같으면 빈 문자열, 다르면 알릴 말을 돌려준다.
-        /// </summary>
-        public static string CheckReference(string strPlcNo)
-        {
-            try
-            {
-                StringBuilder sb = new StringBuilder(512);
-                GetPrivateProfileString("DEVICEMAP", "REF_PATH", "", sb, sb.Capacity, "./WCS_DB.INI");
-                string strRefDir = sb.ToString().Trim();
-
-                if (strRefDir == "")
-                    return "";   // @.안 적었으면 대조하지 않는다
-
-                string strName = "DeviceMap" + strPlcNo + ".xml";
-                string strRef  = System.IO.Path.Combine(strRefDir, strName);
-                string strMine = System.IO.Path.Combine(
-                        AppDomain.CurrentDomain.BaseDirectory, "7_DeviceMap", strName);
-
-                if (!System.IO.File.Exists(strRef))
-                    return "원본을 찾지 못했다 : " + strRef;
-                if (!System.IO.File.Exists(strMine))
-                    return "내 사본을 찾지 못했다 : " + strMine;
-
-                string strFlag = System.IO.Path.Combine(
-                        AppDomain.CurrentDomain.BaseDirectory, "DeviceMap_MISMATCH_" + strPlcNo + ".txt");
-
-                if (Md5Of(strRef) == Md5Of(strMine))
-                {
-                    // @.같아졌으면 지난 자국을 지운다
-                    try { if (System.IO.File.Exists(strFlag)) System.IO.File.Delete(strFlag); }
-                    catch { }
-                    return "";
-                }
-
-                System.IO.FileInfo fiRef  = new System.IO.FileInfo(strRef);
-                System.IO.FileInfo fiMine = new System.IO.FileInfo(strMine);
-                string strMsg = strName + " 가 CvSim 원본과 다르다."
-                     + "  원본 " + fiRef.Length  + "B " + fiRef.LastWriteTime.ToString("MM-dd HH:mm")
-                     + " / 사본 " + fiMine.Length + "B " + fiMine.LastWriteTime.ToString("MM-dd HH:mm");
-
-                /*
-                 * @.화면 메시지 목록은 통신 로그에 금방 밀려, 기동할 때 한 줄은 놓치기 쉽다.
-                 *   (Stop Log 가 켜져 있으면 아예 안 보인다) 그래서 파일로도 남긴다.
-                 *   맞춰 놓으면 다음 기동 때 스스로 지워진다.
-                 */
-                try
-                {
-                    System.IO.File.WriteAllText(strFlag,
-                          DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss") + "  " + strMsg + "\r\n\r\n" +
-                          "원본 : " + strRef  + "\r\n" +
-                          "사본 : " + strMine + "\r\n\r\n" +
-                          "두 벌이 다르면 어긋난 자리는 읽지 않는 비트가 되어 DB 에 값이 안 들어온다.\r\n" +
-                          "어느 쪽이 옳은지 확인하고 맞춘 뒤 다시 기동할 것. 맞으면 이 파일은 저절로 사라진다.\r\n",
-                          System.Text.Encoding.UTF8);
-                }
-                catch { }
-
-                return strMsg + "  (자세한 것은 " + System.IO.Path.GetFileName(strFlag) + ")";
-            }
-            catch (Exception ex)
-            {
-                return "원본 대조 중 오류 : " + ex.Message;
-            }
         }
         #endregion
 
