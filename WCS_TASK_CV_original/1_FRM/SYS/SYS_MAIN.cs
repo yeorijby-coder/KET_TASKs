@@ -201,6 +201,26 @@ namespace WCS_TASK_CV
             {
                 if (cDefApp.m_LogQ[ii] == null)
                     cDefApp.m_LogQ[ii] = new Queue<LogParam>();
+
+                // @.COMM 마다 로그 스레드를 띄운다. 이게 없으면 WCS_DB.INI 의
+                //   LOG_PATH 에 파일이 하나도 쌓이지 않아 장애를 쫓을 수 없다.
+                if (m_thLogging[ii] == null &&
+                    !string.IsNullOrEmpty(m_strLogPath[ii]) &&
+                    !string.IsNullOrEmpty(m_strLogFileNm[ii]))
+                {
+                    try
+                    {
+                        m_thLogging[ii] = new cLogThread(m_strLogPath[ii], m_strLogFileNm[ii], ii);
+                        m_thLogging[ii].m_frmMain = this;
+                        m_thLogging[ii].m_thThread = new Thread(m_thLogging[ii].LogQueThread);
+                        m_thLogging[ii].m_thThread.IsBackground = true;
+                        m_thLogging[ii].m_thThread.Start();
+                    }
+                    catch (Exception)
+                    {
+                        m_thLogging[ii] = null;
+                    }
+                }
             }
 
             // @@.여기서 부터 쓰레드 시작

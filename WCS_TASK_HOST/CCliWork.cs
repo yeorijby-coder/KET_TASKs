@@ -138,6 +138,8 @@ namespace TSK_HostCom
 		//설명		: ECS와 Socket 연결
 		public bool ConnectSock()
 		{
+			string strErrMsg = "";
+
 			try
 			{
 				System.Net.IPEndPoint ipep = default(System.Net.IPEndPoint);
@@ -155,6 +157,12 @@ namespace TSK_HostCom
 					modCmWork.SetSocketCon(ref modDefApp.g_frmForm.picCliCom, modDefApp.ComSts.ComNor);
 					m_strLog = "통신이 연결되었습니다.";
 					modCmWork.ShowMsgClient(m_strLog, modDefApp.MSG_IMP);
+
+					// @.상위와 붙었다. 클라이언트가 보는 접속상태를 남긴다.
+					if (!UpdateEQP_MST(ref m_BDb, "10", "HOST", "01", "Y", ref strErrMsg))
+					{
+						throw new Exception(strErrMsg);
+					}
 
 					return true;
 				}
@@ -175,6 +183,9 @@ namespace TSK_HostCom
 			m_sktSock.Close();
 			m_sktSock = null;
 			modCmWork.ShowMsgClient(m_strLog, modDefApp.MSG_IMP);
+
+			// @.끊겼다. 접속상태를 내린다.
+			UpdateEQP_MST(ref m_BDb, "10", "HOST", "01", "N", ref strErrMsg);
 
 			return false;
 		}
@@ -3034,6 +3045,42 @@ namespace TSK_HostCom
 
 			return true;
 		}
+
+
+        private bool UpdateEQP_MST(ref CUserDb p_Bdb, 
+                                   string p_strWH_TYP,
+                                   string p_strEQP_TYP,
+                                   string p_strPLC_NO,
+                                   string p_strCONNECTED_YN,
+                                   ref string p_strRtnMsg)
+        {
+            try
+            {
+                m_strSql = "";
+                m_strSql += modDefApp.CRLF + "     UPDATE EQP_MST           ";
+                m_strSql += modDefApp.CRLF + "        SET CONNECTED_YN  = '" + p_strCONNECTED_YN + "'   ";
+                m_strSql += modDefApp.CRLF + "      , UPD_DT            = " + modDateTime.SYSDATE;
+                m_strSql += modDefApp.CRLF + "  WHERE WH_TYP            = '" + p_strWH_TYP + "'         ";
+                m_strSql += modDefApp.CRLF + "    AND EQP_TYP           = '" + p_strEQP_TYP + "'        ";
+                m_strSql += modDefApp.CRLF + "    AND PLC_NO            = '" + p_strPLC_NO + "'         ";
+
+                m_iSelCnt = m_BDb.ExcuteNonQry_Par(ref m_strSql);
+
+                if (m_iSelCnt != 1)
+                {
+                    throw new Exception("EQP MST의 CONNECTED_YN을 수정하는데 실패하였습니다." + p_Bdb.ErrMsg);
+                }
+
+                return true;
+
+            }
+            catch (Exception ex)
+            {
+                p_strRtnMsg = ex.Message;
+                return false;
+            }
+
+        }
 
 	}
 }

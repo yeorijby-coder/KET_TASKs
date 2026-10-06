@@ -83,7 +83,7 @@ namespace TSK_HostCom
                 m_strSql += modDefApp.CRLF + " UPDATE EQP_MST ";
                 m_strSql += modDefApp.CRLF + "    SET UPD_DT = " + modDateTime.SYSDATE;
                 m_strSql += modDefApp.CRLF + "  WHERE WH_TYP = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
-                m_strSql += modDefApp.CRLF + "    AND EQP_TYP = " + m_BDb.ParamsAdd("EQP_TYP", "HOST2");
+                m_strSql += modDefApp.CRLF + "    AND EQP_TYP = " + m_BDb.ParamsAdd("EQP_TYP", "HOST");
                 nRtn = m_BDb.ExcuteNonQry_Par(ref m_strSql);
 
                 if (nRtn < 0)
@@ -142,11 +142,14 @@ namespace TSK_HostCom
             // Body 체크
 
             iRxCnt = m_sktSock.Available;
-			iRxCnt = m_sktSock.Receive(m_bytRxBuff,modDefApp.MSG_HEAD_CNT, p_iBodyLen, SocketFlags.None);
-			if (!CheckBody(p_iBodyLen, iRxCnt))
+			// @.머리말이 알려준 길이가 아니라 실제로 와 있는 만큼 읽는다.
+			//   길이가 들쭉날쭉한 전문에서 몸통을 덜 읽어 NAK 가 나던 것을 막는다.
+			iRxCnt = m_sktSock.Receive(m_bytRxBuff, modDefApp.MSG_HEAD_CNT, iRxCnt, SocketFlags.None);
+			if (!CheckBody(iRxCnt, iRxCnt))
 			{
 				// 잘못된 바디 로그
-				strLog = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, 0, modDefApp.MSG_HEAD_CNT + p_iBodyLen);
+				// @.전문에 한글이 섞여 온다. UTF8 로 풀면 깨진다.
+				strLog = System.Text.Encoding.Default.GetString(m_bytRxBuff, 0, modDefApp.MSG_HEAD_CNT + p_iBodyLen);
 				modCmWork.ShowMsgServer(strLog, modDefApp.MSG_ERR);
 
 				// NAK 응답
@@ -183,7 +186,7 @@ namespace TSK_HostCom
 					return false;
 				}
 
-				strTemp = System.Text.Encoding.UTF8.GetString(m_bytRxHead, 10, 4);
+				strTemp = System.Text.Encoding.Default.GetString(m_bytRxHead, 10, 4);
 
 				p_iBodyLen = Convert.ToInt32(strTemp);
 				if (p_iBodyLen < 3)
@@ -430,6 +433,11 @@ namespace TSK_HostCom
                     ParseOorR(p_iBodyCnt);
                     break;
 
+                // @.우선순위 변경(P). 상위가 내린 작업의 우선순위를 JOB_MST 에 반영한다.
+                case "P":
+                    ParseP(p_iBodyCnt);
+                    break;
+
                 //// @.작업삭제(D) 는 문서의 메시지 타입 목록에도 원본 CHostSv::Parsing 에도 없다.
                 ////   현장에서 필요해지면 WMS 와 규격을 정한 뒤 되살릴 것.
                 //case "D":
@@ -555,7 +563,7 @@ namespace TSK_HostCom
 
 		    // @.출고 / 호기간 이동은 크레인 H/S 에서 출발한다.
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternRet:
-    //		case (int)modDefApp.EN_JOB_PATTERN.enJobPatternPR:
+		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternPR:
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternW2W:
 			    if ((nKIND & modDefApp.STN_KIND_SC) == 0)
                 {
@@ -599,7 +607,7 @@ namespace TSK_HostCom
 
 		    // @.출고 / 이동은 출고대로 도착한다. 도착대도 도착지가 된다.
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternRet:
-    //		case (int)modDefApp.EN_JOB_PATTERN.enJobPatternPR:
+		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternPR:
 		    case (int)modDefApp.EN_JOB_PATTERN.enJobPatternMove:
                 if ((nKIND & (modDefApp.STN_KIND_RET | modDefApp.STN_KIND_ARV)) == 0)
                 {
@@ -675,7 +683,9 @@ namespace TSK_HostCom
              *     O : +8 (4) Seq  +12(20) PalletNo  +32(3) SourceStn ...
              *     R : +8 (3) SourceStn ...
              */
-            string strWhDef = GfField(1, 1);
+            // @.바로 위 주석대로 +3 자리가 WareHouse Define 이다.
+            //   GfField(1,1) 은 Message Type 자리라 창고구분이 통째로 어긋났다.
+            string strWhDef = GfField(3, 1);
             string strJob_Define = GfField(2, 1);
             string strLuggNo = GfField(4, 4);
 
@@ -904,6 +914,7 @@ namespace TSK_HostCom
                         #endregion
                         break;
                     case "2":       // 출고
+                    case "3":       // 피킹 출고 - 원본에서 출고와 같은 패턴(JOB_PATTERN_RET)이라 같이 본다
                         #region 출고시에 출발지와 도착지가 정상적인지 체크
                         // 출발LOC 올바른지 체크!
                         // 도착지 올바른지 체크! 
@@ -917,8 +928,6 @@ namespace TSK_HostCom
 
                         #endregion
                         break;
-                    //case "3":       // 피킹 출고
-                    //    break;
                     case "4":       // 랙투랙
                         #region 랙투랙시에 출발지와 도착지가 정상적인지 체크
                         // 출발LOC 올바른지 체크!
@@ -1272,6 +1281,100 @@ namespace TSK_HostCom
         //최초작성자	: BASE(원효재)
         //작성일		: 20170929
         //설명		    : 입/출고 홈스텐드 도착
+        private void ParseP(int p_iBodyCnt)
+        {
+            string strTitle = "[ParseP] .. ";
+            string strMsg = "";
+            m_strMsgType = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + 1, 1);
+            // @.수신한 만큼만 읽는다. (예전에는 77바이트로 고정돼 있었다)
+            int nMsgLen = modDefApp.MSG_HEAD_CNT + p_iBodyCnt;
+            if (nMsgLen > m_bytRxBuff.Length) nMsgLen = m_bytRxBuff.Length;
+            strMsg = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, 0, nMsgLen);//상위에서 내린 작업 메시지
+
+
+            /*
+             * 문서 IV.1 작업지시 / IV.2 재작업지시
+             *   STX 를 0 으로 볼 때의 자리
+             *     +1  (1) Message Type
+             *     +2  (4) Luggage No
+             *     +6  (3) Priority      
+
+             */
+
+            string strLuggNo = GfField(2, 4);
+            string strPriority = GfField(6, 3);
+
+            #region 수신 데이터 검증
+            // 작업번호가 올바른지 체크!(온라인 작업번호)
+            int nLuggNum = Convert.ToInt32(strLuggNo);
+            //if ((nLuggNum > 0) && (nLuggNum < 9000))
+            if (modDefApp.IsOnlineLuggNum(nLuggNum) == false)
+            {
+                m_strLog = string.Format("작업번호가 올바르지 않습니다.[{0}]", nLuggNum);
+                modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
+                MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INVALID_LUGG_NO);
+                return;
+            }
+            #endregion
+
+            #region 작업상태 체크
+            m_strSql = "          SELECT * FROM JOB_MST";
+            m_strSql += modDefApp.CRLF + "WHERE LUGG_NO = " + m_BDb.ParamsAdd("LUGG_NO", strLuggNo);
+            //m_strSql += modDefApp.CRLF + "WHERE WH_TYP = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            //m_strSql += modDefApp.CRLF + "  AND LUGG_NO = " + m_BDb.ParamsAdd("LUGG_NO", strLuggNo);
+
+            m_iSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
+
+            if (m_iSelCnt < 0)
+            {
+                m_strLog = m_BDb.ErrMsg + m_strSql;
+                modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
+                MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INTERNAL_ERROR);
+                return;
+            }
+            else if (m_iSelCnt == 0)
+            {
+                m_strLog = string.Format("작업번호가 없습니다.[{0}]", nLuggNum);
+                modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
+                MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INTERNAL_ERROR);
+                return;
+            }
+
+            if (m_BDb.dtMain.Rows[0]["JOB_STATUS"].ToString() != "99" && 
+                m_BDb.dtMain.Rows[0]["JOB_STATUS"].ToString() != "20")
+                {
+                    m_strLog = string.Format("작업상태가 신규이거나 SC구동요구 상태만 처리할 수 있습니다. 작업번호[{0}] 작업상태[{1}]", nLuggNum, m_BDb.dtMain.Rows[0]["JOB_STATUS"].ToString());
+                    modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
+                    MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INTERNAL_ERROR);
+                    return;
+                }
+            #endregion
+
+            m_BDb.BeginTrans();
+
+            m_strSql = "";
+            m_strSql += modDefApp.CRLF + "     UPDATE JOB_MST       ";
+            m_strSql += modDefApp.CRLF + "        SET JOB_PRIORITY  = '" + strPriority + "'     ";
+            m_strSql += modDefApp.CRLF + "      WHERE LUGG_NO       = " + m_BDb.ParamsAdd("LUGG_NO", strLuggNo);
+
+            m_iSelCnt = m_BDb.ExcuteNonQry(m_strSql);
+
+            if (m_iSelCnt != 1)
+            {
+                m_BDb.RollbackTrans();
+                m_strLog = string.Format("작업우선순위 변경에 실패하였습니다. 작업번호[{0}]", strLuggNo) + modDefApp.CRLF +  m_BDb.ErrMsg + m_strSql;
+                modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
+                MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INTERNAL_ERROR);
+                return;
+            }
+
+            m_BDb.CommitTrans();
+
+            modCmWork.ShowMsgServer(strTitle + "작업우선순위가 변경되었습니다. 작업번호[" + strLuggNo + "]", modDefApp.MSG_IMP);
+            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_NO_ERROR);
+        }
+
+
         private void ParsePallet(int p_iBodyCnt)
         {
             string strJob_Define = null;
