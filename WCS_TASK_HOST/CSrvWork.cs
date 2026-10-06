@@ -843,13 +843,22 @@ namespace TSK_HostCom
                 m_strSql += modDefApp.CRLF + "  AND DEST_LOCATION = '" + strDestLoc + "'";// mm_BDb.ParamsAdd("DEST_LOCATION", strDestLoc);
                 m_strSql += modDefApp.CRLF + "  AND LOT_NO = '" + strO_LotNo + "'";// mm_BDb.ParamsAdd("LOT_NO", strO_LotNo);
                 m_strSql += modDefApp.CRLF + "  AND PRODUCT_SIZE = '" + strO_Size + "'";// mm_BDb.ParamsAdd("LOT_NO", strO_LotNo);
+                // @.작업구분까지 같아야 "완전히 같은 작업" 이다.
+                //   이 현장은 출발LOC/도착LOC 가 늘 00-000-00 이고 LOT_NO 와 사이즈도
+                //   고정이라, 작업구분을 빼면 사실상 "출발지+도착지가 같으면 거절" 이 된다.
+                //   그러면 같은 구간을 쓰는 이동과 입고가 서로를 막는다.
+                //   (P-Box 순환 : 211->221 이동, 221->랙 입고, 랙->251 출고, 251->221 이동)
+                m_strSql += modDefApp.CRLF + "  AND JOB_TYP = '" + strJob_Define + "'";
 
                 m_iSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
 
                 if (m_iSelCnt > 0)
                 {
-                    m_strLog = string.Format("이미 존재하는 작업입니다.[출발지:{0}][출발LOC:{1}][도착지:{2}][도착LOC:{3}][LOT_NO:{4}]",
-                        strStartPos, strStartLoc, strDestPos, strDestLoc, strO_LotNo);
+                    // @.무엇이 막았는지 적는다. 예전에는 사유만 있어, 어느 작업이
+                    //   걸려 있는지 보려고 JOB_MST 를 따로 떠 봐야 했다.
+                    m_strLog = string.Format("이미 존재하는 작업입니다.[작업구분:{0}][출발지:{1}][도착지:{2}][LOT_NO:{3}] - 막고 있는 작업번호:{4} (상태:{5})",
+                        strJob_Define, strStartPos, strDestPos, strO_LotNo,
+                        m_BDb.dtMain.Rows[0]["LUGG_NO"], m_BDb.dtMain.Rows[0]["JOB_STATUS"]);
                     modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
                     MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_LUGG_NO_DUPLICATED);
                     return;
@@ -882,10 +891,15 @@ namespace TSK_HostCom
                         m_strSql += modDefApp.CRLF + " SELECT CD.*, JM.*                            ";
                         m_strSql += modDefApp.CRLF + "   FROM CV_DATA CD                            ";
                         m_strSql += modDefApp.CRLF + "  INNER JOIN JOB_MST JM                       ";
-                        m_strSql += modDefApp.CRLF + "     ON CD.TRACK_NO = JM.START_POS            ";
+                        // @.JM.START_POS 는 상위 작업대번호(221), CD.TRACK_NO 는 물리 트랙(4019) 이다.
+                        //   둘을 맞춰 보고 있어 이 점검은 늘 0건이었다. 대응표인 HOST_STN_NO 로 맞춘다.
+                        m_strSql += modDefApp.CRLF + "     ON CD.HOST_STN_NO = JM.START_POS         ";
                         m_strSql += modDefApp.CRLF + "    AND JM.JOB_STATUS = '99'                  ";
-                        m_strSql += modDefApp.CRLF + "  WHERE CD.PLC_NO	= :PLC_NO                   ";
-                        m_strSql += modDefApp.CRLF + "    AND CD.LUGG_NO_RD 	= '0'               ";
+                        // @.PLC_NO 를 "01" 로 박아 두어 1호기 말고는 걸리지 않았다.
+                        //   출발 작업대번호만으로 행이 하나로 좁혀지므로 PLC 조건은 뺀다.
+                        m_strSql += modDefApp.CRLF + "  WHERE 1 = 1                                 ";
+                        // @.빈 자리는 '0' 으로도 '0000' 으로도 들어온다.
+                        m_strSql += modDefApp.CRLF + "    AND CD.LUGG_NO_RD IN ('0','0000','')  ";
                         m_strSql += modDefApp.CRLF + "    AND JM.START_POS 	    = :START_POS        ";
                         m_strSql += modDefApp.CRLF + "    AND CD.OD_RQ_YN		= 'N'               ";
                         m_strSql += modDefApp.CRLF + "    AND CD.OD_RQ_FLAG		= 'N'               ";
@@ -896,7 +910,6 @@ namespace TSK_HostCom
 
                         m_BDb.comMain.CommandType = System.Data.CommandType.Text;
                         m_BDb.comMain.Parameters.Clear();       
-                        m_BDb.comMain.Parameters.Add("PLC_NO", modSpDb.DbTypeChar).Value = "01";
                         m_BDb.comMain.Parameters.Add("WH_TYP", modSpDb.DbTypeChar).Value = modDefApp.WH_TYP;
                         m_BDb.comMain.Parameters.Add("START_POS", modSpDb.DbTypeChar).Value = strStartPos;
 
@@ -1001,10 +1014,15 @@ namespace TSK_HostCom
                         m_strSql += modDefApp.CRLF + " SELECT CD.*, JM.*                            ";
                         m_strSql += modDefApp.CRLF + "   FROM CV_DATA CD                            ";
                         m_strSql += modDefApp.CRLF + "  INNER JOIN JOB_MST JM                       ";
-                        m_strSql += modDefApp.CRLF + "     ON CD.TRACK_NO = JM.START_POS            ";
+                        // @.JM.START_POS 는 상위 작업대번호(221), CD.TRACK_NO 는 물리 트랙(4019) 이다.
+                        //   둘을 맞춰 보고 있어 이 점검은 늘 0건이었다. 대응표인 HOST_STN_NO 로 맞춘다.
+                        m_strSql += modDefApp.CRLF + "     ON CD.HOST_STN_NO = JM.START_POS         ";
                         m_strSql += modDefApp.CRLF + "    AND JM.JOB_STATUS = '99'                  ";
-                        m_strSql += modDefApp.CRLF + "  WHERE CD.PLC_NO	= :PLC_NO                   ";
-                        m_strSql += modDefApp.CRLF + "    AND CD.LUGG_NO_RD 	= '0'               ";
+                        // @.PLC_NO 를 "01" 로 박아 두어 1호기 말고는 걸리지 않았다.
+                        //   출발 작업대번호만으로 행이 하나로 좁혀지므로 PLC 조건은 뺀다.
+                        m_strSql += modDefApp.CRLF + "  WHERE 1 = 1                                 ";
+                        // @.빈 자리는 '0' 으로도 '0000' 으로도 들어온다.
+                        m_strSql += modDefApp.CRLF + "    AND CD.LUGG_NO_RD IN ('0','0000','')  ";
                         m_strSql += modDefApp.CRLF + "    AND JM.START_POS 	    = :START_POS        ";
                         m_strSql += modDefApp.CRLF + "    AND CD.OD_RQ_YN		= 'N'               ";
                         m_strSql += modDefApp.CRLF + "    AND CD.OD_RQ_FLAG		= 'N'               ";
@@ -1015,7 +1033,6 @@ namespace TSK_HostCom
 
                         m_BDb.comMain.CommandType = System.Data.CommandType.Text;
                         m_BDb.comMain.Parameters.Clear();       
-                        m_BDb.comMain.Parameters.Add("PLC_NO", modSpDb.DbTypeChar).Value = "01";
                         m_BDb.comMain.Parameters.Add("WH_TYP", modSpDb.DbTypeChar).Value = modDefApp.WH_TYP;
                         m_BDb.comMain.Parameters.Add("START_POS", modSpDb.DbTypeChar).Value = strStartPos;
 
@@ -1023,7 +1040,7 @@ namespace TSK_HostCom
 
                         if (m_iSelCnt > 0)
                         {
-                            m_strLog = string.Format("해당 출발지에 지시하지 않은 작업이 존재합니다. [신규 출발지:{0}][신규 작업번호:{1}][기존 작업번호:{1}]",
+                            m_strLog = string.Format("해당 출발지에 지시하지 않은 작업이 존재합니다. [신규 출발지:{0}][신규 작업번호:{1}][기존 작업번호:{2}]",
                                 strStartPos, strLuggNo, m_BDb.dtMain.Rows[0]["LUGG_NO"]);
                             modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
                             MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_LUGG_NO_DUPLICATED);
