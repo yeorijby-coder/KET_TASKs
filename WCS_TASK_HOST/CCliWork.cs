@@ -1868,8 +1868,25 @@ namespace TSK_HostCom
          *           + Fork1 작업번호(4) + 스테이션222 미실행작업 유무(1)
          *           + ETX
          *
-         *   ※ 원본은 Fork2 를 먼저 싣고 스테이션 221 플래그와 짝지운다.
-         *      (221 이 자동입고대기 #1 이므로 짝이 어긋나 보이지만 원본을 그대로 따랐다)
+         *   ※ 포크와 작업대의 짝  (원본 EcsSv 를 확인한 결과)
+         *
+         *        Fork1 = 222 (트랙 420, 안쪽)
+         *        Fork2 = 221 (트랙 419, 바깥)
+         *
+         *      원본 CCv::CheckBoxStoArrived 의 머리말이 이렇게 적어 두었다.
+         *        "Twinfork 입고 대기대 #2(안쪽, Fork#1)에 화물이 도착했을 때..."
+         *      그리고 같은 함수가 222 의 화물을 First 로 읽어 RequestBoxStore 의
+         *      첫 인자(nFork1LuggNum)로 넘긴다. 두 군데가 같은 말을 한다.
+         *
+         *      전문에 싣는 차례는 그와 별개다. 원본은 첫 자리에 nFork2LuggNum 을
+         *      싣고 221 의 미실행 플래그와 짝지운다. 즉
+         *        전문 첫 자리 = 221 의 작업번호,  둘째 자리 = 222 의 작업번호
+         *      이다. 우리도 그대로 보내고 있으므로 전문 내용은 원본과 같다.
+         *
+         *      다만 이름을 거꾸로 달아 두어서, 로그가
+         *        "Fork1=[0] Fork2=[1077]"  (221 이 비고 222 에 1077)
+         *      로 찍혀 마치 바깥 포크에 실린 것처럼 읽혔다. 실제로는 안쪽(Fork1)이다.
+         *      이름만 바로잡는다. 보내는 바이트는 달라지지 않는다.
          *
          *   대상 작업대(221 / 222)는 CV_DATA.HOST_STN_NO 로 찾는다.
          */
@@ -1879,8 +1896,9 @@ namespace TSK_HostCom
 
             if (!m_blSockConnected) return;
 
-            int nFork1 = GfGetStnLuggNo(modDefApp.ECS_STN_POS_3F_BOX_221);
-            int nFork2 = GfGetStnLuggNo(modDefApp.ECS_STN_POS_3F_BOX_222);
+            // @.Fork1 = 222(안쪽), Fork2 = 221(바깥). 원본 EcsSv 를 따른다.
+            int nFork1 = GfGetStnLuggNo(modDefApp.ECS_STN_POS_3F_BOX_222);
+            int nFork2 = GfGetStnLuggNo(modDefApp.ECS_STN_POS_3F_BOX_221);
 
             // @.두 대기대 모두 비어 있으면 요구하지 않는다
             if (nFork1 <= 0 && nFork2 <= 0) return;
@@ -1905,7 +1923,9 @@ namespace TSK_HostCom
              *     1자리를 더 붙여 11자로 보낸다. 문서에 그 항목이 없어 문서를 따랐다.
              *     (미실행 유무는 상태보고 S 의 ECS작업유무로도 전달된다)
              */
-            string strTemp = string.Format("L{0:0000}{1:0000}", nFork1LuggNum, nFork2LuggNum);
+            // @.전문 첫 자리는 221(=Fork2), 둘째 자리는 222(=Fork1) 다.
+            //   원본이 그렇게 싣는다. 이름을 바로잡아도 보내는 바이트는 같다.
+            string strTemp = string.Format("L{0:0000}{1:0000}", nFork2LuggNum, nFork1LuggNum);
 
             int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
             m_bytTxBuff = new byte[iTxCnt];
@@ -1919,7 +1939,8 @@ namespace TSK_HostCom
 
             if (!RequestSrv(iTxCnt.ToString())) return false;
 
-            m_strLog = string.Format("P-BOX 입고 요구.. Fork1=[{0}] Fork2=[{1}]", nFork1LuggNum, nFork2LuggNum);
+            m_strLog = string.Format("P-BOX 입고 요구.. Fork1(222)=[{0}] Fork2(221)=[{1}]",
+                nFork1LuggNum, nFork2LuggNum);
             modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_NOR);
             return true;
         }
