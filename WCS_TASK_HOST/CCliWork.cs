@@ -1890,22 +1890,109 @@ namespace TSK_HostCom
          *
          *   대상 작업대(221 / 222)는 CV_DATA.HOST_STN_NO 로 찾는다.
          */
+        /*
+         * GetBoxStoRequest :: 언제 요구를 낼지 고른다. (원본 CCv::CheckBoxStoArrived)
+         *
+         *   대기대가 둘이고 한 크레인이 두 포크로 집는다.
+         *     Fork1 = 222 (트랙 420, 안쪽)
+         *     Fork2 = 221 (트랙 419, 바깥)
+         *
+         *   안쪽부터 채운다. 그래서 원본은 이렇게 가른다.
+         *
+         *     222   221   하는 일
+         *     ----  ----  ------------------------------------------------
+         *      X     X    아무것도 안 한다. 기다린 시각을 지운다.
+         *      O     X    30초 기다렸다가 Fork1 만 요구한다.
+         *      X     O    아무것도 안 한다.
+         *      O     O    아직 안 받은 쪽만 골라 30초 뒤 요구한다.
+         *
+         *   바깥(221)에만 화물이 선 경우를 비워 둔 것은 원본 그대로다.
+         *   그 자리에 혼자 섰다는 것은 안쪽으로 갈 화물이 아직 오는 중이라는
+         *   뜻이므로, 서둘러 요구하면 바깥 포크(Fork2)로 작업이 잡힌다.
+         *   (원본에도 그 분기가 주석으로 막혀 있다)
+         *
+         *   30초를 두는 것은, 짝이 뒤따라 올 수 있으니 한 번에 둘을 집게
+         *   하려는 것이다. 그 안에 짝이 서면 두 개를 함께 요구한다.
+         *
+         *   목적지가 이미 크레인 H/S(11) 면 작업을 받은 것이므로 건너뛴다.
+         */
+        private const int DEF_BOX_HS_SC  = 11;    // 크레인 H/S. 이미 작업을 받은 상태
+        private const int DEF_BOX_WAIT_S = 30;    // 짝을 기다리는 시간(초)
+
+        private DateTime m_dtBoxRequested = DateTime.MinValue;
+
         private void GetBoxStoRequest()
         {
-            string strTitle = "[GetBoxStoRequest] .. ";
-
             if (!m_blSockConnected) return;
 
             // @.Fork1 = 222(안쪽), Fork2 = 221(바깥). 원본 EcsSv 를 따른다.
-            int nFork1 = GfGetStnLuggNo(modDefApp.ECS_STN_POS_3F_BOX_222);
-            int nFork2 = GfGetStnLuggNo(modDefApp.ECS_STN_POS_3F_BOX_221);
+            int nLugg1 = 0, nDest1 = 0; bool bReady1 = false;
+            int nLugg2 = 0, nDest2 = 0; bool bReady2 = false;
 
-            // @.두 대기대 모두 비어 있으면 요구하지 않는다
-            if (nFork1 <= 0 && nFork2 <= 0) return;
+            GfGetBoxStnInfo(modDefApp.ECS_STN_POS_3F_BOX_222, ref nLugg1, ref nDest1, ref bReady1);
+            GfGetBoxStnInfo(modDefApp.ECS_STN_POS_3F_BOX_221, ref nLugg2, ref nDest2, ref bReady2);
 
-            GetBoxStoRequest(nFork1, nFork2);
+            // @.둘 다 준비되지 않았다. 기다린 시각을 지우고 돌아간다.
+            if (!bReady1 && !bReady2)
+            {
+                m_dtBoxRequested = DateTime.MinValue;
+                return;
+            }
+
+            // @.바깥(221)에만 섰다. 안쪽으로 갈 화물이 아직 오는 중이다. 기다린다.
+            if (!bReady1 && bReady2)
+                return;
+
+            // @.안쪽(222)만 섰다.
+            if (bReady1 && !bReady2)
+            {
+                if (nDest1 == DEF_BOX_HS_SC) return;
+                if (!GfIsBoxWaitOver()) return;
+
+                GetBoxStoRequest(nLugg1, 0);
+                return;
+            }
+
+            // @.둘 다 섰다. 아직 작업을 안 받은 쪽만 올린다.
+            bool bTake1 = (nDest1 != DEF_BOX_HS_SC);
+            bool bTake2 = (nDest2 != DEF_BOX_HS_SC);
+
+            if (!bTake1 && !bTake2) return;
+            if (!GfIsBoxWaitOver()) return;
+
+            GetBoxStoRequest(bTake1 ? nLugg1 : 0, bTake2 ? nLugg2 : 0);
         }
 
+        // @@.마지막으로 요구한 지 DEF_BOX_WAIT_S 초가 지났는가.
+        //    한 번도 안 냈으면 바로 낼 수 있다고 본다.
+        private bool GfIsBoxWaitOver()
+        {
+            if (m_dtBoxRequested == DateTime.MinValue) return true;
+
+            return ((DateTime.Now - m_dtBoxRequested).TotalSeconds >= DEF_BOX_WAIT_S);
+        }
+
+        // @@.대기대 하나의 지금 상태. 적재물번호 / 목적지 / 출고대 준비 신호.
+        private void GfGetBoxStnInfo(int nStation, ref int nLuggNo, ref int nDestPos, ref bool bRetReady)
+        {
+            nLuggNo = 0; nDestPos = 0; bRetReady = false;
+
+            m_BDb.ParamsClear();
+            m_strSql  = modDefApp.CRLF + "  SELECT COALESCE(LUGG_NO_RD,'0')   AS LUGG_NO_RD   ";
+            m_strSql += modDefApp.CRLF + "       , COALESCE(DEST_POS_RD,'0')  AS DEST_POS_RD  ";
+            m_strSql += modDefApp.CRLF + "       , COALESCE(RET_READY_RD,'0') AS RET_READY_RD ";
+            m_strSql += modDefApp.CRLF + "    FROM CV_DATA                                    ";
+            m_strSql += modDefApp.CRLF + "   WHERE WH_TYP      = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            m_strSql += modDefApp.CRLF + "     AND HOST_STN_NO = " + m_BDb.ParamsAdd("HOST_STN_NO", nStation.ToString());
+
+            int iCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
+            if (iCnt <= 0) return;
+
+            int.TryParse(m_BDb.dtMain.Rows[0]["LUGG_NO_RD"].ToString().Trim(),  out nLuggNo);
+            int.TryParse(m_BDb.dtMain.Rows[0]["DEST_POS_RD"].ToString().Trim(), out nDestPos);
+
+            bRetReady = (m_BDb.dtMain.Rows[0]["RET_READY_RD"].ToString().Trim() == "1");
+        }
         private bool GetBoxStoRequest(int nFork1LuggNum, int nFork2LuggNum)
         {
             string strTitle = "[GetBoxStoRequest] .. ";
@@ -1938,6 +2025,9 @@ namespace TSK_HostCom
             m_bytTxBuff[iTxCnt - 1] = modDefApp.ETX;
 
             if (!RequestSrv(iTxCnt.ToString())) return false;
+
+            // @.낸 시각을 적어 둔다. 다음 요구는 DEF_BOX_WAIT_S 초 뒤에 나간다.
+            m_dtBoxRequested = DateTime.Now;
 
             m_strLog = string.Format("P-BOX 입고 요구.. Fork1(222)=[{0}] Fork2(221)=[{1}]",
                 nFork1LuggNum, nFork2LuggNum);
