@@ -245,6 +245,31 @@ namespace WCS_TASK_CV
                     if (GetAttr(tr, "desc").IndexOf("사용안함") >= 0) continue;
                     eb.Tracks.Add(Convert.ToInt32("0" + tr.InnerText.Trim()));
                 }
+
+                /*
+                 * TrList 가 없으면 tid 속성 하나를 담당 트랙으로 본다.
+                 *
+                 *   <Bit desc="D251.1" Use="1" tid="419"/>          <- 이 모양
+                 *   <Bit desc="D257.0" Use="1" tid="0"><TrList>401</TrList></Bit>
+                 *
+                 * 예전에는 TrList 자식만 읽었다. 그런데 StoStation / RetStation /
+                 * ScStoHS / ScRetHS 영역은 모두 tid 속성 모양이라 트랙이 하나도
+                 * 안 잡혔고, 그러면 Bits 가 비어 영역 통째로 버려졌다.
+                 * (SkippedAreas "트랙 매핑 정보 없음")
+                 *
+                 * 그래서 출고대·입고대·크레인 H/S 준비 신호가 PLC 에서는 서는데
+                 * CV_DATA 의 RET_READY_RD / STO_READY_RD / STOHS_READY_RD 는
+                 * 영영 0 이었다. 상위는 화물이 선 것을 알 수가 없었다.
+                 *
+                 * tid 가 0 이면 OpBox 를 뜻하므로 트랙이 아니다. (XML 주석 그대로)
+                 */
+                if (eb.Tracks.Count == 0)
+                {
+                    int nTid = Convert.ToInt32("0" + GetAttr(bit, "tid"));
+                    if (nTid > 0)
+                        eb.Tracks.Add(nTid);
+                }
+
                 if (eb.Tracks.Count > 0)
                     etc.Bits.Add(eb);
             }

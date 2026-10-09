@@ -614,7 +614,7 @@ namespace WCS_TASK_CV
                  * 80개의 트랙식 읽음.
                  */
 
-                MakeMsg(strTitle + "80 TRACK PLC 통신", m_nthNo);
+                MakeMsg(strTitle + "TRACK PLC 통신 [FR=" + m_nFrTrackNo + " TO=" + m_nToTrackNo + "]", m_nthNo);
                 nReadTrack = 80;
 
                 for (int CvNo = m_nFrTrackNo; CvNo < m_nToTrackNo; )
@@ -658,7 +658,20 @@ namespace WCS_TASK_CV
                         }
 
                         //Hexa string 값으로 가져온다.
-                        string strCvHexVal = BytesToHexs(byRxBuff, nArrayIdx, nWPT * 2);
+                        /*
+                         * BytesToHexs(버퍼, 시작, 끝) 이다. 길이가 아니라 끝 위치다.
+                         *   public string BytesToHexs(byte[] value, int nStartLen, int nEndlen)
+                         *   { for (int ii = nStartLen; ii < nEndlen; ii++) ... }
+                         *
+                         * 그런데 길이(nWPT * 2)를 넘기고 있었다. 그래서 블록의 첫 트랙
+                         * (nArrayIdx = 0) 만 제대로 나오고, 둘째 트랙부터는 시작이 끝보다
+                         * 커서 빈 문자열이 나왔다.
+                         *
+                         * 빈 문자열은 CVSTATHEXVAL 의 처음 값과 같으므로 "변한 것 없음" 이
+                         * 되어 CV_DATA 에 한 번도 쓰이지 않았다. 한 PLC 에서 트랙 하나만
+                         * 살아 있고 나머지는 영영 0 으로 남던 까닭이다.
+                         */
+                        string strCvHexVal = BytesToHexs(byRxBuff, nArrayIdx, nArrayIdx + nWPT * 2);
 
                         //Conveyor상태값이 다를 때만 Update.
                         if (CvDic[nCvNo].CVSTATHEXVAL != strCvHexVal)
@@ -891,6 +904,40 @@ namespace WCS_TASK_CV
         #endregion
 
 
+        #region [GfCol] :: 조회 결과에서 컬럼 하나를 읽는다. 없는 컬럼이면 빈 문자열.
+        /*
+         * CV_DATA 의 컬럼은 현장마다 조금씩 다르다. DeviceMap XML 이 쓰지 않는
+         * 기능 — 펄프 센서(PULP_SENSOR_OD), 크레인 출고 대기(WAIT_SC_RET_JOB_*),
+         * 앞 트랙 센서(FRONT_*) — 은 컬럼 자체가 없는 곳이 있다.
+         *
+         * 예전에는 없는 컬럼을 Rows[n]["이름"] 으로 그대로 읽었다. DataTable 은
+         * 그 자리에서 ArgumentException 을 낸다. 그 코드가 통신 스레드의 맨
+         * 바깥이라 아무도 잡지 않아 CV 태스크가 통째로 죽었다.
+         *
+         * 죽는 자리가 하필 CvChg_CMD_RQ_YN / CvChg_OD_RQ_YN 이라, 지시를 한 번
+         * 내릴 때마다 죽었다. 그래서 CV 지시가 영영 PLC 로 나가지 못했고
+         * CV_DATA 의 OD_RQ_YN 은 'Y' 인 채로 남았다.
+         *
+         * 없는 컬럼은 빈 문자열로 돌려준다. 부르는 쪽이 모두
+         * Convert.ToInt32(0 + 값) 으로 받으므로 0 이 되어 "그 기능 없음" 과 같다.
+         */
+        private string GfCol(int nRow, string strName)
+        {
+            try
+            {
+                System.Data.DataTable dt = m_msQPlc._pBdb.mDtMain;
+                if (dt == null || nRow < 0 || nRow >= dt.Rows.Count) return "";
+                if (!dt.Columns.Contains(strName)) return "";
+
+                return dt.Rows[nRow][strName].ToString();
+            }
+            catch
+            {
+                return "";
+            }
+        }
+        #endregion
+
         #region [CvChg_CMD_RQ_YN] :: CV_DATA에서 CMD_RQ_YN 여부에 따른 CV 지시
         private bool CvChg_CMD_RQ_YN(int Idx)
         {
@@ -940,31 +987,31 @@ namespace WCS_TASK_CV
                     #region table정보 읽음
 
                     //LFC 사용
-                    string TRACK_NO = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["MC_NO"].ToString();
+                    string TRACK_NO = "" + GfCol(nRows, "MC_NO");
                     string ADDR_NO = TRACK_NO.Substring(TRACK_NO.Length - 2, 2);
                     int nADDR_NO = (Convert.ToInt32(0 + ADDR_NO)) * m_devMap.WordPerTrack; //시작트랙 * 트랙당워드수 -> 해당 어드레스
 
-                    string CMD_RQ_ID = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["CMD_RQ_ID"].ToString();
+                    string CMD_RQ_ID = "" + GfCol(nRows, "CMD_RQ_ID");
 
-                    string CMD_RQ_PARM = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["CMD_RQ_PARM"].ToString();
+                    string CMD_RQ_PARM = "" + GfCol(nRows, "CMD_RQ_PARM");
                     int nCMD_RQ_PARM = (Convert.ToInt32(0 + CMD_RQ_PARM));
 
-                    string PULP_SENSOR_OD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["PULP_SENSOR_OD"].ToString(); // 대기필요
+                    string PULP_SENSOR_OD = "" + GfCol(nRows, "PULP_SENSOR_OD"); // 대기필요
                     int nPULP_SENSOR_OD = (Convert.ToInt32(0 + PULP_SENSOR_OD));
 
-                    string WAIT_SC_RET_JOB_OD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["WAIT_SC_RET_JOB_OD"].ToString(); // 대기필요
+                    string WAIT_SC_RET_JOB_OD = "" + GfCol(nRows, "WAIT_SC_RET_JOB_OD"); // 대기필요
                     int nWAIT_SC_RET_JOB_OD = (Convert.ToInt32(0 + WAIT_SC_RET_JOB_OD));
 
-                    string WAIT_SC_RET_JOB_RD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["WAIT_SC_RET_JOB_RD"].ToString(); // 대기필요
+                    string WAIT_SC_RET_JOB_RD = "" + GfCol(nRows, "WAIT_SC_RET_JOB_RD"); // 대기필요
                     int nWAIT_SC_RET_JOB_RD = (Convert.ToInt32(0 + WAIT_SC_RET_JOB_RD));
 
-                    string TR_PAUSE_OD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["TR_PAUSE_OD"].ToString();
+                    string TR_PAUSE_OD = "" + GfCol(nRows, "TR_PAUSE_OD");
                     int nTR_PAUSE_OD = (Convert.ToInt32(0 + TR_PAUSE_OD));
 
-                    string TR_PAUSE_RD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["TR_PAUSE_RD"].ToString();
+                    string TR_PAUSE_RD = "" + GfCol(nRows, "TR_PAUSE_RD");
                     int nTR_PAUSE_RD = (Convert.ToInt32(0 + TR_PAUSE_RD));
 
-                    string JOB_TYP_RD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["JOB_TYP_RD"].ToString();
+                    string JOB_TYP_RD = "" + GfCol(nRows, "JOB_TYP_RD");
                     int nJOB_TYP_RD = (Convert.ToInt32(0 + JOB_TYP_RD));
                     #endregion
 
@@ -1509,29 +1556,29 @@ namespace WCS_TASK_CV
                     #region table정보 읽음
 
                     //LFC 사용
-                    string TRACK_NO = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["MC_NO"].ToString();
+                    string TRACK_NO = "" + GfCol(nRows, "MC_NO");
                     string ADDR_NO = TRACK_NO.Substring(TRACK_NO.Length - 2, 2);
                     int nADDR_NO = (Convert.ToInt32(0 + ADDR_NO)) * m_devMap.WordPerTrack; //시작트랙 * 트랙당워드수 -> 해당 어드레스
 
-                    string LUGG_NO_OD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["LUGG_NO_OD"].ToString();
+                    string LUGG_NO_OD = "" + GfCol(nRows, "LUGG_NO_OD");
                     int nLUGG_NO_OD = (Convert.ToInt32(0 + LUGG_NO_OD));
 
-                    string DEST_POS_OD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["DEST_POS_OD"].ToString();
+                    string DEST_POS_OD = "" + GfCol(nRows, "DEST_POS_OD");
                     int nDEST_POS_OD = (Convert.ToInt32(0 + DEST_POS_OD));
 
-                    string JOB_TYP_OD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["JOB_TYP_OD"].ToString();
+                    string JOB_TYP_OD = "" + GfCol(nRows, "JOB_TYP_OD");
                     int nJOB_TYP_OD = (Convert.ToInt32(0 + JOB_TYP_OD));
 
-                    string PULP_SENSOR_RD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["PULP_SENSOR_RD"].ToString();
+                    string PULP_SENSOR_RD = "" + GfCol(nRows, "PULP_SENSOR_RD");
                     int nPULP_SENSOR_RD = (Convert.ToInt32(0 + PULP_SENSOR_RD));
 
-                    string PULP_SENSOR_OD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["PULP_SENSOR_OD"].ToString();
+                    string PULP_SENSOR_OD = "" + GfCol(nRows, "PULP_SENSOR_OD");
                     int nPULP_SENSOR_OD = (Convert.ToInt32(0 + PULP_SENSOR_OD));
 
-                    string WAIT_SC_RET_JOB_RD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["WAIT_SC_RET_JOB_RD"].ToString();
+                    string WAIT_SC_RET_JOB_RD = "" + GfCol(nRows, "WAIT_SC_RET_JOB_RD");
                     int nWAIT_SC_RET_JOB_RD = (Convert.ToInt32(0 + WAIT_SC_RET_JOB_RD));
 
-                    string WAIT_SC_RET_JOB_OD = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["WAIT_SC_RET_JOB_OD"].ToString();
+                    string WAIT_SC_RET_JOB_OD = "" + GfCol(nRows, "WAIT_SC_RET_JOB_OD");
                     int nWAIT_SC_RET_JOB_OD = (Convert.ToInt32(0 + WAIT_SC_RET_JOB_OD));
 
                     #endregion
@@ -1995,8 +2042,8 @@ namespace WCS_TASK_CV
 
                 for (int nRows = 0; nRows < nSelCnt; nRows++)
                 {
-                    string strFRONT_GET_TRACK_NO = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["FRONT_GET_TRACK_NO"].ToString();
-                    string strFRONT_SENSOR_VALUE = "" + m_msQPlc._pBdb.mDtMain.Rows[nRows]["FRONT_SENSOR_VALUE"].ToString();
+                    string strFRONT_GET_TRACK_NO = "" + GfCol(nRows, "FRONT_GET_TRACK_NO");
+                    string strFRONT_SENSOR_VALUE = "" + GfCol(nRows, "FRONT_SENSOR_VALUE");
 
                     if (strFRONT_GET_TRACK_NO == "PASS")
                     {
