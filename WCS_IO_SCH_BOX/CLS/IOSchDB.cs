@@ -4033,14 +4033,12 @@ namespace TSK_COMM_IOSCH
                  *   완료보고가 안 나가니 상위는 이동이 끝난 줄 모르고, 입고 요구도
                  *   나가지 못해 화물이 420 에 그대로 서 있었다.
                  *
-                 *   ARV_STN_NO : 화물이 실제로 선 작업대
-                 *   JOB_DEST_POS : 작업에 적힌 목적지
+                 *   CD.HOST_STN_NO 가 화물이 실제로 선 작업대,
+                 *   JM.DEST_POS 가 작업에 적힌 목적지다.
                  *   둘이 다르면 아래에서 작업의 목적지를 실제 자리로 고쳐 쓴다.
                  *   (원본도 같은 자리에서 JOB->SetDestPos 로 고쳐 쓴다)
                  */
                 strSql += CRLF + " SELECT JM.*, CD.*                                ";
-                strSql += CRLF + "      , CD.HOST_STN_NO AS ARV_STN_NO              ";
-                strSql += CRLF + "      , JM.DEST_POS    AS JOB_DEST_POS            ";
                 strSql += CRLF + "   FROM CV_DATA CD                                ";
                 strSql += CRLF + "  INNER JOIN JOB_MST JM                           ";
                 strSql += CRLF + "     ON CD.WH_TYP             = JM.WH_TYP 	    ";
@@ -4072,6 +4070,58 @@ namespace TSK_COMM_IOSCH
                     return true;
                 }
 
+                /*
+                 * 트윈 대기대 보정 (원본 CCv::ArrivedCheck4 의 "작업정보 변경")
+                 *
+                 *   적힌 목적지와 화물이 실제로 선 자리가 다르면 — P-BOX 221/222
+                 *   에서만 생긴다 — 먼저 그것부터 바로잡고 이번 사이클은 끝낸다.
+                 *   다음 사이클에는 두 값이 같아져 아래 보통 길로 도착 처리된다.
+                 *
+                 *   아래 도착 처리 트랜잭션 안에서 같이 하지 않는 까닭이 있다.
+                 *   그 안에서 부르는 UPDATE_IF_LUGG_STA 가 트랜잭션을 또 열어
+                 *   "Nested/Concurrent transactions aren't supported" 로 걸리고,
+                 *   그 처리 과정에서 그때까지의 갱신이 되돌려진다. 뒤이은 문장은
+                 *   트랜잭션 밖에서 돌아 남으므로, 상태만 19 로 바뀌고 목적지는
+                 *   옛 값으로 남는 어긋난 상태가 된다.
+                 */
+                for (int k = 0; k < nSelCnt; k++)
+                {
+                    string strArv = _pBdb.mDtMain.Rows[k]["HOST_STN_NO"].ToString().Trim();
+                    string strDst = _pBdb.mDtMain.Rows[k]["DEST_POS"].ToString().Trim();
+                    if (strArv == "" || strDst == "" || strArv == strDst) continue;
+
+                    string strFixLugg = _pBdb.mDtMain.Rows[k]["LUGG_NO"].ToString().Trim();
+                    string strFixMc   = _pBdb.mDtMain.Rows[k]["MC_NO"].ToString().Trim();
+                    string strFixTyp  = _pBdb.mDtMain.Rows[k]["JOB_TYP"].ToString().Trim();
+                    if (strFixTyp == "") strFixTyp = "0";
+
+                    // @.트랙 데이터의 목적지를 제자리로 쓴다. 이게 없으면 P-BOX 입고
+                    //   요구가 "아직 221 로 가는 중" 으로 읽어 요구를 내지 않는다.
+                    _pBdb.BeginTrans();
+                    if (UPDATE_CV_DATA(strFixTyp, "", "", strArv, "",
+                                       strFixLugg, strWH_TYP, strCV_PLC, strFixMc, "",
+                                       ref pRTN_MSG) == false)
+                    {
+                        _pBdb.Rollback();
+                        pRTN_MSG = strTitle + "TRACK " + strFixMc + "번 목적지를 [" + strArv
+                                 + "]로 다시 쓰지 못해 다음 주기에 다시 합니다. [작업번호:" + strFixLugg + "]";
+                        return true;
+                    }
+
+                    if (UPDATE_JOB_DATA(ST_CV_RUN, strFixLugg, strWH_TYP, strFixTyp,
+                                        ref pRTN_MSG, strArv) == false)
+                    {
+                        _pBdb.Rollback();
+                        return false;
+                    }
+                    _pBdb.Commit();
+
+                    pRTN_MSG = strTitle + "[" + strDst + "]로의 작업이 [" + strArv
+                             + "]에 도착하여 작업정보와 트랙 목적지를 바꿨습니다. [작업번호:" + strFixLugg + "]";
+                    InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strFixLugg, ST_CV_RUN, strFixMc);
+                    return true;        // 도착 처리는 다음 주기에
+                }
+
                 string strLUGG_NO = "";
                 string strMC_NO = "";
                 _pBdb.BeginTrans();
@@ -4092,49 +4142,6 @@ namespace TSK_COMM_IOSCH
                      *   원본 CCv::ArrivedCheck4 가 같은 자리에서 이렇게 적는다.
                      *     "221로의 작업 [자동입고 대기대 #2]에 도착, 작업정보 변경..."
                      */
-                    string strArvStn = _pBdb.mDtMain.Rows[i]["ARV_STN_NO"].ToString().Trim();
-                    string strJobDst = _pBdb.mDtMain.Rows[i]["JOB_DEST_POS"].ToString().Trim();
-
-                    if (strArvStn != "" && strJobDst != "" && strArvStn != strJobDst)
-                    {
-                        /*
-                         * 트랙 데이터의 목적지도 제자리로 다시 쓴다.
-                         *
-                         *   원본 ArrivedCheck4 는 작업의 목적지를 고치면서 트랙에도
-                         *   같이 쓴다.  WriteTrackInfo(트랙, 화물, 작업구분, 제자리)
-                         *
-                         *   이게 있어야 하는 까닭은 바로 다음 단계 때문이다.
-                         *   P-BOX 입고 요구(CHECK_PBOX_STO_REQUEST)는 그 자리의
-                         *   DEST_POS 가 크레인 H/S(11) 인지를 보고 "이미 작업을 받았다"를
-                         *   가른다. 목적지가 221 로 남아 있으면 420 에 선 화물을 두고도
-                         *   아직 221 로 가는 중인 것처럼 읽힌다.
-                         *
-                         *   쓰기가 안 되면(앞선 지시가 아직 안 먹었거나 에러) 이번
-                         *   사이클은 이 건을 건너뛰고 다음에 다시 한다. 도착 보고를
-                         *   먼저 내보내면 트랙에는 옛 목적지가 남아 어긋나기 때문이다.
-                         *   원본도 같은 자리에서 continue 로 미룬다.
-                         */
-                        if (UPDATE_CV_DATA(strJOB_TYP, "", "", strArvStn, "",
-                                           strLUGG_NO, strWH_TYP, strCV_PLC, strMC_NO, "",
-                                           ref pRTN_MSG) == false)
-                        {
-                            pRTN_MSG = strTitle + "TRACK " + strMC_NO + "번 목적지를 [" + strArvStn
-                                     + "]로 다시 쓰지 못해 도착 보고를 미룹니다. [작업번호:" + strLUGG_NO + "]";
-                            continue;
-                        }
-
-                        if (UPDATE_JOB_DATA(ST_CV_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP,
-                                            ref pRTN_MSG, strArvStn) == false)
-                        {
-                            _pBdb.Rollback();
-                            return false;
-                        }
-
-                        InsertLog(SCH_WH_TYP, strTitle + "[" + strJobDst + "]로의 작업이 [" + strArvStn
-                                  + "]에 도착하여 작업정보와 트랙 목적지를 바꿨습니다. [작업번호:" + strLUGG_NO + "]",
-                                  "", "", strLUGG_NO, ST_CV_RUN, strMC_NO);
-                    }
-
                     // 상위 TASK에 도착 보고 (LFC 인터페이스 테이블)
                     if (UPDATE_IF_LUGG_STA(strWH_TYP, strLUGG_NO, "90", ref pRTN_MSG) == false)
                     {
@@ -4165,7 +4172,6 @@ namespace TSK_COMM_IOSCH
                     }
                 }
 
-                pRTN_MSG = strTitle + "TRACK " + strMC_NO + "번[1층 출고대]에서 HOST_TASK를 통해서 완료보고 요청하였습니다. [작업번호:" + strLUGG_NO + "]";
                 _pBdb.Commit();
                 InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_CV_DONE);
                 return true;
