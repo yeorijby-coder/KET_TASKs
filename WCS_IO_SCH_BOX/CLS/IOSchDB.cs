@@ -4015,11 +4015,38 @@ namespace TSK_COMM_IOSCH
                 pRTN_MSG = strTitle;
 
                 strSql = "";
+                /*
+                 * 도착 자리 맞추기 (원본 CLib::IsArrivedToRetStation)
+                 *
+                 *   P-BOX 자동입고 대기대 221(트랙 419, 바깥) 과 222(트랙 420, 안쪽) 은
+                 *   한 크레인의 트윈 자리라 원본이 둘을 한 자리로 본다.
+                 *
+                 *     목적지 221 -> 221 에 서도 222 에 서도 도착
+                 *     목적지 222 -> 221 에 서도 222 에 서도 도착
+                 *
+                 *   상위는 이동 작업의 목적지를 늘 221 로 준다. 그런데 뒤에 오는
+                 *   화물이 없으면 PLC 가 화물을 안쪽(222, 트랙 420)으로 밀어 넣는다.
+                 *   ECS 는 그 밀어 넣기에 관여하지 않는다.
+                 *
+                 *   예전에는 CD.HOST_STN_NO = JM.DEST_POS 로만 맞췄다. 그래서 화물이
+                 *   420 으로 밀려 가면 222 != 221 이 되어 도착이 영영 안 잡혔다.
+                 *   완료보고가 안 나가니 상위는 이동이 끝난 줄 모르고, 입고 요구도
+                 *   나가지 못해 화물이 420 에 그대로 서 있었다.
+                 *
+                 *   ARV_STN_NO : 화물이 실제로 선 작업대
+                 *   JOB_DEST_POS : 작업에 적힌 목적지
+                 *   둘이 다르면 아래에서 작업의 목적지를 실제 자리로 고쳐 쓴다.
+                 *   (원본도 같은 자리에서 JOB->SetDestPos 로 고쳐 쓴다)
+                 */
                 strSql += CRLF + " SELECT JM.*, CD.*                                ";
+                strSql += CRLF + "      , CD.HOST_STN_NO AS ARV_STN_NO              ";
+                strSql += CRLF + "      , JM.DEST_POS    AS JOB_DEST_POS            ";
                 strSql += CRLF + "   FROM CV_DATA CD                                ";
                 strSql += CRLF + "  INNER JOIN JOB_MST JM                           ";
                 strSql += CRLF + "     ON CD.WH_TYP             = JM.WH_TYP 	    ";
-                strSql += CRLF + "    AND CD.HOST_STN_NO       = JM.DEST_POS 	    ";
+                strSql += CRLF + "    AND (CD.HOST_STN_NO       = JM.DEST_POS       ";
+                strSql += CRLF + "         OR (JM.DEST_POS     IN ('221','222')     ";
+                strSql += CRLF + "             AND CD.HOST_STN_NO IN ('221','222')))";
                 strSql += CRLF + "    AND CD.LUGG_NO_RD         = JM.LUGG_NO        ";
                 strSql += CRLF + "  WHERE CD.WH_TYP		        = :WH_TYP           ";
                 strSql += CRLF + "    AND CD.PLC_NO             = :CV_PLC           ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
@@ -4054,6 +4081,33 @@ namespace TSK_COMM_IOSCH
                     strLUGG_NO = "" + _pBdb.mDtMain.Rows[i]["LUGG_NO"].ToString() == "" ? "0" : _pBdb.mDtMain.Rows[i]["LUGG_NO"].ToString();
                     strMC_NO = "" + _pBdb.mDtMain.Rows[i]["MC_NO"].ToString() == "" ? "" : _pBdb.mDtMain.Rows[i]["MC_NO"].ToString();
                     string strJOB_TYP = "" + _pBdb.mDtMain.Rows[i]["JOB_TYP"].ToString() == "" ? "1" : _pBdb.mDtMain.Rows[i]["JOB_TYP"].ToString();
+
+                    /*
+                     * 적힌 목적지와 실제로 선 자리가 다르면 작업의 목적지를 고쳐 쓴다.
+                     *
+                     *   P-BOX 트윈 대기대에서만 생긴다. 목적지 221 짜리가 PLC 에 밀려
+                     *   222 에 선 경우다. 고쳐 쓰지 않으면 완료보고의 도착지가 화물이
+                     *   있지도 않은 221 로 나가고, 뒤따르는 입고도 221 에서 찾게 된다.
+                     *
+                     *   원본 CCv::ArrivedCheck4 가 같은 자리에서 이렇게 적는다.
+                     *     "221로의 작업 [자동입고 대기대 #2]에 도착, 작업정보 변경..."
+                     */
+                    string strArvStn = _pBdb.mDtMain.Rows[i]["ARV_STN_NO"].ToString().Trim();
+                    string strJobDst = _pBdb.mDtMain.Rows[i]["JOB_DEST_POS"].ToString().Trim();
+
+                    if (strArvStn != "" && strJobDst != "" && strArvStn != strJobDst)
+                    {
+                        if (UPDATE_JOB_DATA(ST_CV_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP,
+                                            ref pRTN_MSG, strArvStn) == false)
+                        {
+                            _pBdb.Rollback();
+                            return false;
+                        }
+
+                        InsertLog(SCH_WH_TYP, strTitle + "[" + strJobDst + "]로의 작업이 [" + strArvStn
+                                  + "]에 도착하여 작업정보를 바꿨습니다. [작업번호:" + strLUGG_NO + "]",
+                                  "", "", strLUGG_NO, ST_CV_RUN);
+                    }
 
                     // 상위 TASK에 도착 보고 (LFC 인터페이스 테이블)
                     if (UPDATE_IF_LUGG_STA(strWH_TYP, strLUGG_NO, "90", ref pRTN_MSG) == false)
