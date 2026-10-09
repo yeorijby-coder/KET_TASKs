@@ -4097,6 +4097,32 @@ namespace TSK_COMM_IOSCH
 
                     if (strArvStn != "" && strJobDst != "" && strArvStn != strJobDst)
                     {
+                        /*
+                         * 트랙 데이터의 목적지도 제자리로 다시 쓴다.
+                         *
+                         *   원본 ArrivedCheck4 는 작업의 목적지를 고치면서 트랙에도
+                         *   같이 쓴다.  WriteTrackInfo(트랙, 화물, 작업구분, 제자리)
+                         *
+                         *   이게 있어야 하는 까닭은 바로 다음 단계 때문이다.
+                         *   P-BOX 입고 요구(CHECK_PBOX_STO_REQUEST)는 그 자리의
+                         *   DEST_POS 가 크레인 H/S(11) 인지를 보고 "이미 작업을 받았다"를
+                         *   가른다. 목적지가 221 로 남아 있으면 420 에 선 화물을 두고도
+                         *   아직 221 로 가는 중인 것처럼 읽힌다.
+                         *
+                         *   쓰기가 안 되면(앞선 지시가 아직 안 먹었거나 에러) 이번
+                         *   사이클은 이 건을 건너뛰고 다음에 다시 한다. 도착 보고를
+                         *   먼저 내보내면 트랙에는 옛 목적지가 남아 어긋나기 때문이다.
+                         *   원본도 같은 자리에서 continue 로 미룬다.
+                         */
+                        if (UPDATE_CV_DATA(strJOB_TYP, "", "", strArvStn, "",
+                                           strLUGG_NO, strWH_TYP, strCV_PLC, strMC_NO, "",
+                                           ref pRTN_MSG) == false)
+                        {
+                            pRTN_MSG = strTitle + "TRACK " + strMC_NO + "번 목적지를 [" + strArvStn
+                                     + "]로 다시 쓰지 못해 도착 보고를 미룹니다. [작업번호:" + strLUGG_NO + "]";
+                            continue;
+                        }
+
                         if (UPDATE_JOB_DATA(ST_CV_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP,
                                             ref pRTN_MSG, strArvStn) == false)
                         {
@@ -4105,8 +4131,8 @@ namespace TSK_COMM_IOSCH
                         }
 
                         InsertLog(SCH_WH_TYP, strTitle + "[" + strJobDst + "]로의 작업이 [" + strArvStn
-                                  + "]에 도착하여 작업정보를 바꿨습니다. [작업번호:" + strLUGG_NO + "]",
-                                  "", "", strLUGG_NO, ST_CV_RUN);
+                                  + "]에 도착하여 작업정보와 트랙 목적지를 바꿨습니다. [작업번호:" + strLUGG_NO + "]",
+                                  "", "", strLUGG_NO, ST_CV_RUN, strMC_NO);
                     }
 
                     // 상위 TASK에 도착 보고 (LFC 인터페이스 테이블)
