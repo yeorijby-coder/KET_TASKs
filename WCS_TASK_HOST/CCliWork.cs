@@ -1921,6 +1921,35 @@ namespace TSK_HostCom
 
         private DateTime m_dtBoxRequested = DateTime.MinValue;
 
+        /*
+         * P-BOX 입고 요구 전문에 미실행 유무를 붙일지.
+         *
+         *   원본 CHostCl::RequestBoxStore 는 작업번호 뒤마다 한 자리를 더 붙인다.
+         *     STX L 작업번호#1(4) 미실행#1(1) 작업번호#2(4) 미실행#2(1) ETX   = 11자
+         *   문서 [09]Interface목록서 IV.9 에는 그 항목이 없다.
+         *     STX L 작업번호#1(4) 작업번호#2(4) ETX                            =  9자
+         *
+         *   현장 상위가 어느 쪽을 읽는지 몰라 ECSCOMA.ini 에서 고르게 한다.
+         *   기본값은 1(붙인다) 이다. 현장에서 도는 것이 원본이기 때문이다.
+         *
+         *     [Property]
+         *     BOX_STO_REQ_FLAG=1     ; 1=미실행 유무 포함(11자), 0=제외(9자)
+         *
+         *   미실행 유무는 그 출발 작업대에 아직 지시되지 않은 작업이 있는지다.
+         *   받는 쪽이 그 자리에서 작업을 또 내면 거절되므로(중복 출발지), 미리
+         *   알려 주는 값이다.
+         */
+        private int m_nBoxStoReqFlag = -1;      // -1 = 아직 안 읽음
+
+        // @@.INI 를 한 번만 읽는다. 전문을 낼 때마다 파일을 열 까닭이 없다.
+        private bool GfIsBoxStoReqFlagUsed()
+        {
+            if (m_nBoxStoReqFlag < 0)
+                m_nBoxStoReqFlag = modDefAPI.GetPrivateProfileInt("Property", "BOX_STO_REQ_FLAG", 1, modDefApp.MAIN_INI);
+
+            return (m_nBoxStoReqFlag != 0);
+        }
+
         private void GetBoxStoRequest()
         {
             if (!m_blSockConnected) return;
@@ -2000,19 +2029,31 @@ namespace TSK_HostCom
 
             if (!m_blSockConnected) return false;
 
-            // @.원본 순서 그대로 : Fork2 + 221플래그, Fork1 + 222플래그
             /*
-             * 문서 IV.9 P-BoxRack 입고 요구
-             *   STX + 'L' + 작업번호#1(4) + 작업번호#2(4) + ETX      (본문 9자)
-             *   #1 은 자동입고대기#1(221), #2 는 자동입고대기#2(222) 의 작업번호.
+             * 전문 자리차례는 원본 CHostCl::RequestBoxStore 를 그대로 따른다.
              *
-             *   ※ 원본 CHostCl::RequestBoxStore 는 각 작업번호 뒤에 미실행작업 유무
-             *     1자리를 더 붙여 11자로 보낸다. 문서에 그 항목이 없어 문서를 따랐다.
-             *     (미실행 유무는 상태보고 S 의 ECS작업유무로도 전달된다)
+             *   첫 자리 = 221(자동입고대기 #1, 바깥, Fork2)
+             *   둘째 자리 = 222(자동입고대기 #2, 안쪽, Fork1)
+             *
+             * 이름(Fork1/Fork2)과 싣는 차례가 서로 반대인 것은 원본이 그렇다.
+             * 이름을 바로잡아도 나가는 바이트는 같다.
              */
-            // @.전문 첫 자리는 221(=Fork2), 둘째 자리는 222(=Fork1) 다.
-            //   원본이 그렇게 싣는다. 이름을 바로잡아도 보내는 바이트는 같다.
-            string strTemp = string.Format("L{0:0000}{1:0000}", nFork2LuggNum, nFork1LuggNum);
+            string strTemp;
+
+            if (GfIsBoxStoReqFlagUsed())
+            {
+                // @.원본 형식(11자). 작업번호 뒤마다 그 작업대의 미실행 유무 한 자리.
+                int nFlag221 = GfHasUnExcutedJob(modDefApp.ECS_STN_POS_3F_BOX_221) ? 1 : 0;
+                int nFlag222 = GfHasUnExcutedJob(modDefApp.ECS_STN_POS_3F_BOX_222) ? 1 : 0;
+
+                strTemp = string.Format("L{0:0000}{1:0}{2:0000}{3:0}",
+                    nFork2LuggNum, nFlag221, nFork1LuggNum, nFlag222);
+            }
+            else
+            {
+                // @.문서 IV.9 형식(9자). 미실행 유무를 뺀다.
+                strTemp = string.Format("L{0:0000}{1:0000}", nFork2LuggNum, nFork1LuggNum);
+            }
 
             int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
             m_bytTxBuff = new byte[iTxCnt];
@@ -2029,8 +2070,8 @@ namespace TSK_HostCom
             // @.낸 시각을 적어 둔다. 다음 요구는 DEF_BOX_WAIT_S 초 뒤에 나간다.
             m_dtBoxRequested = DateTime.Now;
 
-            m_strLog = string.Format("P-BOX 입고 요구.. Fork1(222)=[{0}] Fork2(221)=[{1}]",
-                nFork1LuggNum, nFork2LuggNum);
+            m_strLog = string.Format("P-BOX 입고 요구.. Fork1(222)=[{0}] Fork2(221)=[{1}] 전문=[{2}]",
+                nFork1LuggNum, nFork2LuggNum, strTemp);
             modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_NOR);
             return true;
         }
@@ -2060,7 +2101,17 @@ namespace TSK_HostCom
             m_strSql += modDefApp.CRLF + "    FROM JOB_MST                                 ";
             m_strSql += modDefApp.CRLF + "   WHERE WH_TYP    = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
             m_strSql += modDefApp.CRLF + "     AND START_POS = " + m_BDb.ParamsAdd("START_POS", nStation.ToString());
-            m_strSql += modDefApp.CRLF + "     AND COALESCE(JOB_STATUS,'0')::INTEGER < " + ((int)modDefApp.EN_JOB_STATUS.enJobStatusComplete).ToString();
+            // @.신규(아직 지시 전)만 센다. 원본 GetUnExcutedJob 이 JOB_STA_NEW /
+            //   JOB_STA_CV_NEW 만 보는 것과 같다.
+            //
+            //   예전에는 EN_JOB_STATUS.enJobStatusComplete(=2) 보다 작은가를 봤다.
+            //   그 열거형은 전문에 싣는 번호지 JOB_MST.JOB_STATUS 의 값이 아니다.
+            //   DB 는 신규를 '99' 로 적으므로 이 조건은 한 건도 세지 못했다.
+            //   (CSrvWork 의 중복 출발지 검사도 '99' 로 본다. 같은 뜻이어야 한다)
+            m_strSql += modDefApp.CRLF + "     AND JOB_STATUS  = '99'                          ";
+
+            // @.원본은 입고와 작업대이동만 센다.(JOB_PATTERN_STO / JOB_PATTERN_SITE)
+            m_strSql += modDefApp.CRLF + "     AND COALESCE(NULLIF(TRIM(JOB_TYP),''),'0')::INTEGER IN (1, 11, 6, 10) ";
 
             int iCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
             if (iCnt <= 0) return false;
