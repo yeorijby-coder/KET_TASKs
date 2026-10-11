@@ -573,8 +573,14 @@ namespace TSK_HostCom
         #region 공파레트 입출고 관련 작업정보 UPDATE 하는 함수
         public bool UpdateHostEmptyPlt(CUserDb bDb, string strEmtpyPltKind, string strEmtpyPltStation, string strLuggNo, string strWhereStatus = "", string strSetStatus = "")
         {
+            string strTitle = "[UpdateHostEmptyPlt] .. ";
+
             if (strLuggNo == "0" || strLuggNo == "")
             {
+                modDefApp.GM_RTN_MSG = strTitle + string.Format(
+                    "작업번호가 없어 공파레트 정보를 고치지 못했습니다. [종류:{0}][작업대:{1}][작업번호:{2}]",
+                    strEmtpyPltKind, strEmtpyPltStation, strLuggNo);
+                modCmWork.ShowMsgServer(modDefApp.GM_RTN_MSG, modDefApp.MSG_ERR);
                 return false;
             }
             bDb.BeginTrans();
@@ -588,7 +594,8 @@ namespace TSK_HostCom
 
             strSql += modDefApp.CRLF + "      , UPD_ID  = 'HOST_TASK'";
             strSql += modDefApp.CRLF + "      , UPD_DT  = " + modDateTime.SYSDATE;
-            strSql += modDefApp.CRLF + "  WHERE WH_TYP  = " + bDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            // @.P-BOX 작업대(WH_TYP 20)도 같이 본다. 공파레트 자리는 창고를 가리지 않는다.
+            strSql += modDefApp.CRLF + "  WHERE WH_TYP  IN " + modDefApp.GsWhTypList();
             strSql += modDefApp.CRLF + "    AND STATUS  = " + bDb.ParamsAdd("WHERE_STATUS", strWhereStatus);
 
             if (strWhereStatus != "" && strSetStatus != "")
@@ -604,14 +611,40 @@ namespace TSK_HostCom
 
             int iSelCnt = bDb.ExcuteNonQry_Par(ref strSql);
 
-            if (iSelCnt <= 0)
+            /*
+             * 여기서 조용히 빠지면 공파레트가 왜 안 움직이는지 찾을 길이 없었다.
+             * 0 과 음수는 다른 일이므로 갈라서 남긴다.
+             *   음수 : DATABASE 에러. ErrMsg 가 까닭을 들고 있다.
+             *   0    : 에러는 없고, 고칠 줄을 못 찾은 것이다. HOST_EMPTY_PLT 에
+             *          그 종류·작업대 줄이 없거나, 이미 다른 작업번호가 올라가
+             *          있어 LUGG_NO = '0' 조건에 걸리지 않는 때다.
+             * 아래 두 번째 if (iSelCnt == 0) 는 앞의 <= 0 에 먹혀 한 번도 돌지
+             * 않던 죽은 가지였다. 지웠다.
+             */
+            if (iSelCnt < 0)
             {
+                string strErr = bDb.ErrMsg;
+                if (string.IsNullOrEmpty(strErr)) strErr = "(에러 메시지가 비어 있다)";
+
+                modDefApp.GM_RTN_MSG = strTitle + "HOST_EMPTY_PLT UPDATE중 DATABASE 에러., MESSAGE [" + strErr
+                                     + "] [종류:" + strEmtpyPltKind + "][작업대:" + strEmtpyPltStation
+                                     + "][작업번호:" + strLuggNo + "]" + modDefApp.CRLF + strSql;
+                modCmWork.ShowMsgServer(modDefApp.GM_RTN_MSG, modDefApp.MSG_ERR);
+
                 bDb.RollbackTrans();
                 return false;
             }
 
             if (iSelCnt == 0)
             {
+                modDefApp.GM_RTN_MSG = strTitle + string.Format(
+                    "고칠 공파레트 줄을 찾지 못했습니다. [종류:{0}][작업대:{1}][작업번호:{2}][창고:{3}]{4}",
+                    strEmtpyPltKind, strEmtpyPltStation, strLuggNo, modDefApp.GsWhTypList(),
+                    (strWhereStatus != "" && strSetStatus != "")
+                        ? "[상태조건:" + strWhereStatus + "->" + strSetStatus + "]"
+                        : "[상태조건:" + strWhereStatus + "][LUGG_NO='0' 인 줄만]");
+                modCmWork.ShowMsgServer(modDefApp.GM_RTN_MSG, modDefApp.MSG_ERR);
+
                 bDb.RollbackTrans();
                 return false;
             }

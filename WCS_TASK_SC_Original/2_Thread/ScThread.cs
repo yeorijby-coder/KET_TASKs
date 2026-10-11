@@ -85,6 +85,32 @@ namespace WCS_TASK_SC
 
         public int m_nThNo = 0;
         public string m_strWh_typ = "";
+
+        /*
+         * GfSideOfBank :: 크레인에 보낼 뱅크 번호.
+         *
+         *   크레인은 제 양옆 두 랙만 가리면 되므로 전역 뱅크 번호를 그대로
+         *   받지 않는다. 왼쪽이면 1, 오른쪽이면 2 다.
+         *
+         *   기존 ECS 도 같다. (EcsSv/Sc.cpp CSc::GetSide)
+         *     return ((atoi(strLocation.Mid(0, 2)) + 1) % 2) + 1;
+         *   홀수 뱅크 -> 1, 짝수 뱅크 -> 2. 모든 호기가 이렇게 받는다.
+         *     1호기 뱅크 1,2   -> 1,2
+         *     2호기 뱅크 3,4   -> 1,2
+         *     …
+         *     11호기 뱅크 21,22 -> 1,2   (P-BOX)
+         *
+         *   DB(SC_DATA, JOB_MST)에는 참 뱅크 번호를 그대로 둔다. 접는 것은
+         *   PLC 로 내보내는 이 순간뿐이다. 기존 ECS 도 CSc::Store 에서만 접는다.
+         *
+         *   0 은 랙 자리가 아니라는 뜻이라(H/S 쪽) 그대로 0 으로 둔다.
+         */
+        private int GfSideOfBank(int nBank)
+        {
+            if (nBank <= 0) return 0;
+
+            return ((nBank + 1) % 2) + 1;
+        }
         public string m_strEqmtTyp = "";
         public string m_strPlc_No = "";
         public string m_strScNo = "";
@@ -1064,10 +1090,14 @@ namespace WCS_TASK_SC
                     int n_LUGG_NO_FK1_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["LUGG_NO_FK1_OD"].ToString());
                     string str_LUGG_NO_FK1_OD = n_LUGG_NO_FK1_OD.ToString("0000");
                     int n_START_BANK_FK1_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["START_BANK_FK1_OD"].ToString());
+                    // @.크레인에는 1(왼쪽) / 2(오른쪽) 로 접어 보낸다.
+                    n_START_BANK_FK1_OD = GfSideOfBank(n_START_BANK_FK1_OD);
                     int n_START_BAY_FK1_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["START_BAY_FK1_OD"].ToString());
                     int n_START_LEVEL_FK1_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["START_LEVEL_FK1_OD"].ToString());
                     int n_START_HSPOS_FK1_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["START_HSPOS_FK1_OD"].ToString());
                     int n_DEST_BANK_FK1_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["DEST_BANK_FK1_OD"].ToString());
+                    // @.크레인에는 1(왼쪽) / 2(오른쪽) 로 접어 보낸다.
+                    n_DEST_BANK_FK1_OD = GfSideOfBank(n_DEST_BANK_FK1_OD);
                     int n_DEST_BAY_FK1_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["DEST_BAY_FK1_OD"].ToString());
                     int n_DEST_LEVEL_FK1_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["DEST_LEVEL_FK1_OD"].ToString());
                     int n_DEST_HSPOS_FK1_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["DEST_HSPOS_FK1_OD"].ToString());
@@ -1075,10 +1105,14 @@ namespace WCS_TASK_SC
                     int n_LUGG_NO_FK2_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["LUGG_NO_FK2_OD"].ToString());
                     string str_LUGG_NO_FK2_OD = n_LUGG_NO_FK2_OD.ToString("0000");
                     int n_START_BANK_FK2_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["START_BANK_FK2_OD"].ToString());
+                    // @.크레인에는 1(왼쪽) / 2(오른쪽) 로 접어 보낸다.
+                    n_START_BANK_FK2_OD = GfSideOfBank(n_START_BANK_FK2_OD);
                     int n_START_BAY_FK2_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["START_BAY_FK2_OD"].ToString());
                     int n_START_LEVEL_FK2_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["START_LEVEL_FK2_OD"].ToString());
                     int n_START_HSPOS_FK2_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["START_HSPOS_FK2_OD"].ToString());
                     int n_DEST_BANK_FK2_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["DEST_BANK_FK2_OD"].ToString());
+                    // @.크레인에는 1(왼쪽) / 2(오른쪽) 로 접어 보낸다.
+                    n_DEST_BANK_FK2_OD = GfSideOfBank(n_DEST_BANK_FK2_OD);
                     int n_DEST_BAY_FK2_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["DEST_BAY_FK2_OD"].ToString());
                     int n_DEST_LEVEL_FK2_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["DEST_LEVEL_FK2_OD"].ToString());
                     int n_DEST_HSPOS_FK2_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["DEST_HSPOS_FK2_OD"].ToString());
