@@ -381,6 +381,28 @@ namespace TSK_HostCom
         // 함수
         //---------------------------------------------
         // 작업생성         - 트랜젝션 없음
+        /*
+         * GsPairLuggNo :: 짝 작업번호를 JOB_MST 에 넣을 모양으로 다듬는다.
+         *
+         *   전문에서는 네 자리 숫자로 오고, 짝이 없으면 0 이나 공백이다.
+         *   앞에 붙은 0 을 떼어 JOB_MST.LUGG_NO 와 같은 모양으로 맞춘다.
+         *   (LUGG_NO 는 varchar(4) 에 '1092' 처럼 들어간다)
+         *   짝이 없으면 '0' 으로 둔다. NULL 로 두면 조회에서 가려내기 번거롭다.
+         */
+        public static string GsPairLuggNo(string strPairLuggNo)
+        {
+            if (string.IsNullOrEmpty(strPairLuggNo)) return "0";
+
+            string strTrim = strPairLuggNo.Trim();
+            if (strTrim.Length == 0) return "0";
+
+            int nPair = 0;
+            if (!int.TryParse(strTrim, out nPair)) return "0";
+            if (nPair <= 0) return "0";
+
+            return nPair.ToString();
+        }
+
         public bool InsertJobMst(CUserDb bDb 
                                 , string strLuggNo
                                 , string strStartPos
@@ -391,7 +413,11 @@ namespace TSK_HostCom
                                 , string strLotNo = ""
                                 , string strPriority = "000"
                                 , string strSize = "0"
-                                  , bool bServerSocket = false)
+                                  , bool bServerSocket = false
+                                // @.짝 작업번호. 트윈 포크 크레인이 한 번에 두 개를 집는 짝이다.
+                                //   지시 전문(문서 IV.1) +55(4) Pair Luggage No. 에서 온다.
+                                //   짝이 없으면 "0" 이다.
+                                , string strPairLuggNo = "0")
         {
             string strTitle = "[InsertJobMst] .. ";
             string strSql = "";
@@ -416,6 +442,7 @@ namespace TSK_HostCom
             strSql += modDefApp.CRLF + " , INS_DT		    	";
             strSql += modDefApp.CRLF + " , INS_USER_ID       	";
             strSql += modDefApp.CRLF + " , REMARKS          	";
+            strSql += modDefApp.CRLF + " , PAIR_LUGG_NO      	";
             strSql += modDefApp.CRLF + " , WC_STEP )         	";
             strSql += modDefApp.CRLF + "VALUES ('" + modDefApp.WH_TYP + "'";
             strSql += modDefApp.CRLF + "     ,  '" + strLuggNo + "'";
@@ -431,6 +458,7 @@ namespace TSK_HostCom
             strSql += modDefApp.CRLF + "     ,   " + modDateTime.SYSDATE;
             strSql += modDefApp.CRLF + "     ,  'HOST_TASK'";
             strSql += modDefApp.CRLF + "     ,  ''";
+            strSql += modDefApp.CRLF + "     ,  '" + GsPairLuggNo(strPairLuggNo) + "'";
             strSql += modDefApp.CRLF + "     ,  '0');";
 
             int iSelCnt = bDb.ExcuteNonQry_Par(ref strSql);

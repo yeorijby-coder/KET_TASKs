@@ -669,6 +669,7 @@ namespace TSK_HostCom
             string strO_Priority = "";
             string strO_LotNo = "";
             string strO_Size = "";
+            string strO_PairLuggNo = "0";
             string strR_Kind = "";
             string strR_ScNum = "";
 
@@ -830,6 +831,11 @@ namespace TSK_HostCom
                  *     문서에는 그 두 항목이 없다. 성격이 가장 가까운
                  *     Product ID 를 LOT_NO 자리에, Job Routing 을 사이즈 자리에 쓴다.
                  */
+                // @.짝 작업번호. 트윈 포크 크레인이 한 번에 두 개를 집는 짝이다.
+                //   전에는 이 네 자리를 아예 읽지 않고 우선순위로 건너뛰었다.
+                //   기존 ECS 는 이 값을 들고 있다가 출고 지시 때 포크#2 작업을 찾는다.
+                //   (EcsSv/Job.cpp CJob::FetchScRetJobByScNumForTwinFork)
+                strO_PairLuggNo = GfField(55, 4);
                 strO_Priority = GfField(59, 3);
                 strO_Size     = GfField(62, 1);
                 strO_LotNo    = GfField(63, 20).TrimEnd();
@@ -1071,7 +1077,7 @@ namespace TSK_HostCom
                 m_BDb.BeginTrans();
 
                 m_BDb.ParamsClear();
-                if (modDefApp.g_frmForm.InsertJobMst(m_BDb, strLuggNo, strStartPos, strStartLoc, strDestPos, strDestLoc, strJob_Define, strO_LotNo, strO_Priority, strO_Size, true) == false)
+                if (modDefApp.g_frmForm.InsertJobMst(m_BDb, strLuggNo, strStartPos, strStartLoc, strDestPos, strDestLoc, strJob_Define, strO_LotNo, strO_Priority, strO_Size, true, strO_PairLuggNo) == false)
                 {
                     // 함수안에서 실패시 화면에 메세지 출력함!
                     MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_ECS_BUFFER_FULL);
