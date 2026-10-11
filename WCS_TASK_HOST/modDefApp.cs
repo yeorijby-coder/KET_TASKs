@@ -59,6 +59,53 @@ namespace TSK_HostCom
         public static string WH_DEF = "A";
 
         /*
+         * P-BOX 창고
+         *
+         *   WMS 가 P-BOX 를 따로 관리한다. 설비는 한 WCS 가 다 보지만, 상위로
+         *   올라가는 전문의 창고구분은 설비마다 갈라 보내야 한다.
+         *
+         *   기존 ECS 도 그렇게 한다. (EcsSv/Lib.cpp CLib::GetWareHouseFromPosition)
+         *     작업대 211 221 222 231 241 242 251  ->  'B'
+         *     크레인 11호기                        ->  'B'
+         *     그 밖                                ->  'A'
+         *
+         *   호기·작업대 번호는 기존 ECS 그대로다. 크레인은 11 을 그대로 보낸다.
+         *   (EcsSv/ScInfo.cpp 가 ECS_STN_POS_HS_11 = 11 을 싣는다)
+         *   바뀌는 것은 창고구분 한 글자뿐이다.
+         */
+        public static string WH_TYP_BOX = "20";   // DB 창고타입 (eWHTYP.KET_WH02)
+        public static string WH_DEF_BOX = "B";    // 전문 창고구분
+
+        // @.P-BOX 크레인 호기번호. 기존 ECS 가 보내는 값 그대로.
+        public const int SC_NO_BOX = 11;
+
+        // @.DB 창고타입 -> 전문 창고구분
+        public static string GsWhDefOf(string strWhTyp)
+        {
+            return (strWhTyp != null && strWhTyp.Trim() == WH_TYP_BOX) ? WH_DEF_BOX : WH_DEF;
+        }
+
+        // @.전문 창고구분 -> DB 창고타입
+        public static string GsWhTypOf(string strWhDef)
+        {
+            return (strWhDef != null && strWhDef.Trim().ToUpper() == WH_DEF_BOX) ? WH_TYP_BOX : WH_TYP;
+        }
+
+        /*
+         * 조회에 쓰는 창고 목록.
+         *
+         *   HOST 태스크는 상위로 가는 길이 하나뿐이라 두 창고를 다 맡는다.
+         *   창고를 하나로 묶어 두면 P-BOX 설비가 조회에서 통째로 빠져
+         *   상태보고도 완료보고도 올라가지 않는다.
+         *
+         *   둘 다 코드 안에서 정한 값이라 따옴표로 바로 넣어도 된다.
+         */
+        public static string GsWhTypList()
+        {
+            return "('" + WH_TYP + "','" + WH_TYP_BOX + "')";
+        }
+
+        /*
          * 전문의 장비분류 (Device Class) - 문서 IV.3 / IV.4
          */
         public const int DEV_CLASS_SC = 1;      // S/C

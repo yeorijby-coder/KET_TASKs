@@ -721,8 +721,17 @@ namespace TSK_HostCom
                 #endregion
             }
 
-            // @.창고구분은 지금 로직에서 쓰지 않지만 자리를 맞추기 위해 읽어 둔다.
+            /*
+             * 창고구분으로 이 작업이 어느 창고의 것인지 정한다.
+             *
+             *   A : PalletRack  -> WH_TYP 10
+             *   B : P-BoxRack   -> WH_TYP 20
+             *
+             *   예전에는 읽기만 하고 버렸다. 그래서 P-BOX 작업도 WH_TYP 10 으로
+             *   들어갔고, 완료보고의 창고구분이 늘 'A' 로 나가 상위가 못 알아봤다.
+             */
             if (strWhDef.Length == 0) strWhDef = modDefApp.WH_DEF;
+            string strJobWhTyp = modDefApp.GsWhTypOf(strWhDef);
             if (strRouteStn.Length == 0) strRouteStn = "000";
 
             string strStartLoc = strStartBank + "-" + strStartBay + "-" + strStartLevel;
@@ -781,7 +790,8 @@ namespace TSK_HostCom
 
             #region 작업번호 중복 체크
             m_strSql = "SELECT * FROM JOB_MST";
-            m_strSql += modDefApp.CRLF + "WHERE WH_TYP = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            // @.작업번호는 공장 전체에서 하나뿐이어야 한다. 두 창고를 다 본다.
+            m_strSql += modDefApp.CRLF + "WHERE WH_TYP IN " + modDefApp.GsWhTypList();
             m_strSql += modDefApp.CRLF + "  AND LUGG_NO = " + m_BDb.ParamsAdd("LUGG_NO", strLuggNo);
 
             m_iSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
@@ -828,7 +838,7 @@ namespace TSK_HostCom
                 #region 작업번호가 존재하는 경우 에러 로깅
                 if (bExistJob == true)
                 {
-                    m_strLog = string.Format("이미 지시된 작업입니다. [창고 타입:{0}][작업번호:{1}]", modDefApp.WH_TYP, strLuggNo);
+                    m_strLog = string.Format("이미 지시된 작업입니다. [창고 타입:{0}][작업번호:{1}]", strJobWhTyp, strLuggNo);
                     modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
                     MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_ALREADY_INVOKED_JOB);
                     return;
@@ -836,7 +846,7 @@ namespace TSK_HostCom
                 #endregion
                 #region 작업정보가 완전히 같은 작업존재하는지 체크
                 m_strSql = "SELECT * FROM JOB_MST";
-                m_strSql += modDefApp.CRLF + "WHERE WH_TYP = '" + modDefApp.WH_TYP + "'";// m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+                m_strSql += modDefApp.CRLF + "WHERE WH_TYP IN " + modDefApp.GsWhTypList();
                 m_strSql += modDefApp.CRLF + "  AND START_POS = '" + strStartPos + "'";// mm_BDb.ParamsAdd("START_POS", strStartPos);
                 m_strSql += modDefApp.CRLF + "  AND START_LOCATION = '" + strStartLoc + "'";// mm_BDb.ParamsAdd("START_LOCATION", strStartLoc);
                 m_strSql += modDefApp.CRLF + "  AND DEST_POS = '" + strDestPos + "'";// mm_BDb.ParamsAdd("DEST_POS", strDestPos);
@@ -910,7 +920,7 @@ namespace TSK_HostCom
 
                         m_BDb.comMain.CommandType = System.Data.CommandType.Text;
                         m_BDb.comMain.Parameters.Clear();       
-                        m_BDb.comMain.Parameters.Add("WH_TYP", modSpDb.DbTypeChar).Value = modDefApp.WH_TYP;
+                        m_BDb.comMain.Parameters.Add("WH_TYP", modSpDb.DbTypeChar).Value = strJobWhTyp;
                         m_BDb.comMain.Parameters.Add("START_POS", modSpDb.DbTypeChar).Value = strStartPos;
 
                         m_iSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
@@ -1033,7 +1043,7 @@ namespace TSK_HostCom
 
                         m_BDb.comMain.CommandType = System.Data.CommandType.Text;
                         m_BDb.comMain.Parameters.Clear();       
-                        m_BDb.comMain.Parameters.Add("WH_TYP", modSpDb.DbTypeChar).Value = modDefApp.WH_TYP;
+                        m_BDb.comMain.Parameters.Add("WH_TYP", modSpDb.DbTypeChar).Value = strJobWhTyp;
                         m_BDb.comMain.Parameters.Add("START_POS", modSpDb.DbTypeChar).Value = strStartPos;
 
                         m_iSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
@@ -1084,7 +1094,8 @@ namespace TSK_HostCom
                 m_strSql += modDefApp.CRLF + " , INS_DT		    	";
                 m_strSql += modDefApp.CRLF + " , INS_USER_ID       	";
                 m_strSql += modDefApp.CRLF + " , REMARKS )         	";
-                m_strSql += modDefApp.CRLF + "VALUES ('" + modDefApp.WH_TYP + "'";
+                // @.이 작업이 속한 창고. 전문의 창고구분에서 나온다.
+                m_strSql += modDefApp.CRLF + "VALUES ('" + strJobWhTyp + "'";
                 m_strSql += modDefApp.CRLF + "     ,  '" + strLuggNo + "'";
                 m_strSql += modDefApp.CRLF + "     ,  '" + strStartPos + "'";
                 m_strSql += modDefApp.CRLF + "     ,  '" + strStartLoc + "'";

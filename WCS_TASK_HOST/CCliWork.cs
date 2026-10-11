@@ -420,7 +420,7 @@ namespace TSK_HostCom
 
                 m_strSql = modDefApp.CRLF + " SELECT * FROM JOB_MST                   ";
                 m_strSql += modDefApp.CRLF + "  WHERE JOB_STATUS = " + m_BDb.ParamsAdd("JOB_STATUS", nJobStatus.ToString());
-                m_strSql += modDefApp.CRLF + "    AND WH_TYP     = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+                m_strSql += modDefApp.CRLF + "    AND WH_TYP     IN " + modDefApp.GsWhTypList();
                 if (strJobTypNotIn != "")
                 {
                     // 해당 상태가 최종이 아닌 작업구분을 뺀다
@@ -436,6 +436,10 @@ namespace TSK_HostCom
                     return -2;       // 완료보고할 작업이 없는 상황도 정상이긴함!
                 }
                 nJobType = Convert.ToInt32(m_BDb.dtMain.Rows[0]["JOB_TYP"].ToString());
+
+                // @.완료보고에 실을 창고구분. 기존 ECS 도 완료보고에는
+                //   JobItem.m_nStartWareHouse(작업의 창고) 를 싣는다.
+                m_strJobWhDef = modDefApp.GsWhDefOf(m_BDb.dtMain.Rows[0]["WH_TYP"].ToString());
 
                 switch (nJobType)
                 {
@@ -558,7 +562,7 @@ namespace TSK_HostCom
                 {
                     m_strSql += modDefApp.CRLF + " UPDATE SC_DATA                                              ";
                     m_strSql += modDefApp.CRLF + "    SET HOST_ERR_SEND_YN = 'Y'                               ";
-                    m_strSql += modDefApp.CRLF + "  WHERE WH_TYP           = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+                    m_strSql += modDefApp.CRLF + "  WHERE WH_TYP           IN " + modDefApp.GsWhTypList();
                     m_strSql += modDefApp.CRLF + "    AND HOST_ERR_SEND_YN = 'N'                               ";
                     m_strSql += modDefApp.CRLF + "    AND (    " + modDefApp.NVL + "(ERR_CODE_RD, '0') IN ('0', '0000', '')  ";
                     m_strSql += modDefApp.CRLF + "          OR " + modDefApp.NVL + "(UCSTATUS_RD, '0') <> '4' )              ";
@@ -567,7 +571,7 @@ namespace TSK_HostCom
                 {
                     m_strSql += modDefApp.CRLF + " UPDATE CV_DATA                                              ";
                     m_strSql += modDefApp.CRLF + "    SET HOST_ERR_SEND_YN = 'Y'                               ";
-                    m_strSql += modDefApp.CRLF + "  WHERE WH_TYP           = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+                    m_strSql += modDefApp.CRLF + "  WHERE WH_TYP           IN " + modDefApp.GsWhTypList();
                     m_strSql += modDefApp.CRLF + "    AND HOST_ERR_SEND_YN = 'N'                               ";
                     m_strSql += modDefApp.CRLF + "    AND " + modDefApp.NVL + "(ERROR_CODE, '0') IN ('0', '0000', '')        ";
                 }
@@ -637,7 +641,7 @@ namespace TSK_HostCom
                     m_strSql += modDefApp.CRLF + "   LEFT OUTER JOIN EQP_ECD_MST B                                  ";
                     m_strSql += modDefApp.CRLF + "     ON A.ERR_CODE_RD         = B.EQP_ERR_CD                      ";
                     m_strSql += modDefApp.CRLF + "    AND B.EQP_TYP             = " + m_BDb.ParamsAdd("EQP_TYP", strEQP_TYP);
-                    m_strSql += modDefApp.CRLF + "  WHERE A.WH_TYP              = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+                    m_strSql += modDefApp.CRLF + "  WHERE A.WH_TYP              IN " + modDefApp.GsWhTypList();
                     m_strSql += modDefApp.CRLF + "    AND A.HOST_ERR_SEND_YN     = 'N'           ";
                     nSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
                     if (nSelCnt < 0) 
@@ -661,6 +665,7 @@ namespace TSK_HostCom
                     int nScNo = 0; int.TryParse(strScNo, out nScNo);
                     if (nScNo > 900) nScNo -= 900;
                     strHostDevNo = nScNo.ToString();
+                    m_strEqpWhDef = modDefApp.GsWhDefOf(m_BDb.dtMain.Rows[0]["WH_TYP"].ToString());
 
 
                     string strSBank = "" + m_BDb.dtMain.Rows[0]["START_BANK_FK1_RD"].ToString();
@@ -721,7 +726,7 @@ namespace TSK_HostCom
                     m_strSql = "";
                     m_strSql += modDefApp.CRLF + " UPDATE SC_DATA                       ";
                     m_strSql += modDefApp.CRLF + "    SET HOST_ERR_SEND_YN = 'Y'         ";
-                    m_strSql += modDefApp.CRLF + "  WHERE WH_TYP          = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+                    m_strSql += modDefApp.CRLF + "  WHERE WH_TYP          IN " + modDefApp.GsWhTypList();
                     m_strSql += modDefApp.CRLF + "    AND MC_NO           = " + m_BDb.ParamsAdd("MC_NO", strDeviceNo);
                     m_strSql += modDefApp.CRLF + "    AND HOST_ERR_SEND_YN = 'N'         ";
                     int nRtn = m_BDb.ExcuteNonQry_Par(ref m_strSql);
@@ -751,7 +756,7 @@ namespace TSK_HostCom
                     m_strSql += modDefApp.CRLF + "   LEFT OUTER JOIN EQP_ECD_MST B ";
                     m_strSql += modDefApp.CRLF + "     ON A.ERROR_CODE           = B.EQP_ERR_CD   ";
                     m_strSql += modDefApp.CRLF + "    AND B.EQP_TYP              = " + m_BDb.ParamsAdd("EQP_TYP", strEQP_TYP);
-                    m_strSql += modDefApp.CRLF + "  WHERE A.WH_TYP               = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+                    m_strSql += modDefApp.CRLF + "  WHERE A.WH_TYP               IN " + modDefApp.GsWhTypList();
                     m_strSql += modDefApp.CRLF + "    AND A.HOST_ERR_SEND_YN     = 'N'           ";
 
                     nSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
@@ -772,6 +777,7 @@ namespace TSK_HostCom
                     //   매칭은 CV_DATA.HOST_STN_NO 에 있다. (상태 보고와 같은 자리)
                     strHostDevNo = "" + m_BDb.dtMain.Rows[0]["HOST_STN_NO"].ToString().Trim();
                     if (strHostDevNo.Length == 0) strHostDevNo = strDeviceNo;
+                    m_strEqpWhDef = modDefApp.GsWhDefOf(m_BDb.dtMain.Rows[0]["WH_TYP"].ToString());
                     strErrorKind = "0";         // 기계적 에러 
                     strDeviceClass = "2";       // CV
                     strBank = "00";
@@ -786,7 +792,7 @@ namespace TSK_HostCom
                     m_strSql = "";
                     m_strSql += modDefApp.CRLF + " UPDATE CV_DATA                       ";
                     m_strSql += modDefApp.CRLF + "    SET HOST_ERR_SEND_YN = 'Y'         ";
-                    m_strSql += modDefApp.CRLF + "  WHERE WH_TYP           = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+                    m_strSql += modDefApp.CRLF + "  WHERE WH_TYP           IN " + modDefApp.GsWhTypList();
                     m_strSql += modDefApp.CRLF + "    AND MC_NO            = " + m_BDb.ParamsAdd("MC_NO", strDeviceNo);
                     m_strSql += modDefApp.CRLF + "    AND HOST_ERR_SEND_YN = 'N'         ";
                     int nRtn = m_BDb.ExcuteNonQry_Par(ref m_strSql);
@@ -855,7 +861,7 @@ namespace TSK_HostCom
 
             m_strSql = modDefApp.CRLF + "   SELECT  *                                                                               ";
             m_strSql += modDefApp.CRLF + "    FROM  EQP_MST                                                                         ";
-            m_strSql += modDefApp.CRLF + "   WHERE  WH_TYP    = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            m_strSql += modDefApp.CRLF + "   WHERE  WH_TYP    IN " + modDefApp.GsWhTypList();
             m_strSql += modDefApp.CRLF + "     AND  TO_CHAR(" + modDateTime.SYSDATE + " - UPD_DT, 'YYYYMMDDHH24MISS')::INTEGER < 30 ";       // 30초       
             m_strSql += modDefApp.CRLF + "     AND  EQP_TYP   = 'HOST2'                                                             ";
             m_strSql += modDefApp.CRLF + "ORDER BY  UPD_DT DESC                                                                     ";
@@ -906,7 +912,7 @@ namespace TSK_HostCom
 
             m_strSql = modDefApp.CRLF + "   SELECT  *                 ";
             m_strSql += modDefApp.CRLF + "    FROM  SC_DATA           ";
-            m_strSql += modDefApp.CRLF + "   WHERE  WH_TYP = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            m_strSql += modDefApp.CRLF + "   WHERE  WH_TYP IN " + modDefApp.GsWhTypList();
             //m_strSql += modDefApp.CRLF + "     AND  HOST_SEND_YN = 'N'";          // 모든 크레인의 정보를 가져와야함!
             m_strSql += modDefApp.CRLF + "ORDER BY  SC_NO             ";
 
@@ -949,7 +955,8 @@ namespace TSK_HostCom
             // @.설비별로 만들어질 전문 본문들. 문서 IV.3 상태 보고 참고.
             System.Collections.Generic.List<string> lstStatusFrame = new System.Collections.Generic.List<string>();
             // @.C/V 는 작업유무 조회 때문에 값만 모았다가 루프 뒤에서 본문을 만든다.
-            System.Collections.Generic.List<int[]> lstCvPending = new System.Collections.Generic.List<int[]>();
+            // @.작업대번호 / 상태 / 적재물번호 / 창고구분. 창고는 작업대마다 다르다.
+            System.Collections.Generic.List<object[]> lstCvPending = new System.Collections.Generic.List<object[]>();
 
             int nScStatus = modDefApp.SC_STATUS_NORMAL_WAIT;
 
@@ -1019,7 +1026,10 @@ namespace TSK_HostCom
                 if (nScNo > 900) nScNo -= 900;
                 int nScLugg = 0; int.TryParse(strITN_LUGG_FK1.Trim(), out nScLugg);
 
-                lstStatusFrame.Add(GfMakeStatusBody(modDefApp.DEV_CLASS_SC, nScNo, nScStatus,
+                // @.그 크레인이 속한 창고. 11호기(P-BOX)는 'B' 로 나간다.
+                string strScWhDef = modDefApp.GsWhDefOf(m_BDb.dtMain.Rows[ii]["WH_TYP"].ToString());
+
+                lstStatusFrame.Add(GfMakeStatusBody(strScWhDef, modDefApp.DEV_CLASS_SC, nScNo, nScStatus,
                                                     nScLugg,
                                                     0,                          // @.사이즈체크는 S/C 에 해당 없음
                                                     (nScLugg > 0) ? 1 : 0));
@@ -1052,7 +1062,7 @@ namespace TSK_HostCom
              *     COMP_VR 컬럼은 어느 DB 에도 없고 코드 어디에서도 넣지 않는다.
              *     이 조건 때문에 상태보고 조회가 매번 42703 오류로 실패했다.
              */
-            m_strSql += modDefApp.CRLF + "     WHERE  CD.WH_TYP       =  " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            m_strSql += modDefApp.CRLF + "     WHERE  CD.WH_TYP       IN " + modDefApp.GsWhTypList();
             m_strSql += modDefApp.CRLF + "       AND (COALESCE(NULLIF(TRIM(CD.STN_KIND),''),'0')::INTEGER & 3) <> 0 ";
             m_strSql += modDefApp.CRLF + "       AND (CD.HOST_STN_NO IS NULL                                        ";
             m_strSql += modDefApp.CRLF + "            OR CD.HOST_STN_NO NOT IN ('221','222'))                       ";
@@ -1141,7 +1151,8 @@ namespace TSK_HostCom
 
                 // @.여기서 DB 를 다시 조회하면 m_BDb.dtMain 이 교체되어
                 //   다음 회차의 Rows[iii] 가 사라진다. 값만 모아 두고 루프 뒤에서 만든다.
-                lstCvPending.Add(new int[] { nCvStn, nCvStatus, nCvLugg });
+                lstCvPending.Add(new object[] { nCvStn, nCvStatus, nCvLugg,
+                                                modDefApp.GsWhDefOf(m_BDb.dtMain.Rows[iii]["WH_TYP"].ToString()) });
 
                 strTempFrame = string.Format("{0:0}", nCvStatus);
 
@@ -1152,11 +1163,12 @@ namespace TSK_HostCom
             #region C/V 본문 만들기 (조회가 dtMain 을 건드리므로 루프 밖에서)
             for (int nCv = 0; nCv < lstCvPending.Count; nCv++)
             {
-                int[] arrCv = lstCvPending[nCv];
-                lstStatusFrame.Add(GfMakeStatusBody(modDefApp.DEV_CLASS_CV,
-                                                    arrCv[0], arrCv[1], arrCv[2],
+                object[] arrCv = lstCvPending[nCv];
+                int nStn = (int)arrCv[0];
+                lstStatusFrame.Add(GfMakeStatusBody((string)arrCv[3], modDefApp.DEV_CLASS_CV,
+                                                    nStn, (int)arrCv[1], (int)arrCv[2],
                                                     0,                          // @.사이즈체크 센서값은 DB 에 없다
-                                                    GfHasUnExcutedJob(arrCv[0]) ? 1 : 0));
+                                                    GfHasUnExcutedJob(nStn) ? 1 : 0));
             }
             #endregion
 
@@ -1184,7 +1196,7 @@ namespace TSK_HostCom
             m_strSql = "";
             m_strSql += modDefApp.CRLF + " UPDATE SC_DATA                    ";
             m_strSql += modDefApp.CRLF + "    SET HOST_SEND_YN = 'Y'         ";
-            m_strSql += modDefApp.CRLF + "  WHERE WH_TYP       = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            m_strSql += modDefApp.CRLF + "  WHERE WH_TYP       IN " + modDefApp.GsWhTypList();
             //m_strSql += modDefApp.CRLF + "    AND PLC_NO       = " + m_BDb.ParamsAdd("PLC_NO", strPLC_NO);
             m_strSql += modDefApp.CRLF + "    AND HOST_SEND_YN = 'N'         ";
             int nRtn = m_BDb.ExcuteNonQry_Par(ref m_strSql);
@@ -1206,7 +1218,7 @@ namespace TSK_HostCom
             m_strSql = "";
             m_strSql += modDefApp.CRLF + " UPDATE CV_DATA                    ";
             m_strSql += modDefApp.CRLF + "    SET HOST_SEND_YN = 'Y'         ";
-            m_strSql += modDefApp.CRLF + "  WHERE WH_TYP       = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            m_strSql += modDefApp.CRLF + "  WHERE WH_TYP       IN " + modDefApp.GsWhTypList();
             m_strSql += modDefApp.CRLF + "    AND MC_NO        IN (" + strMC_NO_LIST + ") ";
             m_strSql += modDefApp.CRLF + "    AND HOST_SEND_YN = 'N'         ";
             nRtn = m_BDb.ExcuteNonQry_Par(ref m_strSql);
@@ -1229,7 +1241,7 @@ namespace TSK_HostCom
             m_strSql = "";
             m_strSql += modDefApp.CRLF + " UPDATE EQP_MST                                                       ";
             m_strSql += modDefApp.CRLF + "    SET UPD_DT       = " + modDateTime.SYSDATE;
-            m_strSql += modDefApp.CRLF + "  WHERE WH_TYP       = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            m_strSql += modDefApp.CRLF + "  WHERE WH_TYP       IN " + modDefApp.GsWhTypList();
             m_strSql += modDefApp.CRLF + "    AND EQP_TYP      = 'HOST2'                                        ";
             nRtn = m_BDb.ExcuteNonQry_Par(ref m_strSql);
             if (nRtn < 0)
@@ -1344,7 +1356,7 @@ namespace TSK_HostCom
              *   못 읽는 칸은 0 으로 둔다. 보고를 못 하는 것보다 낫다.
              */
             strTemp = string.Format("E{0}{1:0}{2:000}{3:0}{4:0000}{5:0000}{6:00}{7:000}{8:00}",
-                modDefApp.WH_DEF,
+                m_strEqpWhDef,
                 GfToInt(strDeviceClass), GfToInt(strHostDevNo), GfToInt(strErrorKind),
                 GfToInt(strErrorCode), GfToInt(strLuggNo),
                 GfToInt(strBank), GfToInt(strBay), GfToInt(strLevel));
@@ -1533,7 +1545,7 @@ namespace TSK_HostCom
              *   그냥 붙여 두어, 받는 쪽이 작업번호부터 어긋나게 읽었다.
              */
             strTemp = string.Format("F{0:0}{1}{2:0000}{3:0}{4:0}{5:000}",
-                                    modDefApp.GsJobDefineOfReport(nJobType), modDefApp.WH_DEF, nLuggNum, nClass,
+                                    modDefApp.GsJobDefineOfReport(nJobType), m_strJobWhDef, nLuggNum, nClass,
                                     modDefApp.STEP_FIRST, nStation);
 
             int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
@@ -1768,11 +1780,13 @@ namespace TSK_HostCom
          *   문서 IV.3 : 창고구분 + 장비분류 + 장비번호(3) + 상태 + 작업번호(4)
          *               + 사이즈체크 + ECS작업유무      (본문 13자)
          */
-        private string GfMakeStatusBody(int nDevClass, int nDevNo, int nStatus,
+        // @.창고구분은 설비마다 다르다. 그 설비 행의 WH_TYP 에서 뽑아 넘긴다.
+        //   P-BOX(WH_TYP 20) 는 'B', 팔레트(10) 는 'A' 다.
+        private string GfMakeStatusBody(string strWhDef, int nDevClass, int nDevNo, int nStatus,
                                         int nLuggNum, int nSizeChk, int nJobExist)
         {
             return string.Format("S{0}{1:0}{2:000}{3:0}{4:0000}{5:0}{6:0}",
-                                 modDefApp.WH_DEF, nDevClass, nDevNo, nStatus,
+                                 strWhDef, nDevClass, nDevNo, nStatus,
                                  nLuggNum, nSizeChk, nJobExist);
         }
 
@@ -1815,7 +1829,7 @@ namespace TSK_HostCom
             m_BDb.ParamsClear();
             m_strSql = modDefApp.CRLF + "  SELECT HOST_STN_NO                                                 ";
             m_strSql += modDefApp.CRLF + "    FROM CV_DATA                                                    ";
-            m_strSql += modDefApp.CRLF + "   WHERE WH_TYP        = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            m_strSql += modDefApp.CRLF + "   WHERE WH_TYP        IN " + modDefApp.GsWhTypList();
             m_strSql += modDefApp.CRLF + "     AND HOST_STN_NO   = " + m_BDb.ParamsAdd("HOST_STN_NO", modDefApp.ECS_STN_POS_3F_PLT_207.ToString());
             m_strSql += modDefApp.CRLF + "     AND STO_READY_RD  = '1'                                        ";   // @.입고대 준비완료
             m_strSql += modDefApp.CRLF + "     AND COALESCE(LUGG_NO_RD,'0')::INTEGER = 0                       ";   // @.적재물 없음
@@ -1922,6 +1936,17 @@ namespace TSK_HostCom
         private DateTime m_dtBoxRequested = DateTime.MinValue;
 
         /*
+         * 방금 읽은 작업·설비가 어느 창고인지.
+         *
+         *   전문의 창고구분은 설비마다 작업마다 다르다. 그런데 IsJobExist /
+         *   IsEquip_ERROR_Modified 는 ref 인자가 이미 많아 하나를 더 끼우면
+         *   부르는 쪽을 다 고쳐야 한다. 읽을 때 여기 적어 두고 전문 만들 때 쓴다.
+         *   (두 함수와 그것을 쓰는 전문 만들기는 같은 스레드에서 잇달아 돈다)
+         */
+        private string m_strJobWhDef = modDefApp.WH_DEF;   // 작업의 창고
+        private string m_strEqpWhDef = modDefApp.WH_DEF;   // 설비의 창고
+
+        /*
          * P-BOX 입고 요구 전문에 미실행 유무를 붙일지.
          *
          *   원본 CHostCl::RequestBoxStore 는 작업번호 뒤마다 한 자리를 더 붙인다.
@@ -2011,7 +2036,7 @@ namespace TSK_HostCom
             m_strSql += modDefApp.CRLF + "       , COALESCE(DEST_POS_RD,'0')  AS DEST_POS_RD  ";
             m_strSql += modDefApp.CRLF + "       , COALESCE(RET_READY_RD,'0') AS RET_READY_RD ";
             m_strSql += modDefApp.CRLF + "    FROM CV_DATA                                    ";
-            m_strSql += modDefApp.CRLF + "   WHERE WH_TYP      = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            m_strSql += modDefApp.CRLF + "   WHERE WH_TYP      IN " + modDefApp.GsWhTypList();
             m_strSql += modDefApp.CRLF + "     AND HOST_STN_NO = " + m_BDb.ParamsAdd("HOST_STN_NO", nStation.ToString());
 
             int iCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
@@ -2082,7 +2107,7 @@ namespace TSK_HostCom
             m_BDb.ParamsClear();
             m_strSql = modDefApp.CRLF + "  SELECT COALESCE(LUGG_NO_RD,'0') AS LUGG_NO_RD ";
             m_strSql += modDefApp.CRLF + "    FROM CV_DATA                                ";
-            m_strSql += modDefApp.CRLF + "   WHERE WH_TYP      = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            m_strSql += modDefApp.CRLF + "   WHERE WH_TYP      IN " + modDefApp.GsWhTypList();
             m_strSql += modDefApp.CRLF + "     AND HOST_STN_NO = " + m_BDb.ParamsAdd("HOST_STN_NO", nStation.ToString());
 
             int iCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
@@ -2099,7 +2124,7 @@ namespace TSK_HostCom
             m_BDb.ParamsClear();
             m_strSql = modDefApp.CRLF + "  SELECT COUNT(*) AS CNT                          ";
             m_strSql += modDefApp.CRLF + "    FROM JOB_MST                                 ";
-            m_strSql += modDefApp.CRLF + "   WHERE WH_TYP    = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            m_strSql += modDefApp.CRLF + "   WHERE WH_TYP    IN " + modDefApp.GsWhTypList();
             m_strSql += modDefApp.CRLF + "     AND START_POS = " + m_BDb.ParamsAdd("START_POS", nStation.ToString());
             // @.신규(아직 지시 전)만 센다. 원본 GetUnExcutedJob 이 JOB_STA_NEW /
             //   JOB_STA_CV_NEW 만 보는 것과 같다.
@@ -2188,7 +2213,7 @@ namespace TSK_HostCom
             m_strSql += modDefApp.CRLF + "    SET JOB_STATUS   = " + m_BDb.ParamsAdd("JOB_STATUS", nJobStatus + 6);      // 도착 보고에서 도착보고완료로 수정 
             m_strSql += modDefApp.CRLF + "      , UPD_USER_ID  = 'HOST_TASK'";
             m_strSql += modDefApp.CRLF + "      , UPD_DT       = " + modDateTime.SYSDATE;
-            m_strSql += modDefApp.CRLF + "  WHERE WH_TYP       = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            m_strSql += modDefApp.CRLF + "  WHERE WH_TYP       IN " + modDefApp.GsWhTypList();
             m_strSql += modDefApp.CRLF + "    AND LUGG_NO      = " + m_BDb.ParamsAdd("LUGG_NO", strLuggNum);
 
             m_iSelCnt = m_BDb.ExcuteNonQry_Par(ref m_strSql);
@@ -2269,7 +2294,7 @@ namespace TSK_HostCom
             }
 
             strTemp = string.Format("F{0:0}{1}{2:0000}{3:0}{4:0}{5:000}",
-                                    modDefApp.GsJobDefineOfReport(nJobType), modDefApp.WH_DEF, nLuggNum, nClass,
+                                    modDefApp.GsJobDefineOfReport(nJobType), m_strJobWhDef, nLuggNum, nClass,
                                     modDefApp.STEP_FINAL, nStation);
 
             int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;

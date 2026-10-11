@@ -3493,8 +3493,13 @@ namespace TSK_COMM_IOSCH
         // ================================================================
         #region 층 공통 - 멤버
 
-        // 창고 구분 : cDefApp.eWHTYP.KET_WH01 = 10
-        protected static readonly string SCH_WH_TYP = ((int)cDefApp.eWHTYP.KET_WH01).ToString();
+        /*
+         * 창고 구분 : P-BOX 는 따로 관리한다. cDefApp.eWHTYP.KET_WH02 = 20
+         *
+         *   WMS 가 P-BOX 창고를 별도로 보므로 설비도 창고 20 으로 옮겼다.
+         *   1층·3층 스케줄러는 그대로 10(KET_WH01) 이다.
+         */
+        protected static readonly string SCH_WH_TYP = ((int)cDefApp.eWHTYP.KET_WH02).ToString();
 
         // 명령 지시 주체 표기
         protected const string OD_USER = "IOTASK";
