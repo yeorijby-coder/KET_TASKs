@@ -389,6 +389,17 @@ namespace TSK_HostCom
          *   (LUGG_NO 는 varchar(4) 에 '1092' 처럼 들어간다)
          *   짝이 없으면 '0' 으로 둔다. NULL 로 두면 조회에서 가려내기 번거롭다.
          */
+        // @.창고가 비어 오면 예전처럼 이 태스크의 기본 창고로 간다.
+        public static string GsWhTypOrDefault(string strWhTyp)
+        {
+            if (string.IsNullOrEmpty(strWhTyp)) return modDefApp.WH_TYP;
+
+            string strTrim = strWhTyp.Trim();
+            if (strTrim.Length == 0) return modDefApp.WH_TYP;
+
+            return strTrim;
+        }
+
         public static string GsPairLuggNo(string strPairLuggNo)
         {
             if (string.IsNullOrEmpty(strPairLuggNo)) return "0";
@@ -417,7 +428,19 @@ namespace TSK_HostCom
                                 // @.짝 작업번호. 트윈 포크 크레인이 한 번에 두 개를 집는 짝이다.
                                 //   지시 전문(문서 IV.1) +55(4) Pair Luggage No. 에서 온다.
                                 //   짝이 없으면 "0" 이다.
-                                , string strPairLuggNo = "0")
+                                , string strPairLuggNo = "0"
+                                /*
+                                 * @.이 작업이 속한 창고. 지시 전문의 창고구분에서 온다.
+                                 *     A : PalletRack -> 10      B : P-BoxRack -> 20
+                                 *
+                                 *   전에는 늘 modDefApp.WH_TYP(10) 을 박아 넣었다. 그래서 P-BOX
+                                 *   작업도 WH_TYP 10 으로 들어갔고, 완료보고의 창고구분이 늘 'A'
+                                 *   로 나가 상위가 못 알아봤다. CSrvWork 는 창고구분을 읽어
+                                 *   두고도 주석 처리된 INSERT 쪽에서만 쓰고 있었다.
+                                 *
+                                 *   비워 두면 예전처럼 modDefApp.WH_TYP 로 간다.
+                                 */
+                                , string strWhTyp = null)
         {
             string strTitle = "[InsertJobMst] .. ";
             string strSql = "";
@@ -444,7 +467,7 @@ namespace TSK_HostCom
             strSql += modDefApp.CRLF + " , REMARKS          	";
             strSql += modDefApp.CRLF + " , PAIR_LUGG_NO      	";
             strSql += modDefApp.CRLF + " , WC_STEP )         	";
-            strSql += modDefApp.CRLF + "VALUES ('" + modDefApp.WH_TYP + "'";
+            strSql += modDefApp.CRLF + "VALUES ('" + GsWhTypOrDefault(strWhTyp) + "'";
             strSql += modDefApp.CRLF + "     ,  '" + strLuggNo + "'";
             strSql += modDefApp.CRLF + "     ,  '" + strStartPos + "'";
             strSql += modDefApp.CRLF + "     ,  '" + strStartLoc + "'";

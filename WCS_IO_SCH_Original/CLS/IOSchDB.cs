@@ -3805,6 +3805,14 @@ namespace TSK_COMM_IOSCH
             ,       string strStoHsPos
             ,       string strRetHsPos
             , ref   string strRtn
+            /*
+             * 포크#2. 트윈 포크 크레인이 한 번에 두 개를 집을 때만 쓴다.
+             *   strLuggNo2 가 "0" 이거나 비면 예전처럼 포크#1 하나로 간다.
+             *   (기존 ECS : EcsSv/Sc.cpp CSc::Retrieve 의 nLuggNumForkTwo)
+             */
+            ,       string strLuggNo2   = "0"
+            ,       string strStartLoc2 = ""
+            ,       string strDestLoc2  = ""
             )
         {
             try
@@ -3820,6 +3828,27 @@ namespace TSK_COMM_IOSCH
                     return false;
                 }
 
+                /*
+                 * 포크#2 가 있는가.
+                 *
+                 *   있으면 USE_FK_OD 를 '1'(양포크)로 주고 FK2 자리를 함께 적는다.
+                 *   없으면 예전과 똑같이 '0'(포크1) 으로 가고 FK2 는 손대지 않는다.
+                 */
+                bool bTwin = false;
+                string strBank2 = "0", strBay2 = "0", strLev2 = "0";
+
+                if (!string.IsNullOrEmpty(strLuggNo2) && strLuggNo2.Trim() != "0" && strLuggNo2.Trim() != "")
+                {
+                    string strLoc2 = bStore ? strDestLoc2 : strStartLoc2;
+                    if (!ParseLocation(strLoc2, ref strBank2, ref strBay2, ref strLev2))
+                    {
+                        strRtn += "포크#2 랙 위치 형식 오류(LOC:" + strLoc2 + ")";
+                        return false;
+                    }
+
+                    bTwin = true;
+                }
+
                 string strSql = "";
                 strSql += CRLF + " UPDATE SC_DATA                                        ";
                 strSql += CRLF + "    SET JOB_TYP_OD          = :JOB_TYP_OD              ";
@@ -3832,11 +3861,28 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "      , DEST_BAY_FK1_OD     = :DEST_BAY                ";
                 strSql += CRLF + "      , DEST_LEVEL_FK1_OD   = :DEST_LEVEL              ";
                 strSql += CRLF + "      , DEST_HSPOS_FK1_OD   = :DEST_HSPOS              ";
+
+                if (bTwin)
+                {
+                    strSql += CRLF + "      , LUGG_NO_FK2_OD      = :LUGG_NO_FK2_OD      ";
+                    strSql += CRLF + "      , START_BANK_FK2_OD   = :START_BANK2         ";
+                    strSql += CRLF + "      , START_BAY_FK2_OD    = :START_BAY2          ";
+                    strSql += CRLF + "      , START_LEVEL_FK2_OD  = :START_LEVEL2        ";
+                    strSql += CRLF + "      , START_HSPOS_FK2_OD  = :START_HSPOS2        ";
+                    strSql += CRLF + "      , DEST_BANK_FK2_OD    = :DEST_BANK2          ";
+                    strSql += CRLF + "      , DEST_BAY_FK2_OD     = :DEST_BAY2           ";
+                    strSql += CRLF + "      , DEST_LEVEL_FK2_OD   = :DEST_LEVEL2         ";
+                    strSql += CRLF + "      , DEST_HSPOS_FK2_OD   = :DEST_HSPOS2         ";
+                }
                 //   사용 포크 : 0 = 포크1 / 1 = 포크1,2(양쪽) / 2 = 포크2
                 //   이 현장 크레인은 전부 SINGLE 로 둔다(BOX 는 레거시상 Twin 이나 포크1만 쓴다).
                 //   1 을 주면 크레인이 양포크 작업으로 돌아 한 건을 끝내도
                 //   적재 표시가 다 안 내려가고, 다음 작업이 집기부터 시작하지 못한다.
-                strSql += CRLF + "      , USE_FK_OD           = '0'                      ";   // 포크1 사용 (SINGLE 포크)
+                //   0 = 포크1 / 1 = 포크1,2(양쪽) / 2 = 포크2
+                //   짝이 없을 때 1 을 주면 크레인이 양포크 작업으로 돌아 한 건을 끝내도
+                //   적재 표시가 다 안 내려가고 다음 작업이 집기부터 시작하지 못한다.
+                //   그래서 FK2 를 실제로 적을 때만 1 로 준다.
+                strSql += CRLF + "      , USE_FK_OD           = '" + (bTwin ? "1" : "0") + "'  ";
                 strSql += CRLF + "      , WRITE_FLAG_OD       = '1'                      ";   // 명령 기록 완료 (레거시 D191=1)
                 strSql += CRLF + "      , OD_RQ_YN            = 'Y'                      ";
                 strSql += CRLF + "      , OD_USER_ID          = '" + OD_USER + "'        ";
@@ -3858,6 +3904,19 @@ namespace TSK_COMM_IOSCH
                 _pBdb.mComMain.Parameters.Add("DEST_BAY",       DbLang.VARCHAR).Value = bStore ? strBay  : "0";
                 _pBdb.mComMain.Parameters.Add("DEST_LEVEL",     DbLang.VARCHAR).Value = bStore ? strLev  : "0";
                 _pBdb.mComMain.Parameters.Add("DEST_HSPOS",     DbLang.VARCHAR).Value = bStore ? "0" : strRetHsPos;
+                if (bTwin)
+                {
+                    _pBdb.mComMain.Parameters.Add("LUGG_NO_FK2_OD", DbLang.VARCHAR).Value = strLuggNo2;
+                    _pBdb.mComMain.Parameters.Add("START_BANK2",    DbLang.VARCHAR).Value = bStore ? "0" : strBank2;
+                    _pBdb.mComMain.Parameters.Add("START_BAY2",     DbLang.VARCHAR).Value = bStore ? "0" : strBay2;
+                    _pBdb.mComMain.Parameters.Add("START_LEVEL2",   DbLang.VARCHAR).Value = bStore ? "0" : strLev2;
+                    _pBdb.mComMain.Parameters.Add("START_HSPOS2",   DbLang.VARCHAR).Value = bStore ? strStoHsPos : "0";
+                    _pBdb.mComMain.Parameters.Add("DEST_BANK2",     DbLang.VARCHAR).Value = bStore ? strBank2 : "0";
+                    _pBdb.mComMain.Parameters.Add("DEST_BAY2",      DbLang.VARCHAR).Value = bStore ? strBay2  : "0";
+                    _pBdb.mComMain.Parameters.Add("DEST_LEVEL2",    DbLang.VARCHAR).Value = bStore ? strLev2  : "0";
+                    _pBdb.mComMain.Parameters.Add("DEST_HSPOS2",    DbLang.VARCHAR).Value = bStore ? "0" : strRetHsPos;
+                }
+
                 _pBdb.mComMain.Parameters.Add("WH_TYP",         DbLang.VARCHAR).Value = SCH_WH_TYP;
                 _pBdb.mComMain.Parameters.Add("SC_NO",          DbLang.VARCHAR).Value = strScNo;
                 int n = _pBdb.ExcuteNonQry(strSql);
@@ -5361,6 +5420,104 @@ namespace TSK_COMM_IOSCH
          *   "0700101" 처럼 붙여 쓰기도 한다. 숫자만 뽑아 2/3/2 로 자른다.
          *   (레거시 LOCATION_LEN=7 : BANK 2 + BAY 3 + LEVEL 2)
          */
+        /*
+         * IsRetHsTrackReady :: 그 출고 H/S 트랙이 지금 받을 수 있는가.
+         *
+         *   트윈 포크로 둘을 보낼 때 포크#2 가 내려놓을 짝 H/S(411)도 비어 있어야
+         *   한다. 포크#1 쪽은 부르는 곳에서 이미 보고 왔다.
+         *
+         *   보는 것은 포크#1 쪽과 같다.
+         *     화물이 없고(SENSOR0, LUGG_NO), 자동이고, 에러가 없고, 멈춰 있지 않다.
+         *   (기존 ECS : CCvTrackInfo::IsRetHomeStandReady)
+         */
+        protected bool IsRetHsTrackReady(string strWH_TYP, string strHsTrack)
+        {
+            try
+            {
+                if (string.IsNullOrEmpty(strHsTrack)) return false;
+                if (strHsTrack.Trim() == "") return false;
+
+                string strSql = "";
+                strSql += CRLF + " SELECT CD.MC_NO                                        ";
+                strSql += CRLF + "   FROM CV_DATA CD                                       ";
+                strSql += CRLF + "  WHERE CD.WH_TYP          = :WH_TYP                     ";
+                strSql += CRLF + "    AND CD.MC_NO           = :MC_NO                      ";
+                strSql += CRLF + "    AND CD.SENSOR0_DATA_RD = '0'                         ";
+                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.LUGG_NO_RD, " + SQL_WS + "), ''), '0') IN ('0','0000') ";
+                strSql += CRLF + "    AND CD.AUTO_MODE_RD    = '1'                         ";
+                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000') ";
+                strSql += SQL_HS_NOT_PAUSED;
+
+                _pBdb.mComMain.CommandType = CommandType.Text;
+                _pBdb.mComMain.Parameters.Clear();
+                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+                _pBdb.mComMain.Parameters.Add("MC_NO",  DbLang.VARCHAR).Value = strHsTrack;
+
+                return (_pBdb.ExcuteQry(strSql) > 0);
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /*
+         * ArrangeTwinByBay :: 두 출고 작업을 포크 순서에 맞게 놓는다.
+         *
+         *   기존 ECS 와 같은 두 가지를 본다.
+         *     (EcsSv/Job.cpp 1220~1226, EcsSv/Sc.cpp 756~781)
+         *
+         *   ㄱ. 같은 뱅크·같은 단이면 베이가 작은 쪽이 포크#1 이다.
+         *       뱅크나 단이 다르면 건드리지 않는다. 기존 ECS 도 그 셋이 다 같을
+         *       때만 맞바꾼다.
+         *   ㄴ. 포크#2 가 될 쪽의 베이는 BAY_CNT_W_BOX(100) 보다 작아야 한다.
+         *       포크#2 쪽이 100 이면 둘을 맞바꿔 본다. 둘 다 100 이면 묶을 수
+         *       없으므로 false 를 돌려준다. 부르는 곳이 하나만 지시한다.
+         *
+         *   돌려주는 값 : true 면 짝으로 묶을 수 있다. 인자는 포크 순서대로 놓인다.
+         */
+        protected const int BAY_CNT_W_BOX = 100;
+
+        protected bool ArrangeTwinByBay(ref string strLuggFk1, ref string strLocFk1,
+                                        ref string strLuggFk2, ref string strLocFk2)
+        {
+            string strBank1 = "0", strBay1 = "0", strLev1 = "0";
+            string strBank2 = "0", strBay2 = "0", strLev2 = "0";
+
+            if (!ParseLocation(strLocFk1, ref strBank1, ref strBay1, ref strLev1)) return false;
+            if (!ParseLocation(strLocFk2, ref strBank2, ref strBay2, ref strLev2)) return false;
+
+            int nBay1 = 0, nBay2 = 0;
+            int.TryParse(strBay1, out nBay1);
+            int.TryParse(strBay2, out nBay2);
+
+            // ㄱ. 같은 뱅크·같은 단이면 베이가 작은 쪽을 포크#1 로
+            if ((strBank1 == strBank2) && (strLev1 == strLev2) && (nBay2 < nBay1))
+            {
+                SwapTwin(ref strLuggFk1, ref strLocFk1, ref strLuggFk2, ref strLocFk2);
+                int nTmp = nBay1; nBay1 = nBay2; nBay2 = nTmp;
+            }
+
+            // ㄴ. 포크#2 의 베이는 100 보다 작아야 한다
+            if (nBay2 >= BAY_CNT_W_BOX)
+            {
+                if (nBay1 >= BAY_CNT_W_BOX)
+                    return false;       // 둘 다 안 된다
+
+                SwapTwin(ref strLuggFk1, ref strLocFk1, ref strLuggFk2, ref strLocFk2);
+            }
+
+            return true;
+        }
+
+        private static void SwapTwin(ref string strLuggFk1, ref string strLocFk1,
+                                     ref string strLuggFk2, ref string strLocFk2)
+        {
+            string strTmp;
+            strTmp = strLuggFk1; strLuggFk1 = strLuggFk2; strLuggFk2 = strTmp;
+            strTmp = strLocFk1;  strLocFk1  = strLocFk2;  strLocFk2  = strTmp;
+        }
+
         protected bool ParseLocation(string strLoc, ref string strBank, ref string strBay, ref string strLev)
         {
             if (strLoc == null)

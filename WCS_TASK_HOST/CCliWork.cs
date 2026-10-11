@@ -1598,7 +1598,9 @@ namespace TSK_HostCom
                         //m_BDb.BeginTrans();
 
                         m_BDb.ParamsClear();
-                        if (modDefApp.g_frmForm.InsertJobMst(m_BDb, strLuggNum, strDScNum, strDPosition, strSPosition, "00-000-00", nNewJobType.ToString()) == false)
+                        // @.뒤따르는 작업은 바탕이 된 작업과 같은 창고에 둔다.
+                        if (modDefApp.g_frmForm.InsertJobMst(m_BDb, strLuggNum, strDScNum, strDPosition, strSPosition, "00-000-00", nNewJobType.ToString()
+                                                            , "", "000", "0", false, "0", modDefApp.GsWhTypOf(m_strJobWhDef)) == false)
                         {
                             // 함수안에서 실패시 화면에 메세지 출력함!
                             //MakeResponse(m_strMsgType, strLuggNum, modDefApp.MSG_ECS_BUFFER_FULL);
@@ -1697,7 +1699,9 @@ namespace TSK_HostCom
                         #endregion          
               
                         m_BDb.ParamsClear();
-                        if (modDefApp.g_frmForm.InsertJobMst(m_BDb, strLuggNum, strDPosition, "00-000-00", strSScNum, strLocation, nNewJobType.ToString()) == false)
+                        // @.뒤따르는 작업은 바탕이 된 작업과 같은 창고에 둔다.
+                        if (modDefApp.g_frmForm.InsertJobMst(m_BDb, strLuggNum, strDPosition, "00-000-00", strSScNum, strLocation, nNewJobType.ToString()
+                                                            , "", "000", "0", false, "0", modDefApp.GsWhTypOf(m_strJobWhDef)) == false)
                         {
                             // 함수안에서 실패시 화면에 메세지 출력함!
                             //MakeResponse(m_strMsgType, strLuggNum, modDefApp.MSG_ECS_BUFFER_FULL);

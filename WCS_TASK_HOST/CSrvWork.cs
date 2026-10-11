@@ -1077,7 +1077,7 @@ namespace TSK_HostCom
                 m_BDb.BeginTrans();
 
                 m_BDb.ParamsClear();
-                if (modDefApp.g_frmForm.InsertJobMst(m_BDb, strLuggNo, strStartPos, strStartLoc, strDestPos, strDestLoc, strJob_Define, strO_LotNo, strO_Priority, strO_Size, true, strO_PairLuggNo) == false)
+                if (modDefApp.g_frmForm.InsertJobMst(m_BDb, strLuggNo, strStartPos, strStartLoc, strDestPos, strDestLoc, strJob_Define, strO_LotNo, strO_Priority, strO_Size, true, strO_PairLuggNo, strJobWhTyp) == false)
                 {
                     // 함수안에서 실패시 화면에 메세지 출력함!
                     MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_ECS_BUFFER_FULL);

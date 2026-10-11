@@ -560,7 +560,9 @@ namespace TSK_COMM_IOSCH
                 // ── 1) BOX 로 나갈 출고 작업만 고른다 (호기는 아직 모른다)
                 //      레거시 CLib::GetRank 가 RANK_2 를 주는 BOX 작업대
                 strSql = "";
+                //   PAIR_LUGG_NO : 상위가 지시 전문에 실어 준 짝 작업번호. 트윈 짝을 찾는 데 쓴다.
                 strSql += CRLF + " SELECT LUGG_NO, JOB_TYP, START_POS, START_LOCATION, DEST_POS ";
+                strSql += CRLF + "      , COALESCE(NULLIF(BTRIM(PAIR_LUGG_NO), ''), '0') AS PAIR_LUGG_NO ";
                 strSql += CRLF + "   FROM JOB_MST                                            ";
                 strSql += CRLF + "  WHERE WH_TYP           = :WH_TYP                         ";
                 strSql += CRLF + "    AND JOB_STATUS       = '" + ST_SC_WAIT + "'            ";   // 20 = SC 구동요구
@@ -587,6 +589,8 @@ namespace TSK_COMM_IOSCH
 
                 string strLUGG_NO = "", strJOB_TYP = "", strSC_NO = "", strSTART_LOC = "";
                 string strDEST_POS = "", strHS_MC_NO = "";
+                string strSC_TYP = "", strPAIR_HS = "";
+                int    nJobRow = -1;
                 bool bFound = false;
 
                 for (int i = 0; i < dtJob.Rows.Count; i++)
@@ -609,7 +613,12 @@ namespace TSK_COMM_IOSCH
 
                     // ── 4) 그 호기와 BOX 출고 H/S 가 지시를 받을 수 있는 상태인지 본다
                     strSql = "";
-                    strSql += CRLF + " SELECT SHD.HS_MC_NO                                      ";
+                    //   SC_TYP     : SINGLE / TWIN. 트윈이면 포크가 둘이다.
+                    //   PAIR_HS_NO : 포크#2 가 내려놓는 짝 H/S 트랙. 11호기는 410 의 짝이 411 이다.
+                    //                (기존 ECS : CLib::GetScHSTrackPerRank 가 RANK_2 에
+                    //                 Single 4010, Twin 4011 을 준다)
+                    strSql += CRLF + " SELECT SHD.HS_MC_NO, SD.SC_TYP                              ";
+                    strSql += CRLF + "      , COALESCE(NULLIF(BTRIM(SHD.PAIR_HS_NO), ''), '') AS PAIR_HS_NO ";
                     strSql += CRLF + "   FROM SC_DATA SD                                        ";
                     strSql += CRLF + "  INNER JOIN SC_HS_DEF SHD                                ";
                     strSql += CRLF + "     ON SHD.WH_TYP          = SD.WH_TYP                   ";
@@ -645,6 +654,9 @@ namespace TSK_COMM_IOSCH
                         continue;   // 아직 받을 수 없다
 
                     strHS_MC_NO = _pBdb.mDtMain.Rows[0]["HS_MC_NO"].ToString();
+                    strSC_TYP   = _pBdb.mDtMain.Rows[0]["SC_TYP"].ToString().Trim().ToUpper();
+                    strPAIR_HS  = _pBdb.mDtMain.Rows[0]["PAIR_HS_NO"].ToString().Trim();
+                    nJobRow     = i;
                     bFound = true;
                     break;
                 }
@@ -655,10 +667,95 @@ namespace TSK_COMM_IOSCH
                     return true;
                 }
 
+                /*
+                 * 5) 트윈이면 짝을 하나 더 찾는다.
+                 *
+                 *   P-BOX 크레인은 포크가 둘이다. 짝을 지어 보내면 한 번 들어가서
+                 *   두 개를 집어 온다. 짝이 없으면 예전처럼 하나만 간다.
+                 *
+                 *   기존 ECS 와 같은 조건으로 고른다.
+                 *     (EcsSv/Job.cpp CJob::FetchScRetJobByScNumForTwinFork)
+                 *     ㄱ. 짝 작업번호(PAIR_LUGG_NO)로 먼저 찾는다.
+                 *     ㄴ. 없으면 같은 호기의 다른 출고를 훑는다.
+                 *     ㄷ. 지시 대기(20)인 출고여야 한다. 위 후보 목록이 그것만 담고 있다.
+                 *     ㄹ. 자리가 포크#1 과 같으면 안 된다. 같은 칸이다.
+                 *     ㅁ. 베이가 작은 쪽이 포크#1 로 간다. 같은 뱅크·단일 때만 맞바꾼다.
+                 *     ㅂ. 포크#2 가 될 쪽의 베이는 100 보다 작아야 한다.
+                 *         (EcsDef.h BAY_CNT_W_BOX = 100, EcsSv/Sc.cpp 756~781)
+                 *
+                 *   그리고 포크#2 가 내려놓을 짝 H/S(411)도 비어 있어야 한다.
+                 *   (기존 ECS : GetRankCvTrackInfoForkTwo + IsRetHomeStandReady)
+                 *
+                 *   ※ 기존 ECS 의 Melsec-Q 쪽 CSc::Retrieve 는 포크#2 자리를 아예
+                 *     보내지 않는다(D171 부터 22워드만, D181=0). 그래서 현장도 한
+                 *     개씩 일해 왔다. 포크#2 워드(D182~D190)는 우리 SC 태스크가
+                 *     이미 쓰고 있으므로 여기서 채워 주면 둘이 함께 나간다.
+                 */
+                string strLUGG_NO_FK2 = "0";
+                string strSTART_LOC_FK2 = "";
+
+                if ((strSC_TYP == "TWIN") && (strPAIR_HS != "") && (nJobRow >= 0))
+                {
+                    if (IsRetHsTrackReady(strWH_TYP, strPAIR_HS))
+                    {
+                        string strPairOfFk1 = dtJob.Rows[nJobRow]["PAIR_LUGG_NO"].ToString().Trim();
+
+                        for (int nPass = 0; (nPass < 2) && (strLUGG_NO_FK2 == "0"); nPass++)
+                        {
+                            for (int k = 0; k < dtJob.Rows.Count; k++)
+                            {
+                                if (k == nJobRow) continue;
+
+                                string strLugg2 = dtJob.Rows[k]["LUGG_NO"].ToString();
+                                string strTyp2  = dtJob.Rows[k]["JOB_TYP"].ToString();
+                                string strLoc2  = dtJob.Rows[k]["START_LOCATION"].ToString();
+                                string strPair2 = dtJob.Rows[k]["PAIR_LUGG_NO"].ToString().Trim();
+
+                                if (IsRetJobType(strTyp2) == false) continue;
+
+                                // 같은 호기여야 한다
+                                string strSc2 = dtJob.Rows[k]["START_POS"].ToString();
+                                if (IsScNo(strSc2) == false)
+                                {
+                                    if (GetScNoByLocation(strLoc2, ref strSc2) == false) continue;
+                                }
+                                if (strSc2 != strSC_NO) continue;
+
+                                // 같은 칸이면 짝이 아니다
+                                if (strLoc2 == strSTART_LOC) continue;
+
+                                // 첫 바퀴는 짝 번호가 맞는 것만, 둘째 바퀴는 아무거나
+                                if (nPass == 0)
+                                {
+                                    bool bPaired = ((strPairOfFk1 != "0") && (strPairOfFk1 == strLugg2))
+                                                || ((strPair2     != "0") && (strPair2     == strLUGG_NO));
+                                    if (bPaired == false) continue;
+                                }
+
+                                strLUGG_NO_FK2   = strLugg2;
+                                strSTART_LOC_FK2 = strLoc2;
+                                break;
+                            }
+                        }
+
+                        // 베이 순서를 맞춘다. 묶을 수 없으면 하나만 간다.
+                        if (strLUGG_NO_FK2 != "0")
+                        {
+                            if (ArrangeTwinByBay(ref strLUGG_NO, ref strSTART_LOC,
+                                                 ref strLUGG_NO_FK2, ref strSTART_LOC_FK2) == false)
+                            {
+                                strLUGG_NO_FK2   = "0";
+                                strSTART_LOC_FK2 = "";
+                            }
+                        }
+                    }
+                }
+
                 _pBdb.BeginTrans();
 
                 if (UpdateScData(strSC_NO, JT_RET, strLUGG_NO, strSTART_LOC, "",
-                                 HSPOS_STO_BOX, HSPOS_RET_BOX, ref pRTN_MSG) == false)
+                                 HSPOS_STO_BOX, HSPOS_RET_BOX, ref pRTN_MSG,
+                                 strLUGG_NO_FK2, strSTART_LOC_FK2, "") == false)
                 {
                     _pBdb.Rollback();
                     pRTN_MSG = "";
@@ -667,14 +764,47 @@ namespace TSK_COMM_IOSCH
 
                 // 이어받을 CV_RETHS_PLC 가 HS_TRACK_NO 로 BOX 출고 H/S 트랙을 찾는다
                 if (UPDATE_JOB_DATA(ST_SC_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG,
-                                    "0", "0", strHS_MC_NO) == false)
+                                    "0", "0", strHS_MC_NO, "0", "0", strLUGG_NO_FK2) == false)
                 {
                     _pBdb.Rollback();
                     return false;
                 }
 
-                pRTN_MSG = strTitle + strSC_NO + "호기에 BOX 출고를 지시하였습니다. [작업번호:" + strLUGG_NO
-                         + "][출발LOC:" + strSTART_LOC + "][출고H/S:" + strHS_MC_NO + "][도착지:" + strDEST_POS + "]";
+                /*
+                 * 포크#2 작업도 같이 구동중으로 돌린다.
+                 *
+                 *   한 번의 크레인 동작으로 둘이 함께 나가므로, 한쪽만 돌려 두면
+                 *   다음 주기에 그 작업이 다시 후보로 올라와 또 지시된다.
+                 *
+                 *   H/S 트랙은 서로 다르다. 포크#1 은 410, 포크#2 는 짝 H/S(411) 에
+                 *   내려놓는다. 이어받는 CV_RETHS_PLC 가 HS_TRACK_NO 로 트랙을
+                 *   찾으므로 각자의 트랙을 넣어야 제 화물을 집어 간다.
+                 *
+                 *   짝 작업번호도 서로를 가리키게 넣어 둔다. 완료 쪽에서 둘을
+                 *   함께 보려면 그 고리가 필요하다.
+                 */
+                if (strLUGG_NO_FK2 != "0")
+                {
+                    if (UPDATE_JOB_DATA(ST_SC_RUN, strLUGG_NO_FK2, strWH_TYP, strJOB_TYP, ref pRTN_MSG,
+                                        "0", "0", strPAIR_HS, "0", "0", strLUGG_NO) == false)
+                    {
+                        _pBdb.Rollback();
+                        return false;
+                    }
+                }
+
+                if (strLUGG_NO_FK2 == "0")
+                {
+                    pRTN_MSG = strTitle + strSC_NO + "호기에 BOX 출고를 지시하였습니다. [작업번호:" + strLUGG_NO
+                             + "][출발LOC:" + strSTART_LOC + "][출고H/S:" + strHS_MC_NO + "][도착지:" + strDEST_POS + "]";
+                }
+                else
+                {
+                    pRTN_MSG = strTitle + strSC_NO + "호기에 BOX 출고를 트윈(포크#1,#2)으로 지시하였습니다."
+                             + " [포크#1 작업번호:" + strLUGG_NO     + "][출발LOC:" + strSTART_LOC     + "][출고H/S:" + strHS_MC_NO + "]"
+                             + " [포크#2 작업번호:" + strLUGG_NO_FK2 + "][출발LOC:" + strSTART_LOC_FK2 + "][출고H/S:" + strPAIR_HS  + "]"
+                             + " [도착지:" + strDEST_POS + "]";
+                }
                 _pBdb.Commit();
                 InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_SC_RUN, strHS_MC_NO, strSC_NO);
                 return true;
