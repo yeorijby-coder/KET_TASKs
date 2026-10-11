@@ -437,8 +437,14 @@ namespace TSK_HostCom
 
             if (iSelCnt <= 0)
             {
-                strLog = string.Format("작업 생성에 실패하였습니다. [작업번호:{0}][출발지:{1}][출발LOC:{2}][도착지:{3}][도착LOC:{4}][LOT_NO:{5}][SIZE:{6}][DB Err:{7}]",
-                    strLuggNo, strStartPos, strStartLoc, strDestPos, strDestLoc, strLotNo, strSize, bDb.strErrMsg);
+                // @.0(한 건도 안 들어감) 과 음수(DB 에러) 를 가려 적는다.
+                //   예전에는 둘 다 [DB Err:] 가 비어 나와 까닭을 알 수 없었다.
+                string strWhy = (iSelCnt < 0)
+                    ? (string.IsNullOrEmpty(bDb.strErrMsg) ? "(에러 메시지가 비어 있다)" : bDb.strErrMsg)
+                    : "DB 에러는 없는데 한 건도 들어가지 않았다";
+
+                strLog = string.Format("작업 생성에 실패하였습니다. [작업번호:{0}][출발지:{1}][출발LOC:{2}][도착지:{3}][도착LOC:{4}][LOT_NO:{5}][SIZE:{6}][까닭:{7}]",
+                    strLuggNo, strStartPos, strStartLoc, strDestPos, strDestLoc, strLotNo, strSize, strWhy);
                 if (bServerSocket == true)
                 {
                     modCmWork.ShowMsgServer(strTitle + strLog, modDefApp.MSG_ERR);
@@ -641,7 +647,7 @@ namespace TSK_HostCom
                 strSql = "";
                 strSql += modDefApp.CRLF + " SELECT *               ";
                 strSql += modDefApp.CRLF + "   FROM JOB_MST         ";
-                strSql += modDefApp.CRLF + "  WHERE WH_TYP        = " + bDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+                strSql += modDefApp.CRLF + "  WHERE WH_TYP        IN " + modDefApp.GsWhTypList();
                 strSql += modDefApp.CRLF + "    AND LUGG_NO       = " + bDb.ParamsAdd("LUGG_NO", strLuggNo);
 
                 if (bJobComplete == true)
@@ -649,9 +655,41 @@ namespace TSK_HostCom
                     strSql += modDefApp.CRLF + "    AND JOB_STATUS    IN ('19', '29')";
                 }
                 int nRtn = bDb.ExcuteQry_Par(ref strSql);
-                if (nRtn <= 0)
+                /*
+                 * 0 과 음수는 다른 일이다.
+                 *
+                 *   ExcuteQry_Par 는 성공하면 가져온 행수를, 실패하면 음수를
+                 *   돌려주고 ErrMsg 를 채운다. 0 은 "에러 없이 한 건도 없음" 이라
+                 *   ErrMsg 가 비어 있다.
+                 *
+                 *   예전에는 둘을 nRtn <= 0 으로 묶어 두 경우 모두
+                 *   "DATABASE 에러., MESSAGE []" 로 찍었다. 메시지가 비어 있으니
+                 *   무엇이 잘못됐는지 알 길이 없었다.
+                 *
+                 *   찾지 못한 것이면 무엇으로 찾았는지를 적어 준다.
+                 */
+                if (nRtn == 0)
                 {
-                    modDefApp.GM_RTN_MSG = strTitle + "JOB_MST SELECT중 DATABASE 에러., MESSAGE [" + bDb.ErrMsg + "]";
+                    modDefApp.GM_RTN_MSG = strTitle + string.Format(
+                        "지울 작업을 찾지 못했습니다. [작업번호:{0}][창고:{1}]{2}",
+                        strLuggNo, modDefApp.GsWhTypList(),
+                        bJobComplete ? "[상태조건:19 또는 29]" : "");
+
+                    if (bServerSocket == true)
+                        modCmWork.ShowMsgServer(modDefApp.GM_RTN_MSG, modDefApp.MSG_ERR);
+                    else
+                        modCmWork.ShowMsgClient(modDefApp.GM_RTN_MSG, modDefApp.MSG_ERR);
+
+                    return false;
+                }
+
+                if (nRtn < 0)
+                {
+                    string strErr = bDb.ErrMsg;
+                    if (string.IsNullOrEmpty(strErr)) strErr = "(에러 메시지가 비어 있다)";
+
+                    modDefApp.GM_RTN_MSG = strTitle + "JOB_MST SELECT중 DATABASE 에러., MESSAGE [" + strErr
+                                         + "] [작업번호:" + strLuggNo + "]" + modDefApp.CRLF + strSql;
                     if (bServerSocket == true)
                     {
                         modCmWork.ShowMsgServer(modDefApp.GM_RTN_MSG, modDefApp.MSG_ERR);
@@ -719,7 +757,7 @@ namespace TSK_HostCom
                 strSql += modDefApp.CRLF + "      , TRAY_LEV, HS_TRACK_NO, SC_NO, DURATION_TIME, SYSTEM_BYTE, S6F12_RESPONSE   ";
                 strSql += modDefApp.CRLF + "      , S6F11_YON, CEID_NAME, FK_NO, AGING_TIME, PAIR_LUGG_NO, LOT_NO              ";
                 strSql += modDefApp.CRLF + "   FROM JOB_MST                                                                    ";
-                strSql += modDefApp.CRLF + "  WHERE WH_TYP        = " + bDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+                strSql += modDefApp.CRLF + "  WHERE WH_TYP        IN " + modDefApp.GsWhTypList();
                 strSql += modDefApp.CRLF + "    AND LUGG_NO       = " + bDb.ParamsAdd("LUGG_NO", strLuggNo);
 
                 nRtn = bDb.ExcuteNonQry_Par(ref strSql);
@@ -765,7 +803,7 @@ namespace TSK_HostCom
                 strSql = "";
                 strSql += modDefApp.CRLF + " DELETE                                           ";
                 strSql += modDefApp.CRLF + "   FROM JOB_MST                                   ";
-                strSql += modDefApp.CRLF + "  WHERE WH_TYP        = " + bDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+                strSql += modDefApp.CRLF + "  WHERE WH_TYP        IN " + modDefApp.GsWhTypList();
                 strSql += modDefApp.CRLF + "    AND LUGG_NO       = " + bDb.ParamsAdd("LUGG_NO", strLuggNo);
                 if (bJobComplete == true)
                 {
