@@ -74,6 +74,8 @@ namespace WCS_TASK_SC
         public string[] m_strCOMM_FROM_PORT = new string[200];
         public string[] m_strCOMM_TO_PORT = new string[200];
         public string[] m_strPLC_NO = new string[200];
+        // @.COMM 마다 맡은 창고. [COMMn] WH_TYP 가 없으면 [CNF] 값을 쓴다.
+        public string[] m_strWH_TYP = new string[200];
         public string[] m_strSC_NO = new string[200];
         public string[] m_strMC_NO = new string[200];
         public string[] m_strSC_GRP_NO = new string[200];
@@ -152,6 +154,7 @@ namespace WCS_TASK_SC
                 string Name = null;
 
                 Name = "COMM" + ii.ToString();
+                m_strWH_TYP[ii] = cDefApi.GsReadComWhTyp(Name, cDefApp.GM_WH_TYP);
                 //@@.CV #1 접속정보ini 읽어오기
                 cDefApi.GsReadInitProfileCom(Name,
                                              ref m_strPLC_NO[ii],
@@ -239,7 +242,7 @@ namespace WCS_TASK_SC
             {
                 //SC 통신 스레드.
                 m_thScThread[ii] = new ScThread(ii
-                                             , cDefApp.GM_WH_TYP
+                                             , m_strWH_TYP[ii]
                                              , m_strEQMT_TYP[ii]
                                              , m_strPLC_NO[ii]
                                              , m_strSC_NO[ii]

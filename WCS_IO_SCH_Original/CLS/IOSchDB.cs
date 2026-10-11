@@ -1557,8 +1557,8 @@ namespace TSK_COMM_IOSCH
          *
          *   여기에 "크레인에 작업이 없어야" 를 더한다.
          *     OD_RQ_YN='N'   앞 지시를 SC_TASK 가 이미 가져갔다
-         *     ITN_LUGG_FK1   크레인이 들고 있는 작업번호. 남아 있으면 앞 작업이 안 끝났다
-         *     LUGG_NO_FK1_RD 크레인이 읽어 준 포크1 작업번호
+         *     ITN_LUGG_FK1   WCS 가 적어 둔 작업번호. 남아 있으면 앞 작업이 안 끝났다
+         *                    (크레인이 읽어 준 LUGG_NO_FK1_RD 는 보지 않는다. 아래 참고)
          *     COMPLETE_RD    완료표시가 남아 있으면 ScCompleteCheck 가 아직 안 치웠다
          *
          *   에러코드는 '0000' 과 '0' 을 같이 본다. SC_TASK 는 네 자리로 쓰지만
@@ -1606,8 +1606,18 @@ namespace TSK_COMM_IOSCH
             //            + cDefApp.CRLF + "    AND SD.UCSTATUS_RD      = '" + SC_STA_WAIT + "'         "
             + cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.UCSTATUS_RD, " + SQL_WS + "), ''), '0')    IN ('" + SC_STA_IDLE + "','" + SC_STA_WAIT + "')"
             + cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.ERR_CODE_RD, " + SQL_WS + "), ''), '0')    IN ('0','0000')  "
-            + cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.ITN_LUGG_FK1, " + SQL_WS + "), ''), '0')   IN ('0','0000')  "
-            + cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.LUGG_NO_FK1_RD, " + SQL_WS + "), ''), '0') IN ('0','0000')  ";
+            + cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.ITN_LUGG_FK1, " + SQL_WS + "), ''), '0')   IN ('0','0000')  ";
+        /*
+         * 크레인이 읽어 준 작업번호(LUGG_NO_FK1_RD)는 보지 않는다.
+         *
+         *   이 현장 크레인은 작업을 마쳐도 제가 들고 있던 작업번호를 지우지
+         *   않는다. 그 값을 "앞 작업이 안 끝났다" 로 읽으면 첫 작업 뒤로
+         *   그 크레인에는 영영 지시가 나가지 않는다.
+         *
+         *   앞 작업이 끝났는지는 WCS 가 적어 둔 ITN_LUGG_FK1 로 본다. 그것은
+         *   완료 처리(SC_COMP_CHK)에서 '0' 으로 되돌리므로 믿을 수 있다.
+         *   크레인이 읽어 준 값은 완료 짝 맞추기(cThread_SC) 에서만 쓴다.
+         */
 //            + cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.COMPLETE_RD, " + SQL_WS + "), ''), '0')    IN ('0')         ";      // 이건 보지 말자
         /*
          * 입고/출고 정지 - 레거시 SC_INFO->m_bStoreSuspend / m_bRetrieveSuspend
@@ -3494,7 +3504,15 @@ namespace TSK_COMM_IOSCH
         #region 층 공통 - 멤버
 
         // 창고 구분 : cDefApp.eWHTYP.KET_WH01 = 10
-        protected static readonly string SCH_WH_TYP = ((int)cDefApp.eWHTYP.KET_WH01).ToString();
+        /*
+         * 이 스케줄러 스레드가 맡은 창고.
+         *
+         *   한 프로세스 안에서 1F / 3F / BOX 세 스레드가 돈다. P-BOX 는 WMS 가
+         *   따로 관리해 WH_TYP 20(KET_WH02) 으로 떼어 놓았으므로, 창고를 모든
+         *   스레드가 나눠 쓰는 static 으로 두면 BOX 스레드가 제 설비를 못 찾는다.
+         *   인스턴스마다 두고 BOX 스레드 생성자에서 20 으로 바꾼다.
+         */
+        protected string SCH_WH_TYP = ((int)cDefApp.eWHTYP.KET_WH01).ToString();
 
         // 명령 지시 주체 표기
         protected const string OD_USER = "IOTASK";
@@ -4448,11 +4466,24 @@ namespace TSK_COMM_IOSCH
                 pRTN_MSG = strTitle;
 
                 strSql = "";
+                /*
+                 * 도착 자리 맞추기 (원본 ECS CLib::IsArrivedToRetStation)
+                 *
+                 *   P-BOX 자동입고 대기대 221(트랙 419, 바깥) 과 222(트랙 420, 안쪽) 은
+                 *   한 크레인의 트윈 자리라 원본이 둘을 한 자리로 본다.
+                 *
+                 *   상위는 이동 작업의 목적지를 늘 221 로 준다. 그런데 뒤에 오는
+                 *   화물이 없으면 PLC 가 화물을 안쪽(222, 트랙 420)으로 밀어 넣는다.
+                 *   예전에는 CD.HOST_STN_NO = JM.DEST_POS 로만 맞춰, 화물이 420 으로
+                 *   밀려 가면 222 != 221 이 되어 도착이 영영 안 잡혔다.
+                 */
                 strSql += CRLF + " SELECT JM.*, CD.*                                ";
                 strSql += CRLF + "   FROM CV_DATA CD                                ";
                 strSql += CRLF + "  INNER JOIN JOB_MST JM                           ";
                 strSql += CRLF + "     ON CD.WH_TYP             = JM.WH_TYP 	    ";
-                strSql += CRLF + "    AND CD.HOST_STN_NO       = JM.DEST_POS 	    ";
+                strSql += CRLF + "    AND (CD.HOST_STN_NO       = JM.DEST_POS       ";
+                strSql += CRLF + "         OR (JM.DEST_POS     IN ('221','222')     ";
+                strSql += CRLF + "             AND CD.HOST_STN_NO IN ('221','222')))";
                 strSql += CRLF + "    AND CD.LUGG_NO_RD         = JM.LUGG_NO        ";
                 strSql += CRLF + "  WHERE CD.WH_TYP		        = :WH_TYP           ";
                 strSql += CRLF + "    AND CD.PLC_NO             = :CV_PLC           ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
@@ -4476,6 +4507,58 @@ namespace TSK_COMM_IOSCH
                 {
                     pRTN_MSG = "";
                     return true;
+                }
+
+                /*
+                 * 트윈 대기대 보정 (원본 ECS CCv::ArrivedCheck4 의 "작업정보 변경")
+                 *
+                 *   적힌 목적지와 화물이 실제로 선 자리가 다르면 — P-BOX 221/222
+                 *   에서만 생긴다 — 먼저 그것부터 바로잡고 이번 주기는 끝낸다.
+                 *   다음 주기에는 두 값이 같아져 아래 보통 길로 도착 처리된다.
+                 *
+                 *   아래 도착 처리 트랜잭션 안에서 같이 하지 않는 까닭이 있다.
+                 *   그 안에서 부르는 UPDATE_IF_LUGG_STA 가 트랜잭션을 또 열어
+                 *   "Nested/Concurrent transactions aren't supported" 로 걸리고,
+                 *   그 처리 과정에서 그때까지의 갱신이 되돌려진다. 뒤이은 문장은
+                 *   트랜잭션 밖에서 돌아 남으므로 상태만 19 로 바뀌고 목적지는
+                 *   옛 값으로 남는 어긋난 상태가 된다.
+                 */
+                for (int k = 0; k < nSelCnt; k++)
+                {
+                    string strArv = _pBdb.mDtMain.Rows[k]["HOST_STN_NO"].ToString().Trim();
+                    string strDst = _pBdb.mDtMain.Rows[k]["DEST_POS"].ToString().Trim();
+                    if (strArv == "" || strDst == "" || strArv == strDst) continue;
+
+                    string strFixLugg = _pBdb.mDtMain.Rows[k]["LUGG_NO"].ToString().Trim();
+                    string strFixMc   = _pBdb.mDtMain.Rows[k]["MC_NO"].ToString().Trim();
+                    string strFixTyp  = _pBdb.mDtMain.Rows[k]["JOB_TYP"].ToString().Trim();
+                    if (strFixTyp == "") strFixTyp = "0";
+
+                    // @.트랙 데이터의 목적지를 제자리로 쓴다. 이게 없으면 P-BOX 입고
+                    //   요구가 "아직 221 로 가는 중" 으로 읽어 요구를 내지 않는다.
+                    _pBdb.BeginTrans();
+                    if (UPDATE_CV_DATA(strFixTyp, "", "", strArv, "",
+                                       strFixLugg, strWH_TYP, strCV_PLC, strFixMc, "",
+                                       ref pRTN_MSG) == false)
+                    {
+                        _pBdb.Rollback();
+                        pRTN_MSG = strTitle + "TRACK " + strFixMc + "번 목적지를 [" + strArv
+                                 + "]로 다시 쓰지 못해 다음 주기에 다시 합니다. [작업번호:" + strFixLugg + "]";
+                        return true;
+                    }
+
+                    if (UPDATE_JOB_DATA(ST_CV_RUN, strFixLugg, strWH_TYP, strFixTyp,
+                                        ref pRTN_MSG, strArv) == false)
+                    {
+                        _pBdb.Rollback();
+                        return false;
+                    }
+                    _pBdb.Commit();
+
+                    pRTN_MSG = strTitle + "[" + strDst + "]로의 작업이 [" + strArv
+                             + "]에 도착하여 작업정보와 트랙 목적지를 바꿨습니다. [작업번호:" + strFixLugg + "]";
+                    InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strFixLugg, ST_CV_RUN, strFixMc);
+                    return true;        // 도착 처리는 다음 주기에
                 }
 
                 string strLUGG_NO = "";

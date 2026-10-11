@@ -244,6 +244,25 @@ namespace WCS_TASK_CV
         #endregion
 
         #region [COMM]::설비통신 접속정보
+
+        /*
+         * GsReadComWhTyp :: 그 COMM 이 맡은 창고.
+         *
+         *   [COMMn] 에 WH_TYP 가 있으면 그것을, 없으면 [CNF] 의 값을 쓴다.
+         *   한 프로세스가 여러 설비를 맡는데 창고가 갈린 현장이 있다.
+         *   이 현장은 P-BOX(크레인 11호기, CV PLC 04)만 WH_TYP 20 이다.
+         */
+        public static string GsReadComWhTyp(string pAppNm, string pDefault)
+        {
+            StringBuilder sb = new StringBuilder(32);
+
+            if (!System.IO.File.Exists(cDefApp.GM_ENV_INI)) return pDefault;
+
+            GetPrivateProfileString(pAppNm, "WH_TYP", "", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+            string strVal = sb.ToString().Trim();
+
+            return (strVal == "") ? pDefault : strVal;
+        }
         public static bool GsReadInitProfileCom(string pAppNm,
                                             ref string pGrpNo,
                                             ref string pCommIP,

@@ -3234,6 +3234,35 @@ namespace TSK_HostCom
 		}
 
 
+        /*
+         * HeartBeatEqpMst :: 살아 있다고 EQP_MST 에 적는다.
+         *
+         *   관제 Client 가 통신 램프를 이렇게 가린다.
+         *     CASE WHEN TO_CHAR(NOW() - UPD_DT, 'YYYYMMDDHH24MISS')::INTEGER > 120
+         *          THEN 121 ELSE 0 END   (Ecs/ConnectStatus.cpp)
+         *   UPD_DT 가 오래되면 빨강이다. CONNECTED_YN 이 'Y' 여도 소용없다.
+         *
+         *   C/V·S/C 태스크는 폴링을 돌 때마다 Communication() 으로 이 시각을
+         *   갱신한다. 그런데 HOST 는 붙을 때와 끊길 때 한 번씩만 썼다.
+         *   그래서 붙어 있는데도 1~2분이면 램프가 빨강으로 떨어졌다.
+         *
+         *   너무 자주 쓸 까닭은 없다. 판정이 분 단위라 10초면 넉넉하다.
+         */
+        private DateTime m_dtHeartBeat = DateTime.MinValue;
+        private const int DEF_HEARTBEAT_S = 10;
+
+        public void HeartBeatEqpMst()
+        {
+            if (!m_blDbConnted) return;
+            if ((DateTime.Now - m_dtHeartBeat).TotalSeconds < DEF_HEARTBEAT_S) return;
+
+            m_dtHeartBeat = DateTime.Now;
+
+            string strErrMsg = "";
+            string strYn = m_blSockConnected ? "Y" : "N";
+            UpdateEQP_MST(ref m_BDb, "10", "HOST", "01", strYn, ref strErrMsg);
+        }
+
         private bool UpdateEQP_MST(ref CUserDb p_Bdb, 
                                    string p_strWH_TYP,
                                    string p_strEQP_TYP,

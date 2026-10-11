@@ -320,6 +320,9 @@ namespace TSK_HostCom
 					}
 					//==LKM[20140430]DB연결
 
+                    // @.관제 화면의 통신 램프가 UPD_DT 로 판정한다. 살아 있다고 적어 둔다.
+                    modDefApp.g_CliWork.HeartBeatEqpMst();
+
                     if (!modDefApp.g_CliWork.m_blSockConnected && modDefApp.g_frmForm.chkSimMode.Checked == false)
 					{
 						iCnt += 1;

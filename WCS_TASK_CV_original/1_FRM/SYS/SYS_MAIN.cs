@@ -24,6 +24,8 @@ namespace WCS_TASK_CV
         public cLogThread[] m_thLogging = new cLogThread[200];
         public string[] m_strCOMM_IP     = new string[200];
         public string[] m_strPLC_NO = new string[200];
+        // @.COMM 마다 맡은 창고. [COMMn] WH_TYP 가 없으면 [CNF] 값을 쓴다.
+        public string[] m_strWH_TYP = new string[200];
         public string[] m_strEQMT_TYP = new string[200];
         public int[] m_nCOMM_CUR_PORT      = new int[200];
         public int[] m_nCOMM_FROM_PORT = new int[200];
@@ -155,6 +157,7 @@ namespace WCS_TASK_CV
                 string Name=null;
 
                 Name =  "COMM" + ii.ToString();
+                m_strWH_TYP[ii] = cDefApi.GsReadComWhTyp(Name, cDefApp.GM_WH_TYP);
                 //@@.CV #1 접속정보ini 읽어오기
                 cDefApi.GsReadInitProfileCom(Name,
                                              ref m_strPLC_NO[ii],
@@ -495,7 +498,7 @@ namespace WCS_TASK_CV
 
                 //Conveyor 통신 스레드.
                 m_thCvThread[ii] = new CvThread(ii,
-                                                cDefApp.GM_WH_TYP,
+                                                m_strWH_TYP[ii],
                                                 m_strEQMT_TYP[ii],
                                                 m_strPLC_NO[ii],
                                                 m_strCOMM_IP[ii],

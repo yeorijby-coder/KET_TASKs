@@ -75,6 +75,10 @@ namespace TSK_COMM_IOSCH
         public cThread_SCH_BOX(int Id)
         {
             m_nId = Id;
+
+            // @.P-BOX 는 WMS 가 따로 관리한다. 설비가 WH_TYP 20 으로 떨어져 있다.
+            //   1F / 3F 스레드는 그대로 10 이다.
+            SCH_WH_TYP = ((int)cDefApp.eWHTYP.KET_WH02).ToString();
         }
         #endregion
 
