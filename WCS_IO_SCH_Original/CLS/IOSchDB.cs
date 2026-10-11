@@ -2531,19 +2531,36 @@ namespace TSK_COMM_IOSCH
                 string strLEVEL = strLocation.Substring(5, 2);
                 string strCELL_NO = strBANK + "-" + strBAY + "-" + strLEVEL;
 
-                if (strBANK == "01" || strBANK == "02" || strBANK == "03" || strBANK == "04")
+                /*
+                 * 뱅크에서 호기를 구한다. 창고마다 셈이 다르다.
+                 *   (기존 ECS : EcsSv/Lib.cpp CLib::GetStackerNum, CLib::IsValidLocation)
+                 *
+                 *   파레트 창고(10) : 뱅크 01~20. 두 줄에 한 대씩 901~910.
+                 *   P-BOX 창고(20) : 뱅크 01~02. 한 대뿐이라 늘 911.
+                 *
+                 * Location 은 창고 안에서만 뜻이 있는 번호다. 뱅크 01 이 어느
+                 * 창고의 01 인지는 WH_TYP 이 가린다. 그래서 창고를 함께 본다.
+                 * 전에는 01~08 만 알아 901/902 로 갈랐고(개발용 자료 그대로),
+                 * 09 이상과 P-BOX 는 모두 "잘못된 Location" 으로 떨어졌다.
+                 */
+                int nBank = 0;
+                int.TryParse(strBANK, out nBank);
+
+                bool bBox = (strWH_TYP != null && strWH_TYP.Trim() == ((int)cDefApp.eWHTYP.KET_WH02).ToString());
+                int nBankMax = bBox ? 2 : 20;
+
+                if (nBank < 1 || nBank > nBankMax)
                 {
-                    strSC_NO = "901";
-                }
-                else if (strBANK == "05" || strBANK == "06" || strBANK == "07" || strBANK == "08")
-                {
-                    strSC_NO = "902";
-                }
-                else
-                {
-                    pRTN_MSG += "잘못된 Location 입니다 - SC 번호를 구할수 없습니다. ";
+                    pRTN_MSG += "잘못된 Location 입니다 - SC 번호를 구할수 없습니다."
+                              + " [창고:" + strWH_TYP + "][BANK:" + strBANK + "]"
+                              + " 뱅크는 01 ~ " + nBankMax.ToString("00") + " 까지다. ";
                     return false;
                 }
+
+                if (bBox)
+                    strSC_NO = "911";
+                else
+                    strSC_NO = "9" + ((nBank - 1) / 2 + 1).ToString("00");
 
                 strSql = "";
                 strSql += CRLF + " SELECT *                            ";
