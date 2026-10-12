@@ -2548,29 +2548,43 @@ namespace TSK_COMM_IOSCH
                 int.TryParse(strBANK, out nBank);
 
                 /*
-                 * 뱅크는 창고를 가로지르는 하나의 번호다.
-                 *   파레트 01~20 -> 901~910   (두 줄에 한 호기)
-                 *   P-BOX   21~22 -> 911
+                 * 뱅크는 창고 안에서만 뜻이 있는 번호다.
+                 *   파레트 창고 01~20  -> 두 줄에 한 호기 : 901~910
+                 *   P-BOX  창고 01~02  -> 호기는 하나 : 911
                  *
-                 * 현장 자료가 그렇게 적혀 있다. 2026-10-12 JOB_MST_HIS 의 P-BOX
-                 * 작업이 21-056-01 / 21-057-01 이다. 기존 ECS 는 창고 안에서만
-                 * 뜻이 있는 번호(P-BOX 도 01/02)를 쓰지만 이 시스템은 하나로 이었다.
-                 * 크레인에 나가는 값은 어느 쪽이든 1/2 다. (ScThread.cs GfSideOfBank)
+                 * 그래서 뱅크만으로는 호기를 못 구한다. 창고를 함께 봐야 한다.
+                 * 뱅크 01 은 파레트면 901, P-BOX 면 911 이다.
+                 *
+                 * 크레인에 나가는 값은 어느 창고든 1/2 다.
+                 *   (ScThread.cs GfSideOfBank, 기존 ECS CSc::GetSide)
+                 *
+                 * ※ 지난 자료에는 P-BOX 를 21/22 로 적어 둔 것이 있다.
+                 *   (2026-10-12 현장 JOB_MST_HIS 의 21-056-01 등)
+                 *   이미 들어가 있는 작업이 걸리지 않게 그것도 받아 준다.
+                 *   새로 만드는 쪽(반자동 화면)은 01~02 만 받는다.
                  */
                 bool bBox = (strWH_TYP != null && strWH_TYP.Trim() == ((int)cDefApp.eWHTYP.KET_WH02).ToString());
-                int nBankMin = bBox ? 21 :  1;
-                int nBankMax = bBox ? 22 : 20;
 
-                if (nBank < nBankMin || nBank > nBankMax)
+                bool bBankOk;
+                if (bBox)
+                    bBankOk = ((nBank >= 1) && (nBank <= 2)) || ((nBank >= 21) && (nBank <= 22));
+                else
+                    bBankOk = (nBank >= 1) && (nBank <= 20);
+
+                if (bBankOk == false)
                 {
                     pRTN_MSG += "잘못된 Location 입니다 - SC 번호를 구할수 없습니다."
                               + " [창고:" + strWH_TYP + "][BANK:" + strBANK + "]"
-                              + " 뱅크는 " + nBankMin.ToString("00") + " ~ " + nBankMax.ToString("00") + " 까지다. ";
+                              + (bBox ? " P-BOX 뱅크는 01~02 다(지난 자료의 21~22 도 받는다). "
+                                      : " 파레트 뱅크는 01~20 이다. ");
                     return false;
                 }
 
-                // 뱅크 두 줄에 한 호기. 21/22 면 (21-1)/2+1 = 11 이라 911 이 나온다.
-                strSC_NO = "9" + ((nBank - 1) / 2 + 1).ToString("00");
+                // P-BOX 는 호기가 하나다. 파레트는 뱅크 두 줄에 한 대씩이다.
+                if (bBox)
+                    strSC_NO = "911";
+                else
+                    strSC_NO = "9" + ((nBank - 1) / 2 + 1).ToString("00");
 
                 strSql = "";
                 strSql += CRLF + " SELECT *                            ";
@@ -5600,11 +5614,16 @@ namespace TSK_COMM_IOSCH
         /*
          * GetScNoByLocation :: 랙 위치에서 담당 호기를 구한다.
          *
-         *   호기 = (뱅크 + 1) / 2      뱅크 1,2 -> 1호기 / 3,4 -> 2호기 / ...
-         *   WCS_TASK_HOST 의 modDefApp.GetStackerNum 과 같은 식이다.
-         *   확인 : 입고 1002 의 랙 07-001-01 -> (7+1)/2 = 4 -> 904 호기
+         *   파레트 창고 : 호기 = (뱅크 + 1) / 2   뱅크 1,2 -> 901 / 3,4 -> 902 / ...
+         *                 WCS_TASK_HOST 의 modDefApp.GetStackerNum 과 같은 식이다.
+         *                 확인 : 랙 07-001-01 -> (7+1)/2 = 4 -> 904 호기
+         *
+         *   P-BOX 창고  : 호기가 하나다. 늘 911 이다.
+         *                 뱅크는 창고 안에서만 뜻이 있는 번호(01/02)라 뱅크만
+         *                 보면 901 이 나와 버린다. 그래서 창고를 함께 받는다.
+         *                 비워서 부르면 예전처럼 뱅크만 본다(파레트 호기들).
          */
-        protected bool GetScNoByLocation(string strLoc, ref string strScNo)
+        protected bool GetScNoByLocation(string strLoc, ref string strScNo, string strWhTyp = null)
         {
             string strBank = "", strBay = "", strLev = "";
             if (ParseLocation(strLoc, ref strBank, ref strBay, ref strLev) == false)
@@ -5613,6 +5632,12 @@ namespace TSK_COMM_IOSCH
             int nBank;
             if (int.TryParse(strBank, out nBank) == false) return false;
             if (nBank < 1) return false;
+
+            if ((strWhTyp != null) && (strWhTyp.Trim() == ((int)cDefApp.eWHTYP.KET_WH02).ToString()))
+            {
+                strScNo = "911";
+                return true;
+            }
 
             strScNo = (900 + ((nBank + 1) / 2)).ToString();
             return true;

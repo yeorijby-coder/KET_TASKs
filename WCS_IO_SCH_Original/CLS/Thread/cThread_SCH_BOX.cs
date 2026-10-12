@@ -619,7 +619,8 @@ namespace TSK_COMM_IOSCH
                     strSC_NO = dtJob.Rows[i]["START_POS"].ToString();
                     if (IsScNo(strSC_NO) == false)
                     {
-                        if (GetScNoByLocation(strSTART_LOC, ref strSC_NO) == false)
+                        // @.P-BOX 는 뱅크만 보면 901 이 나온다. 창고를 함께 넘긴다.
+                        if (GetScNoByLocation(strSTART_LOC, ref strSC_NO, strWH_TYP) == false)
                             continue;
                     }
 
@@ -732,7 +733,7 @@ namespace TSK_COMM_IOSCH
                                 string strSc2 = dtJob.Rows[k]["START_POS"].ToString();
                                 if (IsScNo(strSc2) == false)
                                 {
-                                    if (GetScNoByLocation(strLoc2, ref strSc2) == false) continue;
+                                    if (GetScNoByLocation(strLoc2, ref strSc2, strWH_TYP) == false) continue;
                                 }
                                 if (strSc2 != strSC_NO) continue;
 
