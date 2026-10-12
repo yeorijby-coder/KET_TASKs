@@ -1316,8 +1316,19 @@ namespace WCS_TASK_SC
                         return false;
                     }
 
-                    //OD_RQ_YN = 'N' 업데이트
-                    if (!UpdateSC_OD_RQ_YN(str_LUGG_NO_FK1_OD, "0"))
+                    /*
+                     * OD_RQ_YN = 'N' 업데이트 + 크레인이 지금 들고 있는 작업번호 기록
+                     *
+                     *   ITN_LUGG_FK1/FK2 는 "이 크레인이 지금 어느 작업을 들고 있나" 다.
+                     *   IO_SCH 의 완료 조회(SC_COMP_CHK)가 이 값으로 작업을 찾는다.
+                     *
+                     *   전에는 포크#2 자리에 "0" 을 박아 넣었다. 그래서
+                     *     - 트윈 지시에서 포크#2 작업을 못 찾아 짝이 안 닫혔고
+                     *     - 포크#2 단독 지시는 FK1 이 0 이라 아예 찾지 못해
+                     *       그 작업이 구동중(21)에 영원히 멈췄다.
+                     *   실제로 쓴 값을 그대로 적는다.
+                     */
+                    if (!UpdateSC_OD_RQ_YN(str_LUGG_NO_FK1_OD, str_LUGG_NO_FK2_OD))
                     {
                         return false;
                     }

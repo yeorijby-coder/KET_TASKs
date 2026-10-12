@@ -4975,10 +4975,32 @@ namespace TSK_COMM_IOSCH
                 //   ITN_LUGG_FK2 : 포크#2 가 같이 들고 나간 작업번호. 트윈일 때만 들어 있다.
                 strSql += CRLF + " SELECT JM.LUGG_NO, JM.JOB_TYP, SD.SC_NO, SD.COMPLETE_RD ";
                 strSql += CRLF + "      , COALESCE(NULLIF(BTRIM(SD.ITN_LUGG_FK2, " + SQL_WS + "), ''), '0') AS ITN_LUGG_FK2 ";
+                /*
+                 * JM_PAIR : 지시할 때 우리가 적어 둔 짝 작업번호.
+                 *
+                 *   크레인이 돌려주는 ITN_LUGG_FK2 만 보면 안 된다. 작업이 끝나면
+                 *   SC 태스크가 ITN_LUGG_FK1/FK2 를 모두 '0' 으로 지운다
+                 *   (ScThread.cs 1712~1721). 완료표시를 읽는 시점과 지우는 시점이
+                 *   겹치면 짝 번호가 이미 0 이 되어 있어 짝을 못 닫는다.
+                 *   실제로 포크#1 작업만 닫히고 포크#2 작업이 21 에 영원히
+                 *   멈춰 있었다. (7101 완료 / 7102 21 고정)
+                 *
+                 *   PAIR_LUGG_NO 는 우리가 지시할 때 두 작업에 서로를 가리키게
+                 *   적어 둔 값이라 지워지지 않는다. 이쪽을 먼저 본다.
+                 */
+                strSql += CRLF + "      , COALESCE(NULLIF(BTRIM(JM.PAIR_LUGG_NO, " + SQL_WS + "), ''), '0') AS JM_PAIR ";
                 strSql += CRLF + "   FROM JOB_MST JM                                       ";
                 strSql += CRLF + "  INNER JOIN SC_DATA SD                                  ";
                 strSql += CRLF + "     ON SD.WH_TYP           = JM.WH_TYP                  ";
-                strSql += CRLF + "    AND SD.ITN_LUGG_FK1     = JM.LUGG_NO                 ";   // 이 작업을 들고 있는 크레인
+                /*
+                 * 이 작업을 들고 있는 크레인.
+                 *
+                 *   포크#2 단독 지시(USE_FK 2)면 크레인의 내부 작업번호가 FK2 자리에
+                 *   들어가고 FK1 은 0 이다. FK1 만 보면 그 작업을 못 찾아 구동중(21)에
+                 *   영원히 멈춘다. 두 자리를 다 본다.
+                 */
+                strSql += CRLF + "    AND (   COALESCE(NULLIF(BTRIM(SD.ITN_LUGG_FK1, " + SQL_WS + "), ''), '0') = JM.LUGG_NO ";
+                strSql += CRLF + "         OR COALESCE(NULLIF(BTRIM(SD.ITN_LUGG_FK2, " + SQL_WS + "), ''), '0') = JM.LUGG_NO ) ";
                 strSql += CRLF + "  WHERE JM.WH_TYP           = :WH_TYP                    ";
                 strSql += CRLF + "    AND JM.JOB_STATUS       = '" + ST_SC_RUN + "'        ";
                 strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.COMPLETE_RD, " + SQL_WS + "), ''), '0') NOT IN ('0')     ";   // 작업완료표시
@@ -5006,6 +5028,11 @@ namespace TSK_COMM_IOSCH
                 string strJOB_TYP = _pBdb.mDtMain.Rows[0]["JOB_TYP"].ToString();
                 string strSC_NO   = _pBdb.mDtMain.Rows[0]["SC_NO"].ToString();
                 string strLUGG_FK2 = _pBdb.mDtMain.Rows[0]["ITN_LUGG_FK2"].ToString().Trim();
+                string strJmPair   = _pBdb.mDtMain.Rows[0]["JM_PAIR"].ToString().Trim();
+
+                // 우리가 적어 둔 것을 먼저 쓴다. 없으면 크레인이 돌려준 것을 쓴다.
+                if ((strJmPair != "") && (strJmPair != "0") && (strJmPair != "0000"))
+                    strLUGG_FK2 = strJmPair;
 
                 _pBdb.BeginTrans();
 
@@ -5027,7 +5054,17 @@ namespace TSK_COMM_IOSCH
                  *   머물러, 출고 H/S 에 화물을 올려 둔 채 아무도 집어 가지 않는다.
                  *   (실제로 포크#2 작업이 411 위에 그대로 멈춰 있었다)
                  */
-                bool bTwinDone = (strLUGG_FK2 != "") && (strLUGG_FK2 != "0") && (strLUGG_FK2 != "0000");
+                /*
+                 * 짝이 자기 자신이면 짝이 아니다.
+                 *
+                 *   포크#2 단독 지시(USE_FK 2)면 ITN_LUGG_FK2 에 그 작업 자신이
+                 *   들어 있다. 그걸 짝으로 보고 한 번 더 닫으려 하면, 이미 29 로
+                 *   옮긴 뒤라 UPDATE_JOB_DATA 가 "고칠 줄이 없다"로 실패하고
+                 *   트랜잭션을 통째로 되돌린다. 그래서 그 작업이 21 에 그대로
+                 *   남았다. (8601 이 그랬다)
+                 */
+                bool bTwinDone = (strLUGG_FK2 != "") && (strLUGG_FK2 != "0") && (strLUGG_FK2 != "0000")
+                              && (strLUGG_FK2 != strLUGG_NO);
 
                 if (bTwinDone)
                 {
