@@ -406,7 +406,16 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND  JM.HS_TRACK_NO        = CD.MC_NO            ";
                 strSql += CRLF + "  INNER  JOIN SC_HS_DEF SHD                          ";
                 strSql += CRLF + "     ON  JM.WH_TYP             = SHD.WH_TYP          ";
-                strSql += CRLF + "    AND  JM.HS_TRACK_NO        = SHD.HS_MC_NO        ";
+                /*
+                 * 짝 H/S 도 본다.
+                 *
+                 *   트윈으로 내보내면 포크#1 은 HS_MC_NO(410)에, 포크#2 는
+                 *   PAIR_HS_NO(411)에 내려놓는다. HS_MC_NO 만 보면 411 에 놓인
+                 *   화물을 아무도 집어 가지 않아 그 자리에 그대로 남는다.
+                 *   (cThread_CV.cs 의 같은 조인도 두 자리를 다 본다)
+                 */
+                strSql += CRLF + "    AND ( JM.HS_TRACK_NO       = SHD.HS_MC_NO         ";
+                strSql += CRLF + "       OR JM.HS_TRACK_NO       = SHD.PAIR_HS_NO        )";
                 strSql += CRLF + "    AND  SHD.HS_NO             = '02'                ";   // 3층 P-BOX 출고 HS (레거시 RANK_2)
                 strSql += CRLF + "    AND  SHD.HS_USE_YN         = 'Y'                 ";
                 strSql += CRLF + "  WHERE  CD.WH_TYP             = :WH_TYP             ";
