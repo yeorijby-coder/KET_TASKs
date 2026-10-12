@@ -3783,14 +3783,13 @@ namespace TSK_COMM_IOSCH
                 /*
                  * 어느 H/S 에 올라와 있는지로 포크를 가린다.
                  *
-                 *   포크#1 H/S 것     -> 포크#1 (USE_FK 0)
-                 *   포크#2 H/S 것     -> 포크#2 (USE_FK 2)
-                 *   양쪽에 다 있으면  -> 둘을 함께 (USE_FK 1)
+                 *   포크#1 H/S(420) 것만        -> 포크#1 단독 (USE_FK 0)
+                 *   양쪽(420,419)에 다 있으면   -> 트윈       (USE_FK 1)
                  *
-                 *   전에는 어느 쪽에 올라왔든 늘 포크#1 로 지시했다. 그래서 화물이
-                 *   포크#2 쪽(P-BOX 419)에 올라와 있으면 크레인이 포크#1 쪽(420)으로
-                 *   가 버렸다. 작업대에 올려 둔 자리와 크레인이 집으러 간 자리가
-                 *   달랐던 것이 이것이다.
+                 * 포크#2 단독은 없다. 419 는 420 이 찬 뒤에 쓰이는 뒷자리이므로,
+                 * 419 에만 화물이 있는 것은 정상 상태가 아니다. 그때는 지시하지
+                 * 않고 사유를 남긴다. 포크#1 로 지시해 버리면 크레인이 420 으로
+                 * 가서 빈 자리를 집으려 한다.
                  */
                 int nRowFk1 = -1, nRowFk2 = -1;
 
@@ -3818,10 +3817,20 @@ namespace TSK_COMM_IOSCH
                 if ((nRowFk1 < 0) && (nRowFk2 < 0))
                     nRowFk1 = 0;
 
-                bool bFk2Only = (nRowFk1 < 0);
+                /*
+                 * 포크#2 쪽에만 있으면 지시하지 않는다.
+                 *   사유는 한 번만 적는다. 다음 주기에 420 이 차면 트윈으로 나간다.
+                 */
+                if (nRowFk1 < 0)
+                {
+                    pRTN_MSG = strTitle + "포크#2 쪽 입고 H/S(TRACK " + strStoHsFk2 + ")에만 화물이 있습니다."
+                             + " 포크#2 단독 작업은 없으므로 포크#1 쪽(TRACK " + strStoHsFk1 + ")이 찰 때까지 기다립니다.";
+                    return true;
+                }
+
                 bool bStoTwin = (nRowFk1 >= 0) && (nRowFk2 >= 0);
 
-                int nRowMain = (nRowFk1 >= 0) ? nRowFk1 : nRowFk2;
+                int nRowMain = nRowFk1;
 
                 string strLUGG_NO  = dtSto.Rows[nRowMain]["LUGG_NO"].ToString();
                 string strSC_NO    = dtSto.Rows[nRowMain]["DEST_POS"].ToString();
@@ -3868,7 +3877,7 @@ namespace TSK_COMM_IOSCH
 
                 if (UpdateScData(strSC_NO, JT_STO, strLUGG_NO, "", strDEST_LOC,
                                  strStoHsPos, strRetHsPos, ref pRTN_MSG,
-                                 strLUGG_NO2, "", strDEST_LOC2, bFk2Only) == false)
+                                 strLUGG_NO2, "", strDEST_LOC2) == false)
                 {
                     _pBdb.Rollback();
                     pRTN_MSG = "";
@@ -3902,8 +3911,7 @@ namespace TSK_COMM_IOSCH
                 else
                 {
                     pRTN_MSG = strTitle + "TRACK " + strMC_NO + "번[입고 H/S]에서 SC_TASK를 통해서 "
-                             + strSC_NO + "호기에 입고 지시하였습니다. [작업번호:" + strLUGG_NO + "][도착LOC:" + strDEST_LOC + "]"
-                             + (bFk2Only ? "[포크#2]" : "[포크#1]");
+                             + strSC_NO + "호기에 입고 지시하였습니다. [작업번호:" + strLUGG_NO + "][도착LOC:" + strDEST_LOC + "][포크#1]";
                 }
                 _pBdb.Commit();
                 InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_SC_RUN, strMC_NO, strSC_NO);
@@ -3951,17 +3959,6 @@ namespace TSK_COMM_IOSCH
             ,       string strLuggNo2   = "0"
             ,       string strStartLoc2 = ""
             ,       string strDestLoc2  = ""
-            /*
-             * 짝 없이 혼자 가는 작업이 포크#2 쪽 H/S 에 올라와 있는가.
-             *
-             *   트윈 포크 크레인은 랭크마다 H/S 가 둘이다. 포크#1 것과 포크#2 것이
-             *   따로 있다. 전문에는 랭크(1/2)만 실리고 어느 쪽 H/S 인지는 USE_FK 가
-             *   가린다. 그래서 화물이 포크#2 쪽에 올라와 있는데 USE_FK 를 0 으로
-             *   주면 크레인이 포크#1 쪽 H/S 로 가 버린다.
-             *     (기존 ECS : CLib::GetScHSTrackPerRank 가 같은 랭크에
-             *      Single 4020 / Twin 4019 두 트랙을 준다)
-             */
-            ,       bool   bOnFork2    = false
             )
         {
             try
@@ -3990,7 +3987,10 @@ namespace TSK_COMM_IOSCH
                  * 쓸 포크를 정한다. USE_FK_OD(D181) 의 뜻은 SC 태스크 주석과 같다.
                  *     0 = 포크#1 만 / 1 = 포크#1,#2 동시 / 2 = 포크#2 만
                  *
-                 *   짝이 있으면 1, 혼자인데 포크#2 쪽 H/S 면 2, 그 밖은 0 이다.
+                 * 포크#2 단독은 없다. 짝이 있으면 1, 없으면 0 이다.
+                 *   입고 : 포크#1 단독, 또는 포크#1,#2 트윈
+                 *   출고 : 단독도 트윈도 포크#1 에서 실행한다
+                 * 그래서 2 는 쓰지 않는다.
                  */
                 string strUseFk = "0";
 
@@ -4006,14 +4006,7 @@ namespace TSK_COMM_IOSCH
                     bTwin = true;
                     strUseFk = "1";
                 }
-                else if (bOnFork2)
-                {
-                    // 혼자 가는데 포크#2 쪽 H/S 다. 자리를 FK2 칸에 적는다.
-                    strUseFk = "2";
-                }
 
-                // 포크#2 만 쓰는가. FK1 칸을 비워야 하므로 미리 정해 둔다.
-                bool bFk2Only = (strUseFk == "2");
 
                 string strSql = "";
                 strSql += CRLF + " UPDATE SC_DATA                                        ";
@@ -4060,28 +4053,25 @@ namespace TSK_COMM_IOSCH
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
                 _pBdb.mComMain.Parameters.Add("JOB_TYP_OD",     DbLang.VARCHAR).Value = bStore ? SC_CMD_STORE : SC_CMD_RETRIEVE;
-                // 포크#2 만 쓸 때는 FK1 칸을 비운다.
-                _pBdb.mComMain.Parameters.Add("LUGG_NO_FK1_OD", DbLang.VARCHAR).Value = bFk2Only ? "0" : strLuggNo;
-                _pBdb.mComMain.Parameters.Add("START_BANK",     DbLang.VARCHAR).Value = bFk2Only ? "0" : (bStore ? "0" : strBank);
-                _pBdb.mComMain.Parameters.Add("START_BAY",      DbLang.VARCHAR).Value = bFk2Only ? "0" : (bStore ? "0" : strBay);
-                _pBdb.mComMain.Parameters.Add("START_LEVEL",    DbLang.VARCHAR).Value = bFk2Only ? "0" : (bStore ? "0" : strLev);
-                _pBdb.mComMain.Parameters.Add("START_HSPOS",    DbLang.VARCHAR).Value = bFk2Only ? "0" : (bStore ? strStoHsPos : "0");
-                _pBdb.mComMain.Parameters.Add("DEST_BANK",      DbLang.VARCHAR).Value = bFk2Only ? "0" : (bStore ? strBank : "0");
-                _pBdb.mComMain.Parameters.Add("DEST_BAY",       DbLang.VARCHAR).Value = bFk2Only ? "0" : (bStore ? strBay  : "0");
-                _pBdb.mComMain.Parameters.Add("DEST_LEVEL",     DbLang.VARCHAR).Value = bFk2Only ? "0" : (bStore ? strLev  : "0");
-                _pBdb.mComMain.Parameters.Add("DEST_HSPOS",     DbLang.VARCHAR).Value = bFk2Only ? "0" : (bStore ? "0" : strRetHsPos);
+                _pBdb.mComMain.Parameters.Add("LUGG_NO_FK1_OD", DbLang.VARCHAR).Value = strLuggNo;
+                _pBdb.mComMain.Parameters.Add("START_BANK",     DbLang.VARCHAR).Value = bStore ? "0" : strBank;
+                _pBdb.mComMain.Parameters.Add("START_BAY",      DbLang.VARCHAR).Value = bStore ? "0" : strBay;
+                _pBdb.mComMain.Parameters.Add("START_LEVEL",    DbLang.VARCHAR).Value = bStore ? "0" : strLev;
+                _pBdb.mComMain.Parameters.Add("START_HSPOS",    DbLang.VARCHAR).Value = bStore ? strStoHsPos : "0";
+                _pBdb.mComMain.Parameters.Add("DEST_BANK",      DbLang.VARCHAR).Value = bStore ? strBank : "0";
+                _pBdb.mComMain.Parameters.Add("DEST_BAY",       DbLang.VARCHAR).Value = bStore ? strBay  : "0";
+                _pBdb.mComMain.Parameters.Add("DEST_LEVEL",     DbLang.VARCHAR).Value = bStore ? strLev  : "0";
+                _pBdb.mComMain.Parameters.Add("DEST_HSPOS",     DbLang.VARCHAR).Value = bStore ? "0" : strRetHsPos;
                 /*
                  * FK2 칸에 넣을 값.
                  *   USE_FK 1 : 짝의 자리를 넣는다.
-                 *   USE_FK 2 : 혼자 가는 그 작업을 FK2 칸에 넣는다. FK1 칸은 위에서
-                 *              이미 적었으나 쓰지 않으므로 아래에서 0 으로 덮는다.
                  *   USE_FK 0 : 0 으로 지운다.
                  */
-                string strFk2Lugg  = bTwin ? strLuggNo2 : (bFk2Only ? strLuggNo : "0");
-                string strFk2Bank  = bTwin ? strBank2   : (bFk2Only ? strBank   : "0");
-                string strFk2Bay   = bTwin ? strBay2    : (bFk2Only ? strBay    : "0");
-                string strFk2Lev   = bTwin ? strLev2    : (bFk2Only ? strLev    : "0");
-                bool   bFk2Used    = (bTwin || bFk2Only);
+                string strFk2Lugg  = bTwin ? strLuggNo2 : "0";
+                string strFk2Bank  = bTwin ? strBank2   : "0";
+                string strFk2Bay   = bTwin ? strBay2    : "0";
+                string strFk2Lev   = bTwin ? strLev2    : "0";
+                bool   bFk2Used    = bTwin;
 
                 _pBdb.mComMain.Parameters.Add("LUGG_NO_FK2_OD", DbLang.VARCHAR).Value = strFk2Lugg;
                 _pBdb.mComMain.Parameters.Add("START_BANK2",    DbLang.VARCHAR).Value = (bFk2Used && !bStore) ? strFk2Bank : "0";
