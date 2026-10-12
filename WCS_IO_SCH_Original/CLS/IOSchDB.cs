@@ -2558,25 +2558,21 @@ namespace TSK_COMM_IOSCH
                  * 크레인에 나가는 값은 어느 창고든 1/2 다.
                  *   (ScThread.cs GfSideOfBank, 기존 ECS CSc::GetSide)
                  *
-                 * ※ 지난 자료에는 P-BOX 를 21/22 로 적어 둔 것이 있다.
-                 *   (2026-10-12 현장 JOB_MST_HIS 의 21-056-01 등)
-                 *   이미 들어가 있는 작업이 걸리지 않게 그것도 받아 준다.
-                 *   새로 만드는 쪽(반자동 화면)은 01~02 만 받는다.
+                 * ※ 현장 자료에 P-BOX 를 21/22 로 적어 둔 작업이 있다.
+                 *   (2026-10-12 JOB_MST_HIS 의 21-056-01 등)
+                 *   그것은 시운전 중 급히 만든 것이고 올바른 값이 아니다.
+                 *   받아 주지 않는다. 틀린 자료는 걸러서 드러나는 쪽이 맞다.
                  */
                 bool bBox = (strWH_TYP != null && strWH_TYP.Trim() == ((int)cDefApp.eWHTYP.KET_WH02).ToString());
 
-                bool bBankOk;
-                if (bBox)
-                    bBankOk = ((nBank >= 1) && (nBank <= 2)) || ((nBank >= 21) && (nBank <= 22));
-                else
-                    bBankOk = (nBank >= 1) && (nBank <= 20);
+                int nBankMax = bBox ? 2 : 20;
+                bool bBankOk = (nBank >= 1) && (nBank <= nBankMax);
 
                 if (bBankOk == false)
                 {
                     pRTN_MSG += "잘못된 Location 입니다 - SC 번호를 구할수 없습니다."
                               + " [창고:" + strWH_TYP + "][BANK:" + strBANK + "]"
-                              + (bBox ? " P-BOX 뱅크는 01~02 다(지난 자료의 21~22 도 받는다). "
-                                      : " 파레트 뱅크는 01~20 이다. ");
+                              + " 뱅크는 01 ~ " + nBankMax.ToString("00") + " 까지다. ";
                     return false;
                 }
 
