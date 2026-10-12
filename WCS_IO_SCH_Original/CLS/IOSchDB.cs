@@ -1607,6 +1607,7 @@ namespace TSK_COMM_IOSCH
             + cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.UCSTATUS_RD, " + SQL_WS + "), ''), '0')    IN ('" + SC_STA_IDLE + "','" + SC_STA_WAIT + "')"
             + cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.ERR_CODE_RD, " + SQL_WS + "), ''), '0')    IN ('0','0000')  "
             + cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.ITN_LUGG_FK1, " + SQL_WS + "), ''), '0')   IN ('0','0000')  ";
+//            + cDefApp.CRLF + "    AND COALESCE(NULLIF(BTRIM(SD.LUGG_NO_FK1_RD, " + SQL_WS + "), ''), '0') IN ('0','0000')  ";
         /*
          * 크레인이 읽어 준 작업번호(LUGG_NO_FK1_RD)는 보지 않는다.
          *
@@ -2546,21 +2547,30 @@ namespace TSK_COMM_IOSCH
                 int nBank = 0;
                 int.TryParse(strBANK, out nBank);
 
+                /*
+                 * 뱅크는 창고를 가로지르는 하나의 번호다.
+                 *   파레트 01~20 -> 901~910   (두 줄에 한 호기)
+                 *   P-BOX   21~22 -> 911
+                 *
+                 * 현장 자료가 그렇게 적혀 있다. 2026-10-12 JOB_MST_HIS 의 P-BOX
+                 * 작업이 21-056-01 / 21-057-01 이다. 기존 ECS 는 창고 안에서만
+                 * 뜻이 있는 번호(P-BOX 도 01/02)를 쓰지만 이 시스템은 하나로 이었다.
+                 * 크레인에 나가는 값은 어느 쪽이든 1/2 다. (ScThread.cs GfSideOfBank)
+                 */
                 bool bBox = (strWH_TYP != null && strWH_TYP.Trim() == ((int)cDefApp.eWHTYP.KET_WH02).ToString());
-                int nBankMax = bBox ? 2 : 20;
+                int nBankMin = bBox ? 21 :  1;
+                int nBankMax = bBox ? 22 : 20;
 
-                if (nBank < 1 || nBank > nBankMax)
+                if (nBank < nBankMin || nBank > nBankMax)
                 {
                     pRTN_MSG += "잘못된 Location 입니다 - SC 번호를 구할수 없습니다."
                               + " [창고:" + strWH_TYP + "][BANK:" + strBANK + "]"
-                              + " 뱅크는 01 ~ " + nBankMax.ToString("00") + " 까지다. ";
+                              + " 뱅크는 " + nBankMin.ToString("00") + " ~ " + nBankMax.ToString("00") + " 까지다. ";
                     return false;
                 }
 
-                if (bBox)
-                    strSC_NO = "911";
-                else
-                    strSC_NO = "9" + ((nBank - 1) / 2 + 1).ToString("00");
+                // 뱅크 두 줄에 한 호기. 21/22 면 (21-1)/2+1 = 11 이라 911 이 나온다.
+                strSC_NO = "9" + ((nBank - 1) / 2 + 1).ToString("00");
 
                 strSql = "";
                 strSql += CRLF + " SELECT *                            ";
@@ -3696,7 +3706,20 @@ namespace TSK_COMM_IOSCH
         //   그것만 인자로 받는다. 전에는 1F / 3F / BOX 클래스에 거의 같은 본체가
         //   세 벌 있어, 한 쪽만 고치면 조용히 어긋났다.
         // ─────────────────────────────────────────────────────────────────
-        protected bool ScStoreRoutine(string strWH_TYP, string strCV_PLC, string strStoHsPos, string strRetHsPos, string strTitle, ref string pRTN_MSG)
+        /*
+         * strStoHsFk1 / strStoHsFk2 : 이 랭크의 입고 H/S 트랙 둘.
+         *
+         *   트윈 포크 크레인은 같은 랭크에 H/S 가 둘이다. 포크#1 것과 포크#2 것이
+         *   따로 있다. 전문에는 랭크만 실리고 어느 쪽인지는 USE_FK 가 가린다.
+         *   그래서 화물이 어느 쪽에 올라왔는지를 보고 포크를 정해야 한다.
+         *     (기존 ECS : CLib::GetScHSTrackPerRank - 같은 랭크에 Single/Twin 두 트랙)
+         *     P-BOX 는 입고 420(포크#1) / 419(포크#2) 다.
+         *
+         *   비워 두면 예전처럼 포크#1 하나로만 간다. 싱글 포크 호기(1층/3층 PLT)는
+         *   비워서 부른다.
+         */
+        protected bool ScStoreRoutine(string strWH_TYP, string strCV_PLC, string strStoHsPos, string strRetHsPos, string strTitle, ref string pRTN_MSG,
+                                      string strStoHsFk1 = "", string strStoHsFk2 = "")
         {
             try
             {
@@ -3725,7 +3748,8 @@ namespace TSK_COMM_IOSCH
                 strSql += SQL_HS_NOT_PAUSED;            // 입고 H/S 가 멈춰 있지 않은가
                 strSql += SQL_SC_READY;                 // 크레인이 지시를 받을 수 있는 상태인가
                 strSql += SQL_SC_STO_NOT_SUSPEND;       // 입고 정지가 아닌가
-                strSql += CRLF + "  LIMIT 1                                                 ";
+                // @.트윈이면 두 H/S 를 다 봐야 하므로 한 줄로 끊지 않는다.
+                strSql += CRLF + "  ORDER BY CD.MC_NO                                       ";
 
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
@@ -3744,29 +3768,133 @@ namespace TSK_COMM_IOSCH
                     return true;
                 }
 
-                string strLUGG_NO  = _pBdb.mDtMain.Rows[0]["LUGG_NO"].ToString();
-                string strSC_NO    = _pBdb.mDtMain.Rows[0]["DEST_POS"].ToString();
-                string strDEST_LOC = _pBdb.mDtMain.Rows[0]["DEST_LOCATION"].ToString();
-                string strMC_NO    = _pBdb.mDtMain.Rows[0]["MC_NO"].ToString();
+                DataTable dtSto = _pBdb.mDtMain.Copy();
+
+                /*
+                 * 어느 H/S 에 올라와 있는지로 포크를 가린다.
+                 *
+                 *   포크#1 H/S 것     -> 포크#1 (USE_FK 0)
+                 *   포크#2 H/S 것     -> 포크#2 (USE_FK 2)
+                 *   양쪽에 다 있으면  -> 둘을 함께 (USE_FK 1)
+                 *
+                 *   전에는 어느 쪽에 올라왔든 늘 포크#1 로 지시했다. 그래서 화물이
+                 *   포크#2 쪽(P-BOX 419)에 올라와 있으면 크레인이 포크#1 쪽(420)으로
+                 *   가 버렸다. 작업대에 올려 둔 자리와 크레인이 집으러 간 자리가
+                 *   달랐던 것이 이것이다.
+                 */
+                int nRowFk1 = -1, nRowFk2 = -1;
+
+                bool bTwinHs = (strStoHsFk1 != "") && (strStoHsFk2 != "");
+
+                for (int i = 0; i < dtSto.Rows.Count; i++)
+                {
+                    string strMc = dtSto.Rows[i]["MC_NO"].ToString().Trim();
+
+                    if (bTwinHs && (strMc == strStoHsFk2))
+                    {
+                        if (nRowFk2 < 0) nRowFk2 = i;
+                    }
+                    else if (bTwinHs && (strMc == strStoHsFk1))
+                    {
+                        if (nRowFk1 < 0) nRowFk1 = i;
+                    }
+                    else if (!bTwinHs)
+                    {
+                        if (nRowFk1 < 0) nRowFk1 = i;      // 싱글 포크 호기 - 예전 그대로
+                    }
+                }
+
+                // 아무 쪽도 못 가렸으면 맨 앞을 포크#1 로 본다.
+                if ((nRowFk1 < 0) && (nRowFk2 < 0))
+                    nRowFk1 = 0;
+
+                bool bFk2Only = (nRowFk1 < 0);
+                bool bStoTwin = (nRowFk1 >= 0) && (nRowFk2 >= 0);
+
+                int nRowMain = (nRowFk1 >= 0) ? nRowFk1 : nRowFk2;
+
+                string strLUGG_NO  = dtSto.Rows[nRowMain]["LUGG_NO"].ToString();
+                string strSC_NO    = dtSto.Rows[nRowMain]["DEST_POS"].ToString();
+                string strDEST_LOC = dtSto.Rows[nRowMain]["DEST_LOCATION"].ToString();
+                string strMC_NO    = dtSto.Rows[nRowMain]["MC_NO"].ToString();
+
+                string strLUGG_NO2 = "0";
+                string strDEST_LOC2 = "";
+                string strMC_NO2 = "";
+
+                if (bStoTwin)
+                {
+                    // 두 작업이 같은 호기여야 한 번에 간다.
+                    if (dtSto.Rows[nRowFk2]["DEST_POS"].ToString() == strSC_NO)
+                    {
+                        strLUGG_NO2  = dtSto.Rows[nRowFk2]["LUGG_NO"].ToString();
+                        strDEST_LOC2 = dtSto.Rows[nRowFk2]["DEST_LOCATION"].ToString();
+                        strMC_NO2    = dtSto.Rows[nRowFk2]["MC_NO"].ToString();
+
+                        // 같은 칸이면 짝이 될 수 없다.
+                        if (strDEST_LOC2 == strDEST_LOC)
+                        {
+                            strLUGG_NO2 = "0"; strDEST_LOC2 = ""; strMC_NO2 = "";
+                            bStoTwin = false;
+                        }
+                    }
+                    else
+                    {
+                        bStoTwin = false;
+                    }
+                }
+
+//                string strBANK = "";
+//                int iBANK = 0;
+//
+//                strBANK = strDEST_LOC.Substring(0, 2);
+//
+//                int.TryParse(strBANK, out iBANK);
+//                iBANK = iBANK % 2;
+//
+//                strDEST_LOC = iBANK.ToString("00") + strDEST_LOC.Substring(3);
 
                 _pBdb.BeginTrans();
 
                 if (UpdateScData(strSC_NO, JT_STO, strLUGG_NO, "", strDEST_LOC,
-                                 strStoHsPos, strRetHsPos, ref pRTN_MSG) == false)
+                                 strStoHsPos, strRetHsPos, ref pRTN_MSG,
+                                 strLUGG_NO2, "", strDEST_LOC2, bFk2Only) == false)
                 {
                     _pBdb.Rollback();
                     pRTN_MSG = "";
                     return true;    // 크레인 미준비 - 다음 사이클 재시도
                 }
 
-                if (UPDATE_JOB_DATA(ST_SC_RUN, strLUGG_NO, strWH_TYP, JT_STO, ref pRTN_MSG) == false)
+                if (UPDATE_JOB_DATA(ST_SC_RUN, strLUGG_NO, strWH_TYP, JT_STO, ref pRTN_MSG,
+                                    "0", "0", "0", "0", "0", strLUGG_NO2) == false)
                 {
                     _pBdb.Rollback();
                     return false;
                 }
 
-                pRTN_MSG = strTitle + "TRACK " + strMC_NO + "번[입고 H/S]에서 SC_TASK를 통해서 "
-                         + strSC_NO + "호기에 입고 지시하였습니다. [작업번호:" + strLUGG_NO + "][도착LOC:" + strDEST_LOC + "]";
+                // 짝도 같이 돌린다. 한쪽만 돌리면 다음 주기에 또 지시된다.
+                if (strLUGG_NO2 != "0")
+                {
+                    if (UPDATE_JOB_DATA(ST_SC_RUN, strLUGG_NO2, strWH_TYP, JT_STO, ref pRTN_MSG,
+                                        "0", "0", "0", "0", "0", strLUGG_NO) == false)
+                    {
+                        _pBdb.Rollback();
+                        return false;
+                    }
+                }
+
+                if (strLUGG_NO2 != "0")
+                {
+                    pRTN_MSG = strTitle + strSC_NO + "호기에 입고를 트윈(포크#1,#2)으로 지시하였습니다."
+                             + " [포크#1 TRACK " + strMC_NO  + " 작업번호:" + strLUGG_NO  + " 도착LOC:" + strDEST_LOC  + "]"
+                             + " [포크#2 TRACK " + strMC_NO2 + " 작업번호:" + strLUGG_NO2 + " 도착LOC:" + strDEST_LOC2 + "]";
+                }
+                else
+                {
+                    pRTN_MSG = strTitle + "TRACK " + strMC_NO + "번[입고 H/S]에서 SC_TASK를 통해서 "
+                             + strSC_NO + "호기에 입고 지시하였습니다. [작업번호:" + strLUGG_NO + "][도착LOC:" + strDEST_LOC + "]"
+                             + (bFk2Only ? "[포크#2]" : "[포크#1]");
+                }
                 _pBdb.Commit();
                 InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_SC_RUN, strMC_NO, strSC_NO);
                 return true;
@@ -3813,6 +3941,17 @@ namespace TSK_COMM_IOSCH
             ,       string strLuggNo2   = "0"
             ,       string strStartLoc2 = ""
             ,       string strDestLoc2  = ""
+            /*
+             * 짝 없이 혼자 가는 작업이 포크#2 쪽 H/S 에 올라와 있는가.
+             *
+             *   트윈 포크 크레인은 랭크마다 H/S 가 둘이다. 포크#1 것과 포크#2 것이
+             *   따로 있다. 전문에는 랭크(1/2)만 실리고 어느 쪽 H/S 인지는 USE_FK 가
+             *   가린다. 그래서 화물이 포크#2 쪽에 올라와 있는데 USE_FK 를 0 으로
+             *   주면 크레인이 포크#1 쪽 H/S 로 가 버린다.
+             *     (기존 ECS : CLib::GetScHSTrackPerRank 가 같은 랭크에
+             *      Single 4020 / Twin 4019 두 트랙을 준다)
+             */
+            ,       bool   bOnFork2    = false
             )
         {
             try
@@ -3837,6 +3976,14 @@ namespace TSK_COMM_IOSCH
                 bool bTwin = false;
                 string strBank2 = "0", strBay2 = "0", strLev2 = "0";
 
+                /*
+                 * 쓸 포크를 정한다. USE_FK_OD(D181) 의 뜻은 SC 태스크 주석과 같다.
+                 *     0 = 포크#1 만 / 1 = 포크#1,#2 동시 / 2 = 포크#2 만
+                 *
+                 *   짝이 있으면 1, 혼자인데 포크#2 쪽 H/S 면 2, 그 밖은 0 이다.
+                 */
+                string strUseFk = "0";
+
                 if (!string.IsNullOrEmpty(strLuggNo2) && strLuggNo2.Trim() != "0" && strLuggNo2.Trim() != "")
                 {
                     string strLoc2 = bStore ? strDestLoc2 : strStartLoc2;
@@ -3847,7 +3994,16 @@ namespace TSK_COMM_IOSCH
                     }
 
                     bTwin = true;
+                    strUseFk = "1";
                 }
+                else if (bOnFork2)
+                {
+                    // 혼자 가는데 포크#2 쪽 H/S 다. 자리를 FK2 칸에 적는다.
+                    strUseFk = "2";
+                }
+
+                // 포크#2 만 쓰는가. FK1 칸을 비워야 하므로 미리 정해 둔다.
+                bool bFk2Only = (strUseFk == "2");
 
                 string strSql = "";
                 strSql += CRLF + " UPDATE SC_DATA                                        ";
@@ -3862,18 +4018,17 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "      , DEST_LEVEL_FK1_OD   = :DEST_LEVEL              ";
                 strSql += CRLF + "      , DEST_HSPOS_FK1_OD   = :DEST_HSPOS              ";
 
-                if (bTwin)
-                {
-                    strSql += CRLF + "      , LUGG_NO_FK2_OD      = :LUGG_NO_FK2_OD      ";
-                    strSql += CRLF + "      , START_BANK_FK2_OD   = :START_BANK2         ";
-                    strSql += CRLF + "      , START_BAY_FK2_OD    = :START_BAY2          ";
-                    strSql += CRLF + "      , START_LEVEL_FK2_OD  = :START_LEVEL2        ";
-                    strSql += CRLF + "      , START_HSPOS_FK2_OD  = :START_HSPOS2        ";
-                    strSql += CRLF + "      , DEST_BANK_FK2_OD    = :DEST_BANK2          ";
-                    strSql += CRLF + "      , DEST_BAY_FK2_OD     = :DEST_BAY2           ";
-                    strSql += CRLF + "      , DEST_LEVEL_FK2_OD   = :DEST_LEVEL2         ";
-                    strSql += CRLF + "      , DEST_HSPOS_FK2_OD   = :DEST_HSPOS2         ";
-                }
+                // FK2 칸은 늘 적는다. 쓰지 않을 때 0 으로 지워 두지 않으면 지난
+                // 트윈 지시의 값이 남아 크레인이 엉뚱한 곳을 집는다.
+                strSql += CRLF + "      , LUGG_NO_FK2_OD      = :LUGG_NO_FK2_OD      ";
+                strSql += CRLF + "      , START_BANK_FK2_OD   = :START_BANK2         ";
+                strSql += CRLF + "      , START_BAY_FK2_OD    = :START_BAY2          ";
+                strSql += CRLF + "      , START_LEVEL_FK2_OD  = :START_LEVEL2        ";
+                strSql += CRLF + "      , START_HSPOS_FK2_OD  = :START_HSPOS2        ";
+                strSql += CRLF + "      , DEST_BANK_FK2_OD    = :DEST_BANK2          ";
+                strSql += CRLF + "      , DEST_BAY_FK2_OD     = :DEST_BAY2           ";
+                strSql += CRLF + "      , DEST_LEVEL_FK2_OD   = :DEST_LEVEL2         ";
+                strSql += CRLF + "      , DEST_HSPOS_FK2_OD   = :DEST_HSPOS2         ";
                 //   사용 포크 : 0 = 포크1 / 1 = 포크1,2(양쪽) / 2 = 포크2
                 //   이 현장 크레인은 전부 SINGLE 로 둔다(BOX 는 레거시상 Twin 이나 포크1만 쓴다).
                 //   1 을 주면 크레인이 양포크 작업으로 돌아 한 건을 끝내도
@@ -3882,7 +4037,7 @@ namespace TSK_COMM_IOSCH
                 //   짝이 없을 때 1 을 주면 크레인이 양포크 작업으로 돌아 한 건을 끝내도
                 //   적재 표시가 다 안 내려가고 다음 작업이 집기부터 시작하지 못한다.
                 //   그래서 FK2 를 실제로 적을 때만 1 로 준다.
-                strSql += CRLF + "      , USE_FK_OD           = '" + (bTwin ? "1" : "0") + "'  ";
+                strSql += CRLF + "      , USE_FK_OD           = '" + strUseFk + "'          ";
                 strSql += CRLF + "      , WRITE_FLAG_OD       = '1'                      ";   // 명령 기록 완료 (레거시 D191=1)
                 strSql += CRLF + "      , OD_RQ_YN            = 'Y'                      ";
                 strSql += CRLF + "      , OD_USER_ID          = '" + OD_USER + "'        ";
@@ -3895,27 +4050,38 @@ namespace TSK_COMM_IOSCH
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
                 _pBdb.mComMain.Parameters.Add("JOB_TYP_OD",     DbLang.VARCHAR).Value = bStore ? SC_CMD_STORE : SC_CMD_RETRIEVE;
-                _pBdb.mComMain.Parameters.Add("LUGG_NO_FK1_OD", DbLang.VARCHAR).Value = strLuggNo;
-                _pBdb.mComMain.Parameters.Add("START_BANK",     DbLang.VARCHAR).Value = bStore ? "0" : strBank;
-                _pBdb.mComMain.Parameters.Add("START_BAY",      DbLang.VARCHAR).Value = bStore ? "0" : strBay;
-                _pBdb.mComMain.Parameters.Add("START_LEVEL",    DbLang.VARCHAR).Value = bStore ? "0" : strLev;
-                _pBdb.mComMain.Parameters.Add("START_HSPOS",    DbLang.VARCHAR).Value = bStore ? strStoHsPos : "0";
-                _pBdb.mComMain.Parameters.Add("DEST_BANK",      DbLang.VARCHAR).Value = bStore ? strBank : "0";
-                _pBdb.mComMain.Parameters.Add("DEST_BAY",       DbLang.VARCHAR).Value = bStore ? strBay  : "0";
-                _pBdb.mComMain.Parameters.Add("DEST_LEVEL",     DbLang.VARCHAR).Value = bStore ? strLev  : "0";
-                _pBdb.mComMain.Parameters.Add("DEST_HSPOS",     DbLang.VARCHAR).Value = bStore ? "0" : strRetHsPos;
-                if (bTwin)
-                {
-                    _pBdb.mComMain.Parameters.Add("LUGG_NO_FK2_OD", DbLang.VARCHAR).Value = strLuggNo2;
-                    _pBdb.mComMain.Parameters.Add("START_BANK2",    DbLang.VARCHAR).Value = bStore ? "0" : strBank2;
-                    _pBdb.mComMain.Parameters.Add("START_BAY2",     DbLang.VARCHAR).Value = bStore ? "0" : strBay2;
-                    _pBdb.mComMain.Parameters.Add("START_LEVEL2",   DbLang.VARCHAR).Value = bStore ? "0" : strLev2;
-                    _pBdb.mComMain.Parameters.Add("START_HSPOS2",   DbLang.VARCHAR).Value = bStore ? strStoHsPos : "0";
-                    _pBdb.mComMain.Parameters.Add("DEST_BANK2",     DbLang.VARCHAR).Value = bStore ? strBank2 : "0";
-                    _pBdb.mComMain.Parameters.Add("DEST_BAY2",      DbLang.VARCHAR).Value = bStore ? strBay2  : "0";
-                    _pBdb.mComMain.Parameters.Add("DEST_LEVEL2",    DbLang.VARCHAR).Value = bStore ? strLev2  : "0";
-                    _pBdb.mComMain.Parameters.Add("DEST_HSPOS2",    DbLang.VARCHAR).Value = bStore ? "0" : strRetHsPos;
-                }
+                // 포크#2 만 쓸 때는 FK1 칸을 비운다.
+                _pBdb.mComMain.Parameters.Add("LUGG_NO_FK1_OD", DbLang.VARCHAR).Value = bFk2Only ? "0" : strLuggNo;
+                _pBdb.mComMain.Parameters.Add("START_BANK",     DbLang.VARCHAR).Value = bFk2Only ? "0" : (bStore ? "0" : strBank);
+                _pBdb.mComMain.Parameters.Add("START_BAY",      DbLang.VARCHAR).Value = bFk2Only ? "0" : (bStore ? "0" : strBay);
+                _pBdb.mComMain.Parameters.Add("START_LEVEL",    DbLang.VARCHAR).Value = bFk2Only ? "0" : (bStore ? "0" : strLev);
+                _pBdb.mComMain.Parameters.Add("START_HSPOS",    DbLang.VARCHAR).Value = bFk2Only ? "0" : (bStore ? strStoHsPos : "0");
+                _pBdb.mComMain.Parameters.Add("DEST_BANK",      DbLang.VARCHAR).Value = bFk2Only ? "0" : (bStore ? strBank : "0");
+                _pBdb.mComMain.Parameters.Add("DEST_BAY",       DbLang.VARCHAR).Value = bFk2Only ? "0" : (bStore ? strBay  : "0");
+                _pBdb.mComMain.Parameters.Add("DEST_LEVEL",     DbLang.VARCHAR).Value = bFk2Only ? "0" : (bStore ? strLev  : "0");
+                _pBdb.mComMain.Parameters.Add("DEST_HSPOS",     DbLang.VARCHAR).Value = bFk2Only ? "0" : (bStore ? "0" : strRetHsPos);
+                /*
+                 * FK2 칸에 넣을 값.
+                 *   USE_FK 1 : 짝의 자리를 넣는다.
+                 *   USE_FK 2 : 혼자 가는 그 작업을 FK2 칸에 넣는다. FK1 칸은 위에서
+                 *              이미 적었으나 쓰지 않으므로 아래에서 0 으로 덮는다.
+                 *   USE_FK 0 : 0 으로 지운다.
+                 */
+                string strFk2Lugg  = bTwin ? strLuggNo2 : (bFk2Only ? strLuggNo : "0");
+                string strFk2Bank  = bTwin ? strBank2   : (bFk2Only ? strBank   : "0");
+                string strFk2Bay   = bTwin ? strBay2    : (bFk2Only ? strBay    : "0");
+                string strFk2Lev   = bTwin ? strLev2    : (bFk2Only ? strLev    : "0");
+                bool   bFk2Used    = (bTwin || bFk2Only);
+
+                _pBdb.mComMain.Parameters.Add("LUGG_NO_FK2_OD", DbLang.VARCHAR).Value = strFk2Lugg;
+                _pBdb.mComMain.Parameters.Add("START_BANK2",    DbLang.VARCHAR).Value = (bFk2Used && !bStore) ? strFk2Bank : "0";
+                _pBdb.mComMain.Parameters.Add("START_BAY2",     DbLang.VARCHAR).Value = (bFk2Used && !bStore) ? strFk2Bay  : "0";
+                _pBdb.mComMain.Parameters.Add("START_LEVEL2",   DbLang.VARCHAR).Value = (bFk2Used && !bStore) ? strFk2Lev  : "0";
+                _pBdb.mComMain.Parameters.Add("START_HSPOS2",   DbLang.VARCHAR).Value = (bFk2Used &&  bStore) ? strStoHsPos : "0";
+                _pBdb.mComMain.Parameters.Add("DEST_BANK2",     DbLang.VARCHAR).Value = (bFk2Used &&  bStore) ? strFk2Bank : "0";
+                _pBdb.mComMain.Parameters.Add("DEST_BAY2",      DbLang.VARCHAR).Value = (bFk2Used &&  bStore) ? strFk2Bay  : "0";
+                _pBdb.mComMain.Parameters.Add("DEST_LEVEL2",    DbLang.VARCHAR).Value = (bFk2Used &&  bStore) ? strFk2Lev  : "0";
+                _pBdb.mComMain.Parameters.Add("DEST_HSPOS2",    DbLang.VARCHAR).Value = (bFk2Used && !bStore) ? strRetHsPos : "0";
 
                 _pBdb.mComMain.Parameters.Add("WH_TYP",         DbLang.VARCHAR).Value = SCH_WH_TYP;
                 _pBdb.mComMain.Parameters.Add("SC_NO",          DbLang.VARCHAR).Value = strScNo;
@@ -4796,7 +4962,9 @@ namespace TSK_COMM_IOSCH
                 pRTN_MSG = strTitle;
 
                 strSql = "";
+                //   ITN_LUGG_FK2 : 포크#2 가 같이 들고 나간 작업번호. 트윈일 때만 들어 있다.
                 strSql += CRLF + " SELECT JM.LUGG_NO, JM.JOB_TYP, SD.SC_NO, SD.COMPLETE_RD ";
+                strSql += CRLF + "      , COALESCE(NULLIF(BTRIM(SD.ITN_LUGG_FK2, " + SQL_WS + "), ''), '0') AS ITN_LUGG_FK2 ";
                 strSql += CRLF + "   FROM JOB_MST JM                                       ";
                 strSql += CRLF + "  INNER JOIN SC_DATA SD                                  ";
                 strSql += CRLF + "     ON SD.WH_TYP           = JM.WH_TYP                  ";
@@ -4827,6 +4995,7 @@ namespace TSK_COMM_IOSCH
                 string strLUGG_NO = _pBdb.mDtMain.Rows[0]["LUGG_NO"].ToString();
                 string strJOB_TYP = _pBdb.mDtMain.Rows[0]["JOB_TYP"].ToString();
                 string strSC_NO   = _pBdb.mDtMain.Rows[0]["SC_NO"].ToString();
+                string strLUGG_FK2 = _pBdb.mDtMain.Rows[0]["ITN_LUGG_FK2"].ToString().Trim();
 
                 _pBdb.BeginTrans();
 
@@ -4836,13 +5005,39 @@ namespace TSK_COMM_IOSCH
                     return false;
                 }
 
-                if (ClearScFork1(strSC_NO, ref pRTN_MSG) == false)
+                /*
+                 * 포크#2 작업도 함께 닫는다.
+                 *
+                 *   트윈은 크레인이 한 번 들어가서 둘을 집어 오는 한 동작이다.
+                 *   작업완료표시(D198)는 포크별로 오지 않고 그 동작 하나에 대해
+                 *   한 번 온다. 우리 ScSim 도 포크 수와 무관하게 3 을 쓴다.
+                 *   그래서 완료를 받으면 두 작업을 같이 닫는다.
+                 *
+                 *   한쪽만 닫으면 남은 작업이 지시 대기(20)가 아니라 구동중(21)에
+                 *   머물러, 출고 H/S 에 화물을 올려 둔 채 아무도 집어 가지 않는다.
+                 *   (실제로 포크#2 작업이 411 위에 그대로 멈춰 있었다)
+                 */
+                bool bTwinDone = (strLUGG_FK2 != "") && (strLUGG_FK2 != "0") && (strLUGG_FK2 != "0000");
+
+                if (bTwinDone)
+                {
+                    if (UPDATE_JOB_DATA(ST_SC_DONE, strLUGG_FK2, strWH_TYP, strJOB_TYP, ref pRTN_MSG) == false)
+                    {
+                        _pBdb.Rollback();
+                        return false;
+                    }
+                }
+
+                if (ClearScFork(strSC_NO, bTwinDone, ref pRTN_MSG) == false)
                 {
                     _pBdb.Rollback();
                     return false;
                 }
 
-                pRTN_MSG = strTitle + strSC_NO + "호기가 작업을 완료했습니다. [작업번호:" + strLUGG_NO + "]";
+                if (bTwinDone)
+                    pRTN_MSG = strTitle + strSC_NO + "호기가 트윈 작업을 완료했습니다. [포크#1 작업번호:" + strLUGG_NO + "][포크#2 작업번호:" + strLUGG_FK2 + "]";
+                else
+                    pRTN_MSG = strTitle + strSC_NO + "호기가 작업을 완료했습니다. [작업번호:" + strLUGG_NO + "]";
                 _pBdb.Commit();
                 InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_SC_DONE, "", strSC_NO);
                 return true;
@@ -4865,14 +5060,24 @@ namespace TSK_COMM_IOSCH
          *   DELFK1 은 D199=16(포크#1 데이터 삭제)이고, 기록 뒤 SC 태스크가
          *   ITN_LUGG_FK1 을 '0' 으로 되돌린다. 이 현장은 SINGLE 포크라 FK1 만 쓴다.
          */
-        protected bool ClearScFork1(string strScNo, ref string strRtn)
+        /*
+         * ClearScFork :: 완료한 크레인의 포크 데이터를 지운다.
+         *
+         *   bTwin 이면 포크#2 까지 지운다. SC 태스크가 CMD_RQ_ID 별로 PLC 에
+         *   명령을 쓰고, 기록 뒤 ITN_LUGG_FK1 / FK2 를 '0' 으로 되돌린다.
+         *     DELFK1  D199=16  포크#1 만
+         *     DELFK12          포크#1,#2 둘 다
+         *   포크#2 를 지우지 않으면 ITN_LUGG_FK2 가 남아 다음 완료에서 이미
+         *   닫은 작업을 또 닫으려 든다.
+         */
+        protected bool ClearScFork(string strScNo, bool bTwin, ref string strRtn)
         {
             try
             {
                 string strSql = "";
                 strSql += CRLF + " UPDATE SC_DATA                        ";
                 strSql += CRLF + "    SET CMD_RQ_YN  = 'Y'               ";
-                strSql += CRLF + "      , CMD_RQ_ID  = 'DELFK1'          ";
+                strSql += CRLF + "      , CMD_RQ_ID  = '" + (bTwin ? "DELFK12" : "DELFK1") + "'      ";
                 strSql += CRLF + "      , OD_USER_ID = '" + OD_USER + "' ";
                 strSql += CRLF + "  WHERE WH_TYP     = :WH_TYP           ";
                 strSql += CRLF + "    AND SC_NO      = :SC_NO            ";

@@ -3253,7 +3253,14 @@ namespace TSK_HostCom
          *   너무 자주 쓸 까닭은 없다. 판정이 분 단위라 10초면 넉넉하다.
          */
         private DateTime m_dtHeartBeat = DateTime.MinValue;
-        private const int DEF_HEARTBEAT_S = 10;
+        //   간격은 Client 의 판정보다 넉넉히 짧아야 한다.
+        //   Client 는 UPD_DT 가 5초보다 오래면 빨강으로 본다.
+        //     Ecs/EcsDoc.cpp GetHostConnectInfo
+        //       EXTRACT(EPOCH FROM NOW() - EM.UPD_DT) > 5 THEN 6 ELSE 0
+        //   10초로 두면 0~5초 사이에는 파랑, 6~10초 사이에는 빨강이 되어
+        //   10초 주기로 램프가 깜빡인다. 그래서 2초로 줄였다.
+        //   C/V·S/C 태스크는 폴링마다(1초 안쪽) 갱신하므로 이 쪽이 그 결과 맞다.
+        private const int DEF_HEARTBEAT_S = 2;
 
         public void HeartBeatEqpMst()
         {

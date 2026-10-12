@@ -526,13 +526,25 @@ namespace TSK_COMM_IOSCH
         private const string HSPOS_STO_BOX = "1";   // RANK_1 (D176 입고 출발 H/S)
         private const string HSPOS_RET_BOX = "2";   // RANK_2 (D180 출고 도착 H/S)
 
+        /*
+         * 입고 H/S 트랙 둘. 트윈 포크라 같은 랭크에 H/S 가 둘이다.
+         *   (기존 ECS : CLib::GetScHSTrackPerRank(SC_1, RANK_1, …))
+         *     Single = 4020 -> 420  = 포크#1 쪽 (작업대 222)
+         *     Twin   = 4019 -> 419  = 포크#2 쪽 (작업대 221)
+         *   EcsDoc.cpp 가 SetRankCvTrack 에 Single 을, SetRankCvTrackForkTwo 에
+         *   Twin 을 넣는다. 그래서 Single 이 포크#1 이다.
+         */
+        private const string STO_HS_BOX_FK1 = "420";
+        private const string STO_HS_BOX_FK2 = "419";
+
         // 3층 BOX 출고 작업대 - 레거시 CLib::GetRank 가 RANK_2 를 돌려주는 자리
         private static readonly string[] STN_3F_BOX =
             { "211", "221", "222", "231", "241", "242", "251" };
 
         // ── ECS *4 대응 크레인 공개 함수 ──
         public bool StoHsCheck4(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
-        { return ScStoreRoutine(strWH_TYP, CV_PLC_3F_BOX, HSPOS_STO_BOX, HSPOS_RET_BOX, "[StoHsCheck4]", ref pRTN_MSG); }
+        { return ScStoreRoutine(strWH_TYP, CV_PLC_3F_BOX, HSPOS_STO_BOX, HSPOS_RET_BOX, "[StoHsCheck4]", ref pRTN_MSG,
+                                STO_HS_BOX_FK1, STO_HS_BOX_FK2); }
         public bool RetCmdCheck4(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
         { return ScRetrieveRoutine(strWH_TYP, HS_NO_RET_BOX, "[RetCmdCheck4]", ref pRTN_MSG); }
         public bool ScCompleteCheck4(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
@@ -694,7 +706,10 @@ namespace TSK_COMM_IOSCH
                 string strLUGG_NO_FK2 = "0";
                 string strSTART_LOC_FK2 = "";
 
-                if ((strSC_TYP == "TWIN") && (strPAIR_HS != "") && (nJobRow >= 0))
+                // @.현장 SC_DATA.SC_TYP 는 "DOUBLE" 로 들어 있다. "TWIN" 만 보면 영영 안 걸린다.
+                bool bTwinSc = (strSC_TYP == "TWIN") || (strSC_TYP == "DOUBLE");
+
+                if (bTwinSc && (strPAIR_HS != "") && (nJobRow >= 0))
                 {
                     if (IsRetHsTrackReady(strWH_TYP, strPAIR_HS))
                     {
