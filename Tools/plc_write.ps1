@@ -52,10 +52,12 @@ $st.Flush()
 # 응답이 바로 안 올 때가 있다. 1초까지 기다려 본다.
 $buf = New-Object byte[] 256
 $n = 0
-for ($i = 0; $i -lt 10; $i++) {
+for ($i = 0; $i -lt 30; $i++) {
   Start-Sleep -Milliseconds 100
   if ($st.DataAvailable) { $n = $st.Read($buf, 0, 256); break }
 }
+# 응답을 받은 뒤 잠깐 둔다. 바로 끊으면 시뮬레이터가 아직 보내는 중일 수 있다.
+Start-Sleep -Milliseconds 150
 $st.Close(); $cli.Close()
 
 # 응답 끝 두 바이트가 종료코드다. 0000 이면 정상.

@@ -31,22 +31,56 @@ $ADDR_RDY = 252        # 입고 H/S 준비 비트 : .0=419  .1=420
 #   도착지코드는 DeviceMap04.xml 의 UseScDest(from=1 to=11) 를 따른다.
 $W1 = (1 -shl 8) -bor 11
 
+# CvSim 은 PLC 한 자리에 소켓 하나만 둔다. 우리가 붙으면 그 자리에 있던
+# ScSim 이 밀려난다. ScSim 은 몇 초 뒤 스스로 다시 붙으므로, 다 쓰고 나서
+# 그게 돌아올 때까지 기다려 준다. 안 기다리면 크레인이 화물을 못 집어 간다.
+function Wait-ScSim([int]$sec = 40) {
+  $sc = Get-Process -Name ScSim -ErrorAction SilentlyContinue
+  if ($sc -eq $null) { return }
+  $t0 = Get-Date
+  while (((Get-Date) - $t0).TotalSeconds -lt $sec) {
+    $hit = netstat -ano | Select-String ":$PORT\s" | Select-String "ESTABLISHED" |
+           Where-Object { $_ -match "\s$($sc.Id)\s*$" }
+    if ($hit) { "ScSim 이 다시 붙었다."; return }
+    Start-Sleep -Milliseconds 700
+  }
+  "ScSim 이 아직 안 붙었다. 잠시 뒤 다시 보라." 
+}
+
 if ($Clear) {
   & $W -Port $PORT -Addr $ADDR_419 -Values 0,0,0,0,0
   & $W -Port $PORT -Addr $ADDR_420 -Values 0,0,0,0,0
   & $W -Port $PORT -Addr $ADDR_RDY -Values 0
   "입고 H/S 420 / 419 를 비웠다."
+  Wait-ScSim
   return
 }
 
 if ($Lugg1 -eq '') { throw "작업번호를 달라. -Lugg1 7801 [-Lugg2 7802]" }
 
+# 두 자리에 화물을 먼저 올리고, 둘 다 올라온 것을 확인한 뒤에 준비 비트를 준다.
+#   준비 비트가 먼저 서면, 아직 한쪽만 올라온 순간에 IO_SCH 가 보고
+#   싱글로 지시해 버린다. 그러면 나머지 한 건이 뒤에 남는다.
 if ($Lugg2 -ne '') {
-  # 포크#2 자리는 포크#1 자리가 찬 뒤에 쓰는 뒷자리다. 419 만 채우면 안 된다.
   & $W -Port $PORT -Addr $ADDR_419 -Values ([int]$Lugg2),$W1,1,0,0
 }
 & $W -Port $PORT -Addr $ADDR_420 -Values ([int]$Lugg1),$W1,1,0,0
+
+# 두 자리가 다 올라왔는지 DB 로 확인한다 (WCS_TASK_CV 가 PLC 에서 읽어 넣는다)
+$PSQL = 'C:\Program Files\PostgreSQL\16\bin\psql.exe'
+$env:PGPASSWORD = 'KET_WCS'
+$want = if ($Lugg2 -ne '') { "'420','419'" } else { "'420'" }
+$t0 = Get-Date
+while (((Get-Date) - $t0).TotalSeconds -lt 20) {
+  $n = (& $PSQL -h localhost -p 5432 -U KET_WCS -d KET_WCS -A -t `
+        -c "SELECT count(*) FROM cv_data WHERE plc_no='04' AND mc_no IN ($want) AND sensor0_data_rd='1';") -join ''
+  if ([int]$n -ge $(if ($Lugg2 -ne '') { 2 } else { 1 })) { break }
+  Start-Sleep -Milliseconds 500
+}
+
 & $W -Port $PORT -Addr $ADDR_RDY -Values $(if ($Lugg2 -ne '') { 3 } else { 2 })
 
 if ($Lugg2 -ne '') { "입고 H/S 420 <- $Lugg1 (포크#1), 419 <- $Lugg2 (포크#2). 트윈으로 나간다." }
 else               { "입고 H/S 420 <- $Lugg1 (포크#1). 싱글로 나간다." }
+
+Wait-ScSim
