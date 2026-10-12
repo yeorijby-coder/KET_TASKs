@@ -89,7 +89,11 @@ function Start-Tasks {
   }
 }
 function Clear-Scene {
-  Sql "DELETE FROM job_mst WHERE ins_user_id = '$TAG';"
+  # 시험으로 넣었던 작업은 모두 걷어낸다.
+  #   TWIN_TEST / TWINRUN 은 트윈을 실제로 돌려 보며 넣었던 것이다.
+  #   이것이 남아 있으면 P-BOX 출고 H/S 에 작업번호가 그대로 떠 있어
+  #   현장 자료인 줄 알고 들여다보게 된다.
+  Sql "DELETE FROM job_mst WHERE ins_user_id IN ('$TAG','TWIN_TEST','TWINRUN');"
   Sql @"
 UPDATE cv_data SET lugg_no_rd='0', lugg_no_od='0', dest_pos_rd='0', dest_pos_od='0',
                    job_typ_rd='0', job_typ_od='0', sensor0_data_rd='0',
@@ -247,12 +251,17 @@ switch ($Scene) {
 
   # ------------------------------------------- 1Fork 출고를 H/S 에 기록
   'rethd1' {
-    Add-Job '5301' '2' $SC '01-031-02' $RET_STN '00-000-00' '29' $RET_FK1 '0'
+    # 상태 11 (CV 구동중) 이다. 29 가 아니다.
+    #   29 는 크레인이 내려놓기만 하고 H/S 에 아직 아무것도 안 적힌 때라
+    #   도착지가 비어 있다. 도착지가 적히는 바로 그 순간 11 로 넘어간다.
+    #   (IO_SCH CV_RETHS_PLC 가 CV_DATA 에 쓰면서 UPDATE_JOB_DATA(ST_CV_RUN))
+    #   실제로 돌려 본 값 그대로다. 7501 : 29 -> (재하 센서 ON) -> 11 + 도착지 251
+    Add-Job '5301' '2' $SC '01-031-02' $RET_STN '00-000-00' '11' $RET_FK1 '0'
     Set-HsLoaded $RET_FK1 '5301' $RET_STN '2' 'reths_ready_rd'
     Write-Host ""
     Write-Host "1Fork 출고를 H/S 에 기록한 상태" -ForegroundColor Yellow
     Write-Host "  출고 H/S  TRACK $RET_FK1 : 화물 있음, 작업번호 5301, 도착지 $RET_STN"
-    Write-Host "  작업 5301 은 상태 29 (S/C 반출 완료 - CV 가 이어받을 차례)"
+    Write-Host "  작업 5301 은 상태 11 (CV 구동중 - 방금 H/S 에 도착지를 적었다)"
     Write-Host "  크레인은 비어 있다"
     Write-Host ""
     Write-Host "찍을 것 : 모니터링에서 작업번호 5301 을 고른 상태 + H/S(CV) 컨트롤"
@@ -260,15 +269,16 @@ switch ($Scene) {
 
   # ------------------------------------------- 2Fork 출고를 H/S 에 기록
   'rethd2' {
-    Add-Job '5401' '2' $SC '01-033-02' $RET_STN '00-000-00' '29' $RET_FK1 '5402'
-    Add-Job '5402' '2' $SC '01-036-02' $RET_STN '00-000-00' '29' $RET_FK2 '5401'
+    # rethd1 과 같은 이유로 상태는 11 이다.
+    Add-Job '5401' '2' $SC '01-033-02' $RET_STN '00-000-00' '11' $RET_FK1 '5402'
+    Add-Job '5402' '2' $SC '01-036-02' $RET_STN '00-000-00' '11' $RET_FK2 '5401'
     Set-HsLoaded $RET_FK1 '5401' $RET_STN '2' 'reths_ready_rd'
     Set-HsLoaded $RET_FK2 '5402' $RET_STN '2' 'reths_ready_rd'
     Write-Host ""
     Write-Host "2Fork 출고를 H/S 에 기록한 상태" -ForegroundColor Yellow
     Write-Host "  출고 H/S  TRACK $RET_FK1 : 화물 있음, 작업번호 5401  (포크#1 이 내려놓은 것)"
     Write-Host "  출고 H/S  TRACK $RET_FK2 : 화물 있음, 작업번호 5402  (포크#2 가 내려놓은 것)"
-    Write-Host "  두 작업 모두 상태 29"
+    Write-Host "  두 작업 모두 상태 11 (각자 제 트랙에 도착지가 적혔다)"
     Write-Host "  크레인은 비어 있다"
     Write-Host ""
     Write-Host "찍을 것 : 모니터링에서 작업번호 5401/5402 를 고른 상태 + H/S(CV) 컨트롤"
