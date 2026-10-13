@@ -5096,6 +5096,27 @@ namespace TSK_COMM_IOSCH
                 bool bTwinDone = (strLUGG_FK2 != "") && (strLUGG_FK2 != "0") && (strLUGG_FK2 != "0000")
                               && (strLUGG_FK2 != strLUGG_NO);
 
+                /*
+                 * @.짝이 JOB_MST 에 구동중(21)으로 실제로 있어야 같이 닫는다.
+                 *   상위가 적어 준 PAIR_LUGG_NO 가 가리키는 작업이 이미 따로(단독) 끝나 없으면
+                 *   UPDATE_JOB_DATA 가 "히스토리 추가 불가" 로 실패하고 롤백돼, 이 작업이
+                 *   21 에 영원히 남고 크레인 완료표시도 안 풀려 뒤가 다 멈췄다. (1056 이 그랬다)
+                 */
+                if (bTwinDone)
+                {
+                    string strSqlPair = CRLF + " SELECT COUNT(1) AS CNT FROM JOB_MST WHERE WH_TYP = :WH_TYP AND LUGG_NO = :LUGG_NO AND JOB_STATUS = '" + ST_SC_RUN + "' ";
+                    _pBdb.mComMain.CommandType = CommandType.Text;
+                    _pBdb.mComMain.Parameters.Clear();
+                    _pBdb.mComMain.Parameters.Add("WH_TYP",  DbLang.VARCHAR).Value = strWH_TYP;
+                    _pBdb.mComMain.Parameters.Add("LUGG_NO", DbLang.VARCHAR).Value = strLUGG_FK2;
+                    int nPairCnt = _pBdb.ExcuteQry(strSqlPair);
+                    if (nPairCnt <= 0 || Convert.ToInt32(_pBdb.mDtMain.Rows[0]["CNT"]) == 0)
+                    {
+                        ReportOnChange("SCCOMP_PAIR_" + strSC_NO, strTitle + "짝 작업번호 " + strLUGG_FK2 + " 가 구동중으로 없어 작업번호 " + strLUGG_NO + " 만 닫습니다.");
+                        bTwinDone = false;
+                    }
+                }
+
                 if (bTwinDone)
                 {
                     if (UPDATE_JOB_DATA(ST_SC_DONE, strLUGG_FK2, strWH_TYP, strJOB_TYP, ref pRTN_MSG) == false)

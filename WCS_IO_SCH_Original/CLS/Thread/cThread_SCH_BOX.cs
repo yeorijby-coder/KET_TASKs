@@ -588,6 +588,18 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "  WHERE WH_TYP           = :WH_TYP                         ";
                 strSql += CRLF + "    AND JOB_STATUS       = '" + ST_SC_WAIT + "'            ";   // 20 = SC 구동요구
                 strSql += CRLF + "    AND DEST_POS IN (" + SqlInList(STN_3F_BOX) + ")       ";
+                /*
+                 * @.짝을 잠깐 기다린다.
+                 *   상위는 출고 짝을 한 건씩 잇달아 내린다(첫 건은 짝 번호 0, 둘째 건이 첫 건을 가리킨다).
+                 *   첫 건을 받자마자 단독으로 내보내면 둘째 건이 1초 뒤에 와도 짝이 못 된다.
+                 *   그래서 짝 번호가 없고 들어온 지 5초가 안 됐으며 나를 짝으로 가리키는 작업도 없으면
+                 *   이번 주기는 후보에서 뺀다. (1055 단독 -> 1056 단독 -> 1056 완료가 1055 를 찾다 멈춘 일)
+                 */
+                strSql += CRLF + "    AND (   COALESCE(NULLIF(BTRIM(PAIR_LUGG_NO), ''), '0') <> '0'                       ";
+                strSql += CRLF + "         OR INS_DT <= " + DbLang.SYSDATE + " - INTERVAL '5 second'                          ";
+                strSql += CRLF + "         OR EXISTS (SELECT 1 FROM JOB_MST J2 WHERE J2.WH_TYP = JOB_MST.WH_TYP               ";
+                strSql += CRLF + "                       AND COALESCE(NULLIF(BTRIM(J2.PAIR_LUGG_NO), ''), '0') = JOB_MST.LUGG_NO ";
+                strSql += CRLF + "                       AND J2.JOB_STATUS = '" + ST_SC_WAIT + "'))                           ";
                 strSql += CRLF + "  ORDER BY " + SQL_JOB_PRIORITY("") + " DESC, LUGG_NO      ";
 
                 _pBdb.mComMain.CommandType = CommandType.Text;
@@ -793,6 +805,18 @@ namespace TSK_COMM_IOSCH
                 {
                     _pBdb.Rollback();
                     return false;
+                }
+
+                // @.단독으로 나가면 상위가 적어 준 짝 번호를 지운다. 남겨 두면 완료 처리가 그 짝(이미
+                //   따로 끝난 작업)을 같이 닫으려다 실패해 이 작업이 구동중(21)에 영원히 멈춘다.
+                if (strLUGG_NO_FK2 == "0")
+                {
+                    string strSqlPair = CRLF + " UPDATE JOB_MST SET PAIR_LUGG_NO = '0' WHERE WH_TYP = :WH_TYP AND LUGG_NO = :LUGG_NO ";
+                    _pBdb.mComMain.CommandType = CommandType.Text;
+                    _pBdb.mComMain.Parameters.Clear();
+                    _pBdb.mComMain.Parameters.Add("WH_TYP",  DbLang.VARCHAR).Value = strWH_TYP;
+                    _pBdb.mComMain.Parameters.Add("LUGG_NO", DbLang.VARCHAR).Value = strLUGG_NO;
+                    if (_pBdb.ExcuteNonQry(strSqlPair) < 0) { _pBdb.Rollback(); pRTN_MSG += _pBdb.ErrMsg; return false; }
                 }
 
                 /*
