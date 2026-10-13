@@ -3828,6 +3828,46 @@ namespace TSK_COMM_IOSCH
                     return true;
                 }
 
+                /*
+                 * 포크#1(420) 은 준비됐는데 포크#2(419) 자리에도 화물이 있고 그 작업이
+                 * 곧 준비될 참이면(작업이 CV 구동대기/구동중이거나 지시가 쓰이는 중) 기다린다.
+                 *   420 의 입고 H/S 는 목적지가 쓰이면 바로 서므로, 419 에 아직 안 쓰인
+                 *   그 틈에 단독으로 내보내면 트윈이 영영 안 묶인다. (원본 CSc::StoreRoutine 과 같다)
+                 *   419 화물에 작업이 아예 없으면 기다리지 않고 단독으로 간다.
+                 */
+                if (bTwinHs && (nRowFk1 >= 0) && (nRowFk2 < 0))
+                {
+                    string strSqlWait = "";
+                    strSqlWait += CRLF + " SELECT COUNT(1) AS CNT                                            ";
+                    strSqlWait += CRLF + "   FROM CV_DATA CD                                                ";
+                    strSqlWait += CRLF + "   LEFT OUTER JOIN JOB_MST JM                                     ";
+                    strSqlWait += CRLF + "     ON JM.WH_TYP  = CD.WH_TYP                                    ";
+                    strSqlWait += CRLF + "    AND JM.LUGG_NO = CD.LUGG_NO_RD                                ";
+                    strSqlWait += CRLF + "  WHERE CD.WH_TYP          = :WH_TYP                              ";
+                    strSqlWait += CRLF + "    AND CD.PLC_NO          = :CV_PLC                              ";
+                    strSqlWait += CRLF + "    AND CD.MC_NO           = :MC_NO2                              ";
+                    strSqlWait += CRLF + "    AND CD.SENSOR0_DATA_RD = '1'                                 ";
+                    // @.419 화물에 아직 작업번호가 안 쓰였어도, 그 자리(HOST_STN_NO)를 출발지로 둔
+                    //   입고 작업이 CV 구동대기/구동중이면 곧 쓰일 것이므로 같이 기다린다.
+                    strSqlWait += CRLF + "    AND (   JM.JOB_STATUS IN ('" + ST_CV_WAIT + "','" + ST_CV_RUN + "')";
+                    strSqlWait += CRLF + "         OR CD.OD_RQ_YN = 'Y'";
+                    strSqlWait += CRLF + "         OR EXISTS (SELECT 1 FROM JOB_MST J2";
+                    strSqlWait += CRLF + "                     WHERE J2.WH_TYP = CD.WH_TYP AND J2.START_POS = CD.HOST_STN_NO";
+                    strSqlWait += CRLF + "                       AND J2.JOB_STATUS IN ('" + ST_CV_WAIT + "','" + ST_CV_RUN + "')))";
+                    _pBdb.mComMain.CommandType = CommandType.Text;
+                    _pBdb.mComMain.Parameters.Clear();
+                    _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+                    _pBdb.mComMain.Parameters.Add("CV_PLC", DbLang.VARCHAR).Value = strCV_PLC;
+                    _pBdb.mComMain.Parameters.Add("MC_NO2", DbLang.VARCHAR).Value = strStoHsFk2;
+                    int nWaitCnt = _pBdb.ExcuteQry(strSqlWait);
+                    if (nWaitCnt > 0 && Convert.ToInt32(_pBdb.mDtMain.Rows[0]["CNT"]) > 0)
+                    {
+                        pRTN_MSG = strTitle + "포크#2 쪽 입고 H/S(TRACK " + strStoHsFk2 + ")의 화물도 곧 준비됩니다."
+                                 + " 트윈으로 묶으려고 이번 주기는 지시하지 않습니다.";
+                        return true;
+                    }
+                }
+
                 bool bStoTwin = (nRowFk1 >= 0) && (nRowFk2 >= 0);
 
                 int nRowMain = nRowFk1;
