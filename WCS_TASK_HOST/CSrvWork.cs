@@ -868,6 +868,12 @@ namespace TSK_HostCom
                 //   그러면 같은 구간을 쓰는 이동과 입고가 서로를 막는다.
                 //   (P-Box 순환 : 211->221 이동, 221->랙 입고, 랙->251 출고, 251->221 이동)
                 m_strSql += modDefApp.CRLF + "  AND JOB_TYP = '" + strJob_Define + "'";
+                // @.이동(6)은 같은 구간의 앞 화물이 이미 CV 위를 가고 있으면(10 이 아니면) 같은 작업으로
+                //   보지 않는다. P-BOX 순환은 251->221 이동이 화물마다 잇달아 내려오는데, 앞 것이
+                //   대기대에 닿아 완료보고될 때까지 뒤 것을 거절하면 둘째 화물이 60초 안에 짝 자리에
+                //   못 와 트윈이 영영 안 묶인다. 아직 CV 에 안 쓰인 것(10)끼리만 겹침으로 본다.
+                if (strJob_Define == "6")
+                    m_strSql += modDefApp.CRLF + "  AND JOB_STATUS = '10'";
 
                 m_iSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
 
