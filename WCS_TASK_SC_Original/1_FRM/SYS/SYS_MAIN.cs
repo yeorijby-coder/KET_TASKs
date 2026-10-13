@@ -632,8 +632,15 @@ namespace WCS_TASK_SC
         {
             try
             {
-                 this.txtMsg.Text = this.lsvCOMM1.SelectedItems[0].SubItems[COL_MSG].Text;
-                 this.txtTgm.Text = this.lsvCOMM1.SelectedItems[0].SubItems[COL_TGM].Text;
+                // @.COMM 탭마다 목록(lsvCOMM1, lsvCOMM2, ...)이 따로 있고 모두 이 핸들러에 묶여 있다.
+                //   늘 lsvCOMM1 만 읽어서, 다른 탭에서 메시지를 골라도 아래 칸이 비어 있었다.
+                //   (lsvCOMM1 에는 고른 줄이 없어 예외가 나고, 그 예외를 삼켰다)
+                //   누른 그 목록에서 읽는다.
+                ListView lsv = sender as ListView;
+                if (lsv == null || lsv.SelectedItems.Count == 0) return;
+
+                this.txtMsg.Text = lsv.SelectedItems[0].SubItems[COL_MSG].Text;
+                this.txtTgm.Text = lsv.SelectedItems[0].SubItems[COL_TGM].Text;
             }
             catch(Exception ex)
             {

@@ -367,6 +367,13 @@ namespace WCS_TASK_SC
                     IsOpen = true;
                     MakeMsg_Imp("DB login Ok!", m_nThNo);
 
+                    // @.이 호기의 창고구분을 DB 에서 되찾는다.
+                    //   INI([COMMn] WH_TYP, 없으면 [CNF])만 믿으면, P-BOX 11호기가 SQL 로
+                    //   창고 20 으로 옮겨진 뒤 INI 에 WH_TYP=20 을 안 적은 현장에서
+                    //   "PLC정보 변경중 Data가 없습니다" 가 나고 그 호기가 통째로 안 보인다.
+                    //   SC_DATA 가 진짜 값이다. 거기 있는 대로 맞춘다.
+                    ResolveWhTypFromDb();
+
                     while (!m_bManualStop)
                     {
 
@@ -1586,6 +1593,49 @@ namespace WCS_TASK_SC
                 SetErrorMsg("Comm" + m_nThNo + " :[InsertWcsLogPgr] 쓰기지시 후 상태값 변경중 ERROR., PLC_NO [" + m_strPlc_No + "] TRACK_NO  [" + strTRACK_NO + "] MSG [" + ex.ToString() + "]");
                 MakeMsg_Error("[InsertWcsLogPgr] 쓰기지시 후 상태값 변경중 ERROR., PLC_NO [" + strTRACK_NO + "] MSG [" + ex.ToString() + "]", m_nThNo);
                 return false;
+            }
+        }
+        #endregion
+
+        #region [ResolveWhTypFromDb] :: 창고구분을 SC_DATA 에서 되찾는다
+        /*
+         * ResolveWhTypFromDb :: 이 호기(SC_NO)의 WH_TYP 를 SC_DATA 에서 읽어 m_strWh_typ 에 맞춘다.
+         *
+         *   INI 는 거들 뿐이다. 설비가 어느 창고 것인지는 SC_DATA.WH_TYP 가 정한다.
+         *   못 읽으면(행이 없거나 DB 오류) INI 값을 그대로 둔다.
+         */
+        private void ResolveWhTypFromDb()
+        {
+            string strTitle = "[ResolveWhTypFromDb]";
+            try
+            {
+                string CRLF = "\r\n";
+                string strSql = "";
+                strSql += CRLF + "SELECT WH_TYP           ";
+                strSql += CRLF + "  FROM SC_DATA          ";
+                strSql += CRLF + " WHERE SC_NO  = :SC_NO  ";
+                strSql += CRLF + "   AND PLC_NO = :PLC_NO ";
+
+                m_msQPlc._pBdb.mComMain.CommandType = CommandType.Text;
+                m_msQPlc._pBdb.mComMain.Parameters.Clear();
+                m_msQPlc._pBdb.mComMain.Parameters.Add("SC_NO",  DbLang.VARCHAR, 255).Value = m_strScNo;
+                m_msQPlc._pBdb.mComMain.Parameters.Add("PLC_NO", DbLang.VARCHAR, 255).Value = m_strPlc_No;
+                int nSelCnt = m_msQPlc._pBdb.ExcuteQry(strSql);
+                if (nSelCnt <= 0)
+                {
+                    MakeMsg_Error(strTitle + "SC_DATA 에 이 호기가 없습니다. INI 창고구분 [" + m_strWh_typ + "] 그대로 씁니다. SC_NO [" + m_strScNo + "] PLC_NO [" + m_strPlc_No + "]", m_nThNo);
+                    return;
+                }
+
+                string strDbWh = ("" + m_msQPlc._pBdb.mDtMain.Rows[0]["WH_TYP"]).Trim();
+                if (strDbWh == "" || strDbWh == m_strWh_typ) return;
+
+                MakeMsg_Imp(strTitle + "창고구분을 INI [" + m_strWh_typ + "] 에서 SC_DATA [" + strDbWh + "] 로 맞춥니다. SC_NO [" + m_strScNo + "]", m_nThNo);
+                m_strWh_typ = strDbWh;
+            }
+            catch (Exception ex)
+            {
+                MakeMsg_Error(strTitle + "Exception Error " + ex.Message, m_nThNo);
             }
         }
         #endregion
