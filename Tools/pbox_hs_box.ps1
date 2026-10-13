@@ -51,7 +51,11 @@ if ($Clear) {
   & $W -Port $PORT -Addr $ADDR_419 -Values 0,0,0,0,0
   & $W -Port $PORT -Addr $ADDR_420 -Values 0,0,0,0,0
   & $W -Port $PORT -Addr $ADDR_RDY -Values 0
-  "입고 H/S 420 / 419 를 비웠다."
+  # 출고 H/S 도 비운다. 시험 자취가 남으면 다음 출고가 막힌다.
+  #   410 -> (410-400)*5 = 50,  411 -> 55
+  & $W -Port $PORT -Addr 50 -Values 0,0,0,0,0
+  & $W -Port $PORT -Addr 55 -Values 0,0,0,0,0
+  "입고 H/S 420 / 419, 출고 H/S 410 / 411 을 비웠다."
   Wait-ScSim
   return
 }
