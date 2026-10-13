@@ -484,7 +484,7 @@ namespace TSK_HostCom
         }
 
         #region 작업대에 대한 Validation
-        private bool IsValidStation(int nJobPattern, string strStation, bool bStart, ref string strCV_PLT_JOB_TYP)
+        private bool IsValidStation(int nJobPattern, string strStation, bool bStart, ref string strCV_PLT_JOB_TYP, string strWhTyp)
         {
             m_BDb.ParamsClear();
 
@@ -494,7 +494,10 @@ namespace TSK_HostCom
             //   옛 행이 걸렸고, 그 행들은 STN_KIND 가 0 이라 출발지/도착지 거절이 났다.
             m_strSql = "SELECT * FROM CV_DATA";
             m_strSql += modDefApp.CRLF + "WHERE HOST_STN_NO = " + m_BDb.ParamsAdd("HOST_STN_NO", strStation);
-            m_strSql += modDefApp.CRLF + "  AND WH_TYP = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            // @.창고는 INI 의 WH_TYP(10)이 아니라 전문 창고구분으로 정한 이 작업의 창고다.
+            //   P-BOX 작업(창고구분 B -> 20)의 251/221 은 CV_DATA 에 WH_TYP 20 으로 있어
+            //   10 으로 찾으면 0건이 되어 "9=STATION 이상" 으로 거절하고 있었다.
+            m_strSql += modDefApp.CRLF + "  AND WH_TYP = " + m_BDb.ParamsAdd("WH_TYP", strWhTyp);
 
             m_iSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
 
@@ -892,7 +895,7 @@ namespace TSK_HostCom
                     case "1":       // 입고
                         #region 입고시에 출발지와 도착지가 정상적인지 체크
                         // 출발지 올바른지 체크! 
-                        if (IsValidStation(modDefApp.ConvertJobPattern(nJobType), strStartPos, true, ref strCV_PLT_JOB_TYP) == false)
+                        if (IsValidStation(modDefApp.ConvertJobPattern(nJobType), strStartPos, true, ref strCV_PLT_JOB_TYP, strJobWhTyp) == false)
                         {
                             m_strLog = string.Format("출발지가 올바르지 않습니다.[작업번호:{0}][출발지:{1}]", nLuggNum, strStartPos);
                             modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
@@ -947,7 +950,7 @@ namespace TSK_HostCom
                         #region 출고시에 출발지와 도착지가 정상적인지 체크
                         // 출발LOC 올바른지 체크!
                         // 도착지 올바른지 체크! 
-                        if (IsValidStation(modDefApp.ConvertJobPattern(nJobType), strDestPos, false, ref strCV_PLT_JOB_TYP) == false)
+                        if (IsValidStation(modDefApp.ConvertJobPattern(nJobType), strDestPos, false, ref strCV_PLT_JOB_TYP, strJobWhTyp) == false)
                         {
                             m_strLog = string.Format("도착지가 올바르지 않습니다.[작업번호:{0}][출발지:{1}]", nLuggNum, strDestPos);
                             modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
@@ -1007,7 +1010,7 @@ namespace TSK_HostCom
                     case "6":       // 작업대 이동
                         #region 작업대 이동시에 출발지와 도착지가 정상적인지 체크
                         // 출발지 올바른지 체크! 
-                        if (IsValidStation(modDefApp.ConvertJobPattern(nJobType), strStartPos, true, ref strCV_PLT_JOB_TYP) == false)
+                        if (IsValidStation(modDefApp.ConvertJobPattern(nJobType), strStartPos, true, ref strCV_PLT_JOB_TYP, strJobWhTyp) == false)
                         {
                             m_strLog = string.Format("출발지가 올바르지 않습니다.[작업번호:{0}][출발지:{1}]", nLuggNum, strStartPos);
                             modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
@@ -1016,7 +1019,7 @@ namespace TSK_HostCom
                         }
 
                         // 도착지 올바른지 체크! 
-                        if (IsValidStation(modDefApp.ConvertJobPattern(nJobType), strDestPos, false, ref strCV_PLT_JOB_TYP) == false)
+                        if (IsValidStation(modDefApp.ConvertJobPattern(nJobType), strDestPos, false, ref strCV_PLT_JOB_TYP, strJobWhTyp) == false)
                         {
                             m_strLog = string.Format("도착지가 올바르지 않습니다.[작업번호:{0}][도착지:{1}]", nLuggNum, strDestPos);
                             modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
@@ -1238,7 +1241,7 @@ namespace TSK_HostCom
                     m_strSql += modDefApp.CRLF + "      , JOB_STATUS    = " + m_BDb.ParamsAdd("JOB_STATUS", ((int)modDefApp.EN_JOB_STATUS.enJobStatusDualStoreRetry).ToString());
                     m_strSql += modDefApp.CRLF + "      , UPD_DT        = " + modDateTime.SYSDATE;
                     m_strSql += modDefApp.CRLF + "      , UPD_USER_ID   = 'HOST_TASK'";
-                    m_strSql += modDefApp.CRLF + "  WHERE WH_TYP        = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+                    m_strSql += modDefApp.CRLF + "  WHERE WH_TYP        IN " + modDefApp.GsWhTypList();
                     m_strSql += modDefApp.CRLF + "    AND LUGG_NO        = " + m_BDb.ParamsAdd("LUGG_NO", strLuggNo);
                     m_iSelCnt = m_BDb.ExcuteNonQry_Par(ref m_strSql);
                     if (m_iSelCnt < 0)
@@ -1281,7 +1284,7 @@ namespace TSK_HostCom
                     m_strSql += modDefApp.CRLF + "      , JOB_STATUS    = " + Convert.ToInt32((int)modDefApp.EN_JOB_STATUS.enJobStatusEmptyRetrieveRetry);
                     m_strSql += modDefApp.CRLF + "      , UPD_DT        = " + modDateTime.SYSDATE;
                     m_strSql += modDefApp.CRLF + "      , UPD_USER_ID   = 'HOST_TASK'";
-                    m_strSql += modDefApp.CRLF + "  WHERE WH_TYP        = " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+                    m_strSql += modDefApp.CRLF + "  WHERE WH_TYP        IN " + modDefApp.GsWhTypList();
                     m_strSql += modDefApp.CRLF + "    AND LUGGNO        = " + m_BDb.ParamsAdd("LUGGNO", strLuggNo);
                     m_iSelCnt = m_BDb.ExcuteNonQry_Par(ref m_strSql);
                     if (m_iSelCnt < 0)
