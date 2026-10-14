@@ -3853,12 +3853,23 @@ namespace TSK_COMM_IOSCH
                     strSqlWait += CRLF + "         OR CD.OD_RQ_YN = 'Y'";
                     strSqlWait += CRLF + "         OR EXISTS (SELECT 1 FROM JOB_MST J2";
                     strSqlWait += CRLF + "                     WHERE J2.WH_TYP = CD.WH_TYP AND J2.START_POS = CD.HOST_STN_NO";
-                    strSqlWait += CRLF + "                       AND J2.JOB_STATUS IN ('" + ST_CV_WAIT + "','" + ST_CV_RUN + "')))";
+                    strSqlWait += CRLF + "                       AND J2.JOB_STATUS IN ('" + ST_CV_WAIT + "','" + ST_CV_RUN + "'))";
+                    // @.두 화물이 같이 도착해 완료보고가 같이 나가면, HOST 가 입고 요구에 답하는 데 2~3초가
+                    //   걸려 420 쪽 입고 작업이 먼저 쓰인다. 그 사이 419 화물에는 아직 작업이 없다.
+                    //   (현장 11:23:59 둘 다 도착 -> 11:24:01 420 입고 접수 -> 11:24:02 단독 지시 -> 11:24:03 419 입고 접수)
+                    //   그래서 419 화물의 이동 작업이 아직 JOB_MST 에 남아 있거나(완료보고 처리 중),
+                    //   420 쪽 입고 작업이 접수된 지 10초가 안 됐으면 419 작업을 조금 더 기다린다.
+                    //   10초가 지나도 안 오면 단독으로 간다. (영영 기다리지 않는다)
+                    strSqlWait += CRLF + "         OR (JM.LUGG_NO IS NOT NULL AND JM.JOB_TYP = '6')";
+                    strSqlWait += CRLF + "         OR EXISTS (SELECT 1 FROM JOB_MST J3";
+                    strSqlWait += CRLF + "                     WHERE J3.WH_TYP = CD.WH_TYP AND J3.LUGG_NO = :LUGG1";
+                    strSqlWait += CRLF + "                       AND J3.INS_DT > " + DbLang.SYSDATE + " - INTERVAL '10 second'))";
                     _pBdb.mComMain.CommandType = CommandType.Text;
                     _pBdb.mComMain.Parameters.Clear();
                     _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
                     _pBdb.mComMain.Parameters.Add("CV_PLC", DbLang.VARCHAR).Value = strCV_PLC;
                     _pBdb.mComMain.Parameters.Add("MC_NO2", DbLang.VARCHAR).Value = strStoHsFk2;
+                    _pBdb.mComMain.Parameters.Add("LUGG1", DbLang.VARCHAR).Value = dtSto.Rows[nRowFk1]["LUGG_NO"].ToString();
                     int nWaitCnt = _pBdb.ExcuteQry(strSqlWait);
                     if (nWaitCnt > 0 && Convert.ToInt32(_pBdb.mDtMain.Rows[0]["CNT"]) > 0)
                     {
