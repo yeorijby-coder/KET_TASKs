@@ -4749,6 +4749,87 @@ namespace TSK_COMM_IOSCH
         //   (전에는 "1층 출고대" 로 박혀 있어 3층 도착을 1층이라고 찍어 햷갈릴 수 있었다)
         //   목적지 트랙 도착(RET_READY + 작업번호 일치) → 상위 보고 + 작업 삭제(HIS 이관)
         // ─────────────────────────────────────────────────────────────────
+        /// <summary>도착하면 트랙 작업번호를 지우는 작업대인지 (ENV_IOSCH.INI [SCH] DELETE_DATA_STN, 기본 207,251)</summary>
+        protected bool IsDeleteDataStation(string strHostStn)
+        {
+            if (strHostStn == null || strHostStn.Trim() == "") return false;
+            string strList = cDefApi.GsGetDeleteDataStn();
+            foreach (string s in strList.Split(','))
+                if (s.Trim() == strHostStn.Trim()) return true;
+            return false;
+        }
+
+        /*
+         * 보조 청소 (원본 EcsSv/Cv.cpp:1075 "작업 없이 DATA 만 남음" 분기)
+         *
+         *   삭제 작업대에 화물이 서 있고 트랙에 작업번호가 남았는데 그 작업이 JOB_MST 에
+         *   없으면(완료보고까지 끝나 지워짐) 작업번호를 0 으로 지운다.
+         *   도착 처리 때 못 지웠거나, 태스크 재기동 등으로 남은 것을 치운다.
+         *   화물 센서 ON 이고 출고대 준비가 켜진 자리만 본다. 빈 트랙에는 쓰지 않는다. (EHS)
+         */
+        protected bool CV_DELETE_DATA_STN(string strWH_TYP, string strCV_PLC, string strTitle, ref string pRTN_MSG)
+        {
+            try
+            {
+                pRTN_MSG = "";
+                string strList = cDefApi.GsGetDeleteDataStn();
+                if (strList == "") return true;
+                string strIn = "";
+                foreach (string s in strList.Split(','))
+                    if (s.Trim() != "") strIn += (strIn == "" ? "" : ",") + "'" + s.Trim().Replace("'", "") + "'";
+                if (strIn == "") return true;
+
+                string strSql = "";
+                strSql += CRLF + " SELECT CD.MC_NO, CD.HOST_STN_NO, CD.LUGG_NO_RD, CD.JOB_TYP_RD           ";
+                strSql += CRLF + "   FROM CV_DATA CD                                                ";
+                strSql += CRLF + "  WHERE CD.WH_TYP          = :WH_TYP                              ";
+                strSql += CRLF + "    AND CD.PLC_NO          = :CV_PLC                              ";
+                strSql += CRLF + "    AND CD.HOST_STN_NO    IN (" + strIn + ")                      ";
+                strSql += CRLF + "    AND CD.SENSOR0_DATA_RD = '1'                                  ";
+                strSql += CRLF + "    AND CD.RET_READY_RD    = '1'                                  ";
+                strSql += CRLF + "    AND CD.AUTO_MODE_RD    = '1'                                  ";
+                strSql += CRLF + "    AND CD.OD_RQ_YN        = 'N'                                  ";
+                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.LUGG_NO_RD, " + SQL_WS + "), ''), '0') NOT IN ('0','0000')";
+                strSql += CRLF + "    AND NOT EXISTS (SELECT 1 FROM JOB_MST JM                      ";
+                strSql += CRLF + "                     WHERE JM.WH_TYP = CD.WH_TYP                  ";
+                strSql += CRLF + "                       AND JM.LUGG_NO = CD.LUGG_NO_RD)            ";
+                _pBdb.mComMain.CommandType = CommandType.Text;
+                _pBdb.mComMain.Parameters.Clear();
+                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+                _pBdb.mComMain.Parameters.Add("CV_PLC", DbLang.VARCHAR).Value = strCV_PLC;
+                int nSelCnt = _pBdb.ExcuteQry(strSql);
+                if (nSelCnt < 0) { pRTN_MSG = strTitle + _pBdb.ErrMsg; return false; }
+                if (nSelCnt == 0) return true;
+
+                DataTable dt = _pBdb.mDtMain.Copy();
+                for (int i = 0; i < dt.Rows.Count; i++)
+                {
+                    string strMc  = dt.Rows[i]["MC_NO"].ToString().Trim();
+                    string strStn = dt.Rows[i]["HOST_STN_NO"].ToString().Trim();
+                    string strLug = dt.Rows[i]["LUGG_NO_RD"].ToString().Trim();
+                    string strTyp = dt.Rows[i]["JOB_TYP_RD"].ToString().Trim();
+                    if (strTyp == "") strTyp = "0";
+                    string strMsg = "";
+                    _pBdb.BeginTrans();
+                    if (UPDATE_CV_DATA(strTyp, "", "", strStn, "", "0", strWH_TYP, strCV_PLC, strMc, "", ref strMsg) == false)
+                    {
+                        _pBdb.Rollback();
+                        continue;
+                    }
+                    _pBdb.Commit();
+                    pRTN_MSG = strTitle + "TRACK " + strMc + "번[" + strStn + "] 에 작업 없는 작업번호(" + strLug + ")가 남아 0 으로 지우도록 CV_TASK 에 요청했습니다.";
+                    InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLug, "", strMc);
+                }
+                return true;
+            }
+            catch (Exception ex)
+            {
+                pRTN_MSG = strTitle + ex.Message;
+                _pBdb.Rollback();
+                return false;
+            }
+        }
+
         protected bool CV_ARRIVE_PLC(string strWH_TYP, string strCV_PLC, string strTitle, ref string pRTN_MSG)
         {
             try
@@ -4856,6 +4937,7 @@ namespace TSK_COMM_IOSCH
 
                 string strLUGG_NO = "";
                 string strMC_NO = "";
+                string strDelLogs = "";     // @.삭제 작업대 0 쓰기 결과. InsertLog 가 트랜잭션을 또 열므로 Commit 뒤에 적는다.
                 _pBdb.BeginTrans();
 
                 for (int i = 0; i < nSelCnt; i++)
@@ -4892,11 +4974,40 @@ namespace TSK_COMM_IOSCH
                         _pBdb.Rollback();
                         return false;
                     }
+
+                    /*
+                     * 도착 시 트랙 작업번호 삭제 (원본 ECS 유형 D : IsDeleteDataStation = 207, 251)
+                     *
+                     *   원본 CCv::ArrivedCheck(EcsSv/Cv.cpp:1197~1205) 는 이 자리에 화물이 닿으면
+                     *   WriteTrackInfo(트랙, 0, 작업구분, 목적지) 로 작업번호 자리만 0 으로 쓰고
+                     *   JOB->Arrived() 를 불렀다. 신규는 이것을 빼먹어 251(트랙 415)에 작업번호가
+                     *   화물이 나간 뒤에도 남았다. PLC 가 251 쪽을 "데이터 있음" 으로 보면
+                     *   414 디버터 스토퍼를 올리지 않아 다음 출고 화물이 409 로 빠진다.
+                     *
+                     *   0 쓰기는 CV_DATA 의 _OD 를 통해 CV_TASK 가 한다. 화물 센서 ON 뒤의 도착
+                     *   처리 안에서만 부르므로 빈 트랙에 미리 쓰는 일은 없다. (EHS)
+                     */
+                    string strArvStn = "" + _pBdb.mDtMain.Rows[i]["HOST_STN_NO"].ToString().Trim();
+                    if (IsDeleteDataStation(strArvStn))
+                    {
+                        string strDelMsg = "";
+                        if (UPDATE_CV_DATA(strJOB_TYP, "", "", strArvStn, "", "0",
+                                           strWH_TYP, strCV_PLC, strMC_NO, "", ref strDelMsg) == false)
+                        {
+                            strDelLogs += "|" + strTitle + "TRACK " + strMC_NO + "번[" + strArvStn + "] 도착 후 작업번호 0 쓰기를 이번 주기에 못 냈습니다(지시 자리가 비지 않음). 보조 청소가 다시 봅니다. " + strDelMsg;
+                        }
+                        else
+                        {
+                            strDelLogs += "|" + strTitle + "TRACK " + strMC_NO + "번[" + strArvStn + "] 도착 - 트랙 작업번호를 0 으로 지우도록 CV_TASK 에 요청했습니다(작업구분/목적지 유지). [작업번호:" + strLUGG_NO + "]";
+                        }
+                    }
                 }
 
                 pRTN_MSG = strTitle + "TRACK " + strMC_NO + "번[도착 작업대]에서 HOST_TASK를 통해서 완료보고 요청하였습니다. [작업번호:" + strLUGG_NO + "]";
                 _pBdb.Commit();
                 InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_CV_DONE);
+                foreach (string strOne in strDelLogs.Split('|'))
+                    if (strOne != "") InsertLog(SCH_WH_TYP, strOne, "", "", strLUGG_NO, ST_CV_DONE, strMC_NO);
                 return true;
             }
             catch (Exception ex)

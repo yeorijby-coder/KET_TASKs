@@ -473,8 +473,8 @@ namespace WCS_TASK_CV
 
                             if (!CvChg_OD_RQ_YN(Idx)) goto EXIT_LBL; //컨베이어 OD 쓰기지시를 확인하고 DATA를 WRITE한다..
 
-
-                            Thread.Sleep(200);
+                            // @.출고 H/S 쓰기 지연 줄이기 (2026-10-16) : 한 바퀴 200ms -> 100ms
+                            Thread.Sleep(100);
                         }
                     }
                 }

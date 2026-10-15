@@ -369,6 +369,27 @@ namespace WCS_TASK_CV
             return dicVals;
         }
 
+        /// <summary>
+        /// 작업번호 워드 인코딩. true = 원본 ECS 방식(상위 바이트 = 번호/100, 하위 = 번호%100).
+        /// WCS_DB.INI [CNF] LUGG_WORD_ENC (DEC100 | BIN). 기동 시 한 번 읽는다.
+        /// </summary>
+        public static bool LuggWordDec100 = cDefApi.GsIsLuggWordDec100();
+
+        /// <summary>작업번호 -> PLC 워드</summary>
+        public static int LuggToWord(int nLugg)
+        {
+            if (!LuggWordDec100) return nLugg & 0xFFFF;
+            if (nLugg < 0) nLugg = 0;
+            return (((nLugg / 100) & 0xFF) << 8) | ((nLugg % 100) & 0xFF);
+        }
+
+        /// <summary>PLC 워드 -> 작업번호</summary>
+        public static int WordToLugg(int nWord)
+        {
+            if (!LuggWordDec100) return nWord & 0xFFFF;
+            return ((nWord >> 8) & 0xFF) * 100 + (nWord & 0xFF);
+        }
+
         public string GetValue(CvField f, byte[] byBuf, int nBaseByte)
         {
             int nByteIdx = nBaseByte + f.WordOffset * 2;
@@ -382,6 +403,9 @@ namespace WCS_TASK_CV
                 case 'B': nVal = (nWord >> (8 * f.Pos)) & 0xFF; break;
                 default:  nVal = nWord;                          break;
             }
+            // @.작업번호 워드는 원본 ECS 인코딩(DEC100)이면 되돌려 읽는다.
+            if (f.Kind == 'W' && string.Compare(f.DbCol, "LUGG_NO_RD", true) == 0)
+                nVal = WordToLugg(nWord);
             return (f.Fmt == "") ? nVal.ToString() : nVal.ToString(f.Fmt);
         }
         #endregion
@@ -405,6 +429,10 @@ namespace WCS_TASK_CV
             foreach (CvField f in Fields)
             {
                 if (string.Compare(f.DbCol, strDbCol, true) != 0) continue;
+
+                // @.작업번호 워드는 원본 ECS 인코딩(DEC100)으로 쓴다. (EcsSv/Cv.cpp WriteTrackInfo)
+                if (f.Kind == 'W' && string.Compare(f.DbCol, "LUGG_NO_RD", true) == 0)
+                    nVal = LuggToWord(nVal);
 
                 switch (f.Kind)
                 {

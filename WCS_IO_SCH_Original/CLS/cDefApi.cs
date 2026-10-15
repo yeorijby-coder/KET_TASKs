@@ -92,6 +92,28 @@ namespace TSK_COMM_IOSCH
             }
         }
 
+        /*
+         * 도착하면 트랙의 작업번호를 지우는 작업대 (ENV_IOSCH.INI [SCH] DELETE_DATA_STN)
+         *
+         *   원본 ECS 의 CLib::IsDeleteDataStation(EcsSv/Lib.cpp:3455) 과 같다. 기본 "207,251".
+         *   원본 CCv::ArrivedCheck(Cv.cpp:1200) 는 이 자리에 화물이 닿으면
+         *   WriteTrackInfo(트랙, 0, 작업구분, 목적지) 로 작업번호 자리만 0 으로 썼다.
+         *   값은 작업대 번호(HOST_STN_NO) 목록이다. 비우면("") 아무 데도 안 지운다.
+         */
+        public static string GsGetDeleteDataStn()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(256);
+                GetPrivateProfileString("SCH", "DELETE_DATA_STN", "207,251", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                return sb.ToString().Trim();
+            }
+            catch
+            {
+                return "207,251";
+            }
+        }
+
         public static bool GsGetRetDecideWait()
         {
             try

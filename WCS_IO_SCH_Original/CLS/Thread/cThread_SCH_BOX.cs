@@ -190,6 +190,19 @@ namespace TSK_COMM_IOSCH
                     RunSchFunc(StoHsCheck4);            // BOX 입고 H/S -> 크레인 입고 지시
                     RunSchFunc(RetCmdCheck4);           // BOX 출고 지시 20 -> 21
                     RunSchFunc(ScCompleteCheck4);       // 크레인 작업 완료 -> 29
+                    /*
+                     * @.출고 H/S 쓰기 지연 줄이기 (2026-10-16)
+                     *   크레인 완료(29)를 본 바로 그 주기에 출고 H/S 목적지 쓰기까지 낸다.
+                     *   전에는 다음 주기(200ms 뒤)의 CHECK_CV_RETHS / RetInvokeCheck4 가 냈다.
+                     *   현장에서 크레인 완료 -> PLC 쓰기까지 1~2초 걸리던 것을 줄인다.
+                     */
+                    if (!CHECK_CV_RETHS(SCH_WH_TYP, m_nId.ToString(), ref strRTN_MSG))
+                    {
+                        if (strRTN_MSG != "") { MakeMsg_Error_NoLog(strRTN_MSG); SetErrorMsg(strRTN_MSG); }
+                    }
+                    else if (strRTN_MSG != "") { MakeMsg(strRTN_MSG); }
+                    RunSchFunc(RetInvokeCheck4);        // 출고 H/S -> 픽킹대 지시 (완료 직후 한 번 더)
+                    RunSchFunc(DeleteDataStnCheck4);    // 삭제 작업대(251/207) 보조 청소
 
 
                 }
@@ -290,6 +303,8 @@ namespace TSK_COMM_IOSCH
         { return CV_RETHS_PLC(strWH_TYP, CV_PLC_3F_BOX, "[RetInvokeCheck4]", ref pRTN_MSG); }
         public bool ArrivedCheck4(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
         { return CV_ARRIVE_PLC(strWH_TYP, CV_PLC_3F_BOX, "[ArrivedCheck4]", ref pRTN_MSG); }
+        public bool DeleteDataStnCheck4(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return CV_DELETE_DATA_STN(strWH_TYP, CV_PLC_3F_BOX, "[DeleteDataStnCheck4]", ref pRTN_MSG); }
         public bool CheckBoxStoArrived(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
         { return CHECK_PBOX_STO_REQUEST(strWH_TYP, CV_PLC_3F_BOX, "[CheckBoxStoArrived]", ref pRTN_MSG); }
 

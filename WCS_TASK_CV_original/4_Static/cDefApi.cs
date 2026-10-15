@@ -30,6 +30,28 @@ namespace WCS_TASK_CV
          *   속성이 없는 영역은 형식과 무관하게 항상 읽는다.
          *   키가 없으면 NEW 다. (지금까지 돌던 방식)
          */
+        /*
+         * 작업번호 워드 인코딩 (WCS_DB.INI [CNF] LUGG_WORD_ENC)
+         *
+         *   DEC100 : 원본 ECS(EcsSv/Cv.cpp CCv::WriteTrackInfo) 와 같다.
+         *            상위 바이트 = 작업번호 / 100, 하위 바이트 = 작업번호 % 100.
+         *            1234 -> 0x0C22(3106). 현장 PLC 는 이 형식이다. 키가 없으면 이것이다.
+         *   BIN    : 작업번호를 16비트 이진수 그대로. 시뮬레이터(CvSim)는 이 형식이다.
+         */
+        public static bool GsIsLuggWordDec100()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(32);
+                GetPrivateProfileString("CNF", "LUGG_WORD_ENC", "DEC100", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                return (sb.ToString().Trim().ToUpper() != "BIN");
+            }
+            catch
+            {
+                return true;
+            }
+        }
+
         public static string GsGetAutoModeStyle()
         {
             try
