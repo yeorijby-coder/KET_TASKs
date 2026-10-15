@@ -1691,6 +1691,22 @@ namespace WCS_TASK_CV
                     {
                         return false;
                     }
+                    /*
+                     * @.OD_RQ_FLAG 가 'Y' 로 굳는 것 막기 (2026-10-16)
+                     *   UpdateCvDataOD 가 OD_RQ_FLAG='Y' 로 두면, 다음 읽기 주기에 CvStatus 가
+                     *   UpdateCvData 로 'N' 으로 되돌려야 스케줄러가 그 자리에 다시 지시할 수 있다.
+                     *   그런데 UpdateCvData 는 읽은 워드가 직전과 달라졌을 때만 돈다. 쓴 값이
+                     *   PLC 에 이미 있던 값과 같거나(같은 지시 재전송, 0 쓰기가 이미 0 인 자리 등)
+                     *   PLC 가 그 사이 스스로 같은 값으로 바꿔 두면 읽기 결과가 안 변해
+                     *   OD_RQ_FLAG='Y' 가 영영 남고, 그 트랙은 지시가 막혔다.
+                     *   쓰고 나면 그 트랙의 직전 읽기값을 비워 다음 읽기에서 반드시 한 번
+                     *   UpdateCvData 가 돌게 한다. (OD_RQ_FLAG 는 설계대로 한 주기만 'Y' 다)
+                     */
+                    {
+                        int nTrkKey = 0;
+                        if (int.TryParse(TRACK_NO, out nTrkKey) && CvDic.ContainsKey(nTrkKey))
+                            CvDic[nTrkKey].CVSTATHEXVAL = "";
+                    }
 
                     #endregion
                 }
