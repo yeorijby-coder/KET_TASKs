@@ -1091,7 +1091,9 @@ namespace TSK_HostCom
                     // 함수안에서 실패시 화면에 메세지 출력함!
                     MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_ECS_BUFFER_FULL);
                     m_BDb.RollbackTrans();
-                    break;
+                    // @.break 로 나가면 switch 뒤의 MakeResponse(MSG_NO_ERROR) 가 NAK 를 ACK 로 덮어써
+                    //   작업이 안 만들어졌는데 상위는 접수된 줄 알았다. (2026-10-16 전수 조사에서 발견)
+                    return;
                 }
 
                     /*
