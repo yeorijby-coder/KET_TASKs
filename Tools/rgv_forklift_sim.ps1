@@ -31,7 +31,7 @@ function Ask([string]$q) { (& $P -h localhost -U KET_WCS -d KET_WCS -A -t -c $q)
 function PlcW([int]$addr, $vals) { & $W -Port $PORT -Addr $addr -Values $vals | Out-Null }
 function Say([string]$m) { Write-Host ("[{0}] {1}" -f (Get-Date -Format 'HH:mm:ss'), $m) }
 
-$DEST = @{ '103' = 206; '104' = 212 }          # 출고대 -> 트랙
+$DEST = @{ 103 = 206; 104 = 212 }              # 출고대 -> 트랙 (정수 키)
 $STO_TRACK = 217                               # 입고대 101
 
 do {
@@ -40,8 +40,9 @@ do {
     $rows = Ask "SELECT cd.lugg_no_rd, jm.dest_pos, jm.job_typ FROM cv_data cd JOIN job_mst jm ON jm.wh_typ=cd.wh_typ AND jm.lugg_no=cd.lugg_no_rd WHERE cd.plc_no='02' AND cd.mc_no='259' AND cd.sensor0_data_rd='1' AND cd.lugg_no_rd NOT IN ('0','0000') AND jm.job_status='11' AND jm.dest_pos IN ('103','104');"
     foreach ($r in ($rows -split "`n")) {
       if ($r.Trim() -eq '') { continue }
-      $f = $r.Split('|'); $lugg = [int]$f[0]; $dest = $f[1]; $typ = [int]$f[2]
+      $f = $r.Trim().Split('|'); $lugg = [int]$f[0].Trim(); $dest = [int]$f[1].Trim(); $typ = [int]$f[2].Trim()
       $trk = $DEST[$dest]
+      if ($null -eq $trk) { Say "RGV: 모르는 출고대 [$dest] (행: $r)"; continue }
       $busy = Ask "SELECT sensor0_data_rd FROM cv_data WHERE plc_no='02' AND mc_no='$trk';"
       if ($busy.Trim() -eq '1') { Say "RGV: 출고대 $dest($trk) 가 차 있어 $lugg 을 기다린다"; continue }
       PlcW (Addr 259) @(0,0,0,0,0)
@@ -51,11 +52,11 @@ do {
     }
 
     # 2) 지게차 : 출고대 -> 입고대 101
-    foreach ($dest in $DEST.Keys) {
+    foreach ($dest in @($DEST.Keys)) {
       $trk = $DEST[$dest]
       $r = Ask "SELECT cd.lugg_no_rd FROM cv_data cd WHERE cd.plc_no='02' AND cd.mc_no='$trk' AND cd.sensor0_data_rd='1' AND cd.lugg_no_rd NOT IN ('0','0000') AND NOT EXISTS (SELECT 1 FROM job_mst jm WHERE jm.wh_typ=cd.wh_typ AND jm.lugg_no=cd.lugg_no_rd) AND cd.od_rq_yn='N';"
       if ($r.Trim() -eq '') { continue }
-      $lugg = $r.Trim()
+      $lugg = $r.Trim().Split("`n")[0].Trim()
       $sto = Ask "SELECT sensor0_data_rd FROM cv_data WHERE plc_no='02' AND mc_no='$STO_TRACK';"
       if ($sto.Trim() -eq '1') { Say "지게차: 입고대 101 이 차 있어 $lugg 을 기다린다"; continue }
       PlcW (Addr $trk) @(0,0,0,0,0)
