@@ -36,6 +36,19 @@ function Say([string]$m) { Write-Host ("[{0}] {1}" -f (Get-Date -Format 'HH:mm:s
 
 function DestTrack([int]$d) { switch ($d) { 103 { return 206 } 104 { return 212 } 105 { return 267 } default { return 0 } } }   # 출고대 -> 트랙 (105 는 CvSim 가상 트랙 267. CV 태스크 VIRTUAL_TRACK=2101:267)
 $DEST_LIST = @(103, 104, 105)
+function Confirm([int]$trk, [int]$lugg, [int]$dest, [int]$typ) {
+  # 출고대에 쓴 작업번호를 CV 태스크가 CV_DATA 에 올렸는지 2초 안에 확인. 못 올렸으면 한 번 더 쓴다.
+  $mc = if ($trk -eq 267) { '2101' } else { "$trk" }
+  for ($k = 0; $k -lt 3; $k++) {
+    for ($w = 0; $w -lt 7; $w++) {
+      Start-Sleep -Milliseconds 300
+      $v = Ask "SELECT lugg_no_rd FROM cv_data WHERE plc_no='02' AND mc_no='$mc';"
+      if ([int]("0" + $v.Trim()) -eq $lugg) { return }
+    }
+    Say "RGV: 출고대 $dest($trk) 의 작업번호 $lugg 를 CV 태스크가 못 읽어 다시 쓴다 ($($k+1))"
+    PlcW (Addr $trk) @($lugg, (($typ -shl 8) -bor [int]$dest), 1, 0, 0)
+  }
+}
 $STO_TRACK = 217                               # 입고대 101
 
 do {
@@ -54,6 +67,23 @@ do {
       Start-Sleep -Milliseconds 500
       PlcW (Addr $trk) @($lugg, (($typ -shl 8) -bor [int]$dest), 1, 0, 0)
       Say "RGV: $from -> $dest($trk)  작업번호 $lugg"
+      Confirm $trk $lugg $dest $typ
+    }
+
+    # 1b) 잃어버린 출고 화물 구조 : 출고대행(103/104/105) 작업이 지시(11) 상태인데 어느 트랙에도, 어느 크레인에도 없으면
+    #     RGV 가 가지고 있다고 보고 출고대가 빌 때 출고대에 내려놓는다.
+    #     (CvSim 이 출고대 데이터를 6초 뒤 지우는데, 그 사이 CV 태스크가 못 읽은 경우가 있었다)
+    $lost = Ask "SELECT jm.lugg_no, jm.dest_pos, jm.job_typ FROM job_mst jm WHERE jm.wh_typ='10' AND jm.job_status='11' AND jm.dest_pos IN ('103','104','105') AND jm.job_typ IN ('2','6') AND jm.upd_dt < now() - interval '20 seconds' AND NOT EXISTS (SELECT 1 FROM cv_data cd WHERE cd.lugg_no_rd=jm.lugg_no) AND NOT EXISTS (SELECT 1 FROM sc_data sd WHERE sd.lugg_no_fk1_rd=jm.lugg_no OR sd.lugg_no_fk2_rd=jm.lugg_no OR sd.lugg_no_fk1_od=jm.lugg_no) ORDER BY jm.upd_dt;"
+    foreach ($r in ("$lost" -split "`n")) {
+      if ([string]::IsNullOrWhiteSpace($r)) { continue }
+      $f = $r.Trim().Split('|'); $lugg = [int]$f[0].Trim(); $dest = [int]$f[1].Trim(); $typ = [int]$f[2].Trim()
+      $trk = DestTrack $dest
+      if ($trk -eq 0) { continue }
+      $busy = Ask "SELECT CASE WHEN sensor0_data_rd='1' OR lugg_no_rd NOT IN ('0','0000') THEN '1' ELSE '0' END FROM cv_data WHERE plc_no='02' AND mc_no='$trk';"
+      if ($busy.Trim() -eq '1') { Say "RGV(구조): 출고대 $dest($trk) 가 차 있어 $lugg 을 기다린다"; continue }
+      PlcW (Addr $trk) @($lugg, (($typ -shl 8) -bor [int]$dest), 1, 0, 0)
+      Say "RGV(구조): 트랙에 없는 출고 화물 $lugg 을 $dest($trk) 에 내려놓았다"
+      Confirm $trk $lugg $dest $typ
     }
 
     # 2) 지게차 : 출고대 -> 입고대 101
