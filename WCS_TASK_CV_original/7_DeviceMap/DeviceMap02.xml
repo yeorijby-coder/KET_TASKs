@@ -87,6 +87,7 @@
 				<TrList>204</TrList>
 				<TrList>205</TrList>
 				<TrList>206</TrList>
+				<TrList>2101</TrList>
 			</Bit>
 			<Bit  desc="D557.1" Use ="1" tid="0" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재">
 				<TrList>207</TrList>

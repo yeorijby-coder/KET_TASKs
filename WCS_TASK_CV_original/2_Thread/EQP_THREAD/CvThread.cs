@@ -223,6 +223,12 @@ namespace WCS_TASK_CV
 
         // @.CV_DATA 에 행이 없어 건너뛴 트랙. 같은 트랙을 매 주기 알리지 않으려고 기억해 둔다.
         private Dictionary<string, bool> m_dicNoRowTrack = new Dictionary<string, bool>();
+
+        // @.가상 트랙 : mc_no -> PLC 자리를 빌리는 트랙번호. WCS_DB.INI [COMMn] VIRTUAL_TRACK=2101:267
+        //   105(1F 그룹 출고대, mc_no 2101)는 현장에서는 RGV 가 내려놓는 자리라 PLC 트랙 데이터가 따로 없다.
+        //   시뮬레이터에서 도착/완료를 보려고 2101 의 데이터를 267 번 트랙 자리에서 읽고 쓴다.
+        //   현장 INI 에는 이 키가 없으므로 아무 영향이 없다.
+        private Dictionary<int, int> m_dicVirtual = new Dictionary<int, int>();
         public Thread m_thThread;
         public SYS_MAIN m_frmMain;
 
@@ -266,6 +272,7 @@ namespace WCS_TASK_CV
         {
             #region 변수값 세팅
             m_nthNo = nThNo;
+            LoadVirtualTracks();
             m_strWh_typ = strWh_typ;
             m_strEqmt_typ = Eqmt_typ;
             m_strPlc_No = Plc_No;
@@ -678,93 +685,28 @@ namespace WCS_TASK_CV
                         int nCvNo = nIdx + CvNo;
                         int nArrayIdx = nIdx * nWPT * 2;
 
-                        if (!CvDic.ContainsKey(nCvNo))
-                        {
-                            CvDic.Add(nCvNo, new CVData()); //Key를 추가한다.
-                        }
-
-                        //최초 실행 시 현재 DB값을 DIC에 넣기(상위에 상태보고 하는 값들)
-                        if (CvDic[nCvNo].PrevVals.Count == 0)
-                        {
-                            if (!LoadPrevValsFromDb(nCvNo))
-                            {
-                                MakeMsg_Error(strTitle + "최초 트랙정보 읽는 중 에러(CV_DATA)", m_nthNo);
-                                return false;
-                            }
-                        }
-
-                        //Hexa string 값으로 가져온다.
-                        // @.BytesToHexs 의 세번째 인자는 "길이" 가 아니라 "끝 인덱스" 다.
-                        //   (maindefine.cs : for (ii = nStartLen; ii < nEndlen; ii++))
-                        //   예전에는 길이(nWPT*2 = 10)를 넘겨서 첫 트랙(오프셋 0)만 값이 나오고
-                        //   두번째 트랙부터는 ii = 10 < 10 이 거짓이라 빈 문자열이 됐다.
-                        //   그러면 직전 값(역시 빈 문자열)과 같아 "변화 없음" 으로 판정되어
-                        //   그 트랙의 읽기값이 영영 CV_DATA 에 반영되지 않았다.
-                        string strCvHexVal = BytesToHexs(byRxBuff, nArrayIdx, nArrayIdx + nWPT * 2);
-
-                        //Conveyor상태값이 다를 때만 Update.
-                        if (CvDic[nCvNo].CVSTATHEXVAL != strCvHexVal)
-                        {
-                            CvDic[nCvNo].CVSTATHEXVAL = strCvHexVal; //Dictionary 값을 변경한다.
-
-                            //DeviceMap XML 정의대로 트랙 버퍼를 필드 단위 파싱
-                            Dictionary<string, string> dicVals = m_devMap.ParseTrack(byRxBuff, nArrayIdx);
-
-                            //상위 보고 대상(hostRpt) 필드 값이 변했으면 보고 플래그 SET
-                            foreach (cDeviceMapRuntime.CvField fld in m_devMap.Fields)
-                            {
-                                string strNew = dicVals[fld.DbCol];
-                                string strOld;
-                                CvDic[nCvNo].PrevVals.TryGetValue(fld.DbCol, out strOld);
-                                if (strOld != strNew)
-                                {
-                                    CvDic[nCvNo].PrevVals[fld.DbCol] = strNew;
-                                    if (fld.HostRpt)
-                                        m_blHostSendYN = true;
-                                }
-                            }
-
-                            //에러코드가 있고 전에 에러코드와 다를때만.
-                            //처음에 에러코드가 0인거는 안탐.
-                            int nErrorCode = 0;
-                            string ERROR_CODE = "0000";
-                            if (dicVals.ContainsKey("ERROR_CODE"))
-                            {
-                                ERROR_CODE = dicVals["ERROR_CODE"];
-                                nErrorCode = Convert.ToInt32("0" + ERROR_CODE);
-                            }
-
-                            if (CvDic[nCvNo].CVERRCD != nErrorCode)
-                            {
-                                m_blHostErrSendYN = true;
-
-                                string LUGG_NO_RD = dicVals.ContainsKey("LUGG_NO_RD") ? dicVals["LUGG_NO_RD"] : "";
-                                if (!UpdateEQMT_ERR_LOG(m_strWh_typ, m_strEqmt_typ, nCvNo.ToString("000"), ERROR_CODE, LUGG_NO_RD))
-                                {
-                                    m_blHostErrSendYN = false;
-                                    return false;
-                                }
-
-                                //에러코드를 SET한다.
-                                CvDic[nCvNo].CVERRCD = nErrorCode;
-                            }
-
-                            //TRACK정보 UPDATE. (파싱된 전체 필드를 동적 반영)
-                            if (!UpdateCvData(nCvNo.ToString("000"), dicVals))
-                            {
-                                m_blHostSendYN = false;
-                                m_blHostErrSendYN = false;
-                                return false;
-                            }
-                        }
-                        m_blHostSendYN = false;
-                        m_blHostErrSendYN = false;
-                        m_strCvNo = Convert.ToString("" + nCvNo);
+                        if (!ProcessTrackBlock(nCvNo, byRxBuff, nArrayIdx, strTitle))
+                            return false;
                     }
 
                     CvNo += nReadTrack;
 
                     if (m_nToTrackNo < CvNo) break;
+                }
+
+                // @.가상 트랙(VIRTUAL_TRACK) : 읽기 범위 밖의 자리를 빌려 쓰는 트랙을 한 건씩 읽는다 (시뮬레이터용)
+                foreach (KeyValuePair<int, int> kv in m_dicVirtual)
+                {
+                    Array.Clear(byRxBuff, 0x00, byRxBuff.Length);
+                    int nVAddr = TrackAddr(kv.Key);
+                    if (m_msQPlc.READ((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT,
+                            (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D,
+                            nVAddr, nWPT, ref byRxBuff) == false)
+                    {
+                        throw new Exception("PLC 읽기 실패 (가상 트랙 " + kv.Key + " 주소 " + nVAddr + ") : " + m_msQPlc.GetErrorMsg());
+                    }
+                    if (!ProcessTrackBlock(kv.Key, byRxBuff, 0, strTitle))
+                        return false;
                 }
                 //설비 통신상태 업데이트
                 Communication("Y", m_strWh_typ, m_strEqmt_typ, m_strPlc_No);
@@ -779,6 +721,128 @@ namespace WCS_TASK_CV
                 MakeMsg_Error(strTitle + m_strCvNo + "Exception Error" + ex.Message, m_nthNo);
                 return false;
             }
+            return true;
+        }
+        #endregion
+
+        #region [가상 트랙] VIRTUAL_TRACK 읽기 / 트랙 주소
+        private void LoadVirtualTracks()
+        {
+            m_dicVirtual.Clear();
+            string strList = cDefApi.GsGetVirtualTracks("COMM" + m_nthNo);
+            if (strList == "") return;
+            foreach (string strPair in strList.Split(','))
+            {
+                string[] arr = strPair.Trim().Split(':');
+                if (arr.Length != 2) continue;
+                int nMc, nAlias;
+                if (!int.TryParse(arr[0].Trim(), out nMc) || !int.TryParse(arr[1].Trim(), out nAlias)) continue;
+                m_dicVirtual[nMc] = nAlias;
+            }
+        }
+
+        /// <summary>
+        /// 트랙의 PLC 워드 주소.
+        ///   보통 트랙 : 트랙번호 끝 두 자리 x 트랙당 워드수 (예전 식 그대로. 201 -> D5, 266 -> D330)
+        ///   가상 트랙 : VIRTUAL_TRACK=2101:267 이면 267 번 자리 ((267-FR_TRACK) x 워드수 + 시작주소 = D335).
+        ///   예전 식만 있으면 2101 의 끝 두 자리 "01" 로 D5 가 되어 201 번 트랙과 겹친다.
+        /// </summary>
+        private int TrackAddr(int nCvNo)
+        {
+            int nAlias;
+            if (m_dicVirtual.TryGetValue(nCvNo, out nAlias))
+                return (nAlias - m_nFrTrackNo) * m_devMap.WordPerTrack + m_nAddress;
+            string strNo = nCvNo.ToString("000");
+            return Convert.ToInt32(strNo.Substring(strNo.Length - 2, 2)) * m_devMap.WordPerTrack;
+        }
+        #endregion
+
+        #region [ProcessTrackBlock] :: 읽어 온 한 트랙 분량을 CV_DATA 에 반영 (CvStatus 본문)
+        private bool ProcessTrackBlock(int nCvNo, byte[] byRxBuff, int nArrayIdx, string strTitle)
+        {
+            if (!CvDic.ContainsKey(nCvNo))
+            {
+                CvDic.Add(nCvNo, new CVData()); //Key를 추가한다.
+            }
+
+            //최초 실행 시 현재 DB값을 DIC에 넣기(상위에 상태보고 하는 값들)
+            if (CvDic[nCvNo].PrevVals.Count == 0)
+            {
+                if (!LoadPrevValsFromDb(nCvNo))
+                {
+                    MakeMsg_Error(strTitle + "최초 트랙정보 읽는 중 에러(CV_DATA)", m_nthNo);
+                    return false;
+                }
+            }
+
+            //Hexa string 값으로 가져온다.
+            // @.BytesToHexs 의 세번째 인자는 "길이" 가 아니라 "끝 인덱스" 다.
+            //   (maindefine.cs : for (ii = nStartLen; ii < nEndlen; ii++))
+            //   예전에는 길이(m_devMap.WordPerTrack*2 = 10)를 넘겨서 첫 트랙(오프셋 0)만 값이 나오고
+            //   두번째 트랙부터는 ii = 10 < 10 이 거짓이라 빈 문자열이 됐다.
+            //   그러면 직전 값(역시 빈 문자열)과 같아 "변화 없음" 으로 판정되어
+            //   그 트랙의 읽기값이 영영 CV_DATA 에 반영되지 않았다.
+            string strCvHexVal = BytesToHexs(byRxBuff, nArrayIdx, nArrayIdx + m_devMap.WordPerTrack * 2);
+
+            //Conveyor상태값이 다를 때만 Update.
+            if (CvDic[nCvNo].CVSTATHEXVAL != strCvHexVal)
+            {
+                CvDic[nCvNo].CVSTATHEXVAL = strCvHexVal; //Dictionary 값을 변경한다.
+
+                //DeviceMap XML 정의대로 트랙 버퍼를 필드 단위 파싱
+                Dictionary<string, string> dicVals = m_devMap.ParseTrack(byRxBuff, nArrayIdx);
+
+                //상위 보고 대상(hostRpt) 필드 값이 변했으면 보고 플래그 SET
+                foreach (cDeviceMapRuntime.CvField fld in m_devMap.Fields)
+                {
+                    string strNew = dicVals[fld.DbCol];
+                    string strOld;
+                    CvDic[nCvNo].PrevVals.TryGetValue(fld.DbCol, out strOld);
+                    if (strOld != strNew)
+                    {
+                        CvDic[nCvNo].PrevVals[fld.DbCol] = strNew;
+                        if (fld.HostRpt)
+                            m_blHostSendYN = true;
+                    }
+                }
+
+                //에러코드가 있고 전에 에러코드와 다를때만.
+                //처음에 에러코드가 0인거는 안탐.
+                int nErrorCode = 0;
+                string ERROR_CODE = "0000";
+                if (dicVals.ContainsKey("ERROR_CODE"))
+                {
+                    ERROR_CODE = dicVals["ERROR_CODE"];
+                    nErrorCode = Convert.ToInt32("0" + ERROR_CODE);
+                }
+
+                if (CvDic[nCvNo].CVERRCD != nErrorCode)
+                {
+                    m_blHostErrSendYN = true;
+
+                    string LUGG_NO_RD = dicVals.ContainsKey("LUGG_NO_RD") ? dicVals["LUGG_NO_RD"] : "";
+                    if (!UpdateEQMT_ERR_LOG(m_strWh_typ, m_strEqmt_typ, nCvNo.ToString("000"), ERROR_CODE, LUGG_NO_RD))
+                    {
+                        m_blHostErrSendYN = false;
+                        return false;
+                    }
+
+                    //에러코드를 SET한다.
+                    CvDic[nCvNo].CVERRCD = nErrorCode;
+                }
+
+                //TRACK정보 UPDATE. (파싱된 전체 필드를 동적 반영)
+                if (!UpdateCvData(nCvNo.ToString("000"), dicVals))
+                {
+                    m_blHostSendYN = false;
+                    m_blHostErrSendYN = false;
+                    return false;
+                }
+            }
+            m_blHostSendYN = false;
+            m_blHostErrSendYN = false;
+            m_strCvNo = Convert.ToString("" + nCvNo);
+
             return true;
         }
         #endregion
@@ -994,8 +1058,7 @@ namespace WCS_TASK_CV
 
                     //LFC 사용
                     string TRACK_NO = "" + GfCol(nRows, "MC_NO");
-                    string ADDR_NO = TRACK_NO.Substring(TRACK_NO.Length - 2, 2);
-                    int nADDR_NO = (Convert.ToInt32(0 + ADDR_NO)) * m_devMap.WordPerTrack; //시작트랙 * 트랙당워드수 -> 해당 어드레스
+                    int nADDR_NO = TrackAddr(Convert.ToInt32("0" + TRACK_NO.Trim()));   // 트랙 주소 (가상 트랙이면 빌린 자리)
 
                     string CMD_RQ_ID = "" + GfCol(nRows, "CMD_RQ_ID");
 
@@ -1588,8 +1651,7 @@ namespace WCS_TASK_CV
 
                     //LFC 사용
                     string TRACK_NO = "" + GfCol(nRows, "MC_NO");
-                    string ADDR_NO = TRACK_NO.Substring(TRACK_NO.Length - 2, 2);
-                    int nADDR_NO = (Convert.ToInt32(0 + ADDR_NO)) * m_devMap.WordPerTrack; //시작트랙 * 트랙당워드수 -> 해당 어드레스
+                    int nADDR_NO = TrackAddr(Convert.ToInt32("0" + TRACK_NO.Trim()));   // 트랙 주소 (가상 트랙이면 빌린 자리)
 
                     string LUGG_NO_OD = "" + GfCol(nRows, "LUGG_NO_OD");
                     int nLUGG_NO_OD = (Convert.ToInt32(0 + LUGG_NO_OD));

@@ -52,6 +52,24 @@ namespace WCS_TASK_CV
             }
         }
 
+        /// <summary>
+        /// 가상 트랙 목록. WCS_DB.INI [COMMn] VIRTUAL_TRACK=2101:267,... ("mc_no:빌리는 트랙번호")
+        /// 시뮬레이터용. 키가 없으면 빈 문자열.
+        /// </summary>
+        public static string GsGetVirtualTracks(string strSection)
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(256);
+                GetPrivateProfileString(strSection, "VIRTUAL_TRACK", "", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                return sb.ToString().Trim();
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
         public static string GsGetAutoModeStyle()
         {
             try

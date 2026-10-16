@@ -9,8 +9,11 @@
 #    이 둘을 PLC 쓰기로 대신한다. (CvSim PLC 02, 포트 9202)
 #
 #  하는 일 (3초마다)
-#    1) 259 에 화물+작업번호가 있고 그 작업(JOB_MST)의 목적지가 103/104 면
-#       259 를 비우고 목적지 트랙(103=206, 104=212)에 같은 작업번호/목적지/구분 2 로 올린다.
+#    1) 259 에 화물+작업번호가 있고 그 작업(JOB_MST)의 목적지가 103/104/105 면
+#       259 를 비우고 목적지 트랙(103=206, 104=212, 105=267)에 같은 작업번호/목적지/구분 2 로 올린다.
+#       105 는 현장에서 PLC 트랙이 없는 가상 자리(WCS mc_no 2101)라 CvSim 에 트랙 267 을 두고
+#       CV 태스크가 VIRTUAL_TRACK=2101:267 로 그 자리를 읽는다. (2101 을 끝 두 자리로 주소를 내면
+#       D5 = 201 번 트랙 자리라 901호기 입고 H/S 에 출고 화물이 올라가는 사고가 난다)
 #    2) 206/212 에 화물이 있는데 그 작업번호가 JOB_MST 에 없으면(완료보고 끝)
 #       그 자리를 비우고 입고대 101(217)이 비어 있으면 거기에 빈 파렛트(작업번호 0)를 올린다.
 #
@@ -26,12 +29,12 @@ $W    = Join-Path $HERE 'plc_write.ps1'
 $P    = 'C:\Program Files\PostgreSQL\16\bin\psql.exe'
 $env:PGPASSWORD = 'KET_WCS'; $env:PGCLIENTENCODING = 'UTF8'
 $PORT = 9202                                   # CvSim PLC 02 (1층 구라인)
-function Addr([int]$trk) { return ($trk % 100) * 5 }     # PLC02 트랙 주소 = 끝 두 자리 x 5 (2101 -> D5)
+function Addr([int]$trk) { return ($trk % 100) * 5 }     # PLC02 트랙 주소 = 끝 두 자리 x 5 (267 -> D335)
 function Ask([string]$q) { $o = (& $P -h localhost -U KET_WCS -d KET_WCS -A -t -c $q); if ($null -eq $o) { return "" } ; return (($o | % { "$_" }) -join "`n") }
 function PlcW([int]$addr, $vals) { & $W -Port $PORT -Addr $addr -Values $vals | Out-Null }
 function Say([string]$m) { Write-Host ("[{0}] {1}" -f (Get-Date -Format 'HH:mm:ss'), $m) }
 
-function DestTrack([int]$d) { switch ($d) { 103 { return 206 } 104 { return 212 } 105 { return 2101 } default { return 0 } } }   # 출고대 -> 트랙
+function DestTrack([int]$d) { switch ($d) { 103 { return 206 } 104 { return 212 } 105 { return 267 } default { return 0 } } }   # 출고대 -> 트랙 (105 는 CvSim 가상 트랙 267. CV 태스크 VIRTUAL_TRACK=2101:267)
 $DEST_LIST = @(103, 104, 105)
 $STO_TRACK = 217                               # 입고대 101
 
@@ -45,12 +48,11 @@ do {
       $f = $r.Trim().Split('|'); $from = [int]$f[0].Trim(); $lugg = [int]$f[1].Trim(); $dest = [int]$f[2].Trim(); $typ = [int]$f[3].Trim()
       $trk = DestTrack $dest
       if ($trk -eq 0) { Say "RGV: 모르는 출고대 [$dest] (행: $r)"; continue }
-      $busy = Ask "SELECT sensor0_data_rd FROM cv_data WHERE plc_no='02' AND mc_no='$trk';"
+      $busy = Ask "SELECT CASE WHEN sensor0_data_rd='1' OR lugg_no_rd NOT IN ('0','0000') THEN '1' ELSE '0' END FROM cv_data WHERE plc_no='02' AND mc_no='$trk';"   # CvSim ForkLift 규칙이 센서를 바로 끄므로 작업번호도 본다
       if ($busy.Trim() -eq '1') { Say "RGV: 출고대 $dest($trk) 가 차 있어 $lugg($from) 을 기다린다"; continue }
       PlcW (Addr $from) @(0,0,0,0,0)
       Start-Sleep -Milliseconds 500
       PlcW (Addr $trk) @($lugg, (($typ -shl 8) -bor [int]$dest), 1, 0, 0)
-      if ($trk -eq 2101) { PlcW 551 @(16) }      # 105(2101) 는 CvSim 에 정의가 없어 출고대 준비 비트(D551.4)를 직접 올린다
       Say "RGV: $from -> $dest($trk)  작업번호 $lugg"
     }
 
@@ -63,7 +65,6 @@ do {
       $sto = Ask "SELECT sensor0_data_rd FROM cv_data WHERE plc_no='02' AND mc_no='$STO_TRACK';"
       if ($sto.Trim() -eq '1') { Say "지게차: 입고대 101 이 차 있어 $lugg 을 기다린다"; continue }
       PlcW (Addr $trk) @(0,0,0,0,0)
-      if ($trk -eq 2101) { PlcW 551 @(0) }       # 105 준비 비트 내림
       Start-Sleep -Milliseconds 500
       PlcW (Addr $STO_TRACK) @(0,0,1,0,0)
       Say "지게차: $dest($trk) 의 파렛트($lugg) 를 101($STO_TRACK) 로 옮겼다 (빈 파렛트로)"
