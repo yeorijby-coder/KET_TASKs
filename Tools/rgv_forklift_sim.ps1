@@ -26,20 +26,20 @@ $W    = Join-Path $HERE 'plc_write.ps1'
 $P    = 'C:\Program Files\PostgreSQL\16\bin\psql.exe'
 $env:PGPASSWORD = 'KET_WCS'; $env:PGCLIENTENCODING = 'UTF8'
 $PORT = 9202                                   # CvSim PLC 02 (1층 구라인)
-function Addr([int]$trk) { return ($trk - 200) * 5 }
+function Addr([int]$trk) { return ($trk % 100) * 5 }     # PLC02 트랙 주소 = 끝 두 자리 x 5 (2101 -> D5)
 function Ask([string]$q) { $o = (& $P -h localhost -U KET_WCS -d KET_WCS -A -t -c $q); if ($null -eq $o) { return "" } ; return (($o | % { "$_" }) -join "`n") }
 function PlcW([int]$addr, $vals) { & $W -Port $PORT -Addr $addr -Values $vals | Out-Null }
 function Say([string]$m) { Write-Host ("[{0}] {1}" -f (Get-Date -Format 'HH:mm:ss'), $m) }
 
-function DestTrack([int]$d) { switch ($d) { 103 { return 206 } 104 { return 212 } default { return 0 } } }   # 출고대 -> 트랙
-$DEST_LIST = @(103, 104)
+function DestTrack([int]$d) { switch ($d) { 103 { return 206 } 104 { return 212 } 105 { return 2101 } default { return 0 } } }   # 출고대 -> 트랙
+$DEST_LIST = @(103, 104, 105)
 $STO_TRACK = 217                               # 입고대 101
 
 do {
   try {
     # 1) RGV : 259(155) -> 출고대
     # RGV 가 받아 가는 자리 : 중간 도착대(151~160) 와, 경로가 없는 1층 출고 H/S(902:207, 903:215, 904:221)
-    $rows = Ask "SELECT cd.mc_no, cd.lugg_no_rd, jm.dest_pos, jm.job_typ FROM cv_data cd JOIN job_mst jm ON jm.wh_typ=cd.wh_typ AND jm.lugg_no=cd.lugg_no_rd WHERE cd.plc_no='02' AND (cd.host_stn_no IN ('151','152','153','154','155','156','157','158','159','160') OR cd.mc_no IN ('207','215','221')) AND cd.sensor0_data_rd='1' AND cd.lugg_no_rd NOT IN ('0','0000') AND jm.job_status='11' AND jm.dest_pos IN ('103','104');"
+    $rows = Ask "SELECT cd.mc_no, cd.lugg_no_rd, jm.dest_pos, jm.job_typ FROM cv_data cd JOIN job_mst jm ON jm.wh_typ=cd.wh_typ AND jm.lugg_no=cd.lugg_no_rd WHERE cd.plc_no='02' AND (cd.host_stn_no IN ('151','152','153','154','155','156','157','158','159','160') OR cd.mc_no IN ('207','215','221')) AND cd.sensor0_data_rd='1' AND cd.lugg_no_rd NOT IN ('0','0000') AND jm.job_status='11' AND jm.dest_pos IN ('103','104','105');"
     foreach ($r in ("$rows" -split "`n")) {
       if ([string]::IsNullOrWhiteSpace($r)) { continue }
       $f = $r.Trim().Split('|'); $from = [int]$f[0].Trim(); $lugg = [int]$f[1].Trim(); $dest = [int]$f[2].Trim(); $typ = [int]$f[3].Trim()
@@ -50,6 +50,7 @@ do {
       PlcW (Addr $from) @(0,0,0,0,0)
       Start-Sleep -Milliseconds 500
       PlcW (Addr $trk) @($lugg, (($typ -shl 8) -bor [int]$dest), 1, 0, 0)
+      if ($trk -eq 2101) { PlcW 551 @(16) }      # 105(2101) 는 CvSim 에 정의가 없어 출고대 준비 비트(D551.4)를 직접 올린다
       Say "RGV: $from -> $dest($trk)  작업번호 $lugg"
     }
 
@@ -62,6 +63,7 @@ do {
       $sto = Ask "SELECT sensor0_data_rd FROM cv_data WHERE plc_no='02' AND mc_no='$STO_TRACK';"
       if ($sto.Trim() -eq '1') { Say "지게차: 입고대 101 이 차 있어 $lugg 을 기다린다"; continue }
       PlcW (Addr $trk) @(0,0,0,0,0)
+      if ($trk -eq 2101) { PlcW 551 @(0) }       # 105 준비 비트 내림
       Start-Sleep -Milliseconds 500
       PlcW (Addr $STO_TRACK) @(0,0,1,0,0)
       Say "지게차: $dest($trk) 의 파렛트($lugg) 를 101($STO_TRACK) 로 옮겼다 (빈 파렛트로)"
