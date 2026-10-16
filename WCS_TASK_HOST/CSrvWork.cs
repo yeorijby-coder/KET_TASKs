@@ -141,11 +141,15 @@ namespace TSK_HostCom
 
             // Body 체크
 
-            iRxCnt = m_sktSock.Available;
-			// @.머리말이 알려준 길이가 아니라 실제로 와 있는 만큼 읽는다.
-			//   길이가 들쭉날쭉한 전문에서 몸통을 덜 읽어 NAK 가 나던 것을 막는다.
-			iRxCnt = m_sktSock.Receive(m_bytRxBuff, modDefApp.MSG_HEAD_CNT, iRxCnt, SocketFlags.None);
-			if (!CheckBody(iRxCnt, iRxCnt))
+			// @.몸통은 머리말이 알려준 길이(p_iBodyLen)만큼만 읽는다.
+			//   전에는 소켓에 와 있는 만큼(Available) 다 읽었다. 전문 두 건이 잇달아 오면
+			//   두 번째 전문이 첫 전문의 몸통 뒤에 붙어 읽혀 그대로 버려졌다 (끝 ETX 검사는
+			//   두 번째 전문의 ETX 로 통과). HostSim 이 로직그룹 7개를 한꺼번에 시작할 때
+			//   첫 지시 한 건이 응답 없이 사라진 것이 이것이다.
+			//   덜 온 몸통은 ReceiveTimeout(2초) 안에서 채워질 때까지 기다린다. 못 채우면
+			//   CheckBody 가 전처럼 NAK 로 답한다.
+			iRxCnt = ReceiveBody(p_iBodyLen);
+			if (!CheckBody(p_iBodyLen, iRxCnt))
 			{
 				// 잘못된 바디 로그
 				// @.전문에 한글이 섞여 온다. UTF8 로 풀면 깨진다.
@@ -164,6 +168,36 @@ namespace TSK_HostCom
             //}
 
 			return true;
+		}
+
+		/// <summary>
+		/// 몸통을 p_iBodyLen 바이트만큼만 읽는다. 뒤에 붙어 온 다음 전문은 소켓에 남겨 둔다.
+		/// 2초 안에 다 못 받으면 받은 만큼만 돌려준다.
+		/// </summary>
+		private int ReceiveBody(int p_iBodyLen)
+		{
+			int iGot = 0;
+			int iOldTimeout = 0;
+			try
+			{
+				iOldTimeout = m_sktSock.ReceiveTimeout;
+				m_sktSock.ReceiveTimeout = 2000;
+				while (iGot < p_iBodyLen)
+				{
+					int n = m_sktSock.Receive(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + iGot, p_iBodyLen - iGot, SocketFlags.None);
+					if (n <= 0) break;
+					iGot += n;
+				}
+			}
+			catch (SocketException)
+			{
+				// 시간 초과 - 받은 만큼으로 검사한다
+			}
+			finally
+			{
+				try { m_sktSock.ReceiveTimeout = iOldTimeout; } catch { }
+			}
+			return iGot;
 		}
 
 		//최초작성자	: BASE(이길문)
