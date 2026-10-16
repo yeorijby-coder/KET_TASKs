@@ -38,18 +38,19 @@ $STO_TRACK = 217                               # 입고대 101
 do {
   try {
     # 1) RGV : 259(155) -> 출고대
-    $rows = Ask "SELECT cd.lugg_no_rd, jm.dest_pos, jm.job_typ FROM cv_data cd JOIN job_mst jm ON jm.wh_typ=cd.wh_typ AND jm.lugg_no=cd.lugg_no_rd WHERE cd.plc_no='02' AND cd.mc_no='259' AND cd.sensor0_data_rd='1' AND cd.lugg_no_rd NOT IN ('0','0000') AND jm.job_status='11' AND jm.dest_pos IN ('103','104');"
+    # RGV 가 받아 가는 자리 : 중간 도착대(151~160) 와, 경로가 없는 1층 출고 H/S(902:207, 903:215, 904:221)
+    $rows = Ask "SELECT cd.mc_no, cd.lugg_no_rd, jm.dest_pos, jm.job_typ FROM cv_data cd JOIN job_mst jm ON jm.wh_typ=cd.wh_typ AND jm.lugg_no=cd.lugg_no_rd WHERE cd.plc_no='02' AND (cd.host_stn_no IN ('151','152','153','154','155','156','157','158','159','160') OR cd.mc_no IN ('207','215','221')) AND cd.sensor0_data_rd='1' AND cd.lugg_no_rd NOT IN ('0','0000') AND jm.job_status='11' AND jm.dest_pos IN ('103','104');"
     foreach ($r in ("$rows" -split "`n")) {
       if ([string]::IsNullOrWhiteSpace($r)) { continue }
-      $f = $r.Trim().Split('|'); $lugg = [int]$f[0].Trim(); $dest = [int]$f[1].Trim(); $typ = [int]$f[2].Trim()
+      $f = $r.Trim().Split('|'); $from = [int]$f[0].Trim(); $lugg = [int]$f[1].Trim(); $dest = [int]$f[2].Trim(); $typ = [int]$f[3].Trim()
       $trk = DestTrack $dest
       if ($trk -eq 0) { Say "RGV: 모르는 출고대 [$dest] (행: $r)"; continue }
       $busy = Ask "SELECT sensor0_data_rd FROM cv_data WHERE plc_no='02' AND mc_no='$trk';"
-      if ($busy.Trim() -eq '1') { Say "RGV: 출고대 $dest($trk) 가 차 있어 $lugg 을 기다린다"; continue }
-      PlcW (Addr 259) @(0,0,0,0,0)
+      if ($busy.Trim() -eq '1') { Say "RGV: 출고대 $dest($trk) 가 차 있어 $lugg($from) 을 기다린다"; continue }
+      PlcW (Addr $from) @(0,0,0,0,0)
       Start-Sleep -Milliseconds 500
       PlcW (Addr $trk) @($lugg, (($typ -shl 8) -bor [int]$dest), 1, 0, 0)
-      Say "RGV: 259 -> $dest($trk)  작업번호 $lugg"
+      Say "RGV: $from -> $dest($trk)  작업번호 $lugg"
     }
 
     # 2) 지게차 : 출고대 -> 입고대 101

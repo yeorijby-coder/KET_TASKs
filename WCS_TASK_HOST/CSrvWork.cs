@@ -438,12 +438,12 @@ namespace TSK_HostCom
                     ParseP(p_iBodyCnt);
                     break;
 
-                //// @.작업삭제(D) 는 문서의 메시지 타입 목록에도 원본 CHostSv::Parsing 에도 없다.
-                ////   현장에서 필요해지면 WMS 와 규격을 정한 뒤 되살릴 것.
-                //case "D":
-                //    // 작업삭제 메세지 
-                //    ParseCancel(p_iBodyCnt);
-                //    break;
+                // @.작업삭제(D). 문서의 메시지 타입 목록에는 없으나 HostSim 의 대물량 시험(중지 때
+                //   아직 지시되지 않은 출고를 지움)에 쓴다. 자리 : +2 작업구분(1) +3 작업번호(4).
+                //   상태 99/10/20(설비 지시 전)만 지우고, 그 밖에는 4(없음) 로 거절한다.
+                case "D":
+                    ParseCancel(p_iBodyCnt);
+                    break;
                 default:
 					m_strLog = string.Format("알수 없는 MsgType입니다.[{0}]", m_strMsgType);
 					modCmWork.ShowMsgServer(m_strLog, modDefApp.MSG_ERR);
@@ -1613,7 +1613,8 @@ namespace TSK_HostCom
 
             m_strSql = modDefApp.CRLF + "  SELECT * ";
             m_strSql += modDefApp.CRLF + "   FROM JOB_MST ";
-            m_strSql += modDefApp.CRLF + "  WHERE WH_TYP     =  " + m_BDb.ParamsAdd("WH_TYP", modDefApp.WH_TYP);
+            // @.작업번호는 공장 전체에서 하나뿐이다. 창고 둘을 다 본다. (2026-10-16)
+            m_strSql += modDefApp.CRLF + "  WHERE WH_TYP     IN " + modDefApp.GsWhTypList();
             m_strSql += modDefApp.CRLF + "    AND LUGG_NO    =  " + m_BDb.ParamsAdd("LUGG_NO", strWorkNo);
             m_strSql += modDefApp.CRLF + "    AND JOB_STATUS IN ('99', '10', '20')";
             m_iSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
