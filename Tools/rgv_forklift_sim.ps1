@@ -27,22 +27,23 @@ $P    = 'C:\Program Files\PostgreSQL\16\bin\psql.exe'
 $env:PGPASSWORD = 'KET_WCS'; $env:PGCLIENTENCODING = 'UTF8'
 $PORT = 9202                                   # CvSim PLC 02 (1층 구라인)
 function Addr([int]$trk) { return ($trk - 200) * 5 }
-function Ask([string]$q) { (& $P -h localhost -U KET_WCS -d KET_WCS -A -t -c $q) -join "`n" }
+function Ask([string]$q) { $o = (& $P -h localhost -U KET_WCS -d KET_WCS -A -t -c $q); if ($null -eq $o) { return "" } ; return (($o | % { "$_" }) -join "`n") }
 function PlcW([int]$addr, $vals) { & $W -Port $PORT -Addr $addr -Values $vals | Out-Null }
 function Say([string]$m) { Write-Host ("[{0}] {1}" -f (Get-Date -Format 'HH:mm:ss'), $m) }
 
-$DEST = @{ 103 = 206; 104 = 212 }              # 출고대 -> 트랙 (정수 키)
+function DestTrack([int]$d) { switch ($d) { 103 { return 206 } 104 { return 212 } default { return 0 } } }   # 출고대 -> 트랙
+$DEST_LIST = @(103, 104)
 $STO_TRACK = 217                               # 입고대 101
 
 do {
   try {
     # 1) RGV : 259(155) -> 출고대
     $rows = Ask "SELECT cd.lugg_no_rd, jm.dest_pos, jm.job_typ FROM cv_data cd JOIN job_mst jm ON jm.wh_typ=cd.wh_typ AND jm.lugg_no=cd.lugg_no_rd WHERE cd.plc_no='02' AND cd.mc_no='259' AND cd.sensor0_data_rd='1' AND cd.lugg_no_rd NOT IN ('0','0000') AND jm.job_status='11' AND jm.dest_pos IN ('103','104');"
-    foreach ($r in ($rows -split "`n")) {
-      if ($r.Trim() -eq '') { continue }
+    foreach ($r in ("$rows" -split "`n")) {
+      if ([string]::IsNullOrWhiteSpace($r)) { continue }
       $f = $r.Trim().Split('|'); $lugg = [int]$f[0].Trim(); $dest = [int]$f[1].Trim(); $typ = [int]$f[2].Trim()
-      $trk = $DEST[$dest]
-      if ($null -eq $trk) { Say "RGV: 모르는 출고대 [$dest] (행: $r)"; continue }
+      $trk = DestTrack $dest
+      if ($trk -eq 0) { Say "RGV: 모르는 출고대 [$dest] (행: $r)"; continue }
       $busy = Ask "SELECT sensor0_data_rd FROM cv_data WHERE plc_no='02' AND mc_no='$trk';"
       if ($busy.Trim() -eq '1') { Say "RGV: 출고대 $dest($trk) 가 차 있어 $lugg 을 기다린다"; continue }
       PlcW (Addr 259) @(0,0,0,0,0)
@@ -52,11 +53,11 @@ do {
     }
 
     # 2) 지게차 : 출고대 -> 입고대 101
-    foreach ($dest in @($DEST.Keys)) {
-      $trk = $DEST[$dest]
+    foreach ($dest in $DEST_LIST) {
+      $trk = DestTrack $dest
       $r = Ask "SELECT cd.lugg_no_rd FROM cv_data cd WHERE cd.plc_no='02' AND cd.mc_no='$trk' AND cd.sensor0_data_rd='1' AND cd.lugg_no_rd NOT IN ('0','0000') AND NOT EXISTS (SELECT 1 FROM job_mst jm WHERE jm.wh_typ=cd.wh_typ AND jm.lugg_no=cd.lugg_no_rd) AND cd.od_rq_yn='N';"
-      if ($r.Trim() -eq '') { continue }
-      $lugg = $r.Trim().Split("`n")[0].Trim()
+      if ([string]::IsNullOrWhiteSpace($r)) { continue }
+      $lugg = ("$r".Trim() -split "`n")[0].Trim()
       $sto = Ask "SELECT sensor0_data_rd FROM cv_data WHERE plc_no='02' AND mc_no='$STO_TRACK';"
       if ($sto.Trim() -eq '1') { Say "지게차: 입고대 101 이 차 있어 $lugg 을 기다린다"; continue }
       PlcW (Addr $trk) @(0,0,0,0,0)
@@ -65,6 +66,6 @@ do {
       Say "지게차: $dest($trk) 의 파렛트($lugg) 를 101($STO_TRACK) 로 옮겼다 (빈 파렛트로)"
     }
   }
-  catch { Say ("오류: " + $_.Exception.Message) }
+  catch { Say ("오류: " + $_.Exception.Message + " @ line " + $_.InvocationInfo.ScriptLineNumber + ": " + $_.InvocationInfo.Line.Trim()) }
   if (-not $Once) { Start-Sleep -Seconds $IntervalSec }
 } while (-not $Once)
