@@ -1481,8 +1481,15 @@ namespace TSK_HostCom
                     Array.Copy(bytTempByte, 0, m_bytTxBuff, modDefApp.MSG_HEAD_CNT + 1, strTemp.Length);
                     m_bytTxBuff[iTxCnt - 1] = modDefApp.ETX;
 
+                    // @.1차 보고는 응답이 없어도 최종(차수 2) 보고를 막지 않는다.
+                    //   상위는 차수 2 만 받아도 1차를 함께 처리한다. 응답이 없으면(RequestSrv 가 거짓) 소켓이
+                    //   닫히지만 1차는 다시 보내지 않고 "보냈다"고 표시한 채 넘어가, 도착 때 차수 2 가 나가게 한다.
+                    //   (연결이 끊겨 보내지도 못한 경우는 위의 연결 확인에서 먼저 돌아가므로 표시하지 않는다)
                     if (!RequestSrv(iTxCnt.ToString()))
-                        return false;           // 못 보냈다. 표를 안 하므로 다음 주기에 다시 보낸다.
+                    {
+                        m_strLog = string.Format("출고 1차 완료 보고에 응답이 없습니다. 다시 보내지 않고 넘어갑니다. [작업번호:{0}]", strLuggNum);
+                        modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
+                    }
                 }
 
                 m_BDb.BeginTrans();
@@ -1570,10 +1577,7 @@ namespace TSK_HostCom
             int nReportStep = modDefApp.STEP_FIRST;
             if (nJobStatus == 19 && (nJobType == 2 || nJobType == 3 || nJobType == 12 || nJobType == 13))
             {
-                string strWcStep = m_BDb.dtMain.Columns.Contains("WC_STEP") ? m_BDb.dtMain.Rows[0]["WC_STEP"].ToString().Trim() : "";
-                bool bSimOrManual = (modDefApp.g_frmForm.chkSimMode.Checked == true) || (nLuggNum >= 9000);
-                if (bSimOrManual == false && strWcStep != "1")
-                    return false;       // 1차 보고가 아직이다. GetRetFirstReport 가 먼저 보낸다.
+                // 1차 보고(GetRetFirstReport)가 응답을 받았든 못 받았든 최종(차수 2)은 나간다. 상위는 차수 2 만 받아도 1차를 처리한다.
                 nReportStep = modDefApp.STEP_FINAL;
             }
             if (nLuggNum >= 9000 && modDefApp.g_frmForm.chkSimMode.Checked == false)
