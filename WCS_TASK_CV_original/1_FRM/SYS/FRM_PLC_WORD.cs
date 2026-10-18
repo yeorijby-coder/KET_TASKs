@@ -21,7 +21,15 @@ namespace WCS_TASK_CV
         private ComboBox cmbComm;
         private TextBox txtAddr, txtCount, txtVal, txtBit, txtOut;
         private CheckBox chkHex;
-        private Button btnRead, btnWrite, btnBitOn, btnBitOff;
+        private Button btnRead, btnWrite, btnBitOn, btnBitOff, btnWatch;
+        // @.변화 감시 : 지정한 범위를 짧은 주기로 읽어 바뀐 워드만 시각과 함께 적는다.
+        //   기존 ECS 와 WCS 를 번갈아 돌리며 어느 워드를 누가 바꾸는지, PLC 가 언제 반응하는지 볼 때 쓴다.
+        private System.Windows.Forms.Timer m_tmrWatch;
+        private PlcWordReq m_watchReq;
+        private int[] m_watchPrev;
+        private int m_watchAddr, m_watchCount, m_watchComm;
+        private DateTime m_watchSent;
+        private int m_watchFail;
         private Label lblState;
 
         public FRM_PLC_WORD(SYS_MAIN frmMain)
@@ -75,6 +83,14 @@ namespace WCS_TASK_CV
             btnWrite.Click += delegate { Run(1); };
             btnBitOn.Click += delegate { Run(2); };
             btnBitOff.Click += delegate { Run(3); };
+
+            y += 34;
+            btnWatch = new Button { Left = x, Top = y, Width = 150, Height = 28, Text = "변화 감시 시작" };
+            this.Controls.Add(btnWatch);
+            btnWatch.Click += delegate { ToggleWatch(); };
+            m_tmrWatch = new System.Windows.Forms.Timer { Interval = 200 };
+            m_tmrWatch.Tick += delegate { WatchTick(); };
+            this.FormClosing += delegate { m_tmrWatch.Stop(); };
 
             y += 36;
             lblState = new Label { Left = x, Top = y, Width = 610, Height = 32, ForeColor = Color.DimGray,
@@ -218,9 +234,98 @@ namespace WCS_TASK_CV
             }
         }
 
+        #region 변화 감시
+        private void ToggleWatch()
+        {
+            if (m_tmrWatch.Enabled)
+            {
+                m_tmrWatch.Stop(); m_watchReq = null; m_watchPrev = null;
+                btnWatch.Text = "변화 감시 시작";
+                Out("감시를 멈췄습니다.");
+                return;
+            }
+            CommItem ci = cmbComm.SelectedItem as CommItem;
+            if (ci == null) { MessageBox.Show("통신(COMM)을 고르십시오."); return; }
+            int nAddr, nCount;
+            if (!ParseInt(txtAddr.Text, false, out nAddr) || nAddr < 0) { MessageBox.Show("D 주소를 10진수로 적으십시오."); return; }
+            if (!ParseInt(txtCount.Text, false, out nCount) || nCount < 1 || nCount > 100) { MessageBox.Show("개수는 1~100 입니다."); return; }
+            CvThread th = m_frmMain.m_thCvThread[ci.Idx];
+            if (th == null || !th.IsOpen) { Out("실패: 이 COMM 은 PLC 와 연결되어 있지 않습니다."); return; }
+            m_watchComm = ci.Idx; m_watchAddr = nAddr; m_watchCount = nCount; m_watchPrev = null; m_watchReq = null; m_watchFail = 0;
+            Out("감시 시작: COMM" + ci.Idx + " D" + nAddr + " 부터 " + nCount + "워드 (바뀐 것만 기록)");
+            btnWatch.Text = "변화 감시 중지";
+            m_tmrWatch.Start();
+        }
+
+        private void WatchLine(string strLine)
+        {
+            txtOut.AppendText(strLine + Environment.NewLine);
+        }
+
+        private void WatchTick()
+        {
+            CvThread th = m_frmMain.m_thCvThread[m_watchComm];
+            if (th == null || !th.IsOpen) { Out("감시 중단: PLC 연결이 끊겼습니다."); ToggleWatch(); return; }
+
+            if (m_watchReq != null)
+            {
+                if (!m_watchReq.Done)
+                {
+                    if ((DateTime.Now - m_watchSent).TotalSeconds > 8) { Out("감시 중단: 8초 안에 응답이 없습니다."); ToggleWatch(); }
+                    return;
+                }
+                PlcWordReq r = m_watchReq; m_watchReq = null;
+                if (!r.Ok)
+                {
+                    // 일시적인 읽기 실패(시간 초과 등)는 건너뛰고 계속 본다. 연속 10번 실패하면 멈춘다.
+                    m_watchFail++;
+                    if (m_watchFail == 1) WatchLine(DateTime.Now.ToString("HH:mm:ss.fff") + "  읽기 실패(다시 시도): " + r.Msg);
+                    if (m_watchFail >= 10) { Out("감시 중단: 연속 10번 읽지 못했습니다. (" + r.Msg + ")"); ToggleWatch(); return; }
+                }
+                else
+                {
+                    if (m_watchFail > 0) WatchLine(DateTime.Now.ToString("HH:mm:ss.fff") + "  읽기 복구 (실패 " + m_watchFail + "번)");
+                    m_watchFail = 0;
+                    WatchProcess(r);
+                }
+            }
+
+            PlcWordReq q = new PlcWordReq();
+            q.Op = 0; q.Addr = m_watchAddr; q.Count = m_watchCount;
+            m_watchReq = q; m_watchSent = DateTime.Now;
+            th.EnqueueWordReq(q);
+        }
+
+        private void WatchProcess(PlcWordReq r)
+        {
+            {
+                string strTime = DateTime.Now.ToString("HH:mm:ss.fff");
+                if (m_watchPrev == null)
+                {
+                    m_watchPrev = r.Result;
+                    WatchLine(strTime + "  기준값 D" + m_watchAddr + "~D" + (m_watchAddr + m_watchCount - 1));
+                    for (int i = 0; i < r.Result.Length; i++)
+                        if (r.Result[i] != 0)
+                            WatchLine(string.Format("            D{0,-5} = {1:X4}h  {2}", m_watchAddr + i, r.Result[i], Bin16(r.Result[i])));
+                    WatchLine("            (0 인 워드는 생략)");
+                }
+                else
+                {
+                    for (int i = 0; i < r.Result.Length && i < m_watchPrev.Length; i++)
+                    {
+                        if (r.Result[i] == m_watchPrev[i]) continue;
+                        WatchLine(string.Format("{0}  D{1,-5} {2:X4}h -> {3:X4}h   {4}", strTime, m_watchAddr + i, m_watchPrev[i], r.Result[i], Bin16(r.Result[i])));
+                    }
+                    m_watchPrev = r.Result;
+                }
+                if (txtOut.TextLength > 60000) txtOut.Text = txtOut.Text.Substring(txtOut.TextLength - 30000);
+            }
+        }
+        #endregion
+
         private void SetBusy(bool b)
         {
-            btnRead.Enabled = btnWrite.Enabled = btnBitOn.Enabled = btnBitOff.Enabled = !b;
+            btnRead.Enabled = btnWrite.Enabled = btnBitOn.Enabled = btnBitOff.Enabled = !b;   // 감시 버튼은 감시 중에도 눌러 멈출 수 있게 둔다
             this.Cursor = b ? Cursors.WaitCursor : Cursors.Default;
         }
         #endregion
