@@ -1132,10 +1132,23 @@ namespace TSK_HostCom
                 strMC_NO_NM = "" + m_BDb.dtMain.Rows[iii]["MC_NO_NM"].ToString() == "" ? "0" : m_BDb.dtMain.Rows[iii]["MC_NO_NM"].ToString();
                 
                 strMC_NO_LIST += ",'" + strMC_NO + "'";
-                if (strSTO_READY_RD == "1")
+                /*
+                 * @.상태값 (원본 GetCvStoWorkingStatus / GetCvRetWorkingStatus / GetCvWorkingStationStatus / GetCvPickingStationStatus)
+                 *   입고대만(STN_KIND&3 == 1) : 입고 준비(STO_READY_RD)
+                 *   그 밖의 출고대 / 입출고대 / 피킹대 : 화물감지 센서(SENSOR0_DATA_RD)
+                 *   예전에는 모든 작업대를 입고 준비 값으로만 보고해서 피킹대 / 출고대의 화물감지가 상위에 올라가지 않았다.
+                 */
+                int nKindVal = 0; int.TryParse(strSTN_KIND.Trim(), out nKindVal);
+                bool bStoOnly = ((nKindVal & 3) == 1);
+                string strSensor = ("" + m_BDb.dtMain.Rows[iii]["SENSOR0_DATA_RD"]).Trim();
+                if (bStoOnly ? (strSTO_READY_RD == "1") : (strSensor == "1"))
                 {
                     nCvStatus = 1;
                 }
+                // @.사이즈체크 : 센서 워드 비트 10(저) / 11(고). 고가 우선 -> 2, 저 -> 1, 없으면 0 (원본과 같다)
+                int nCvSize = 0;
+                if (("" + m_BDb.dtMain.Rows[iii]["SZ_CHK_HIGH_RD"]).Trim() == "1") nCvSize = 2;
+                else if (("" + m_BDb.dtMain.Rows[iii]["SZ_CHK_LOW_RD"]).Trim() == "1") nCvSize = 1;
 
                 /*
                  * @.C/V 는 장비분류 2, 장비번호는 작업대 번호.
@@ -1152,7 +1165,7 @@ namespace TSK_HostCom
                 // @.여기서 DB 를 다시 조회하면 m_BDb.dtMain 이 교체되어
                 //   다음 회차의 Rows[iii] 가 사라진다. 값만 모아 두고 루프 뒤에서 만든다.
                 lstCvPending.Add(new object[] { nCvStn, nCvStatus, nCvLugg,
-                                                modDefApp.GsWhDefOf(m_BDb.dtMain.Rows[iii]["WH_TYP"].ToString()) });
+                                                modDefApp.GsWhDefOf(m_BDb.dtMain.Rows[iii]["WH_TYP"].ToString()), nCvSize });
 
                 strTempFrame = string.Format("{0:0}", nCvStatus);
 
@@ -1167,7 +1180,7 @@ namespace TSK_HostCom
                 int nStn = (int)arrCv[0];
                 lstStatusFrame.Add(GfMakeStatusBody((string)arrCv[3], modDefApp.DEV_CLASS_CV,
                                                     nStn, (int)arrCv[1], (int)arrCv[2],
-                                                    0,                          // @.사이즈체크 센서값은 DB 에 없다
+                                                    (int)arrCv[4],              // @.사이즈체크 (SZ_CHK_HIGH/LOW_RD)
                                                     GfHasUnExcutedJob(nStn) ? 1 : 0));
             }
             #endregion

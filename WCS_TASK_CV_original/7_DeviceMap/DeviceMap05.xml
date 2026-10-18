@@ -23,6 +23,8 @@
 		</Word>
 		<Word type="b" addr="D5n+2" name="SensorData">
 			<Bit name="ProductSensor" desc="D5n+2.0"/>
+			<Bit name="SizeChkLow" dbcol="SZ_CHK_LOW_RD" pos="10" hostRpt="1" desc="D5n+2.A"/>
+			<Bit name="SizeChkHigh" dbcol="SZ_CHK_HIGH_RD" pos="11" hostRpt="1" desc="D5n+2.B"/>
 		</Word>
 		<Word type="W" addr="D5n+3" name="ErrorCode" />
 		<Word type="W" addr="D5n+4" name="D5n+4" />
