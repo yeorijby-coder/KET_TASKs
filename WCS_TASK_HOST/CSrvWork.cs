@@ -148,7 +148,9 @@ namespace TSK_HostCom
 			//   첫 지시 한 건이 응답 없이 사라진 것이 이것이다.
 			//   덜 온 몸통은 ReceiveTimeout(2초) 안에서 채워질 때까지 기다린다. 못 채우면
 			//   CheckBody 가 전처럼 NAK 로 답한다.
-			iRxCnt = ReceiveBody(p_iBodyLen);
+			//   단, 머리말의 길이가 실제 몸통과 다른 전문(WMS 이동 지시 등)이 있다. 길이를 믿기만 하면
+			//   ETX 가 길이 자리에 없어 "NoEtx" 로 거절한다. 그래서 ETX 로 전문의 끝을 다시 잡는다.
+			iRxCnt = ReceiveBody(ref p_iBodyLen);
 			if (!CheckBody(p_iBodyLen, iRxCnt))
 			{
 				// 잘못된 바디 로그
@@ -174,7 +176,7 @@ namespace TSK_HostCom
 		/// 몸통을 p_iBodyLen 바이트만큼만 읽는다. 뒤에 붙어 온 다음 전문은 소켓에 남겨 둔다.
 		/// 2초 안에 다 못 받으면 받은 만큼만 돌려준다.
 		/// </summary>
-		private int ReceiveBody(int p_iBodyLen)
+		private int ReceiveBody(ref int p_iBodyLen)
 		{
 			int iGot = 0;
 			int iOldTimeout = 0;
@@ -188,6 +190,15 @@ namespace TSK_HostCom
 					if (n <= 0) break;
 					iGot += n;
 				}
+
+				// @.머리말 길이가 실제 몸통보다 짧은 전문 : 길이만큼 읽었는데 끝이 ETX 가 아니면 ETX 가 나올 때까지 더 읽는다.
+				while (iGot > 0 && m_bytRxBuff[modDefApp.MSG_HEAD_CNT + iGot - 1] != modDefApp.ETX
+					   && modDefApp.MSG_HEAD_CNT + iGot < m_bytRxBuff.Length)
+				{
+					int n = m_sktSock.Receive(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + iGot, 1, SocketFlags.None);
+					if (n <= 0) break;
+					iGot += n;
+				}
 			}
 			catch (SocketException)
 			{
@@ -196,6 +207,22 @@ namespace TSK_HostCom
 			finally
 			{
 				try { m_sktSock.ReceiveTimeout = iOldTimeout; } catch { }
+			}
+
+			// @.머리말 길이가 실제 몸통보다 긴 전문 : 받은 것 안에서 처음 나온 ETX 까지를 전문으로 본다.
+			for (int i = 1; i < iGot; i++)
+			{
+				if (m_bytRxBuff[modDefApp.MSG_HEAD_CNT + i] == modDefApp.ETX)
+				{
+					if (i + 1 != p_iBodyLen)
+					{
+						m_strLog = string.Format("전문 머리말 길이[{0}] 와 실제 길이[{1}] 가 다릅니다. ETX 기준으로 처리합니다.", p_iBodyLen, i + 1);
+						modCmWork.ShowMsgServer(m_strLog, modDefApp.MSG_IMP);
+					}
+					p_iBodyLen = i + 1;
+					iGot = i + 1;
+					break;
+				}
 			}
 			return iGot;
 		}
