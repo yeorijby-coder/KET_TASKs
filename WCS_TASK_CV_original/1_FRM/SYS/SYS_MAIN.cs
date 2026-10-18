@@ -20,6 +20,7 @@ namespace WCS_TASK_CV
     {
         private int m_nProcessCnt;
         public int ProcessCount { get { return m_nProcessCnt; } }   // @.FRM_PLC_WORD 가 COMM 목록을 만들 때 쓴다
+        private CheckBox m_chkImpOnly;                              // @.중요 로그만 화면에 보이기 (보통 로그는 화면에서만 뺀다. 파일 로그는 그대로)
         public string m_strConnectString;
         public CvThread[] m_thCvThread     = new CvThread[200];
         public cLogThread[] m_thLogging = new cLogThread[200];
@@ -116,6 +117,14 @@ namespace WCS_TASK_CV
             btnPlcWord.UseVisualStyleBackColor = false;
             btnPlcWord.Click += delegate { new FRM_PLC_WORD(this).Show(this); };
             this.pnlTop.Controls.Add(btnPlcWord);
+
+            // @.중요 로그만 표시 (2026-10-19) : 통신 주기마다 쏟아지는 보통(NOR) 로그를 화면에서 뺀다. 중요(IMP)/에러(ERR)만 남는다.
+            m_chkImpOnly = new CheckBox();
+            m_chkImpOnly.Name = "chkImpOnly";
+            m_chkImpOnly.Text = "중요 로그만 표시";
+            m_chkImpOnly.AutoSize = true;
+            m_chkImpOnly.Location = new System.Drawing.Point(this.chkStopLog.Left + this.chkStopLog.Width + 12, this.chkStopLog.Top);   // Stop Log 옆
+            this.pnlTop.Controls.Add(m_chkImpOnly);
         }
         #endregion
 
@@ -804,6 +813,9 @@ namespace WCS_TASK_CV
             {
 
                 if (chkStopLog.Checked) return;
+
+                // @.중요 로그만 표시 : 보통(NOR) 로그는 화면에 올리지 않는다.
+                if (m_chkImpOnly != null && m_chkImpOnly.Checked && pMsgTyp == cDefApp.eLogMsgType.MSG_NOR) return;
 
                 cDefApp.stutLogMsgInfo LogMsg ;
                 LogMsg.Time = DateTime.Now.ToString( "yyyy/MM/dd HH:mm:ss:ffffff");
