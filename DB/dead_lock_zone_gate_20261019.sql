@@ -59,7 +59,7 @@ UPDATE dead_lock_zone_def
    SET eqp_sta_chk_tr = NULL
  WHERE wh_typ = '10'
    AND cur_pos IN ('318','323','333','337','346','349','606','612','618','624')
-   AND eqp_sta_chk_tr IS NOT NULL;
+   AND eqp_sta_chk_tr IS NOT NULL AND eqp_sta_chk_tr <> '';
 
 COMMIT;
 
