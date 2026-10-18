@@ -5058,74 +5058,144 @@ namespace TSK_COMM_IOSCH
         //               반영하는지 확인 필요. (변화가 있을 때만 기록하여 부하 최소화)
         // 이거는 좀더 확인이 필요함! => 일단 갯수 카운트를 하고 있는지가 확인이 필요함!
         // ─────────────────────────────────────────────────────────────────
+        // @.진입 허가 명령을 다시 내기까지 최소 간격(초). PLC 가 비트를 되돌려 주기 전에 같은 명령을 쌓지 않으려는 것이다.
+        private static System.Collections.Generic.Dictionary<string, DateTime> m_dicEntryOrderAt
+            = new System.Collections.Generic.Dictionary<string, DateTime>();
+
+        /*
+         * 3F 픽킹 레인 진입 허가 (원본 EcsSv/Cv.cpp CCv::MovingTrackCheckPlc3/6)
+         *
+         *   레인 하나(DEAD_LOCK_ZONE_DEF 에서 BUFFERS 가 같은 게이트들)마다
+         *     1) 레인 점유 수 = 작업 트랙(BUFFERS)에 작업번호가 있는 수
+         *                     + 게이트 중 허가 비트(CV_CHECK_POS_RD)가 이미 켜져 있고 작업번호가 있는 수
+         *     2) 점유 수 >= 제한(COUNT, 6)이면 이번 주기에는 허가하지 않는다.
+         *     3) 아니면 게이트 중 작업번호가 있고 허가 비트가 아직 꺼진 것에 진입 허가(CMD_RQ_ID='ENTRY')를 낸다.
+         *   CV 태스크가 PLC 워드 558 의 그 게이트 비트를 켠다. PLC 가 화물을 들이면 비트를 내린다.
+         *
+         *   목적지는 보지 않는다. (원본도 작업번호만 본다. 예전 신규 코드는 게이트 화물의 목적지가
+         *   정의의 CUR_DEST_POS(트랙번호)와 같을 때만 보았는데 목적지는 작업대번호로 적혀 거의 맞지 않았다.)
+         *   TR_PAUSE_OD 는 쓰지 않는다. (CV 태스크가 PLC 에 반영하지 않는 값이다)
+         */
         protected bool MOVING_TRACK_CHECK_PLC(string strWH_TYP, string strPlcDigit, string strTitle, ref string pRTN_MSG)
         {
             try
             {
-                int nSelCnt = 0;
+                pRTN_MSG = strTitle;
                 string strSql = "";
 
-                pRTN_MSG = strTitle;
-
-                // 게이트(대기) 트랙에 화물이 재하된 레인 정의 조회
-                strSql = "";
-                strSql += CRLF + " SELECT DISTINCT DLZ.CUR_POS, DLZ.CUR_DEST_POS,                 ";
-                strSql += CRLF + "        CD.LUGG_NO_RD, CD.TR_PAUSE_RD                           ";
-                strSql += CRLF + "   FROM DEAD_LOCK_ZONE_DEF DLZ                                  ";
-                strSql += CRLF + "  INNER JOIN CV_DATA CD                                         ";
-                strSql += CRLF + "     ON CD.WH_TYP = DLZ.WH_TYP AND CD.MC_NO = DLZ.CUR_POS       ";
-                strSql += CRLF + "  WHERE DLZ.WH_TYP   = :WH_TYP                                  ";
-                strSql += CRLF + "    AND DLZ.USE_YN   = 'Y'                                      ";
-                strSql += CRLF + "    AND DLZ.CUR_POS LIKE :PFX                                   ";   // '3%' / '6%' (해당 층 라인)
-                strSql += CRLF + "    AND CD.SENSOR0_DATA_RD = '1'                                ";   // 게이트에 화물 재하
-                strSql += CRLF + "    AND CD.AUTO_MODE_RD    = '1'                                ";
-                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')                       ";
-                strSql += CRLF + "    AND COALESCE(CD.DEST_POS_RD,'') = DLZ.CUR_DEST_POS          ";   // 화물 목적지 = 레인 방향
+                // 1) 레인 정의
+                strSql += CRLF + " SELECT DISTINCT DLZ.CUR_POS, DLZ.BUFFERS, DLZ.COUNT               ";
+                strSql += CRLF + "   FROM DEAD_LOCK_ZONE_DEF DLZ                                       ";
+                strSql += CRLF + "  WHERE DLZ.WH_TYP   = :WH_TYP                                       ";
+                strSql += CRLF + "    AND DLZ.USE_YN   = 'Y'                                           ";
+                strSql += CRLF + "    AND DLZ.CUR_POS LIKE :PFX                                        ";
+                strSql += CRLF + "    AND COALESCE(DLZ.EQP_STA_CHK_TR, '') = ''                        ";
+                strSql += CRLF + "  ORDER BY DLZ.CUR_POS                                               ";
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
                 _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
                 _pBdb.mComMain.Parameters.Add("PFX", DbLang.VARCHAR).Value = strPlcDigit + "%";
-                nSelCnt = _pBdb.ExcuteQry(strSql);
-                if (nSelCnt < 0)
+                int nDef = _pBdb.ExcuteQry(strSql);
+                if (nDef < 0) { pRTN_MSG += _pBdb.ErrMsg; return false; }
+                if (nDef == 0) { pRTN_MSG = ""; return true; }
+                DataTable dtDef = _pBdb.mDtMain.Copy();
+
+                // 레인 = BUFFERS 가 같은 정의들
+                System.Collections.Generic.List<string> lstBuffers = new System.Collections.Generic.List<string>();
+                System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>> dicGates
+                    = new System.Collections.Generic.Dictionary<string, System.Collections.Generic.List<string>>();
+                System.Collections.Generic.Dictionary<string, int> dicLimit = new System.Collections.Generic.Dictionary<string, int>();
+                for (int i = 0; i < dtDef.Rows.Count; i++)
                 {
-                    pRTN_MSG += _pBdb.ErrMsg;
-                    return false;
+                    string strBuf = ("" + dtDef.Rows[i]["BUFFERS"]).Trim();
+                    string strGate = ("" + dtDef.Rows[i]["CUR_POS"]).Trim();
+                    int nLimit = 6;
+                    int.TryParse(("" + dtDef.Rows[i]["COUNT"]).Trim(), out nLimit);
+                    if (strBuf == "" || strGate == "") continue;
+                    if (!dicGates.ContainsKey(strBuf)) { dicGates[strBuf] = new System.Collections.Generic.List<string>(); lstBuffers.Add(strBuf); dicLimit[strBuf] = nLimit; }
+                    if (!dicGates[strBuf].Contains(strGate)) dicGates[strBuf].Add(strGate);
                 }
-                if (nSelCnt == 0)
+
+                string strDone = "";
+                foreach (string strBuf in lstBuffers)
                 {
-                    pRTN_MSG = "";
-                    return true;
-                }
+                    // 2) 작업 트랙의 작업 수
+                    strSql = "";
+                    strSql += CRLF + " SELECT COUNT(*) AS CNT FROM CV_DATA                                   ";
+                    strSql += CRLF + "  WHERE WH_TYP = :WH_TYP                                               ";
+                    strSql += CRLF + "    AND MC_NO IN (" + strBuf + ")                                      ";
+                    strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(LUGG_NO_RD, " + SQL_WS + "), ''), '0') NOT IN ('0','0000') ";
+                    _pBdb.mComMain.CommandType = CommandType.Text;
+                    _pBdb.mComMain.Parameters.Clear();
+                    _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+                    if (_pBdb.ExcuteQry(strSql) < 0) { pRTN_MSG += _pBdb.ErrMsg; return false; }
+                    int nCount = 0;
+                    int.TryParse(("" + _pBdb.mDtMain.Rows[0]["CNT"]).Trim(), out nCount);
 
-                DataTable dtGate = _pBdb.mDtMain.Copy();
-                pRTN_MSG = "";
+                    // 3) 게이트 상태
+                    string strGateIn = "";
+                    foreach (string g in dicGates[strBuf]) strGateIn += (strGateIn == "" ? "" : ",") + "'" + g + "'";
+                    strSql = "";
+                    strSql += CRLF + " SELECT MC_NO, COALESCE(NULLIF(BTRIM(LUGG_NO_RD, " + SQL_WS + "), ''), '0') AS LUGG_NO_RD ";
+                    strSql += CRLF + "      , COALESCE(CV_CHECK_POS_RD, '0') AS CV_CHECK_POS_RD, COALESCE(CMD_RQ_YN, 'N') AS CMD_RQ_YN ";
+                    strSql += CRLF + "   FROM CV_DATA                                                        ";
+                    strSql += CRLF + "  WHERE WH_TYP = :WH_TYP                                               ";
+                    strSql += CRLF + "    AND MC_NO IN (" + strGateIn + ")                                   ";
+                    strSql += CRLF + "  ORDER BY MC_NO                                                       ";
+                    _pBdb.mComMain.CommandType = CommandType.Text;
+                    _pBdb.mComMain.Parameters.Clear();
+                    _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+                    int nGateCnt = _pBdb.ExcuteQry(strSql);
+                    if (nGateCnt < 0) { pRTN_MSG += _pBdb.ErrMsg; return false; }
+                    DataTable dtGate = _pBdb.mDtMain.Copy();
 
-                for (int i = 0; i < dtGate.Rows.Count; i++)
-                {
-                    string strGATE = "" + dtGate.Rows[i]["CUR_POS"].ToString();
-                    string strDEST = "" + dtGate.Rows[i]["CUR_DEST_POS"].ToString();
-                    string strLUGG = "" + dtGate.Rows[i]["LUGG_NO_RD"].ToString();
-
-                    // 레인 점유수 판정 (기존 공용 함수 - 초과 시 false)
-                    string strChkMsg = "";
-                    DataTable dtDeadLock = new DataTable();
-                    bool bEnterOk = cDefApi.CHECK_ENTER_DEAD_LOCK_ZONE(_pBdb, strWH_TYP, strGATE, strDEST, ref strChkMsg, ref dtDeadLock);
-
-                    // 진입허가('0') / 대기('1') - 값이 바뀔 때만 기록
-                    string strPause = bEnterOk ? "0" : "1";
-                    int nChg = UPDATE_CV_TR_PAUSE(strWH_TYP, strGATE, strPause, ref pRTN_MSG);
-                    if (nChg < 0) return false;
-                    if (nChg > 0)
+                    // 이미 허가가 나가 있는 게이트 화물도 레인 안으로 센다 (원본 IsReadyStartToMove)
+                    for (int i = 0; i < dtGate.Rows.Count; i++)
                     {
-                        pRTN_MSG = strTitle + "TRACK " + strGATE + "번[픽킹 레인 게이트] " +
-                                   (bEnterOk ? "진입 허가" : "레인 만석 - 진입 대기") +
-                                   " (목적지:" + strDEST + ", 작업번호:" + strLUGG + ")";
-                        InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG, "", strGATE, strDEST, false);
-                        return true;
+                        bool bLugg = ("" + dtGate.Rows[i]["LUGG_NO_RD"]) != "0" && ("" + dtGate.Rows[i]["LUGG_NO_RD"]) != "0000";
+                        if (bLugg && ("" + dtGate.Rows[i]["CV_CHECK_POS_RD"]).Trim() == "1") nCount++;
+                    }
+
+                    // 제한 이상이면 이번 주기에는 허가하지 않는다
+                    if (nCount >= dicLimit[strBuf]) continue;
+
+                    // 작업번호가 있고 허가 비트가 아직 꺼진 게이트에 허가
+                    for (int i = 0; i < dtGate.Rows.Count; i++)
+                    {
+                        string strGate = ("" + dtGate.Rows[i]["MC_NO"]).Trim();
+                        string strLugg = ("" + dtGate.Rows[i]["LUGG_NO_RD"]).Trim();
+                        if (strLugg == "0" || strLugg == "0000") continue;
+                        if (("" + dtGate.Rows[i]["CV_CHECK_POS_RD"]).Trim() == "1") continue;     // 이미 허가됨
+                        if (("" + dtGate.Rows[i]["CMD_RQ_YN"]).Trim() == "Y") continue;           // 앞 명령을 CV 태스크가 아직 안 가져감
+
+                        string strKey = strWH_TYP + "/" + strGate;
+                        DateTime dtLast;
+                        if (m_dicEntryOrderAt.TryGetValue(strKey, out dtLast) && (DateTime.Now - dtLast).TotalSeconds < 5) continue;
+
+                        strSql = "";
+                        strSql += CRLF + " UPDATE CV_DATA                        ";
+                        strSql += CRLF + "    SET CMD_RQ_ID  = 'ENTRY'           ";
+                        strSql += CRLF + "      , CMD_RQ_YN  = 'Y'               ";
+                        strSql += CRLF + "      , WRITE_UPD_DT = " + DbLang.SYSDATE + " ";
+                        strSql += CRLF + "  WHERE WH_TYP     = :WH_TYP           ";
+                        strSql += CRLF + "    AND MC_NO      = :MC_NO            ";
+                        strSql += CRLF + "    AND COALESCE(CMD_RQ_YN, 'N') = 'N' ";
+                        _pBdb.mComMain.CommandType = CommandType.Text;
+                        _pBdb.mComMain.Parameters.Clear();
+                        _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+                        _pBdb.mComMain.Parameters.Add("MC_NO", DbLang.VARCHAR).Value = strGate;
+                        int nUpd = _pBdb.ExcuteNonQry(strSql);
+                        if (nUpd < 0) { pRTN_MSG += _pBdb.ErrMsg; return false; }
+                        if (nUpd == 0) continue;
+
+                        m_dicEntryOrderAt[strKey] = DateTime.Now;
+                        nCount++;
+                        strDone = strTitle + "TRACK " + strGate + "번[픽킹 레인 게이트] 진입 허가를 CV_TASK 에 지시했습니다. [작업번호:" + strLugg
+                                + "][레인 작업 수:" + nCount + "/" + dicLimit[strBuf] + "]";
+                        InsertLog(SCH_WH_TYP, strDone, "", "", strLugg, "", strGate, "", false);
                     }
                 }
-
-                pRTN_MSG = "";
+                pRTN_MSG = strDone;
                 return true;
             }
             catch (Exception ex)

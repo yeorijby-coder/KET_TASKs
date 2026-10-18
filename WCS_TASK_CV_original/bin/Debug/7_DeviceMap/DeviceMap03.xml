@@ -147,7 +147,7 @@
 				<TrList>359</TrList>
 			</Bit>
 		</Area>
-		<Area type="b" seq="0" name="CvCheckPos" address="558">
+		<Area type="b" seq="0" name="CvCheckPos" address="558" dbcol="CV_CHECK_POS_RD">
 			<Bit  desc="D558.0" Use ="1" tid="318" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 			<Bit  desc="D558.1" Use ="1" tid="323" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 			<Bit  desc="D558.2" Use ="1" tid="333" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>

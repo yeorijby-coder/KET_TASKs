@@ -725,6 +725,23 @@ namespace WCS_TASK_CV
         }
         #endregion
 
+        #region [CvCheckPos] 게이트 허가 비트의 워드 주소 / 비트 위치
+        /// <summary>DeviceMap 의 CvCheckPos 영역에서 트랙의 (워드 D 주소, 비트 위치)를 찾는다.</summary>
+        private bool FindCvCheckPosBit(int nTrack, out int nAddr, out int nPos)
+        {
+            nAddr = 0; nPos = 0;
+            foreach (cDeviceMapRuntime.EtcArea a in m_devMap.EtcAreas)
+            {
+                if (string.Compare(a.Name, "CvCheckPos", true) != 0) continue;
+                foreach (cDeviceMapRuntime.EtcBit eb in a.Bits)
+                {
+                    if (eb.Tracks.Contains(nTrack)) { nAddr = a.Address; nPos = eb.Pos; return true; }
+                }
+            }
+            return false;
+        }
+        #endregion
+
         #region [가상 트랙] VIRTUAL_TRACK 읽기 / 트랙 주소
         private void LoadVirtualTracks()
         {
@@ -1548,6 +1565,63 @@ namespace WCS_TASK_CV
                         }
 
                         m_strLogMsg = strTitle + " 트랙번호 : [" + TRACK_NO + "] CMD_RQ_ID : [" + CMD_RQ_ID + "] 커맨드 지시 성공";
+                        if (!InsertWcsLogPgr(TRACK_NO, m_strLogMsg))
+                        {
+                            return false;
+                        }
+
+                        if (!UpdateCvDataCmd(TRACK_NO))
+                        {
+                            return false;
+                        }
+                    }
+                    else if (CMD_RQ_ID == "ENTRY")
+                    {
+                        /*
+                         * 픽킹 레인 진입 허가 (원본 ECS CCv::MovingTrackCheckPlc3/6 의 WriteOneWord(558, wData))
+                         *
+                         *   게이트 트랙(3F 346 등)은 PLC 가 허가 비트(D558.x)를 받아야 화물을 레인으로 들여보낸다.
+                         *   IO 스케줄러가 레인 점유 수를 보고 허가를 정하면 CMD_RQ_ID='ENTRY' 로 이 자리에 온다.
+                         *   DeviceMap 의 CvCheckPos 영역에서 이 트랙의 워드 주소와 비트 위치를 찾아
+                         *   현재 워드를 읽어 그 비트만 켜서 다시 쓴다. (다른 게이트의 비트는 그대로)
+                         *   PLC 가 화물을 들인 뒤 비트를 내리면 다음 화물에 다시 허가가 나간다.
+                         */
+                        int nChkAddr = 0, nChkPos = 0;
+                        if (!FindCvCheckPosBit(Convert.ToInt32("0" + TRACK_NO.Trim()), out nChkAddr, out nChkPos))
+                        {
+                            MakeMsg_Error(strTitle + " TRACK [" + TRACK_NO + "] ENTRY 지시 생략 - DeviceMap 에 CvCheckPos(dbcol) 정의 없음", m_nthNo);
+                            if (!UpdateCvDataCmd(TRACK_NO)) return false;
+                            continue;
+                        }
+
+                        byte[] byRdChk = new byte[64];
+                        if (m_msQPlc.READ((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT,
+                                          (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D,
+                                          nChkAddr, 1, ref byRdChk) == false)
+                        {
+                            m_strLogMsg = strTitle + "트랙번호 : [" + TRACK_NO + "] ENTRY 지시 실패 - 워드 D" + nChkAddr + " 읽기 실패";
+                            MakeMsg_Error(m_strLogMsg, m_nthNo);
+                            InsertWcsLogPgr(TRACK_NO, m_strLogMsg);
+                            return false;
+                        }
+                        int nChkWord = (byRdChk[1] << 8) | byRdChk[0];
+                        int nNewWord = nChkWord | (1 << nChkPos);
+
+                        Array.Clear(byTxBuff, 0, byTxBuff.Length);
+                        byTxBuff[0] = (byte)(nNewWord & 0xFF);
+                        byTxBuff[1] = (byte)((nNewWord >> 8) & 0xFF);
+                        if (m_msQPlc.WRITE((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT,
+                                           (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D,
+                                           nChkAddr, 1, byTxBuff) == false)
+                        {
+                            m_strLogMsg = strTitle + "트랙번호 : [" + TRACK_NO + "] ENTRY 지시 실패 - 워드 D" + nChkAddr + " 쓰기 실패";
+                            MakeMsg_Error(m_strLogMsg, m_nthNo);
+                            InsertWcsLogPgr(TRACK_NO, m_strLogMsg);
+                            return false;
+                        }
+
+                        m_strLogMsg = strTitle + " 트랙번호 : [" + TRACK_NO + "] 진입 허가 D" + nChkAddr + "." + nChkPos
+                                      + " 기존[" + nChkWord.ToString("X4") + "] 작성[" + nNewWord.ToString("X4") + "]";
                         if (!InsertWcsLogPgr(TRACK_NO, m_strLogMsg))
                         {
                             return false;
