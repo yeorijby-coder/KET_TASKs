@@ -1412,6 +1412,9 @@ namespace TSK_HostCom
         //설명		    : 완료 보고  
         private void GetJobCompleteReport()
         {
+            // @.출고/피킹출고의 1차 완료 보고(크레인 완료 때). 19(도착) 보고보다 먼저 돈다.
+            GetRetFirstReport();
+
             int[] nStation = new int[] { 19, 29 };
 
             int nCount = nStation.Length;
@@ -1420,6 +1423,97 @@ namespace TSK_HostCom
                 GetJobCompleteReport(nStation[i]);
             }
         }
+
+        /*
+         * 출고/피킹출고(2, 3, 12, 13)의 1차 완료 보고 - 크레인이 출고를 끝냈을 때.
+         *
+         *   원본 ECS 는 크레인 완료(CSc::CompleteCheck)에서 JOB->Complete(번호, 출고, 1) 로
+         *   F 전문(완료차수 1)을 먼저 보내고, 화물이 출고대에 도착하면(JOB->Arrived) 같은 전문을
+         *   완료차수 2 로 한 번 더 보낸다. 신규는 도착 때 차수 1 하나만 보내 상위가 크레인 완료를 몰랐다.
+         *
+         *   출고의 상태 흐름은 99 -> 20 -> 21 -> 29(크레인 완료) -> 11(CV) -> 19(도착) 이다.
+         *   IO 스케줄러가 29 를 1초 안에 11 로 넘기므로 29 에서만 찾으면 놓친다. 크레인 완료 뒤인
+         *   29 / 11 / 19 를 모두 보고, 아직 1차를 안 보낸 것(WC_STEP <> '1')을 보낸다.
+         *   보낸 뒤 WC_STEP = '1' 로 적어 한 번만 나가게 한다. 상태(JOB_STATUS)는 건드리지 않는다.
+         *   19 의 최종(차수 2) 보고는 WC_STEP = '1' 일 때만 나간다. (1 -> 2 순서 보장)
+         */
+        private bool GetRetFirstReport()
+        {
+            string strTitle = "[GetRetFirstReport] .. ";
+            m_strHostCmd = "F";
+            try
+            {
+                if (!m_blSockConnected) return false;
+
+                m_BDb.ParamsClear();
+                m_strSql = "";
+                m_strSql += modDefApp.CRLF + " SELECT * FROM JOB_MST                                         ";
+                m_strSql += modDefApp.CRLF + "  WHERE JOB_STATUS IN ('29', '11', '19')                       ";
+                m_strSql += modDefApp.CRLF + "    AND JOB_TYP    IN ('2', '3', '12', '13')                   ";
+                m_strSql += modDefApp.CRLF + "    AND COALESCE(NULLIF(TRIM(WC_STEP), ''), '0') <> '1'        ";
+                m_strSql += modDefApp.CRLF + "    AND WH_TYP     IN " + modDefApp.GsWhTypList();
+                m_strSql += modDefApp.CRLF + "  ORDER BY UPD_DT                                              ";
+                m_strSql += modDefApp.CRLF + "  LIMIT 1                                                      ";
+                int nSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
+                if (nSelCnt <= 0) return true;
+
+                string strLuggNum = m_BDb.dtMain.Rows[0]["LUGG_NO"].ToString().Trim();
+                int nJobType = Convert.ToInt32(m_BDb.dtMain.Rows[0]["JOB_TYP"].ToString().Trim());
+                string strDPosition = m_BDb.dtMain.Rows[0]["DEST_POS"].ToString().Trim();
+                string strWhTyp = m_BDb.dtMain.Rows[0]["WH_TYP"].ToString().Trim();
+                int nLuggNum = Convert.ToInt32(strLuggNum);
+                m_strJobWhDef = modDefApp.GsWhDefOf(strWhTyp);
+
+                // 반자동(9000 이상)이거나 SIM MODE 는 보고하지 않는다. 표만 해 두어 다시 찾지 않게 한다.
+                bool bNoSend = (nLuggNum >= 9000 && modDefApp.g_frmForm.chkSimMode.Checked == false)
+                               || modDefApp.g_frmForm.chkSimMode.Checked == true;
+
+                if (!bNoSend)
+                {
+                    string strTemp = string.Format("F{0:0}{1}{2:0000}{3:0}{4:0}{5:000}",
+                                                   modDefApp.GsJobDefineOfReport(nJobType), m_strJobWhDef, nLuggNum, 2,
+                                                   modDefApp.STEP_FIRST, Convert.ToInt32(strDPosition));
+                    int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
+                    m_bytTxBuff = new byte[iTxCnt];
+                    MakeHeader(strTemp.Length);
+                    m_bytTxBuff[modDefApp.MSG_HEAD_CNT] = modDefApp.STX;
+                    byte[] bytTempByte = System.Text.Encoding.Default.GetBytes(strTemp);
+                    Array.Copy(bytTempByte, 0, m_bytTxBuff, modDefApp.MSG_HEAD_CNT + 1, strTemp.Length);
+                    m_bytTxBuff[iTxCnt - 1] = modDefApp.ETX;
+
+                    if (!RequestSrv(iTxCnt.ToString()))
+                        return false;           // 못 보냈다. 표를 안 하므로 다음 주기에 다시 보낸다.
+                }
+
+                m_BDb.BeginTrans();
+                m_BDb.ParamsClear();
+                m_strSql = "";
+                m_strSql += modDefApp.CRLF + "  UPDATE JOB_MST                                               ";
+                m_strSql += modDefApp.CRLF + "     SET WC_STEP  = '1'                                        ";
+                m_strSql += modDefApp.CRLF + "   WHERE WH_TYP   IN " + modDefApp.GsWhTypList();
+                m_strSql += modDefApp.CRLF + "     AND LUGG_NO  = " + m_BDb.ParamsAdd("LUGG_NO", strLuggNum);
+                m_iSelCnt = m_BDb.ExcuteNonQry_Par(ref m_strSql);
+                if (m_iSelCnt < 0)
+                {
+                    m_strLog = m_BDb.ErrMsg + m_strSql;
+                    modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
+                    m_BDb.RollbackTrans();
+                    return false;
+                }
+                m_BDb.CommitTrans();
+
+                m_strLog = string.Format("출고 1차 완료 보고(크레인 완료) 하였습니다. [작업번호:{0}]", strLuggNum);
+                modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_NOR);
+            }
+            catch (Exception ex)
+            {
+                m_strLog = strTitle + "실행중 예외 발생!" + ex.Message;
+                modCmWork.ShowMsgClient(m_strLog, modDefApp.MSG_ERR);
+                return false;
+            }
+            return true;
+        }
+
 
         //최초작성자	: BASE(정복열)
         //작성일		: 20200519
@@ -1472,6 +1566,16 @@ namespace TSK_HostCom
 
             int nLuggNum = Convert.ToInt32(strLuggNum);
             bool bResult = false;
+            // @.출고/피킹출고가 CV 에 도착했다(19)면 최종(차수 2) 보고다. 크레인 완료 때 1차를 보낸 뒤(WC_STEP='1')에만 나간다.
+            int nReportStep = modDefApp.STEP_FIRST;
+            if (nJobStatus == 19 && (nJobType == 2 || nJobType == 3 || nJobType == 12 || nJobType == 13))
+            {
+                string strWcStep = m_BDb.dtMain.Columns.Contains("WC_STEP") ? m_BDb.dtMain.Rows[0]["WC_STEP"].ToString().Trim() : "";
+                bool bSimOrManual = (modDefApp.g_frmForm.chkSimMode.Checked == true) || (nLuggNum >= 9000);
+                if (bSimOrManual == false && strWcStep != "1")
+                    return false;       // 1차 보고가 아직이다. GetRetFirstReport 가 먼저 보낸다.
+                nReportStep = modDefApp.STEP_FINAL;
+            }
             if (nLuggNum >= 9000 && modDefApp.g_frmForm.chkSimMode.Checked == false)
             {
                 m_strLog = "작업정보는 존재하지만 온라인 작업이 아니므로 작업완료 처리합니다. [작업 번호:" + strLuggNum + "]";
@@ -1546,7 +1650,7 @@ namespace TSK_HostCom
              */
             strTemp = string.Format("F{0:0}{1}{2:0000}{3:0}{4:0}{5:000}",
                                     modDefApp.GsJobDefineOfReport(nJobType), m_strJobWhDef, nLuggNum, nClass,
-                                    modDefApp.STEP_FIRST, nStation);
+                                    nReportStep, nStation);
 
             int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
             //MSG_ORDER_CNT
