@@ -1063,7 +1063,13 @@ namespace TSK_HostCom
              *     이 조건 때문에 상태보고 조회가 매번 42703 오류로 실패했다.
              */
             m_strSql += modDefApp.CRLF + "     WHERE  CD.WH_TYP       IN " + modDefApp.GsWhTypList();
-            m_strSql += modDefApp.CRLF + "       AND (COALESCE(NULLIF(TRIM(CD.STN_KIND),''),'0')::INTEGER & 3) <> 0 ";
+            /*
+             * @.현장 DB 는 피킹대 / 사이즈체크 / 팔레트 매거진의 STN_KIND 가 64(도착대)뿐이다. (입고대 1, 출고대 2 비트가 없다)
+             *   그래서 (STN_KIND & 3) 만 보면 이 작업대들이 상태 보고에서 빠진다. (2026-10-19 현장 DB 대조)
+             *   원본은 이 작업대를 입고대/출고대로 정의해 보고했으므로 HOST_STN_NO 목록으로 함께 고른다.
+             */
+            m_strSql += modDefApp.CRLF + "       AND ((COALESCE(NULLIF(TRIM(CD.STN_KIND),''),'0')::INTEGER & 3) <> 0 ";
+            m_strSql += modDefApp.CRLF + "            OR CD.HOST_STN_NO IN ('200','201','202','203','205','206','207','209','212','213','214','215')) ";
             m_strSql += modDefApp.CRLF + "       AND (CD.HOST_STN_NO IS NULL                                        ";
             m_strSql += modDefApp.CRLF + "            OR CD.HOST_STN_NO NOT IN ('221','222'))                       ";
             m_strSql += modDefApp.CRLF + "  ORDER BY  CD.PLC_NO,     CD.MC_NO       ";
@@ -1140,6 +1146,14 @@ namespace TSK_HostCom
                  */
                 int nKindVal = 0; int.TryParse(strSTN_KIND.Trim(), out nKindVal);
                 bool bStoOnly = ((nKindVal & 3) == 1);
+                string strHostStnNo = ("" + m_BDb.dtMain.Rows[iii]["HOST_STN_NO"]).Trim();
+                bool bPalletMagazine = (strHostStnNo == "207");                 // 팔레트 매거진 : 입고 준비, 사이즈 0
+                bool bSizeChecker = (strHostStnNo == "205" || strHostStnNo == "206" || strHostStnNo == "209" ||
+                                     strHostStnNo == "214" || strHostStnNo == "215");
+                bool bPickingStn = (strHostStnNo == "200" || strHostStnNo == "201" || strHostStnNo == "202" ||
+                                    strHostStnNo == "203" || strHostStnNo == "212" || strHostStnNo == "213");
+                if (bPalletMagazine) bStoOnly = true;
+                else if (bSizeChecker || bPickingStn) bStoOnly = false;         // 화물감지 센서로 보고
                 string strSensor = ("" + m_BDb.dtMain.Rows[iii]["SENSOR0_DATA_RD"]).Trim();
                 if (bStoOnly ? (strSTO_READY_RD == "1") : (strSensor == "1"))
                 {
@@ -1147,7 +1161,8 @@ namespace TSK_HostCom
                 }
                 // @.사이즈체크 : 센서 워드 비트 10(저) / 11(고). 고가 우선 -> 2, 저 -> 1, 없으면 0 (원본과 같다)
                 int nCvSize = 0;
-                if (("" + m_BDb.dtMain.Rows[iii]["SZ_CHK_HIGH_RD"]).Trim() == "1") nCvSize = 2;
+                if (bPalletMagazine) nCvSize = 0;
+                else if (("" + m_BDb.dtMain.Rows[iii]["SZ_CHK_HIGH_RD"]).Trim() == "1") nCvSize = 2;
                 else if (("" + m_BDb.dtMain.Rows[iii]["SZ_CHK_LOW_RD"]).Trim() == "1") nCvSize = 1;
 
                 /*
