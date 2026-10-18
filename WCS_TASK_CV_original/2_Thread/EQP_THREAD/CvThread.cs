@@ -187,6 +187,20 @@ namespace WCS_TASK_CV
 		}
 	}
 
+    // @.PLC 워드 읽기/쓰기 요청 (FRM_PLC_WORD 가 통신 스레드의 큐에 넣고, 스레드가 처리해 결과를 채운다)
+    public class PlcWordReq
+    {
+        public int Op;              // 0 읽기, 1 워드 쓰기, 2 비트 켜기, 3 비트 끄기
+        public int Addr;            // D 주소
+        public int Count;           // 워드 수
+        public int Bit;             // 비트 위치(0~15)
+        public int[] Values;        // 쓸 값(Op 1)
+        public volatile bool Done;
+        public bool Ok;
+        public string Msg = "";
+        public int[] Result;        // 읽은 값(읽기, 비트 쓰기 뒤의 워드)
+    }
+
     public class CvThread : maindefine
     {
         #region 변수정의
@@ -244,6 +258,96 @@ namespace WCS_TASK_CV
 
         private bool m_bOpen;
         public bool IsOpen { get { return m_bOpen; } set { m_bOpen = value; } } //프로그램 화면표시용.
+
+        #region [PLC 워드 읽기/쓰기 도구] 요청 큐와 처리
+        private readonly Queue<PlcWordReq> m_qWordReq = new Queue<PlcWordReq>();
+
+        /// <summary>FRM_PLC_WORD 가 부른다. 요청을 이 스레드의 큐에 넣는다. (소켓은 이 스레드만 쓴다)</summary>
+        public PlcWordReq EnqueueWordReq(PlcWordReq r)
+        {
+            lock (m_qWordReq) { m_qWordReq.Enqueue(r); }
+            return r;
+        }
+
+        /// <summary>큐의 요청을 이 스레드에서 처리한다. 통신 주기마다 한 번 부른다.</summary>
+        private void ProcessWordReqs()
+        {
+            while (true)
+            {
+                PlcWordReq r = null;
+                lock (m_qWordReq) { if (m_qWordReq.Count > 0) r = m_qWordReq.Dequeue(); }
+                if (r == null) return;
+
+                try
+                {
+                    byte[] rx = new byte[r.Count * 2 + 64];
+                    string strWhat = "";
+
+                    if (r.Op == 0)
+                    {
+                        if (!m_msQPlc.READ((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT, (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D,
+                                           r.Addr, r.Count, ref rx))
+                            throw new Exception("읽기 실패: " + m_msQPlc.GetErrorMsg());
+                        r.Result = new int[r.Count];
+                        for (int i = 0; i < r.Count; i++) r.Result[i] = (rx[i * 2 + 1] << 8) | rx[i * 2];
+                        r.Msg = "D" + r.Addr + " 부터 " + r.Count + "워드";
+                    }
+                    else if (r.Op == 1)
+                    {
+                        byte[] tx = new byte[r.Values.Length * 2 + 16];
+                        for (int i = 0; i < r.Values.Length; i++)
+                        {
+                            tx[i * 2] = (byte)(r.Values[i] & 0xFF);
+                            tx[i * 2 + 1] = (byte)((r.Values[i] >> 8) & 0xFF);
+                        }
+                        // 쓰기 전 값(기록용)
+                        byte[] rxb = new byte[r.Values.Length * 2 + 64];
+                        string strBefore = "";
+                        if (m_msQPlc.READ((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT, (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D,
+                                          r.Addr, r.Values.Length, ref rxb))
+                            for (int i = 0; i < r.Values.Length; i++) strBefore += ((rxb[i * 2 + 1] << 8) | rxb[i * 2]).ToString("X4") + " ";
+                        if (!m_msQPlc.WRITE((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT, (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D,
+                                            r.Addr, r.Values.Length, tx))
+                            throw new Exception("쓰기 실패: " + m_msQPlc.GetErrorMsg());
+                        string strAfter = "";
+                        foreach (int v in r.Values) strAfter += v.ToString("X4") + " ";
+                        strWhat = "D" + r.Addr + " " + r.Values.Length + "워드 쓰기 기존[" + strBefore.Trim() + "] 작성[" + strAfter.Trim() + "]";
+                        r.Msg = strWhat;
+                    }
+                    else
+                    {
+                        if (!m_msQPlc.READ((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT, (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D,
+                                           r.Addr, 1, ref rx))
+                            throw new Exception("읽기 실패: " + m_msQPlc.GetErrorMsg());
+                        int nOld = (rx[1] << 8) | rx[0];
+                        int nNew = (r.Op == 2) ? (nOld | (1 << r.Bit)) : (nOld & ~(1 << r.Bit));
+                        byte[] tx = new byte[16];
+                        tx[0] = (byte)(nNew & 0xFF); tx[1] = (byte)((nNew >> 8) & 0xFF);
+                        if (!m_msQPlc.WRITE((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT, (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D,
+                                            r.Addr, 1, tx))
+                            throw new Exception("쓰기 실패: " + m_msQPlc.GetErrorMsg());
+                        r.Result = new int[] { nNew };
+                        strWhat = "D" + r.Addr + "." + r.Bit + (r.Op == 2 ? " 켜기" : " 끄기") + " 기존[" + nOld.ToString("X4") + "] 작성[" + nNew.ToString("X4") + "]";
+                        r.Msg = strWhat;
+                    }
+
+                    r.Ok = true;
+                    if (r.Op != 0)
+                    {
+                        string strLog = "[PLC워드도구] " + strWhat;
+                        MakeMsg_Imp(strLog, m_nthNo);
+                        InsertWcsLogPgr("", strLog);
+                    }
+                }
+                catch (Exception ex)
+                {
+                    r.Ok = false;
+                    r.Msg = ex.Message;
+                }
+                r.Done = true;
+            }
+        }
+        #endregion
 
         //Dictionary 객체를 생성함.
         Dictionary<int, CVData> CvDic = new Dictionary<int, CVData>();
@@ -479,6 +583,8 @@ namespace WCS_TASK_CV
                             if (!CvChg_CMD_RQ_YN(Idx)) goto EXIT_LBL; //컨베이어 CMD 쓰기지시를 확인하고 DATA를 WRITE한다..
 
                             if (!CvChg_OD_RQ_YN(Idx)) goto EXIT_LBL; //컨베이어 OD 쓰기지시를 확인하고 DATA를 WRITE한다..
+
+                            ProcessWordReqs();    // PLC 워드 읽기/쓰기 도구의 요청 (FRM_PLC_WORD)
 
                             // @.출고 H/S 쓰기 지연 줄이기 (2026-10-16) : 한 바퀴 200ms -> 100ms
                             Thread.Sleep(100);

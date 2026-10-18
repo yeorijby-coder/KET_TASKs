@@ -19,6 +19,7 @@ namespace WCS_TASK_CV
     public partial class SYS_MAIN : Form
     {
         private int m_nProcessCnt;
+        public int ProcessCount { get { return m_nProcessCnt; } }   // @.FRM_PLC_WORD 가 COMM 목록을 만들 때 쓴다
         public string m_strConnectString;
         public CvThread[] m_thCvThread     = new CvThread[200];
         public cLogThread[] m_thLogging = new cLogThread[200];
@@ -102,6 +103,19 @@ namespace WCS_TASK_CV
 
             // @.헤더 오른쪽 클릭으로 열을 켜고 끈다. (디자이너에 있는 첫 탭)
             m_ColMenus.Add(new ListViewColumnMenu(this.lsvCOMM1));
+
+            // @.PLC 워드 읽기/쓰기 도구 버튼 (XML 필드 동기화 버튼 옆)
+            Button btnPlcWord = new Button();
+            btnPlcWord.Name = "btnPlcWord";
+            btnPlcWord.Text = "PLC 워드 읽기/쓰기";
+            btnPlcWord.Location = new System.Drawing.Point(this.btnXmlSync.Left + this.btnXmlSync.Width + 8, this.btnXmlSync.Top);
+            btnPlcWord.Size = new System.Drawing.Size(130, this.btnXmlSync.Height);
+            btnPlcWord.BackColor = System.Drawing.Color.FromArgb(0, 122, 204);
+            btnPlcWord.ForeColor = System.Drawing.Color.White;
+            btnPlcWord.FlatStyle = FlatStyle.Flat;
+            btnPlcWord.UseVisualStyleBackColor = false;
+            btnPlcWord.Click += delegate { new FRM_PLC_WORD(this).Show(this); };
+            this.pnlTop.Controls.Add(btnPlcWord);
         }
         #endregion
 

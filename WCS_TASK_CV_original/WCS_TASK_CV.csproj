@@ -119,6 +119,9 @@
     <Compile Include="1_FRM\SYS\SYS_MAIN.Designer.cs">
       <DependentUpon>SYS_MAIN.cs</DependentUpon>
     </Compile>
+    <Compile Include="1_FRM\SYS\FRM_PLC_WORD.cs">
+      <SubType>Form</SubType>
+    </Compile>
     <Compile Include="1_FRM\SYS\FRM_XML_FIELD_SYNC.cs">
       <SubType>Form</SubType>
     </Compile>
