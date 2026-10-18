@@ -3653,7 +3653,7 @@ namespace TSK_COMM_IOSCH
                 List<string> lstWhy = new List<string>();
 
                 // 출발 자격 : 입고대(트래킹이 비어 있어야 한다) 이거나 도착대(출고 준비)
-                if (bSto == false && bArv == false)
+                if (bSto == false && bArv == false && IsStartNoReadyStation(strStn) == false)
                 {
                     lstWhy.Add("STN_KIND=" + nKind + " 에 입고대(0x01)도 도착대(0x40)도 없다");
                 }
@@ -3662,8 +3662,9 @@ namespace TSK_COMM_IOSCH
                     bool bLuggEmpty = (strLuggRd == "" || strLuggRd == "0" || strLuggRd == "0000");
                     bool bStoOk = bSto && GetVal(r, "sto_ready_rd") == "1" && bLuggEmpty;
                     bool bArvOk = bArv && GetVal(r, "ret_ready_rd") == "1";
+                    bool bNoReadyOk = IsStartNoReadyStation(strStn) && bLuggEmpty;      // START_NO_READY_STN
 
-                    if (bStoOk == false && bArvOk == false)
+                    if (bStoOk == false && bArvOk == false && bNoReadyOk == false)
                     {
                         if (bSto && GetVal(r, "sto_ready_rd") != "1")
                             lstWhy.Add("입고대인데 STO_READY_RD=" + GetVal(r, "sto_ready_rd"));
@@ -4659,7 +4660,12 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "  WHERE CD.PLC_NO         = :CV_PLC           ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
                 strSql += CRLF + "    AND (   (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_STO) + " <> 0 AND CD.STO_READY_RD = '1'   ";
                 strSql += CRLF + "             AND COALESCE(NULLIF(BTRIM(CD.LUGG_NO_RD, " + SQL_WS + "), ''), '0') IN ('0','0000'))                                                        ";
-                strSql += CRLF + "         OR (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_ARV) + " <> 0 AND CD.RET_READY_RD = '1') )  ";
+                strSql += CRLF + "         OR (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_ARV) + " <> 0 AND CD.RET_READY_RD = '1')  ";
+                // @.START_NO_READY_STN : 준비 신호 없이 센서 + 작업번호 0 만으로 출발시키는 작업대 (아래 센서/자동/에러 조건은 그대로 AND)
+                string strNoReadyIn = GetStartNoReadyInList();
+                if (strNoReadyIn != "")
+                    strSql += CRLF + "         OR (CD.HOST_STN_NO IN (" + strNoReadyIn + ") AND COALESCE(NULLIF(BTRIM(CD.LUGG_NO_RD, " + SQL_WS + "), ''), '0') IN ('0','0000')) ";
+                strSql += CRLF + "       )  ";
                 strSql += CRLF + "    AND CD.SENSOR0_DATA_RD = '1'              ";
                 strSql += CRLF + "    AND CD.AUTO_MODE_RD 	= '1'               ";
                 strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')     ";
@@ -4750,6 +4756,30 @@ namespace TSK_COMM_IOSCH
         //   목적지 트랙 도착(RET_READY + 작업번호 일치) → 상위 보고 + 작업 삭제(HIS 이관)
         // ─────────────────────────────────────────────────────────────────
         /// <summary>도착하면 트랙 작업번호를 지우는 작업대인지 (ENV_IOSCH.INI [SCH] DELETE_DATA_STN, 기본 207,251)</summary>
+        /// <summary>준비 신호 없이 출발시키는 작업대 SQL IN 목록 ('251','...'). 없으면 빈 문자열. (숫자만 허용)</summary>
+        protected string GetStartNoReadyInList()
+        {
+            string strOut = "";
+            foreach (string s in cDefApi.GsGetStartNoReadyStn().Split(','))
+            {
+                string t = s.Trim();
+                if (t == "") continue;
+                bool bDigit = true;
+                foreach (char c in t) if (c < '0' || c > '9') { bDigit = false; break; }
+                if (!bDigit) continue;
+                strOut += (strOut == "" ? "" : ",") + "'" + t + "'";
+            }
+            return strOut;
+        }
+
+        protected bool IsStartNoReadyStation(string strHostStn)
+        {
+            if (strHostStn == null || strHostStn.Trim() == "") return false;
+            foreach (string s in cDefApi.GsGetStartNoReadyStn().Split(','))
+                if (s.Trim() == strHostStn.Trim()) return true;
+            return false;
+        }
+
         protected bool IsDeleteDataStation(string strHostStn)
         {
             if (strHostStn == null || strHostStn.Trim() == "") return false;

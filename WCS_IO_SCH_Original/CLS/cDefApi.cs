@@ -114,6 +114,30 @@ namespace TSK_COMM_IOSCH
             }
         }
 
+        /*
+         * 준비 신호 없이 출발시키는 작업대 (ENV_IOSCH.INI [SCH] START_NO_READY_STN, 예: 251)
+         *
+         *   P-BOX 피킹대(251, 트랙 415)는 화물과 작업구분/목적지만 있고 작업번호가 0 이면 PLC 가
+         *   입고 준비(D250.1)도 출고 준비(D251.0)도 올리지 않는 일이 있다. 그러면 그 자리에서
+         *   시작하는 이동 작업이 영영 나가지 못한다.
+         *   여기 적은 작업대는 "화물 센서 ON + 자동모드 + 트랙 작업번호 0 + 에러 없음 + 앞 명령 소화"
+         *   만으로 출발 지시를 쓴다. 센서가 켜진 뒤에만 쓰므로 빈 트랙에 미리 쓰지는 않는다.
+         *   값은 작업대 번호(HOST_STN_NO) 목록이다. 비우거나 키가 없으면 아무 데도 적용하지 않는다(현장 기본).
+         */
+        public static string GsGetStartNoReadyStn()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(256);
+                GetPrivateProfileString("SCH", "START_NO_READY_STN", "", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                return sb.ToString().Trim();
+            }
+            catch
+            {
+                return "";
+            }
+        }
+
         public static bool GsGetRetDecideWait()
         {
             try
