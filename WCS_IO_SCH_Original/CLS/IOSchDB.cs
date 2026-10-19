@@ -4658,9 +4658,20 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "     ON CD.HOST_STN_NO = JM.START_POS         ";
                 strSql += CRLF + "    AND JM.JOB_STATUS = '" + ST_CV_WAIT + "'      ";   // 10 = CV 구동대기. 신규('99')는 JOB_ACCEPT 가 10/20 으로 나눈다
                 strSql += CRLF + "  WHERE CD.PLC_NO         = :CV_PLC           ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
+                /*
+                 * @.출발 + 도착을 같이 하는 작업대 (피킹대 / 사이즈체크)  원본 ECS 의 CLib::IsStartNDestStation
+                 *   원본은 이 작업대에서 "입고대 준비 신호(StoStation, PLC 푸시버튼 = 피킹완료)" 가 켜졌을 때만 출발 지시를 쓴다.
+                 *   도착대 준비 신호(RetStation) 는 도착 완료 판정에만 쓴다.
+                 *   예전에는 이 작업대에서도 도착대 준비 신호로 출발 지시를 써서, 도착하자마자(푸시버튼 전에) PLC 에 작업이 기록됐다.
+                 *   그래서 이 작업대는 푸시버튼(STO_READY_RD)만으로 출발시키고, STN_KIND 비트와 작업번호 유무는 보지 않는다.
+                 */
+                string strStartNDest = cDefApp.START_N_DEST_STN_SQL;
                 strSql += CRLF + "    AND (   (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_STO) + " <> 0 AND CD.STO_READY_RD = '1'   ";
+                strSql += CRLF + "             AND CD.HOST_STN_NO NOT IN (" + strStartNDest + ")                                           ";
                 strSql += CRLF + "             AND COALESCE(NULLIF(BTRIM(CD.LUGG_NO_RD, " + SQL_WS + "), ''), '0') IN ('0','0000'))                                                        ";
-                strSql += CRLF + "         OR (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_ARV) + " <> 0 AND CD.RET_READY_RD = '1')  ";
+                strSql += CRLF + "         OR (CD.HOST_STN_NO IN (" + strStartNDest + ") AND CD.STO_READY_RD = '1')  ";
+                strSql += CRLF + "         OR (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_ARV) + " <> 0 AND CD.RET_READY_RD = '1'  ";
+                strSql += CRLF + "             AND CD.HOST_STN_NO NOT IN (" + strStartNDest + "))  ";
                 // @.START_NO_READY_STN : 준비 신호 없이 센서 + 작업번호 0 만으로 출발시키는 작업대 (아래 센서/자동/에러 조건은 그대로 AND)
                 string strNoReadyIn = GetStartNoReadyInList();
                 if (strNoReadyIn != "")

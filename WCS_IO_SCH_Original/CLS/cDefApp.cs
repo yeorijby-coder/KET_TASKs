@@ -151,6 +151,11 @@ namespace TSK_COMM_IOSCH
          *   (ClientNSim/Ecs/TrackInfo.cpp 의 enStatusArvSTReady)
          */
         public const int STN_KIND_STO    = 0x01;    // 입고대
+        /*
+         * 출발 + 도착을 같이 하는 3층 작업대 (원본 ECS CLib::IsStartNDestStation 중 3층 피킹대 / 사이즈체크)
+         *   이 작업대는 PLC 푸시버튼(입고대 준비 신호)으로만 출발한다. (CV_STO_START_PLC 참고)
+         */
+        public const string START_N_DEST_STN_SQL = "'200','201','202','203','205','206','208','209','212','213','214','215'";
         public const int STN_KIND_RET    = 0x02;    // 출고대
         public const int STN_KIND_SC_IN  = 0x04;    // SC 입고 H/S
         public const int STN_KIND_SC_OUT = 0x08;    // SC 출고 H/S
