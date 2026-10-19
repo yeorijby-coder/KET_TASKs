@@ -341,7 +341,7 @@ namespace WCS_TASK_SC
                             {
                                 // ini에 현재 설정된 포트값 쓰기
                                 string strCOMM = "COMM" + m_nThNo;
-                                cDefApi.WritePrivateProfileString(strCOMM, "CUR_PORT", Convert.ToString("" + m_nCurPort), cDefApp.GM_ENV_INI);
+                                cDefApi.GsWriteCurPortToDb(m_strWh_typ, m_strEqmtTyp, m_strPlc_No, m_nCurPort);   // 2026-10-20 INI 대신 DB(EQP_MST.PLC_PORT)
 
                                 //접속 성공 로그 남기기 
                                 InsertWcsLogPgr("", "[Thread_Doing] SC 번호 : " + m_strScNo + ", 연결포트 : " + m_nCurPort + " 접속 성공");

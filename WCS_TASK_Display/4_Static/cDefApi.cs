@@ -286,6 +286,101 @@ namespace WCS_TASK_Display
         }
         #endregion
 
+
+        #region [EQP_MST]::설비 접속정보를 DB 에서 읽고 쓴다 (2026-10-20)
+        //  INI 의 IP / CUR_PORT / FROM_PORT / TO_PORT / PORT_CNT 는 더 이상 쓰지 않는다. (INI 에는 주석 처리)
+        //  EQP_MST.PLC_IP, PLC_PORT(현재 접속 포트), PLC_PORT_FROM / PLC_PORT_TO(포트 범위) 를 쓴다.
+        //  PLC_PORT 가 FROM~TO 범위 안이면 범위 안에서 포트를 바꿔 가며 접속하고, 아니면 PLC_PORT 하나만 쓴다.
+        public static string GsComDbConnString()
+        {
+            string strConn = "host=" + cDefApp.GM_DB2_IP + ";username=" + cDefApp.GM_DB2_USER + ";password=" + cDefApp.GM_DB2_USER_PW
+                           + ";database=" + cDefApp.GM_DB2_DATABASE + ";Timeout=5;CommandTimeout=10;";
+            if (cDefApp.GM_DB2_PORT != null && cDefApp.GM_DB2_PORT != "")
+                strConn += "port=" + cDefApp.GM_DB2_PORT + ";";
+            return strConn;
+        }
+
+        public static bool GsReadComFromDb(string pWhTyp, string pEqType, string pPlcNo,
+                                           ref string pIp, ref int pCur, ref int pFrom, ref int pTo, ref int pPortCnt,
+                                           ref string pMsg)
+        {
+            try
+            {
+                using (Npgsql.NpgsqlConnection cn = new Npgsql.NpgsqlConnection(GsComDbConnString()))
+                {
+                    cn.Open();
+                    using (Npgsql.NpgsqlCommand cmd = new Npgsql.NpgsqlCommand(
+                        "SELECT PLC_IP, PLC_PORT, PLC_PORT_FROM, PLC_PORT_TO FROM EQP_MST " +
+                        " WHERE WH_TYP = :w AND EQP_TYP = :t AND PLC_NO = :p", cn))
+                    {
+                        cmd.Parameters.AddWithValue("w", pWhTyp == null ? "" : pWhTyp.Trim());
+                        cmd.Parameters.AddWithValue("t", pEqType == null ? "" : pEqType.Trim());
+                        cmd.Parameters.AddWithValue("p", pPlcNo == null ? "" : pPlcNo.Trim());
+                        using (Npgsql.NpgsqlDataReader rd = cmd.ExecuteReader())
+                        {
+                            if (!rd.Read())
+                            {
+                                pMsg = "[GsReadComFromDb]EQP_MST 에 접속정보가 없습니다. WH_TYP[" + pWhTyp + "] EQP_TYP[" + pEqType + "] PLC_NO[" + pPlcNo + "]";
+                                return false;
+                            }
+                            string strIp = ("" + rd[0]).Trim();
+                            int nCur = 0, nFrom = 0, nTo = 0;
+                            int.TryParse(("" + rd[1]).Trim(), out nCur);
+                            int.TryParse(("" + rd[2]).Trim(), out nFrom);
+                            int.TryParse(("" + rd[3]).Trim(), out nTo);
+                            if (strIp == "" || nCur <= 0)
+                            {
+                                pMsg = "[GsReadComFromDb]EQP_MST 의 PLC_IP / PLC_PORT 가 비어 있습니다. WH_TYP[" + pWhTyp + "] EQP_TYP[" + pEqType + "] PLC_NO[" + pPlcNo + "]";
+                                return false;
+                            }
+                            pIp = strIp;
+                            pCur = nCur;
+                            if (nFrom > 0 && nTo >= nFrom && nCur >= nFrom && nCur <= nTo)
+                            {
+                                pFrom = nFrom; pTo = nTo; pPortCnt = nTo - nFrom + 1;
+                            }
+                            else
+                            {
+                                pFrom = nCur; pTo = nCur; pPortCnt = 1;
+                            }
+                        }
+                    }
+                }
+                pMsg = "[GsReadComFromDb]Sucess";
+                return true;
+            }
+            catch (Exception ex)
+            {
+                pMsg = "[GsReadComFromDb]Error::" + ex.Message;
+                return false;
+            }
+        }
+
+        // 접속에 성공한 포트를 DB 에 기록한다. (예전에는 INI 의 CUR_PORT 에 썼다)
+        public static void GsWriteCurPortToDb(string pWhTyp, string pEqType, string pPlcNo, int pPort)
+        {
+            try
+            {
+                using (Npgsql.NpgsqlConnection cn = new Npgsql.NpgsqlConnection(GsComDbConnString()))
+                {
+                    cn.Open();
+                    using (Npgsql.NpgsqlCommand cmd = new Npgsql.NpgsqlCommand(
+                        "UPDATE EQP_MST SET PLC_PORT = :port WHERE WH_TYP = :w AND EQP_TYP = :t AND PLC_NO = :p AND COALESCE(PLC_PORT, '') <> :port", cn))
+                    {
+                        cmd.Parameters.AddWithValue("port", pPort.ToString());
+                        cmd.Parameters.AddWithValue("w", pWhTyp == null ? "" : pWhTyp.Trim());
+                        cmd.Parameters.AddWithValue("t", pEqType == null ? "" : pEqType.Trim());
+                        cmd.Parameters.AddWithValue("p", pPlcNo == null ? "" : pPlcNo.Trim());
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch (Exception)
+            {
+            }
+        }
+        #endregion
+
         // @@@.GsReadInitProfileProcessCnt
         public static bool GsReadInitProfileProcessCnt(string pAppNm, ref int pProcessCnt, ref string pRtnMsg)
         {

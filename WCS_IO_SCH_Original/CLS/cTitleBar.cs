@@ -34,6 +34,9 @@ namespace TSK_COMM_IOSCH
         public void SetTitle(string pTitle)
         {
             m_strFull = (pTitle == null) ? "" : pTitle;
+            // @.타이틀 끝에 [실행 파일의 경로] 를 붙인다 (2026-10-20)
+            string strExePath = System.Windows.Forms.Application.ExecutablePath;
+            if (m_strFull.IndexOf(strExePath) < 0) m_strFull += " [" + strExePath + "]";
             m_nOffset = 0;
             PsRefresh();
         }

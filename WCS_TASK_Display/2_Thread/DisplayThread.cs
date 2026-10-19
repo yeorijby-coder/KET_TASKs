@@ -175,7 +175,7 @@ namespace WCS_TASK_Display
                             else
                             {
                                 string strCOMM = "COMM" + m_nthNo;
-                                cDefApi.WritePrivateProfileString(strCOMM, "CUR_PORT", Convert.ToString("" + m_nCurPort), cDefApp.GM_ENV_INI);
+                                cDefApi.GsWriteCurPortToDb(m_strWh_typ, m_strEqmt_typ, m_strPlc_No, m_nCurPort);   // 2026-10-20 INI 대신 DB(EQP_MST.PLC_PORT)
                                 InsertWcsLogPgr("", "[Thread_Doing] DISPLAY PLC_NO : " + m_strPlc_No + ", PORT : " + m_nCurPort + " connected");
                                 m_blConnectYn = true;
                                 break;

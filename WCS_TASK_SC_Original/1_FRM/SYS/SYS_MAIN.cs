@@ -172,6 +172,23 @@ namespace WCS_TASK_SC
                                              ref m_nPORT_CNT[ii],
                                              ref m_strRtnMsg);
 
+                // @@.접속정보(IP/포트)는 INI 가 아니라 DB(EQP_MST) 에서 읽는다 (2026-10-20)
+                if (m_strPLC_NO[ii] != null && m_strPLC_NO[ii] != "")
+                {
+                    string strDbMsg = "";
+                    int nDbCur = 0, nDbFrom = 0, nDbTo = 0, nDbCnt = 1;
+                    if (cDefApi.GsReadComFromDb(m_strWH_TYP[ii], m_strEQMT_TYP[ii], m_strPLC_NO[ii],
+                                                ref m_strCOMM_IP[ii], ref nDbCur, ref nDbFrom, ref nDbTo, ref nDbCnt, ref strDbMsg))
+                    {
+                        m_strCOMM_CUR_PORT[ii]  = nDbCur.ToString();
+                        m_strCOMM_FROM_PORT[ii] = nDbFrom.ToString();
+                        m_strCOMM_TO_PORT[ii]   = nDbTo.ToString();
+                        m_nPORT_CNT[ii]         = nDbCnt;
+                    }
+                    else
+                        m_strRtnMsg = strDbMsg;
+                }
+
                 if (m_strPLC_NO[ii] == "")
                 {
                     m_strPLC_NO[ii] = null;
