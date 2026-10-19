@@ -4670,14 +4670,21 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "             AND CD.HOST_STN_NO NOT IN (" + strStartNDest + ")                                           ";
                 strSql += CRLF + "             AND COALESCE(NULLIF(BTRIM(CD.LUGG_NO_RD, " + SQL_WS + "), ''), '0') IN ('0','0000'))                                                        ";
                 strSql += CRLF + "         OR (CD.HOST_STN_NO IN (" + strStartNDest + ") AND CD.STO_READY_RD = '1')  ";
+                /*
+                 * @.3층 팔레트 매거진(207) : 원본 StartInvokeCheck3 은 입고대 준비 신호(만재 / 출발 가능)와 작업번호 0 만 보고 출발시킨다.
+                 *   현장 DB 는 207 의 STN_KIND 가 64(도착대)뿐이라 위의 입고대 비트 조건을 못 탄다. 그래서 스테이션 번호로 잡는다.
+                 *   도착대 준비 신호(RetStation)는 도착 판정에만 쓰므로 출발 조건에서는 뺀다.
+                 */
+                strSql += CRLF + "         OR (CD.HOST_STN_NO IN (" + cDefApp.START_PM_STN_SQL + ") AND CD.STO_READY_RD = '1'  ";
+                strSql += CRLF + "             AND COALESCE(NULLIF(BTRIM(CD.LUGG_NO_RD, " + SQL_WS + "), ''), '0') IN ('0','0000'))  ";
                 strSql += CRLF + "         OR (" + DbLang.BITAND("CD.STN_KIND", cDefApp.STN_KIND_ARV) + " <> 0 AND CD.RET_READY_RD = '1'  ";
-                strSql += CRLF + "             AND CD.HOST_STN_NO NOT IN (" + strStartNDest + "))  ";
+                strSql += CRLF + "             AND CD.HOST_STN_NO NOT IN (" + strStartNDest + "," + cDefApp.START_PM_STN_SQL + "))  ";
                 // @.START_NO_READY_STN : 준비 신호 없이 센서 + 작업번호 0 만으로 출발시키는 작업대 (아래 센서/자동/에러 조건은 그대로 AND)
                 string strNoReadyIn = GetStartNoReadyInList();
                 if (strNoReadyIn != "")
                     strSql += CRLF + "         OR (CD.HOST_STN_NO IN (" + strNoReadyIn + ") AND COALESCE(NULLIF(BTRIM(CD.LUGG_NO_RD, " + SQL_WS + "), ''), '0') IN ('0','0000')) ";
                 strSql += CRLF + "       )  ";
-                strSql += CRLF + "    AND CD.SENSOR0_DATA_RD = '1'              ";
+                strSql += CRLF + "    AND (CD.SENSOR0_DATA_RD = '1' OR CD.HOST_STN_NO IN (" + cDefApp.START_PM_STN_SQL + "))   ";   // 매거진은 화물 센서를 보지 않는다(원본)
                 strSql += CRLF + "    AND CD.AUTO_MODE_RD 	= '1'               ";
                 strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')     ";
                 strSql += CRLF + "    AND CD.OD_RQ_YN		= 'N'               ";

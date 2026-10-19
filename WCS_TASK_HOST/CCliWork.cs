@@ -1960,6 +1960,7 @@ namespace TSK_HostCom
          *   (WMS 전문은 작업대 번호를 쓰고, WCS 내부는 트랙번호를 쓰므로
          *    그 매칭을 CV_DATA.HOST_STN_NO 한곳에 모아 두었다)
          */
+        private bool m_bPmReqSent = false;     // @.공파렛트 입고 요구(N)를 이번 켜짐에 이미 보냈는가
         private void GetPmStoRequest()
         {
             string strTitle = "[GetPmStoRequest] .. ";
@@ -1981,9 +1982,10 @@ namespace TSK_HostCom
                 modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
                 return;
             }
-            if (iCnt == 0) return;      // @.요구 조건이 아님
-
-            GetPmStoRequest(1, modDefApp.ECS_STN_POS_3F_PLT_207);
+            if (iCnt == 0) { m_bPmReqSent = false; return; }      // @.요구 조건이 아님. 다음에 켜질 때 다시 보낸다
+            // @.원본은 입고대 준비 신호가 바뀌는 순간(SetStoStationReady)에만 한 번 보낸다. 켜져 있는 동안 계속 보내지 않는다.
+            if (m_bPmReqSent) return;
+            if (GetPmStoRequest(1, modDefApp.ECS_STN_POS_3F_PLT_207)) m_bPmReqSent = true;
         }
 
         private bool GetPmStoRequest(int nKind, int nStation)

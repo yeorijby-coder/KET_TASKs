@@ -155,6 +155,10 @@ namespace TSK_COMM_IOSCH
          * 출발 + 도착을 같이 하는 3층 작업대 (원본 ECS CLib::IsStartNDestStation 중 3층 피킹대 / 사이즈체크)
          *   이 작업대는 PLC 푸시버튼(입고대 준비 신호)으로만 출발한다. (CV_STO_START_PLC 참고)
          */
+        /*
+         * 3층 팔레트 매거진 (스테이션 207) : 입고대 준비 신호가 켜지고 작업번호 0 일 때 출발한다. 화물 센서는 보지 않는다.
+         */
+        public const string START_PM_STN_SQL = "'207'";
         public const string START_N_DEST_STN_SQL = "'200','201','202','203','205','206','208','209','212','213','214','215'";
         public const int STN_KIND_RET    = 0x02;    // 출고대
         public const int STN_KIND_SC_IN  = 0x04;    // SC 입고 H/S

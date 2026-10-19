@@ -182,6 +182,7 @@ namespace TSK_COMM_IOSCH
                     RunSchFunc(RetInvokeCheck3);        // 3F 구라인 출고HS → 픽킹대 지시
                     RunSchFunc(RetInvokeCheck6);        // 3F 신라인 출고HS → 픽킹대 지시
                     RunSchFunc(ArrivedCheck3);          // 3F 구라인 픽킹대 도착보고
+                    RunSchFunc(DeleteDataStnCheck3);    // 삭제 작업대(207 매거진) 작업 없는 작업번호 청소 (원본 ArrivedCheck3)
                     RunSchFunc(ArrivedCheck6);          // 3F 신라인 픽킹대 도착보고
                     RunSchFunc(CopyTrackData3);         // 이음새 352→631 작업 데이터 복사
                     RunSchFunc(DeleteTrackData3);       // 이음새 352 작업 데이터 삭제
@@ -328,6 +329,9 @@ namespace TSK_COMM_IOSCH
         //   대상 : 트랙번호 301(ST 207)
         // 
         // ─────────────────────────────────────────────────────────────────
+        public bool DeleteDataStnCheck3(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return CV_DELETE_DATA_STN(strWH_TYP, CV_PLC_3F_OLD, "[DeleteDataStnCheck3]", ref pRTN_MSG); }
+
         public bool CHECK_PM_STO_REQUEST(string strWH_TYP,
                                          string strPLC_NO,
                                      ref string pRTN_MSG)
