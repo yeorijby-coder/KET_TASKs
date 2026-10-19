@@ -3,10 +3,10 @@
 -- 도착만 해도 화물감지(센서)로 상태가 올라간다.
 -- 여러 번 실행해도 된다.
 SELECT host_stn_no, track_no, stn_kind FROM cv_data
- WHERE wh_typ = '10' AND host_stn_no IN ('201','202','203','212','213','208') ORDER BY host_stn_no;
+ WHERE wh_typ = '10' AND host_stn_no IN ('200','201','202','203','212','213','208') ORDER BY host_stn_no;
 
 UPDATE cv_data SET stn_kind = '115'
- WHERE wh_typ = '10' AND host_stn_no IN ('201','202','203','212','213') AND stn_kind <> '115';
+ WHERE wh_typ = '10' AND host_stn_no IN ('200','201','202','203','212','213') AND stn_kind <> '115';
 
 SELECT host_stn_no, track_no, stn_kind FROM cv_data
- WHERE wh_typ = '10' AND host_stn_no IN ('201','202','203','212','213','208') ORDER BY host_stn_no;
+ WHERE wh_typ = '10' AND host_stn_no IN ('200','201','202','203','212','213','208') ORDER BY host_stn_no;
