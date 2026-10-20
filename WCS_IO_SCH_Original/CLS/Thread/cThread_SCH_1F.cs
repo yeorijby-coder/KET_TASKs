@@ -402,7 +402,14 @@ namespace TSK_COMM_IOSCH
         {
             string strSql = "";
             strSql += CRLF + "    AND  " + strCd + ".SENSOR0_DATA_RD    = '1'                               ";   // 재하
-            strSql += CRLF + "    AND  " + strCd + ".RET_READY_RD       = '1'                               ";   // 출고 준비
+            /*
+             * @.준비 신호는 RTV_DEPARTHS_READY_RD (D554, RGV 적재 H/S 준비) 다. (2026-10-20)
+             *   원본 NewStartRoutinePlc2/5 는 IsStoHomeStandReady() 를 본다. 원본 ParsingExtraFrame 의
+             *   "Loading RGV HS : 4" 가 그 신호이고, CV 태스크 DeviceMap 의 RtvDepartHS(D554)가 같은 자리다.
+             *   중간 도착대(151~160)와 결정대(171)에는 출고대(D551) 비트가 없다. 예전에는 RET_READY_RD 를 봐서
+             *   시뮬레이터에서만 돌고(D558 에 겹쳐 둔 RetStation) 현장 PLC 에서는 출발 지시가 나가지 않았다.
+             */
+            strSql += CRLF + "    AND  " + strCd + ".RTV_DEPARTHS_READY_RD = '1'                           ";   // RGV 적재 H/S 준비
             strSql += CRLF + "    AND  " + strCd + ".AUTO_MODE_RD       = '1'                               ";
             strSql += CRLF + "    AND  " + strCd + ".OD_RQ_YN           = 'N'                               ";
             strSql += CRLF + "    AND  " + strCd + ".OD_RQ_FLAG         = 'N'                               ";
@@ -599,6 +606,7 @@ namespace TSK_COMM_IOSCH
                     // 출고 계열 작업만 대상
                     if (IsRetJobType(strJOB_TYP) == false)
                         continue;
+
 
                     bool bAtDecide = (strWAIT_MC == strMC_DECIDE);
                     bool bAtWait1 = (strWAIT_MC == strMC_WAIT1);
