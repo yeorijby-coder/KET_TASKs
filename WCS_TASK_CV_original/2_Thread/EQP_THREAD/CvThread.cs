@@ -259,6 +259,47 @@ namespace WCS_TASK_CV
         private bool m_bOpen;
         public bool IsOpen { get { return m_bOpen; } set { m_bOpen = value; } } //프로그램 화면표시용.
 
+        #region [1층 출고 루프 화물 수] D570 -> EQP_MST.CV_RET_CNT
+        // @.원본 ECS 는 PLC 02 / 05 의 D570 을 읽어 "루프에 있는 출고 화물 수"로 썼다. (m_nRetCnt)
+        //   IO 스케줄러는 EQP_MST.CV_RET_CNT 의 합이 제한(DEL_HIS_SETTING 1f_ret_rimit)을 넘으면
+        //   중간 대기대에서 새로 내보내지 않는다. 예전 CV 태스크는 이 값을 읽지 않아 DB 의 옛 값(8)에 멈춰 있었다.
+        private int m_nLastRetCnt = -1;
+        private DateTime m_dtRetCnt = DateTime.MinValue;
+
+        private void UpdateRetCnt()
+        {
+            try
+            {
+                if (m_strPlc_No != "02" && m_strPlc_No != "05") return;
+                if ((DateTime.Now - m_dtRetCnt).TotalMilliseconds < 1000) return;
+                m_dtRetCnt = DateTime.Now;
+
+                byte[] rx = new byte[64];
+                if (!m_msQPlc.READ((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT, (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D, 570, 1, ref rx))
+                    return;
+                int nCnt = (rx[1] << 8) | rx[0];
+                if (nCnt == m_nLastRetCnt) return;
+
+                string strSql = "";
+                strSql += cDefApp.CRLF + "UPDATE EQP_MST                                  ";
+                strSql += cDefApp.CRLF + "   SET CV_RET_CNT = :CNT                       ";
+                strSql += cDefApp.CRLF + " WHERE EQP_TYP = 'CV'                          ";
+                strSql += cDefApp.CRLF + "   AND PLC_NO  = :PLC_NO                       ";
+                strSql += cDefApp.CRLF + "   AND WH_TYP  = :WH_TYP                       ";
+                m_msQPlc._pBdb.mComMain.CommandType = CommandType.Text;
+                m_msQPlc._pBdb.mComMain.Parameters.Clear();
+                m_msQPlc._pBdb.mComMain.Parameters.Add("CNT", DbLang.VARCHAR, 255).Value = nCnt.ToString();
+                m_msQPlc._pBdb.mComMain.Parameters.Add("PLC_NO", DbLang.VARCHAR, 255).Value = m_strPlc_No;
+                m_msQPlc._pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR, 255).Value = m_strWh_typ;
+                if (m_msQPlc._pBdb.ExcuteNonQry(strSql) >= 0)
+                    m_nLastRetCnt = nCnt;
+            }
+            catch (Exception)
+            {
+            }
+        }
+        #endregion
+
         #region [PLC 워드 읽기/쓰기 도구] 요청 큐와 처리
         private readonly Queue<PlcWordReq> m_qWordReq = new Queue<PlcWordReq>();
 
@@ -585,6 +626,7 @@ namespace WCS_TASK_CV
                             if (!CvChg_OD_RQ_YN(Idx)) goto EXIT_LBL; //컨베이어 OD 쓰기지시를 확인하고 DATA를 WRITE한다..
 
                             ProcessWordReqs();    // PLC 워드 읽기/쓰기 도구의 요청 (FRM_PLC_WORD)
+                            UpdateRetCnt();       // 1층 출고 루프 화물 수(D570) -> EQP_MST.CV_RET_CNT
 
                             // @.출고 H/S 쓰기 지연 줄이기 (2026-10-16) : 한 바퀴 200ms -> 100ms
                             Thread.Sleep(100);
