@@ -273,6 +273,7 @@ namespace TSK_COMM_IOSCH
             m_ColMenuMAG = new ListViewColumnMenu(this.lsvRMAG);
             // @.유량(1F) / 매거진(3F) 탭은 별도 스레드가 읽기만 해서 보여 주는 분리 화면이라 보통 글자, 나머지 탭은 굵게 그린다.
             this.TABLOG.DrawMode = TabDrawMode.OwnerDrawFixed;
+            this.TABLOG.ItemSize = new Size(88, 22);      // @.굵은 글자가 붙어 보이지 않게 탭을 넓힌다
             this.TABLOG.DrawItem += new DrawItemEventHandler(TABLOG_DrawItem);
 		}
 		#endregion
@@ -280,6 +281,14 @@ namespace TSK_COMM_IOSCH
 		#region[Event]SYS_MAIN_Load
 		private void SYS_MAIN_Load(object sender, EventArgs e)
 		{
+
+            // @.유량(1F) / 매거진(3F) 분리 여부 (ENV_IOSCH.INI [SCH] SPLIT_TABS). N 이면 두 탭을 없애고 해당 스레드도 띄우지 않는다.
+            cDefApp.GM_SPLIT_TABS = cDefApi.GsGetSplitTabs();
+            if (!cDefApp.GM_SPLIT_TABS)
+            {
+                this.TABLOG.TabPages.Remove(this.tbRFLOW);
+                this.TABLOG.TabPages.Remove(this.tbRMAG);
+            }
 
             //MainThread가 시작되었다는것을 나타내는 Bool값.
 			cDefApp.GM_STAT_MAIN = true;
@@ -317,7 +326,8 @@ namespace TSK_COMM_IOSCH
             for (int slot = 0; slot < SCH_CNT; slot++)
             {
                 PsEnsureSchLed(slot);   // @.디자이너에 없는 슬롯(1,2)의 LED 를 만든다
-                SetVisable(pnlTop, slot, "picDbCn" + slot.ToString(), "Scheduler " + SCH_NAME[slot]);
+                if (cDefApp.GM_SPLIT_TABS || slot < 4)
+                    SetVisable(pnlTop, slot, "picDbCn" + slot.ToString(), "Scheduler " + SCH_NAME[slot]);
                 SetDisplay(pnlTop, slot, "picDbCn" + slot.ToString(), "D");
 
                 // @.상태 표시를 눌러 스레드를 중지/시작할 수 있게 한다.
@@ -352,6 +362,7 @@ namespace TSK_COMM_IOSCH
             // @.슬롯별 사용여부를 INI 에서 읽는다. (키가 없으면 Y = 기존 동작)
             for (int slot = 0; slot < SCH_CNT; slot++)
                 m_bSchUse[slot] = cDefApi.GsGetSchUse(SCH_USEKEY[slot]);
+            if (!cDefApp.GM_SPLIT_TABS) { m_bSchUse[4] = false; m_bSchUse[5] = false; }
 
             m_Sch1F.ConnectionString  = m_StrConnecString;
             m_Sch3F.ConnectionString  = m_StrConnecString;
@@ -382,6 +393,7 @@ namespace TSK_COMM_IOSCH
                 if (m_bSchUse[slot] == false)
                 {
                     SetSchStop(slot, true);
+                    if (!cDefApp.GM_SPLIT_TABS && slot >= 4) continue;     // 분리하지 않는 모드 : 조용히 건너뛴다
                     SetDisplay(pnlTop, slot, "picDbCn" + slot.ToString(), "D");
                     PsMsgViewMain("[설정 중지] " + SCH_NAME[slot] + " 스레드는 ENV_IOSCH.INI [SCH] "
                                 + SCH_USEKEY[slot] + "=N 이라 기동하지 않습니다.", slot);
@@ -661,6 +673,40 @@ namespace TSK_COMM_IOSCH
 		}
 		#endregion
 
+		// @.상태 LED 그림. 유량(1F) / 매거진(3F) 슬롯(picDbCn4, picDbCn5)은 읽기만 하는 분리 화면이라 다른 색보다 연한 그림을 쓴다.
+		//   (녹색 / 노랑 / 빨강 모두 흰색과 섞어 연하게)
+		private Image[] m_imgLedLight = null;
+		private Image GetStatLedImage(PictureBox pPic, int nIdx)
+		{
+			bool bLight = (pPic.Name == "picDbCn4" || pPic.Name == "picDbCn5");
+			if (!bLight) return this.ImgLstBkgStat.Images[nIdx];
+
+			if (m_imgLedLight == null)
+			{
+				Image[] arr = new Image[this.ImgLstBkgStat.Images.Count];
+				for (int i = 0; i < arr.Length; i++)
+				{
+					Bitmap bmp = new Bitmap(this.ImgLstBkgStat.Images[i]);
+					for (int y = 0; y < bmp.Height; y++)
+					{
+						for (int x = 0; x < bmp.Width; x++)
+						{
+							Color c = bmp.GetPixel(x, y);
+							if (c.A == 0) continue;
+							// 흰색 쪽으로 55% 섞는다
+							int r = c.R + (255 - c.R) * 55 / 100;
+							int g = c.G + (255 - c.G) * 55 / 100;
+							int b = c.B + (255 - c.B) * 55 / 100;
+							bmp.SetPixel(x, y, Color.FromArgb(c.A, r, g, b));
+						}
+					}
+					arr[i] = bmp;
+				}
+				m_imgLedLight = arr;
+			}
+			return m_imgLedLight[nIdx];
+		}
+
 		#region[Method] @@@.DB연결 상태를 화면에 표시
 		private bool PfSetStatImgView(PictureBox pPic,
 									  string pStatDbCn)
@@ -671,9 +717,9 @@ namespace TSK_COMM_IOSCH
 			{
 				switch (pStatDbCn)
 				{
-					case "C": if (pPic.Tag.ToString() != "0") pPic.Image = this.ImgLstBkgStat.Images[0]; pPic.Tag = "0"; break;
-					case "T": if (pPic.Tag.ToString() != "1") pPic.Image = this.ImgLstBkgStat.Images[1]; pPic.Tag = "1"; break;
-					case "D": if (pPic.Tag.ToString() != "2") pPic.Image = this.ImgLstBkgStat.Images[2]; pPic.Tag = "2"; break;
+					case "C": if (pPic.Tag.ToString() != "0") pPic.Image = GetStatLedImage(pPic, 0); pPic.Tag = "0"; break;
+					case "T": if (pPic.Tag.ToString() != "1") pPic.Image = GetStatLedImage(pPic, 1); pPic.Tag = "1"; break;
+					case "D": if (pPic.Tag.ToString() != "2") pPic.Image = GetStatLedImage(pPic, 2); pPic.Tag = "2"; break;
 					default: break;
 				}
 

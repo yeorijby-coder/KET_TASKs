@@ -174,6 +174,9 @@ namespace TSK_COMM_IOSCH
 
         // @@.enum 정의
         public enum eComSts { ComNor = 0, ComErr = 1 };                    // @.통신상태
+        // @.유량(1F) / 매거진(3F)을 별도 탭으로 분리할지 (ENV_IOSCH.INI [SCH] SPLIT_TABS, 기본 Y). N 이면 기존대로 각 층 탭에만 표현한다.
+        public static bool GM_SPLIT_TABS = true;
+
         public enum eLogMsgType { MSG_NOR = 0, MSG_IMP = 1, MSG_ERR = 2, MSG_BLUE = 3, MSG_ORANGE = 4 }; // @.eLogMsgType[0:일반, 1:중요, 2:오류, 3:하늘색(유량 제한 해제), 4:주황(유량 제한)]
 
         public enum eThGbn

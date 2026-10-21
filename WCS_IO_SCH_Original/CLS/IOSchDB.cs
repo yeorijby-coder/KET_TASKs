@@ -1791,6 +1791,7 @@ namespace TSK_COMM_IOSCH
         {
             try
             {
+                if (!cDefApp.GM_SPLIT_TABS) return;     // 분리하지 않으면 기존대로(각 층 탭의 기존 로그만)
                 int nMag = (int)cDefApp.eThGbn.SCH_GR06;
                 if (callPsMsgView != null)
                     callPsMsgView(msg, nMag.ToString(), "", "", nMag, typ, strFile, strFunc);

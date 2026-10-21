@@ -78,6 +78,21 @@ namespace TSK_COMM_IOSCH
          *   N 으로 두면 그 슬롯은 기동하지 않고 수동 중지 상태로 남는다.
          *   (Thread_Tick 이 수동 중지 슬롯은 되살리지 않으므로 계속 꺼져 있다)
          */
+        // @.[SCH] SPLIT_TABS : 유량(1F) / 매거진(3F)을 별도 탭·스레드로 분리해 보여 줄지 (Y 기본). N 이면 분리하지 않고 기존대로 둔다.
+        public static bool GsGetSplitTabs()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(16);
+                GetPrivateProfileString("SCH", "SPLIT_TABS", "Y", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                return (sb.ToString().Trim().ToUpper() != "N");
+            }
+            catch
+            {
+                return true;
+            }
+        }
+
         public static bool GsGetSchUse(string pKey)
         {
             try
