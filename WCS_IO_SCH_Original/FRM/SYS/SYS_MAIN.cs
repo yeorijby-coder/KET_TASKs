@@ -51,6 +51,7 @@ namespace TSK_COMM_IOSCH
         private ListViewColumnMenu m_ColMenu1F;
         private ListViewColumnMenu m_ColMenu3F;
         private ListViewColumnMenu m_ColMenuBOX;
+        private ListViewColumnMenu m_ColMenuLOG;
 
 		private string m_StrConnecString; //DataBase Connection 문자열.
         // (기존 설비 스레드 cThread_CV/cThread_SC/cThread_R 은 현장 구성에서 제외됨 - 참고용으로만 보존)
@@ -64,19 +65,21 @@ namespace TSK_COMM_IOSCH
         private cThread_SCH_1F  m_Sch1F  = null;
         private cThread_SCH_3F  m_Sch3F  = null;
         private cThread_SCH_BOX m_SchBOX = null;
+        private cThread_LOG     m_SchLOG = null;     // @.오래된 로그 삭제 스레드 (LOG삭제 탭)
 
-        private const int SCH_CNT = 3;
-        private static readonly string[] SCH_NAME = new string[] { "1층(1F)", "3층(3F)", "BOX" };
+        private const int SCH_CNT = 4;
+        private static readonly string[] SCH_NAME = new string[] { "1층(1F)", "3층(3F)", "BOX", "LOG삭제" };
         private static readonly int[] SCH_THGBN = new int[] {
             (int)cDefApp.eThGbn.SCH_GR01,
             (int)cDefApp.eThGbn.SCH_GR02,
-            (int)cDefApp.eThGbn.SCH_GR03 };
+            (int)cDefApp.eThGbn.SCH_GR03,
+            (int)cDefApp.eThGbn.SCH_GR04 };
 
         // @.ENV_IOSCH.INI [SCH] 에서 읽는 슬롯별 사용여부 키 이름
-        private static readonly string[] SCH_USEKEY = new string[] { "USE_1F", "USE_3F", "USE_BOX" };
+        private static readonly string[] SCH_USEKEY = new string[] { "USE_1F", "USE_3F", "USE_BOX", "USE_LOG" };
 
         // @.실제로 기동할 슬롯인지. (WrkThStart 에서 INI 를 읽어 채운다)
-        private bool[] m_bSchUse = new bool[SCH_CNT] { true, true, true };
+        private bool[] m_bSchUse = new bool[SCH_CNT] { true, true, true, true };
 
         // @.슬롯의 스레드 객체를 얻는다. (없으면 null = 중지 상태)
         private Thread GetSchThread(int slot)
@@ -86,6 +89,7 @@ namespace TSK_COMM_IOSCH
                 case 0: return (m_Sch1F  == null) ? null : m_Sch1F.m_Thread;
                 case 1: return (m_Sch3F  == null) ? null : m_Sch3F.m_Thread;
                 case 2: return (m_SchBOX == null) ? null : m_SchBOX.m_Thread;
+                case 3: return (m_SchLOG == null) ? null : m_SchLOG.m_Thread;
             }
             return null;
         }
@@ -98,6 +102,7 @@ namespace TSK_COMM_IOSCH
                 case 0: return (m_Sch1F  != null) && m_Sch1F.m_bManualStop;
                 case 1: return (m_Sch3F  != null) && m_Sch3F.m_bManualStop;
                 case 2: return (m_SchBOX != null) && m_SchBOX.m_bManualStop;
+                case 3: return (m_SchLOG != null) && m_SchLOG.m_bManualStop;
             }
             return false;
         }
@@ -108,6 +113,7 @@ namespace TSK_COMM_IOSCH
                 case 0: if (m_Sch1F  != null) m_Sch1F.m_bManualStop  = v; break;
                 case 1: if (m_Sch3F  != null) m_Sch3F.m_bManualStop  = v; break;
                 case 2: if (m_SchBOX != null) m_SchBOX.m_bManualStop = v; break;
+                case 3: if (m_SchLOG != null) m_SchLOG.m_bManualStop = v; break;
             }
         }
 
@@ -131,6 +137,11 @@ namespace TSK_COMM_IOSCH
                     m_SchBOX.m_Thread = new Thread(new ParameterizedThreadStart(m_SchBOX.Thread_Doing));
                     m_SchBOX.m_Thread.IsBackground = true;
                     m_SchBOX.m_Thread.Start(thGbn);
+                    break;
+                case 3:
+                    m_SchLOG.m_Thread = new Thread(new ParameterizedThreadStart(m_SchLOG.Thread_Doing));
+                    m_SchLOG.m_Thread.IsBackground = true;
+                    m_SchLOG.m_Thread.Start(thGbn);
                     break;
             }
         }
@@ -235,6 +246,7 @@ namespace TSK_COMM_IOSCH
             m_ColMenu1F  = new ListViewColumnMenu(this.lsvR);
             m_ColMenu3F  = new ListViewColumnMenu(this.lsvR3F);
             m_ColMenuBOX = new ListViewColumnMenu(this.lsvRBOX);
+            m_ColMenuLOG = new ListViewColumnMenu(this.lsvRLOG);
 		}
 		#endregion
 
@@ -304,6 +316,7 @@ namespace TSK_COMM_IOSCH
             m_Sch1F  = new cThread_SCH_1F (SCH_THGBN[0]);
             m_Sch3F  = new cThread_SCH_3F (SCH_THGBN[1]);
             m_SchBOX = new cThread_SCH_BOX(SCH_THGBN[2]);
+            m_SchLOG = new cThread_LOG    (SCH_THGBN[3]);
 
             // @.슬롯별 사용여부를 INI 에서 읽는다. (키가 없으면 Y = 기존 동작)
             for (int slot = 0; slot < SCH_CNT; slot++)
@@ -312,10 +325,12 @@ namespace TSK_COMM_IOSCH
             m_Sch1F.ConnectionString  = m_StrConnecString;
             m_Sch3F.ConnectionString  = m_StrConnecString;
             m_SchBOX.ConnectionString = m_StrConnecString;
+            m_SchLOG.ConnectionString = m_StrConnecString;
 
             m_Sch1F.callPsMsgView  = new PsMsgView(PsMsgView);
             m_Sch3F.callPsMsgView  = new PsMsgView(PsMsgView);
             m_SchBOX.callPsMsgView = new PsMsgView(PsMsgView);
+            m_SchLOG.callPsMsgView = new PsMsgView(PsMsgView);
 
             for (int slot = 0; slot < SCH_CNT; slot++)
             {
@@ -561,6 +576,9 @@ namespace TSK_COMM_IOSCH
                 case (int)cDefApp.eThGbn.SCH_GR01:
                     strLogName = "SCHEDULER";
                     break;
+                case (int)cDefApp.eThGbn.SCH_GR04:
+                    strLogName = "LOGDEL";
+                    break;
                 default:
                     strLogName = "NO_DEFINE";
                     break;
@@ -689,6 +707,7 @@ namespace TSK_COMM_IOSCH
 			if (nId == (int)cDefApp.eThGbn.SCH_GR01) return "lsvR";
 			if (nId == (int)cDefApp.eThGbn.SCH_GR02) return "lsvR3F";
 			if (nId == (int)cDefApp.eThGbn.SCH_GR03) return "lsvRBOX";
+			if (nId == (int)cDefApp.eThGbn.SCH_GR04) return "lsvRLOG";
 			return "";
 		}
 
@@ -728,6 +747,8 @@ namespace TSK_COMM_IOSCH
 				{
 					case cDefApp.eLogMsgType.MSG_IMP: vItem.BackColor = Color.YellowGreen; vItem.ForeColor = Color.White; break;
 					case cDefApp.eLogMsgType.MSG_ERR: vItem.BackColor = Color.Red; vItem.ForeColor = Color.White; break;
+					case cDefApp.eLogMsgType.MSG_BLUE: vItem.BackColor = Color.SkyBlue; vItem.ForeColor = Color.Black; break;
+					case cDefApp.eLogMsgType.MSG_ORANGE: vItem.BackColor = Color.Orange; vItem.ForeColor = Color.Black; break;
 					default: vItem.BackColor = Color.White; vItem.ForeColor = Color.Black; break;
 				}
 
@@ -750,6 +771,7 @@ namespace TSK_COMM_IOSCH
             this.lsvR.Items.Clear();
             this.lsvR3F.Items.Clear();
             this.lsvRBOX.Items.Clear();
+            this.lsvRLOG.Items.Clear();
             this.txtMsg.Text = "";
 		}
 		#endregion

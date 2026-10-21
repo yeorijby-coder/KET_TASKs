@@ -174,7 +174,7 @@ namespace TSK_COMM_IOSCH
 
         // @@.enum 정의
         public enum eComSts { ComNor = 0, ComErr = 1 };                    // @.통신상태
-        public enum eLogMsgType { MSG_NOR = 0, MSG_IMP = 1, MSG_ERR = 2 }; // @.eLogMsgType[0:일반, 1:중요, 2:오류]
+        public enum eLogMsgType { MSG_NOR = 0, MSG_IMP = 1, MSG_ERR = 2, MSG_BLUE = 3, MSG_ORANGE = 4 }; // @.eLogMsgType[0:일반, 1:중요, 2:오류, 3:하늘색(유량 제한 해제), 4:주황(유량 제한)]
 
         public enum eThGbn
         {
@@ -186,7 +186,8 @@ namespace TSK_COMM_IOSCH
             // @.통합판 : 층별 스케줄러 스레드 3개
             SCH_GR01 = 50,      // 1층(1F)
             SCH_GR02 = 51,      // 3층(3F)
-            SCH_GR03 = 52       // BOX
+            SCH_GR03 = 52,      // BOX
+            SCH_GR04 = 53       // LOG삭제 (오래된 로그 삭제)
         };  // @.eThGbn[0 ,1:CV, 2:RTV, 3:SC, 4:SCH]
 
 

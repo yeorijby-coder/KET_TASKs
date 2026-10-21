@@ -485,13 +485,13 @@ namespace TSK_COMM_IOSCH
                     if (m_bRetLimitHold == false)
                     {
                         m_bRetLimitHold = true;
-                        MakeMsg(strFunction + "1층 출고 유량 제한으로 대기대 출발 보류. [현재:" + nRetSum + " / 제한:" + nRetLimit + "]");
+                        MakeMsg_Orange(strFunction + "1층 출고 유량 제한으로 대기대 출발 보류. [현재:" + nRetSum + " / 제한:" + nRetLimit + "]");
                     }
                 }
                 else if (m_bRetLimitHold == true)
                 {
                     m_bRetLimitHold = false;
-                    MakeMsg(strFunction + "1층 출고 유량 정상 - 출발 재개. [현재:" + nRetSum + " / 제한:" + nRetLimit + "]");
+                    MakeMsg_Blue(strFunction + "1층 출고 유량 정상 - 출발 재개. [현재:" + nRetSum + " / 제한:" + nRetLimit + "]");
                 }
 
                 // ── 3) 출발 대상 조회 (도착 오래된 순)

@@ -1767,6 +1767,38 @@ namespace TSK_COMM_IOSCH
             {
                 return;
             }
+        }
+        public void MakeMsg_Blue(string msg,
+                                [CallerFilePath] string strFile = "",
+                                [CallerMemberName] string strFunc = "")
+        {
+            try
+            {
+                if (callPsMsgView != null)
+                    callPsMsgView(msg, m_nId.ToString(), "", "", m_nId, cDefApp.eLogMsgType.MSG_BLUE, strFile, strFunc);
+                if (cDefApp.m_LogQ[m_nId] != null)
+                    cDefApp.m_LogQ[m_nId].Enqueue(new LogParam(DateTime.Now, msg));
+            }
+            catch (Exception ex)
+            {
+                return;
+            }
+        }
+        public void MakeMsg_Orange(string msg,
+                                [CallerFilePath] string strFile = "",
+                                [CallerMemberName] string strFunc = "")
+        {
+            try
+            {
+                if (callPsMsgView != null)
+                    callPsMsgView(msg, m_nId.ToString(), "", "", m_nId, cDefApp.eLogMsgType.MSG_ORANGE, strFile, strFunc);
+                if (cDefApp.m_LogQ[m_nId] != null)
+                    cDefApp.m_LogQ[m_nId].Enqueue(new LogParam(DateTime.Now, msg));
+            }
+            catch (Exception ex)
+            {
+                return;
+            }
 
         }
         #endregion

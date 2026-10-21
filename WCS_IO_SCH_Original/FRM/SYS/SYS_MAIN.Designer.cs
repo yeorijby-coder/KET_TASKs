@@ -62,6 +62,14 @@
             this.CH_FILE_BOX = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH_FUNC_BOX = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH04_BOX = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.tbRLOG = new System.Windows.Forms.TabPage();
+            this.lsvRLOG = new System.Windows.Forms.ListView();
+            this.CH01_LOG = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH02_LOG = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH03_LOG = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH_FILE_LOG = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH_FUNC_LOG = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH04_LOG = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH01 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH02 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH03 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -79,6 +87,7 @@
             this.tbR.SuspendLayout();
             this.tbR3F.SuspendLayout();
             this.tbRBOX.SuspendLayout();
+            this.tbRLOG.SuspendLayout();
             this.SuspendLayout();
             //
             // ToolTip
@@ -206,7 +215,7 @@
             this.chkRetDecideWait.CheckState = System.Windows.Forms.CheckState.Unchecked;
             this.chkRetDecideWait.Font = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.chkRetDecideWait.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(70)))), ((int)(((byte)(140)))));
-            this.chkRetDecideWait.Location = new System.Drawing.Point(95, 34);
+            this.chkRetDecideWait.Location = new System.Drawing.Point(110, 34);
             this.chkRetDecideWait.Name = "chkRetDecideWait";
             this.chkRetDecideWait.TabIndex = 819;
             this.chkRetDecideWait.Text = "1층 출고 : 결정대가 비어야 대기대에서 출발 (추가 제한)";
@@ -236,6 +245,7 @@
             this.TABLOG.Controls.Add(this.tbR);
             this.TABLOG.Controls.Add(this.tbR3F);
             this.TABLOG.Controls.Add(this.tbRBOX);
+            this.TABLOG.Controls.Add(this.tbRLOG);
             this.TABLOG.Dock = System.Windows.Forms.DockStyle.Fill;
             this.TABLOG.Location = new System.Drawing.Point(0, 0);
             this.TABLOG.Name = "TABLOG";
@@ -375,6 +385,55 @@
             this.CH04_BOX.Text = "Message";
             this.CH04_BOX.Width = 2000;
             //
+            // tbRLOG
+            //
+            this.tbRLOG.Controls.Add(this.lsvRLOG);
+            this.tbRLOG.Location = new System.Drawing.Point(4, 22);
+            this.tbRLOG.Name = "tbRLOG";
+            this.tbRLOG.Size = new System.Drawing.Size(1004, 464);
+            this.tbRLOG.TabIndex = 21;
+            this.tbRLOG.Text = "LOG삭제";
+            this.tbRLOG.UseVisualStyleBackColor = true;
+            //
+            // lsvRLOG
+            //
+            this.lsvRLOG.AllowColumnReorder = true;
+            this.lsvRLOG.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.CH01_LOG,
+            this.CH02_LOG,
+            this.CH03_LOG,
+            this.CH_FILE_LOG,
+            this.CH_FUNC_LOG,
+            this.CH04_LOG});
+            this.lsvRLOG.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lsvRLOG.FullRowSelect = true;
+            this.lsvRLOG.GridLines = true;
+            this.lsvRLOG.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+            this.lsvRLOG.Location = new System.Drawing.Point(0, 0);
+            this.lsvRLOG.Margin = new System.Windows.Forms.Padding(0);
+            this.lsvRLOG.MultiSelect = false;
+            this.lsvRLOG.Name = "lsvRLOG";
+            this.lsvRLOG.Size = new System.Drawing.Size(1004, 464);
+            this.lsvRLOG.TabIndex = 790;
+            this.lsvRLOG.UseCompatibleStateImageBehavior = false;
+            this.lsvRLOG.View = System.Windows.Forms.View.Details;
+            this.lsvRLOG.Click += new System.EventHandler(this.lsvMsg_Click);
+            //
+            // CH01_LOG ~ CH04_LOG
+            //
+            this.CH01_LOG.Text = "TIMESTAMP";
+            this.CH01_LOG.Width = 220;
+            this.CH02_LOG.Text = "THREAD NO";
+            this.CH02_LOG.Width = 95;
+            this.CH03_LOG.Text = "Command";
+            this.CH03_LOG.Width = 80;
+            this.CH_FILE_LOG.Text = "FILE";
+            this.CH_FILE_LOG.Width = 150;
+            this.CH_FUNC_LOG.Text = "FUNCTION";
+            this.CH_FUNC_LOG.Width = 200;
+            this.CH04_LOG.Text = "Message";
+            this.CH04_LOG.Width = 2000;
+            //
             // CH01
             //
             this.CH01.Text = "TIMESTAMP";
@@ -441,6 +500,7 @@
             this.tbR.ResumeLayout(false);
             this.tbR3F.ResumeLayout(false);
             this.tbRBOX.ResumeLayout(false);
+            this.tbRLOG.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -477,6 +537,14 @@
         internal System.Windows.Forms.ColumnHeader CH_FILE_BOX;
         internal System.Windows.Forms.ColumnHeader CH_FUNC_BOX;
         internal System.Windows.Forms.ColumnHeader CH04_BOX;
+        private System.Windows.Forms.TabPage tbRLOG;
+        internal System.Windows.Forms.ListView lsvRLOG;
+        internal System.Windows.Forms.ColumnHeader CH01_LOG;
+        internal System.Windows.Forms.ColumnHeader CH02_LOG;
+        internal System.Windows.Forms.ColumnHeader CH03_LOG;
+        internal System.Windows.Forms.ColumnHeader CH_FILE_LOG;
+        internal System.Windows.Forms.ColumnHeader CH_FUNC_LOG;
+        internal System.Windows.Forms.ColumnHeader CH04_LOG;
         internal System.Windows.Forms.ColumnHeader CH01;
         internal System.Windows.Forms.ColumnHeader CH02;
         internal System.Windows.Forms.ColumnHeader CH03;
