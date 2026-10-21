@@ -53,6 +53,7 @@ namespace TSK_COMM_IOSCH
         private ListViewColumnMenu m_ColMenuBOX;
         private ListViewColumnMenu m_ColMenuLOG;
         private ListViewColumnMenu m_ColMenuFLOW;
+        private ListViewColumnMenu m_ColMenuMAG;
 
 		private string m_StrConnecString; //DataBase Connection 문자열.
         // (기존 설비 스레드 cThread_CV/cThread_SC/cThread_R 은 현장 구성에서 제외됨 - 참고용으로만 보존)
@@ -66,23 +67,25 @@ namespace TSK_COMM_IOSCH
         private cThread_SCH_1F  m_Sch1F  = null;
         private cThread_SCH_3F  m_Sch3F  = null;
         private cThread_SCH_BOX m_SchBOX = null;
+        private cThread_MAG     m_SchMAG = null;     // @.팔레트 매거진(207) 모니터 스레드 (매거진(3F) 탭, 읽기 전용)
         private cThread_FLOW    m_SchFLOW = null;    // @.1층 출고 유량 모니터 스레드 (유량(1F) 탭, 읽기 전용)
         private cThread_LOG     m_SchLOG = null;     // @.오래된 로그 삭제 스레드 (LOG삭제 탭)
 
-        private const int SCH_CNT = 5;
-        private static readonly string[] SCH_NAME = new string[] { "1층(1F)", "3층(3F)", "BOX", "LOG삭제", "유량(1F)" };
+        private const int SCH_CNT = 6;
+        private static readonly string[] SCH_NAME = new string[] { "1층(1F)", "3층(3F)", "BOX", "LOG삭제", "유량(1F)", "매거진(3F)" };
         private static readonly int[] SCH_THGBN = new int[] {
             (int)cDefApp.eThGbn.SCH_GR01,
             (int)cDefApp.eThGbn.SCH_GR02,
             (int)cDefApp.eThGbn.SCH_GR03,
             (int)cDefApp.eThGbn.SCH_GR04,
-            (int)cDefApp.eThGbn.SCH_GR05 };
+            (int)cDefApp.eThGbn.SCH_GR05,
+            (int)cDefApp.eThGbn.SCH_GR06 };
 
         // @.ENV_IOSCH.INI [SCH] 에서 읽는 슬롯별 사용여부 키 이름
-        private static readonly string[] SCH_USEKEY = new string[] { "USE_1F", "USE_3F", "USE_BOX", "USE_LOG", "USE_FLOW" };
+        private static readonly string[] SCH_USEKEY = new string[] { "USE_1F", "USE_3F", "USE_BOX", "USE_LOG", "USE_FLOW", "USE_MAG" };
 
         // @.실제로 기동할 슬롯인지. (WrkThStart 에서 INI 를 읽어 채운다)
-        private bool[] m_bSchUse = new bool[SCH_CNT] { true, true, true, true, true };
+        private bool[] m_bSchUse = new bool[SCH_CNT] { true, true, true, true, true, true };
 
         // @.슬롯의 스레드 객체를 얻는다. (없으면 null = 중지 상태)
         private Thread GetSchThread(int slot)
@@ -94,6 +97,7 @@ namespace TSK_COMM_IOSCH
                 case 2: return (m_SchBOX == null) ? null : m_SchBOX.m_Thread;
                 case 3: return (m_SchLOG == null) ? null : m_SchLOG.m_Thread;
                 case 4: return (m_SchFLOW == null) ? null : m_SchFLOW.m_Thread;
+                case 5: return (m_SchMAG == null) ? null : m_SchMAG.m_Thread;
             }
             return null;
         }
@@ -108,6 +112,7 @@ namespace TSK_COMM_IOSCH
                 case 2: return (m_SchBOX != null) && m_SchBOX.m_bManualStop;
                 case 3: return (m_SchLOG != null) && m_SchLOG.m_bManualStop;
                 case 4: return (m_SchFLOW != null) && m_SchFLOW.m_bManualStop;
+                case 5: return (m_SchMAG != null) && m_SchMAG.m_bManualStop;
             }
             return false;
         }
@@ -120,6 +125,7 @@ namespace TSK_COMM_IOSCH
                 case 2: if (m_SchBOX != null) m_SchBOX.m_bManualStop = v; break;
                 case 3: if (m_SchLOG != null) m_SchLOG.m_bManualStop = v; break;
                 case 4: if (m_SchFLOW != null) m_SchFLOW.m_bManualStop = v; break;
+                case 5: if (m_SchMAG != null) m_SchMAG.m_bManualStop = v; break;
             }
         }
 
@@ -153,6 +159,11 @@ namespace TSK_COMM_IOSCH
                     m_SchFLOW.m_Thread = new Thread(new ParameterizedThreadStart(m_SchFLOW.Thread_Doing));
                     m_SchFLOW.m_Thread.IsBackground = true;
                     m_SchFLOW.m_Thread.Start(thGbn);
+                    break;
+                case 5:
+                    m_SchMAG.m_Thread = new Thread(new ParameterizedThreadStart(m_SchMAG.Thread_Doing));
+                    m_SchMAG.m_Thread.IsBackground = true;
+                    m_SchMAG.m_Thread.Start(thGbn);
                     break;
             }
         }
@@ -259,6 +270,10 @@ namespace TSK_COMM_IOSCH
             m_ColMenuBOX = new ListViewColumnMenu(this.lsvRBOX);
             m_ColMenuLOG = new ListViewColumnMenu(this.lsvRLOG);
             m_ColMenuFLOW = new ListViewColumnMenu(this.lsvRFLOW);
+            m_ColMenuMAG = new ListViewColumnMenu(this.lsvRMAG);
+            // @.유량(1F) / 매거진(3F) 탭은 별도 스레드가 읽기만 해서 보여 주는 분리 화면이라 보통 글자, 나머지 탭은 굵게 그린다.
+            this.TABLOG.DrawMode = TabDrawMode.OwnerDrawFixed;
+            this.TABLOG.DrawItem += new DrawItemEventHandler(TABLOG_DrawItem);
 		}
 		#endregion
 
@@ -332,6 +347,7 @@ namespace TSK_COMM_IOSCH
             m_SchBOX = new cThread_SCH_BOX(SCH_THGBN[2]);
             m_SchLOG = new cThread_LOG    (SCH_THGBN[3]);
             m_SchFLOW = new cThread_FLOW  (SCH_THGBN[4]);
+            m_SchMAG = new cThread_MAG    (SCH_THGBN[5]);
 
             // @.슬롯별 사용여부를 INI 에서 읽는다. (키가 없으면 Y = 기존 동작)
             for (int slot = 0; slot < SCH_CNT; slot++)
@@ -342,12 +358,14 @@ namespace TSK_COMM_IOSCH
             m_SchBOX.ConnectionString = m_StrConnecString;
             m_SchLOG.ConnectionString = m_StrConnecString;
             m_SchFLOW.ConnectionString = m_StrConnecString;
+            m_SchMAG.ConnectionString = m_StrConnecString;
 
             m_Sch1F.callPsMsgView  = new PsMsgView(PsMsgView);
             m_Sch3F.callPsMsgView  = new PsMsgView(PsMsgView);
             m_SchBOX.callPsMsgView = new PsMsgView(PsMsgView);
             m_SchLOG.callPsMsgView = new PsMsgView(PsMsgView);
             m_SchFLOW.callPsMsgView = new PsMsgView(PsMsgView);
+            m_SchMAG.callPsMsgView = new PsMsgView(PsMsgView);
 
             for (int slot = 0; slot < SCH_CNT; slot++)
             {
@@ -599,6 +617,9 @@ namespace TSK_COMM_IOSCH
                 case (int)cDefApp.eThGbn.SCH_GR05:
                     strLogName = "FLOW1F";
                     break;
+                case (int)cDefApp.eThGbn.SCH_GR06:
+                    strLogName = "MAG3F";
+                    break;
                 default:
                     strLogName = "NO_DEFINE";
                     break;
@@ -721,6 +742,26 @@ namespace TSK_COMM_IOSCH
 			return (nPos < 0) ? strPath : strPath.Substring(nPos + 1);
 		}
 
+        // @.탭 글자 그리기 : 일하는 스레드의 탭(1층/3층/BOX/LOG삭제)은 굵게, 읽기만 해서 보여 주는 분리 화면(유량(1F)/매거진(3F))은 보통 글자
+        //   (회색은 "꺼진 탭"처럼 보여 헷갈려서 굵기로 구분한다)
+        private void TABLOG_DrawItem(object sender, DrawItemEventArgs e)
+        {
+            try
+            {
+                TabControl tc = (TabControl)sender;
+                TabPage pg = tc.TabPages[e.Index];
+                bool bSel = (e.State & DrawItemState.Selected) == DrawItemState.Selected;
+                bool bMonitor = (pg == this.tbRFLOW || pg == this.tbRMAG);
+                Color clrBack = bSel ? SystemColors.Window : SystemColors.Control;
+                using (SolidBrush br = new SolidBrush(clrBack)) e.Graphics.FillRectangle(br, e.Bounds);
+                using (Font fnt = new Font(e.Font, bMonitor ? FontStyle.Regular : FontStyle.Bold))
+                {
+                    TextRenderer.DrawText(e.Graphics, pg.Text, fnt, e.Bounds, SystemColors.ControlText,
+                                          TextFormatFlags.HorizontalCenter | TextFormatFlags.VerticalCenter | TextFormatFlags.SingleLine);
+                }
+            }
+            catch { }
+        }
 		// @.스레드 구분 -> 그 스레드의 로그 리스트뷰 이름
 		private string GetLogCtrlName(int nId)
 		{
@@ -729,6 +770,7 @@ namespace TSK_COMM_IOSCH
 			if (nId == (int)cDefApp.eThGbn.SCH_GR03) return "lsvRBOX";
 			if (nId == (int)cDefApp.eThGbn.SCH_GR04) return "lsvRLOG";
 			if (nId == (int)cDefApp.eThGbn.SCH_GR05) return "lsvRFLOW";
+			if (nId == (int)cDefApp.eThGbn.SCH_GR06) return "lsvRMAG";
 			return "";
 		}
 
@@ -794,6 +836,7 @@ namespace TSK_COMM_IOSCH
             this.lsvRBOX.Items.Clear();
             this.lsvRLOG.Items.Clear();
             this.lsvRFLOW.Items.Clear();
+            this.lsvRMAG.Items.Clear();
             this.txtMsg.Text = "";
 		}
 		#endregion

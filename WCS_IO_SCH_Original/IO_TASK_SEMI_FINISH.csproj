@@ -148,6 +148,7 @@
     <Compile Include="CLS\Thread\cThread_SCH_BOX.cs" />
     <Compile Include="CLS\Thread\cThread_LOG.cs" />
     <Compile Include="CLS\Thread\cThread_FLOW.cs" />
+    <Compile Include="CLS\Thread\cThread_MAG.cs" />
     <Compile Include="CLS\cVB.cs" />
     <Compile Include="CLS\cWork.cs" />
     <Compile Include="CLS\DB.cs" />

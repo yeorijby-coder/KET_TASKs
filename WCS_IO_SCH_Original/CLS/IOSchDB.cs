@@ -1784,6 +1784,32 @@ namespace TSK_COMM_IOSCH
                 return;
             }
         }
+        /// <summary>팔레트 매거진(207) 관련 작업 흐름을 "매거진(3F)" 탭에 남긴다. (어느 스레드에서 불러도 그 탭으로 간다)</summary>
+        public void MakeMagMsg(string msg, cDefApp.eLogMsgType typ = cDefApp.eLogMsgType.MSG_IMP,
+                               [CallerFilePath] string strFile = "",
+                               [CallerMemberName] string strFunc = "")
+        {
+            try
+            {
+                int nMag = (int)cDefApp.eThGbn.SCH_GR06;
+                if (callPsMsgView != null)
+                    callPsMsgView(msg, nMag.ToString(), "", "", nMag, typ, strFile, strFunc);
+                if (cDefApp.m_LogQ[nMag] != null)
+                    cDefApp.m_LogQ[nMag].Enqueue(new LogParam(DateTime.Now, msg));
+            }
+            catch (Exception ex)
+            {
+                return;
+            }
+        }
+        // @.팔레트 매거진 스테이션 번호
+        protected const string MAG_STN = "207";
+        protected static string MagJobName(string strJobTyp, string strStart, string strDest)
+        {
+            if (strStart == MAG_STN) return "매거진에서 입고(공파렛트를 랙으로)";
+            if (strDest == MAG_STN) return "매거진으로 이동";
+            return "작업구분 " + strJobTyp;
+        }
         public void MakeMsg_Orange(string msg,
                                 [CallerFilePath] string strFile = "",
                                 [CallerMemberName] string strFunc = "")
@@ -4231,7 +4257,7 @@ namespace TSK_COMM_IOSCH
                     pRTN_MSG = strTitle;
 
                     strSql = "";
-                    strSql += CRLF + " SELECT LUGG_NO, JOB_TYP        ";
+                    strSql += CRLF + " SELECT LUGG_NO, JOB_TYP, START_POS, DEST_POS ";
                     strSql += CRLF + "   FROM JOB_MST                 ";
                     strSql += CRLF + "  WHERE WH_TYP     = :WH_TYP    ";
                     strSql += CRLF + "    AND JOB_STATUS = '" + ST_NEW + "' ";
@@ -4254,12 +4280,15 @@ namespace TSK_COMM_IOSCH
                     }
 
                     string strMsg = "";
+                    string strMagLogs = "";     // @.매거진 작업 접수 기록(Commit 뒤에 탭으로 보낸다)
                     _pBdb.BeginTrans();
 
                     for (int i = 0; i < nSelCnt; i++)
                     {
                         string strLUGG_NO = _pBdb.mDtMain.Rows[i]["LUGG_NO"].ToString();
                         string strJOB_TYP = _pBdb.mDtMain.Rows[i]["JOB_TYP"].ToString();
+                        string strACC_START = _pBdb.mDtMain.Rows[i]["START_POS"].ToString().Trim();
+                        string strACC_DEST = _pBdb.mDtMain.Rows[i]["DEST_POS"].ToString().Trim();
 
                         // CV 에서 시작하는 작업인가
                         // @.입고 / 이동은 CV 에서 시작한다. 반자동(11 / 10)도 같다.
@@ -4273,12 +4302,16 @@ namespace TSK_COMM_IOSCH
                         }
 
                         strMsg += (strMsg == "" ? "" : ", ") + strLUGG_NO + "→" + strNext;
+                        if (strACC_START == MAG_STN || strACC_DEST == MAG_STN)
+                            strMagLogs += "|[매거진] 작업 " + strLUGG_NO + " 접수 : CV 구동대기로 준비 (99→" + strNext + ") - " + MagJobName(strJOB_TYP, strACC_START, strACC_DEST) + " [출발:" + strACC_START + " 도착:" + strACC_DEST + "]";
                         InsertLog(SCH_WH_TYP, strTitle + "작업 " + strLUGG_NO + " 접수 (상태 " + strNext + ")",
                                   "", "", strLUGG_NO, strNext, "", "", false);
                     }
 
                     pRTN_MSG = strTitle + "신규 작업을 접수했습니다. [" + strMsg + "]";
                     _pBdb.Commit();
+                    foreach (string strMag in strMagLogs.Split('|'))
+                        if (strMag != "") MakeMagMsg(strMag);
                     return true;
                 }
                 catch (Exception ex)
@@ -4788,6 +4821,8 @@ namespace TSK_COMM_IOSCH
                 pRTN_MSG = strTitle + "TRACK " + strJOB_START_POS + "번[출발 작업대]에서 CV_TASK를 통해서 작업 지시하였습니다. [작업번호:" + strLUGG_NO + "]";
                 _pBdb.Commit();
                 InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_CV_RUN, strJOB_START_POS, strJOB_DEST_POS);
+                if (strJOB_START_POS == MAG_STN || strJOB_DEST_POS == MAG_STN)
+                    MakeMagMsg("[매거진] 작업 " + strLUGG_NO + " 구동 지시 : CV_TASK 가 PLC 에 기록하도록 DB 에 썼습니다 (10→" + ST_CV_RUN + ") - " + MagJobName(strJOB_TYP, strJOB_START_POS, strJOB_DEST_POS) + " [출발:" + strJOB_START_POS + " 도착:" + strJOB_DEST_POS + "] TRACK " + strCV_MC_NO);
                 return true;
             }
             catch (Exception ex)
@@ -5017,6 +5052,7 @@ namespace TSK_COMM_IOSCH
 
                 string strLUGG_NO = "";
                 string strMC_NO = "";
+                string strMagArr = "";      // @.매거진(207) 도착 기록(Commit 뒤에 탭으로 보낸다)
                 string strDelLogs = "";     // @.삭제 작업대 0 쓰기 결과. InsertLog 가 트랜잭션을 또 열므로 Commit 뒤에 적는다.
                 _pBdb.BeginTrans();
 
@@ -5068,6 +5104,8 @@ namespace TSK_COMM_IOSCH
                      *   처리 안에서만 부르므로 빈 트랙에 미리 쓰는 일은 없다. (EHS)
                      */
                     string strArvStn = "" + _pBdb.mDtMain.Rows[i]["HOST_STN_NO"].ToString().Trim();
+                    if (strArvStn == MAG_STN)
+                        strMagArr += "|[매거진] 작업 " + strLUGG_NO + " 매거진(" + MAG_STN + ") 도착 - 완료보고 요청 (11→" + ST_CV_DONE + ") TRACK " + strMC_NO;
                     if (IsDeleteDataStation(strArvStn))
                     {
                         string strDelMsg = "";
@@ -5086,6 +5124,8 @@ namespace TSK_COMM_IOSCH
                 pRTN_MSG = strTitle + "TRACK " + strMC_NO + "번[도착 작업대]에서 HOST_TASK를 통해서 완료보고 요청하였습니다. [작업번호:" + strLUGG_NO + "]";
                 _pBdb.Commit();
                 InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_CV_DONE);
+                foreach (string strMag in strMagArr.Split('|'))
+                    if (strMag != "") MakeMagMsg(strMag);
                 foreach (string strOne in strDelLogs.Split('|'))
                     if (strOne != "") InsertLog(SCH_WH_TYP, strOne, "", "", strLUGG_NO, ST_CV_DONE, strMC_NO);
                 return true;

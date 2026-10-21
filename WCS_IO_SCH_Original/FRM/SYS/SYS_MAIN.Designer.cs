@@ -78,6 +78,14 @@
             this.CH_FILE_FLOW = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH_FUNC_FLOW = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH04_FLOW = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.tbRMAG = new System.Windows.Forms.TabPage();
+            this.lsvRMAG = new System.Windows.Forms.ListView();
+            this.CH01_MAG = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH02_MAG = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH03_MAG = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH_FILE_MAG = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH_FUNC_MAG = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH04_MAG = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH01 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH02 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH03 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -97,6 +105,7 @@
             this.tbRBOX.SuspendLayout();
             this.tbRLOG.SuspendLayout();
             this.tbRFLOW.SuspendLayout();
+            this.tbRMAG.SuspendLayout();
             this.SuspendLayout();
             //
             // ToolTip
@@ -224,7 +233,7 @@
             this.chkRetDecideWait.CheckState = System.Windows.Forms.CheckState.Unchecked;
             this.chkRetDecideWait.Font = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.chkRetDecideWait.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(70)))), ((int)(((byte)(140)))));
-            this.chkRetDecideWait.Location = new System.Drawing.Point(138, 34);
+            this.chkRetDecideWait.Location = new System.Drawing.Point(164, 34);
             this.chkRetDecideWait.Name = "chkRetDecideWait";
             this.chkRetDecideWait.TabIndex = 819;
             this.chkRetDecideWait.Text = "1층 출고 : 결정대가 비어야 대기대에서 출발 (추가 제한)";
@@ -256,6 +265,7 @@
             this.TABLOG.Controls.Add(this.tbRBOX);
             this.TABLOG.Controls.Add(this.tbRLOG);
             this.TABLOG.Controls.Add(this.tbRFLOW);
+            this.TABLOG.Controls.Add(this.tbRMAG);
             this.TABLOG.Dock = System.Windows.Forms.DockStyle.Fill;
             this.TABLOG.Location = new System.Drawing.Point(0, 0);
             this.TABLOG.Name = "TABLOG";
@@ -493,6 +503,55 @@
             this.CH04_FLOW.Text = "Message";
             this.CH04_FLOW.Width = 2000;
             //
+            // tbRMAG
+            //
+            this.tbRMAG.Controls.Add(this.lsvRMAG);
+            this.tbRMAG.Location = new System.Drawing.Point(4, 22);
+            this.tbRMAG.Name = "tbRMAG";
+            this.tbRMAG.Size = new System.Drawing.Size(1004, 464);
+            this.tbRMAG.TabIndex = 23;
+            this.tbRMAG.Text = "매거진(3F)";
+            this.tbRMAG.UseVisualStyleBackColor = true;
+            //
+            // lsvRMAG
+            //
+            this.lsvRMAG.AllowColumnReorder = true;
+            this.lsvRMAG.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.CH01_MAG,
+            this.CH02_MAG,
+            this.CH03_MAG,
+            this.CH_FILE_MAG,
+            this.CH_FUNC_MAG,
+            this.CH04_MAG});
+            this.lsvRMAG.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lsvRMAG.FullRowSelect = true;
+            this.lsvRMAG.GridLines = true;
+            this.lsvRMAG.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+            this.lsvRMAG.Location = new System.Drawing.Point(0, 0);
+            this.lsvRMAG.Margin = new System.Windows.Forms.Padding(0);
+            this.lsvRMAG.MultiSelect = false;
+            this.lsvRMAG.Name = "lsvRMAG";
+            this.lsvRMAG.Size = new System.Drawing.Size(1004, 464);
+            this.lsvRMAG.TabIndex = 788;
+            this.lsvRMAG.UseCompatibleStateImageBehavior = false;
+            this.lsvRMAG.View = System.Windows.Forms.View.Details;
+            this.lsvRMAG.Click += new System.EventHandler(this.lsvMsg_Click);
+            //
+            // CH01_MAG ~ CH04_MAG
+            //
+            this.CH01_MAG.Text = "TIMESTAMP";
+            this.CH01_MAG.Width = 220;
+            this.CH02_MAG.Text = "THREAD NO";
+            this.CH02_MAG.Width = 95;
+            this.CH03_MAG.Text = "Command";
+            this.CH03_MAG.Width = 80;
+            this.CH_FILE_MAG.Text = "FILE";
+            this.CH_FILE_MAG.Width = 150;
+            this.CH_FUNC_MAG.Text = "FUNCTION";
+            this.CH_FUNC_MAG.Width = 200;
+            this.CH04_MAG.Text = "Message";
+            this.CH04_MAG.Width = 2000;
+            //
             // CH01
             //
             this.CH01.Text = "TIMESTAMP";
@@ -561,6 +620,7 @@
             this.tbRBOX.ResumeLayout(false);
             this.tbRLOG.ResumeLayout(false);
             this.tbRFLOW.ResumeLayout(false);
+            this.tbRMAG.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -613,6 +673,14 @@
         internal System.Windows.Forms.ColumnHeader CH_FILE_FLOW;
         internal System.Windows.Forms.ColumnHeader CH_FUNC_FLOW;
         internal System.Windows.Forms.ColumnHeader CH04_FLOW;
+        private System.Windows.Forms.TabPage tbRMAG;
+        internal System.Windows.Forms.ListView lsvRMAG;
+        internal System.Windows.Forms.ColumnHeader CH01_MAG;
+        internal System.Windows.Forms.ColumnHeader CH02_MAG;
+        internal System.Windows.Forms.ColumnHeader CH03_MAG;
+        internal System.Windows.Forms.ColumnHeader CH_FILE_MAG;
+        internal System.Windows.Forms.ColumnHeader CH_FUNC_MAG;
+        internal System.Windows.Forms.ColumnHeader CH04_MAG;
         internal System.Windows.Forms.ColumnHeader CH01;
         internal System.Windows.Forms.ColumnHeader CH02;
         internal System.Windows.Forms.ColumnHeader CH03;
