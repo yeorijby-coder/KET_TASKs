@@ -70,6 +70,14 @@
             this.CH_FILE_LOG = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH_FUNC_LOG = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH04_LOG = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.tbRFLOW = new System.Windows.Forms.TabPage();
+            this.lsvRFLOW = new System.Windows.Forms.ListView();
+            this.CH01_FLOW = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH02_FLOW = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH03_FLOW = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH_FILE_FLOW = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH_FUNC_FLOW = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
+            this.CH04_FLOW = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH01 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH02 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.CH03 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
@@ -88,6 +96,7 @@
             this.tbR3F.SuspendLayout();
             this.tbRBOX.SuspendLayout();
             this.tbRLOG.SuspendLayout();
+            this.tbRFLOW.SuspendLayout();
             this.SuspendLayout();
             //
             // ToolTip
@@ -215,7 +224,7 @@
             this.chkRetDecideWait.CheckState = System.Windows.Forms.CheckState.Unchecked;
             this.chkRetDecideWait.Font = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
             this.chkRetDecideWait.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(70)))), ((int)(((byte)(140)))));
-            this.chkRetDecideWait.Location = new System.Drawing.Point(110, 34);
+            this.chkRetDecideWait.Location = new System.Drawing.Point(138, 34);
             this.chkRetDecideWait.Name = "chkRetDecideWait";
             this.chkRetDecideWait.TabIndex = 819;
             this.chkRetDecideWait.Text = "1층 출고 : 결정대가 비어야 대기대에서 출발 (추가 제한)";
@@ -246,6 +255,7 @@
             this.TABLOG.Controls.Add(this.tbR3F);
             this.TABLOG.Controls.Add(this.tbRBOX);
             this.TABLOG.Controls.Add(this.tbRLOG);
+            this.TABLOG.Controls.Add(this.tbRFLOW);
             this.TABLOG.Dock = System.Windows.Forms.DockStyle.Fill;
             this.TABLOG.Location = new System.Drawing.Point(0, 0);
             this.TABLOG.Name = "TABLOG";
@@ -434,6 +444,55 @@
             this.CH04_LOG.Text = "Message";
             this.CH04_LOG.Width = 2000;
             //
+            // tbRFLOW
+            //
+            this.tbRFLOW.Controls.Add(this.lsvRFLOW);
+            this.tbRFLOW.Location = new System.Drawing.Point(4, 22);
+            this.tbRFLOW.Name = "tbRFLOW";
+            this.tbRFLOW.Size = new System.Drawing.Size(1004, 464);
+            this.tbRFLOW.TabIndex = 22;
+            this.tbRFLOW.Text = "유량(1F)";
+            this.tbRFLOW.UseVisualStyleBackColor = true;
+            //
+            // lsvRFLOW
+            //
+            this.lsvRFLOW.AllowColumnReorder = true;
+            this.lsvRFLOW.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.CH01_FLOW,
+            this.CH02_FLOW,
+            this.CH03_FLOW,
+            this.CH_FILE_FLOW,
+            this.CH_FUNC_FLOW,
+            this.CH04_FLOW});
+            this.lsvRFLOW.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lsvRFLOW.FullRowSelect = true;
+            this.lsvRFLOW.GridLines = true;
+            this.lsvRFLOW.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.Nonclickable;
+            this.lsvRFLOW.Location = new System.Drawing.Point(0, 0);
+            this.lsvRFLOW.Margin = new System.Windows.Forms.Padding(0);
+            this.lsvRFLOW.MultiSelect = false;
+            this.lsvRFLOW.Name = "lsvRFLOW";
+            this.lsvRFLOW.Size = new System.Drawing.Size(1004, 464);
+            this.lsvRFLOW.TabIndex = 789;
+            this.lsvRFLOW.UseCompatibleStateImageBehavior = false;
+            this.lsvRFLOW.View = System.Windows.Forms.View.Details;
+            this.lsvRFLOW.Click += new System.EventHandler(this.lsvMsg_Click);
+            //
+            // CH01_FLOW ~ CH04_FLOW
+            //
+            this.CH01_FLOW.Text = "TIMESTAMP";
+            this.CH01_FLOW.Width = 220;
+            this.CH02_FLOW.Text = "THREAD NO";
+            this.CH02_FLOW.Width = 95;
+            this.CH03_FLOW.Text = "Command";
+            this.CH03_FLOW.Width = 80;
+            this.CH_FILE_FLOW.Text = "FILE";
+            this.CH_FILE_FLOW.Width = 150;
+            this.CH_FUNC_FLOW.Text = "FUNCTION";
+            this.CH_FUNC_FLOW.Width = 200;
+            this.CH04_FLOW.Text = "Message";
+            this.CH04_FLOW.Width = 2000;
+            //
             // CH01
             //
             this.CH01.Text = "TIMESTAMP";
@@ -501,6 +560,7 @@
             this.tbR3F.ResumeLayout(false);
             this.tbRBOX.ResumeLayout(false);
             this.tbRLOG.ResumeLayout(false);
+            this.tbRFLOW.ResumeLayout(false);
             this.ResumeLayout(false);
 
         }
@@ -545,6 +605,14 @@
         internal System.Windows.Forms.ColumnHeader CH_FILE_LOG;
         internal System.Windows.Forms.ColumnHeader CH_FUNC_LOG;
         internal System.Windows.Forms.ColumnHeader CH04_LOG;
+        private System.Windows.Forms.TabPage tbRFLOW;
+        internal System.Windows.Forms.ListView lsvRFLOW;
+        internal System.Windows.Forms.ColumnHeader CH01_FLOW;
+        internal System.Windows.Forms.ColumnHeader CH02_FLOW;
+        internal System.Windows.Forms.ColumnHeader CH03_FLOW;
+        internal System.Windows.Forms.ColumnHeader CH_FILE_FLOW;
+        internal System.Windows.Forms.ColumnHeader CH_FUNC_FLOW;
+        internal System.Windows.Forms.ColumnHeader CH04_FLOW;
         internal System.Windows.Forms.ColumnHeader CH01;
         internal System.Windows.Forms.ColumnHeader CH02;
         internal System.Windows.Forms.ColumnHeader CH03;

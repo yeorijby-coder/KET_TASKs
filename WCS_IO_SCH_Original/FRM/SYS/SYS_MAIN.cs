@@ -52,6 +52,7 @@ namespace TSK_COMM_IOSCH
         private ListViewColumnMenu m_ColMenu3F;
         private ListViewColumnMenu m_ColMenuBOX;
         private ListViewColumnMenu m_ColMenuLOG;
+        private ListViewColumnMenu m_ColMenuFLOW;
 
 		private string m_StrConnecString; //DataBase Connection 문자열.
         // (기존 설비 스레드 cThread_CV/cThread_SC/cThread_R 은 현장 구성에서 제외됨 - 참고용으로만 보존)
@@ -65,21 +66,23 @@ namespace TSK_COMM_IOSCH
         private cThread_SCH_1F  m_Sch1F  = null;
         private cThread_SCH_3F  m_Sch3F  = null;
         private cThread_SCH_BOX m_SchBOX = null;
+        private cThread_FLOW    m_SchFLOW = null;    // @.1층 출고 유량 모니터 스레드 (유량(1F) 탭, 읽기 전용)
         private cThread_LOG     m_SchLOG = null;     // @.오래된 로그 삭제 스레드 (LOG삭제 탭)
 
-        private const int SCH_CNT = 4;
-        private static readonly string[] SCH_NAME = new string[] { "1층(1F)", "3층(3F)", "BOX", "LOG삭제" };
+        private const int SCH_CNT = 5;
+        private static readonly string[] SCH_NAME = new string[] { "1층(1F)", "3층(3F)", "BOX", "LOG삭제", "유량(1F)" };
         private static readonly int[] SCH_THGBN = new int[] {
             (int)cDefApp.eThGbn.SCH_GR01,
             (int)cDefApp.eThGbn.SCH_GR02,
             (int)cDefApp.eThGbn.SCH_GR03,
-            (int)cDefApp.eThGbn.SCH_GR04 };
+            (int)cDefApp.eThGbn.SCH_GR04,
+            (int)cDefApp.eThGbn.SCH_GR05 };
 
         // @.ENV_IOSCH.INI [SCH] 에서 읽는 슬롯별 사용여부 키 이름
-        private static readonly string[] SCH_USEKEY = new string[] { "USE_1F", "USE_3F", "USE_BOX", "USE_LOG" };
+        private static readonly string[] SCH_USEKEY = new string[] { "USE_1F", "USE_3F", "USE_BOX", "USE_LOG", "USE_FLOW" };
 
         // @.실제로 기동할 슬롯인지. (WrkThStart 에서 INI 를 읽어 채운다)
-        private bool[] m_bSchUse = new bool[SCH_CNT] { true, true, true, true };
+        private bool[] m_bSchUse = new bool[SCH_CNT] { true, true, true, true, true };
 
         // @.슬롯의 스레드 객체를 얻는다. (없으면 null = 중지 상태)
         private Thread GetSchThread(int slot)
@@ -90,6 +93,7 @@ namespace TSK_COMM_IOSCH
                 case 1: return (m_Sch3F  == null) ? null : m_Sch3F.m_Thread;
                 case 2: return (m_SchBOX == null) ? null : m_SchBOX.m_Thread;
                 case 3: return (m_SchLOG == null) ? null : m_SchLOG.m_Thread;
+                case 4: return (m_SchFLOW == null) ? null : m_SchFLOW.m_Thread;
             }
             return null;
         }
@@ -103,6 +107,7 @@ namespace TSK_COMM_IOSCH
                 case 1: return (m_Sch3F  != null) && m_Sch3F.m_bManualStop;
                 case 2: return (m_SchBOX != null) && m_SchBOX.m_bManualStop;
                 case 3: return (m_SchLOG != null) && m_SchLOG.m_bManualStop;
+                case 4: return (m_SchFLOW != null) && m_SchFLOW.m_bManualStop;
             }
             return false;
         }
@@ -114,6 +119,7 @@ namespace TSK_COMM_IOSCH
                 case 1: if (m_Sch3F  != null) m_Sch3F.m_bManualStop  = v; break;
                 case 2: if (m_SchBOX != null) m_SchBOX.m_bManualStop = v; break;
                 case 3: if (m_SchLOG != null) m_SchLOG.m_bManualStop = v; break;
+                case 4: if (m_SchFLOW != null) m_SchFLOW.m_bManualStop = v; break;
             }
         }
 
@@ -142,6 +148,11 @@ namespace TSK_COMM_IOSCH
                     m_SchLOG.m_Thread = new Thread(new ParameterizedThreadStart(m_SchLOG.Thread_Doing));
                     m_SchLOG.m_Thread.IsBackground = true;
                     m_SchLOG.m_Thread.Start(thGbn);
+                    break;
+                case 4:
+                    m_SchFLOW.m_Thread = new Thread(new ParameterizedThreadStart(m_SchFLOW.Thread_Doing));
+                    m_SchFLOW.m_Thread.IsBackground = true;
+                    m_SchFLOW.m_Thread.Start(thGbn);
                     break;
             }
         }
@@ -247,14 +258,13 @@ namespace TSK_COMM_IOSCH
             m_ColMenu3F  = new ListViewColumnMenu(this.lsvR3F);
             m_ColMenuBOX = new ListViewColumnMenu(this.lsvRBOX);
             m_ColMenuLOG = new ListViewColumnMenu(this.lsvRLOG);
+            m_ColMenuFLOW = new ListViewColumnMenu(this.lsvRFLOW);
 		}
 		#endregion
 
 		#region[Event]SYS_MAIN_Load
 		private void SYS_MAIN_Load(object sender, EventArgs e)
 		{
-            // @.INI 열기 버튼 (맨 처음 참조하는 INI 를 메모장으로 연다)
-            cIniOpener.Attach(this, cDefApp.GM_ENV_INI);
 
             //MainThread가 시작되었다는것을 나타내는 Bool값.
 			cDefApp.GM_STAT_MAIN = true;
@@ -299,6 +309,10 @@ namespace TSK_COMM_IOSCH
                 PsHookSchClick(slot);
             }
 
+            // @.INI 열기 버튼 (맨 처음 참조하는 INI 를 메모장으로 연다)
+            //   상태 LED(PictureBox)를 모두 만든 뒤에 붙인다. 먼저 붙이면 아직 안 보이는 LED 자리를 빈 곳으로 보고 그 위에 놓인다.
+            cIniOpener.Attach(this, cDefApp.GM_ENV_INI);
+
 			PsSetMainTitle();   // @.타이틀에 시스템 구성정보 표시
 
 			WrkThStart();   // @.스레드 시작
@@ -317,6 +331,7 @@ namespace TSK_COMM_IOSCH
             m_Sch3F  = new cThread_SCH_3F (SCH_THGBN[1]);
             m_SchBOX = new cThread_SCH_BOX(SCH_THGBN[2]);
             m_SchLOG = new cThread_LOG    (SCH_THGBN[3]);
+            m_SchFLOW = new cThread_FLOW  (SCH_THGBN[4]);
 
             // @.슬롯별 사용여부를 INI 에서 읽는다. (키가 없으면 Y = 기존 동작)
             for (int slot = 0; slot < SCH_CNT; slot++)
@@ -326,11 +341,13 @@ namespace TSK_COMM_IOSCH
             m_Sch3F.ConnectionString  = m_StrConnecString;
             m_SchBOX.ConnectionString = m_StrConnecString;
             m_SchLOG.ConnectionString = m_StrConnecString;
+            m_SchFLOW.ConnectionString = m_StrConnecString;
 
             m_Sch1F.callPsMsgView  = new PsMsgView(PsMsgView);
             m_Sch3F.callPsMsgView  = new PsMsgView(PsMsgView);
             m_SchBOX.callPsMsgView = new PsMsgView(PsMsgView);
             m_SchLOG.callPsMsgView = new PsMsgView(PsMsgView);
+            m_SchFLOW.callPsMsgView = new PsMsgView(PsMsgView);
 
             for (int slot = 0; slot < SCH_CNT; slot++)
             {
@@ -579,6 +596,9 @@ namespace TSK_COMM_IOSCH
                 case (int)cDefApp.eThGbn.SCH_GR04:
                     strLogName = "LOGDEL";
                     break;
+                case (int)cDefApp.eThGbn.SCH_GR05:
+                    strLogName = "FLOW1F";
+                    break;
                 default:
                     strLogName = "NO_DEFINE";
                     break;
@@ -708,6 +728,7 @@ namespace TSK_COMM_IOSCH
 			if (nId == (int)cDefApp.eThGbn.SCH_GR02) return "lsvR3F";
 			if (nId == (int)cDefApp.eThGbn.SCH_GR03) return "lsvRBOX";
 			if (nId == (int)cDefApp.eThGbn.SCH_GR04) return "lsvRLOG";
+			if (nId == (int)cDefApp.eThGbn.SCH_GR05) return "lsvRFLOW";
 			return "";
 		}
 
@@ -772,6 +793,7 @@ namespace TSK_COMM_IOSCH
             this.lsvR3F.Items.Clear();
             this.lsvRBOX.Items.Clear();
             this.lsvRLOG.Items.Clear();
+            this.lsvRFLOW.Items.Clear();
             this.txtMsg.Text = "";
 		}
 		#endregion

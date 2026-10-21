@@ -187,7 +187,8 @@ namespace TSK_COMM_IOSCH
             SCH_GR01 = 50,      // 1층(1F)
             SCH_GR02 = 51,      // 3층(3F)
             SCH_GR03 = 52,      // BOX
-            SCH_GR04 = 53       // LOG삭제 (오래된 로그 삭제)
+            SCH_GR04 = 53,      // LOG삭제 (오래된 로그 삭제)
+            SCH_GR05 = 54       // 유량(1F) (1층 출고 유량 모니터)
         };  // @.eThGbn[0 ,1:CV, 2:RTV, 3:SC, 4:SCH]
 
 
