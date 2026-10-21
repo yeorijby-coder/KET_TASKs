@@ -35,6 +35,15 @@ namespace TSK_HostCom
                     {
                         if (p_strMsg.Substring(modDefApp.MSG_HEAD_CNT + 1, 1).ToUpper().Equals("S"))
                         {
+                            // @.상태보고(S)는 DB(HOST_IF_LOG)에 남기지 않는다. 화면에 안 보이더라도 파일에는 항상 기록한다.
+                            if (p_blWriteLog)
+                            {
+                                LogMsgInfo SLog = default(LogMsgInfo);
+                                SLog.g_strTime = string.Format(@"{0:HH:mm:ss}", DateTime.Now) + ":" + string.Format(@"{0:000}", DateTime.Now.Millisecond);
+                                SLog.g_strType = p_strMsgKind;
+                                SLog.g_strMsg = p_strMsg;
+                                lock (modDefApp.g_arrlstLogList[0].SyncRoot) { modDefApp.g_arrlstLogList[0].Add(SLog); }
+                            }
                             return;
                         }
                     }
@@ -45,7 +54,7 @@ namespace TSK_HostCom
                 LogMsg.g_strMsg = p_strMsg;
                 if (p_blWriteLog)
                 {
-                    modDefApp.g_arrlstLogList[0].Add(LogMsg);
+                    lock (modDefApp.g_arrlstLogList[0].SyncRoot) { modDefApp.g_arrlstLogList[0].Add(LogMsg); }
                 }
 
                 if (modDefApp.g_blIsAppExit | modDefApp.g_frmForm.chkStopLogClient.Checked)
@@ -111,6 +120,15 @@ namespace TSK_HostCom
                     {
                         if (p_strMsg.Substring(modDefApp.MSG_HEAD_CNT + 1, 1).ToUpper().Equals("S"))
                         {
+                            // @.상태보고(S)는 DB(HOST_IF_LOG)에 남기지 않는다. 화면에 안 보이더라도 파일에는 항상 기록한다.
+                            if (p_blWriteLog)
+                            {
+                                LogMsgInfo SLog = default(LogMsgInfo);
+                                SLog.g_strTime = string.Format(@"{0:HH:mm:ss}", DateTime.Now) + ":" + string.Format(@"{0:000}", DateTime.Now.Millisecond);
+                                SLog.g_strType = p_strMsgKind;
+                                SLog.g_strMsg = p_strMsg;
+                                lock (modDefApp.g_arrlstLogList[1].SyncRoot) { modDefApp.g_arrlstLogList[1].Add(SLog); }
+                            }
                             return;
                         }
                     }
@@ -121,7 +139,7 @@ namespace TSK_HostCom
                 LogMsg.g_strMsg = p_strMsg;
                 if (p_blWriteLog)
                 {
-                    modDefApp.g_arrlstLogList[1].Add(LogMsg);
+                    lock (modDefApp.g_arrlstLogList[1].SyncRoot) { modDefApp.g_arrlstLogList[1].Add(LogMsg); }
                 }
 
                 if (modDefApp.g_blIsAppExit | modDefApp.g_frmForm.chkStopLogServer.Checked)

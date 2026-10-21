@@ -245,12 +245,22 @@ namespace TSK_HostCom
 
 			while (!modDefApp.g_areLogExitEvent[iID].WaitOne(1000, false))
 			{
-				while ((modDefApp.g_arrlstLogList[iID].Count > 0))
+				// @.로그 목록은 여러 스레드가 넣고 이 스레드가 뺀다. 잠금 없이 Count 를 보고 [0] 을 꺼내면
+				//   그 사이 비어 null 을 캐스팅하다 NullReferenceException 으로 프로그램이 죽었다. (2026-10-20 21:30)
+				while (true)
 				{
-					//20170919 권혁찬 Object형식으로는 파라메터를 넘길 수 없어 변수에 캐스팅 후 값을 넘김.
-					LogMsg1 = (LogMsgInfo)modDefApp.g_arrlstLogList[iID][0];
+					object oLog = null;
+					lock (modDefApp.g_arrlstLogList[iID].SyncRoot)
+					{
+						if (modDefApp.g_arrlstLogList[iID].Count > 0)
+						{
+							oLog = modDefApp.g_arrlstLogList[iID][0];
+							modDefApp.g_arrlstLogList[iID].RemoveAt(0);
+						}
+					}
+					if (oLog == null) break;
+					LogMsg1 = (LogMsgInfo)oLog;
 					Log.WriteLog(ref LogMsg1);
-					modDefApp.g_arrlstLogList[iID].RemoveAt(0);
 				}
 
 				//삭제
@@ -273,12 +283,20 @@ namespace TSK_HostCom
 			}
 
 			//이전로그 기록
-			while ((modDefApp.g_arrlstLogList[iID].Count > 0))
+			while (true)
 			{
-				//20170919 권혁찬 Object형식으로는 파라메터를 넘길 수 없어 변수에 캐스팅 후 값을 넘김.
-				LogMsg2 = (LogMsgInfo)modDefApp.g_arrlstLogList[iID][0];
+				object oLog2 = null;
+				lock (modDefApp.g_arrlstLogList[iID].SyncRoot)
+				{
+					if (modDefApp.g_arrlstLogList[iID].Count > 0)
+					{
+						oLog2 = modDefApp.g_arrlstLogList[iID][0];
+						modDefApp.g_arrlstLogList[iID].RemoveAt(0);
+					}
+				}
+				if (oLog2 == null) break;
+				LogMsg2 = (LogMsgInfo)oLog2;
 				Log.WriteLog(ref LogMsg2);
-				modDefApp.g_arrlstLogList[iID].RemoveAt(0);
 			}
 
 		}

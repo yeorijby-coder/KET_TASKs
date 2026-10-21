@@ -542,6 +542,11 @@ namespace TSK_HostCom
         // 인터페이스 기록 입력 
         public bool InsertHostIfLog(CUserDb bDb, string strMsg, string strHostCmd, string strDirection, bool bServerSocket = false)
         {
+            // @.설비 상태전문(S)은 1초에 수십 건이라 HOST_IF_LOG 의 99% 를 차지했다(시간당 약 21만 건, 3,800만 건 / 4.9GB).
+            //   조회할 일이 없어 기록하지 않는다. 작업지시(O)/완료보고(F)/그 밖의 전문은 그대로 남긴다.
+            if (strHostCmd == "S")
+                return true;
+
             string strTitle = "[InsertHostIfLog] .. ";
             #region HOST_IF_LOG에 기록하기
             //if (strHostCmd != "S")
