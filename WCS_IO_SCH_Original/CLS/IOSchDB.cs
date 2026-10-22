@@ -1785,13 +1785,20 @@ namespace TSK_COMM_IOSCH
             }
         }
         /// <summary>팔레트 매거진(207) 관련 작업 흐름을 "매거진(3F)" 탭에 남긴다. (어느 스레드에서 불러도 그 탭으로 간다)</summary>
-        public void MakeMagMsg(string msg, cDefApp.eLogMsgType typ = cDefApp.eLogMsgType.MSG_IMP,
+        /// <para>색 : 매거진에서 랙으로 입고(공파렛트)하는 작업은 초록 바탕 흰 글자(MSG_IMP), 상위로 보내는 공파렛트 입고 요구(N)와 그 응답은
+        /// 하늘색 바탕 검은 글자(MSG_BLUE), 그 밖(매거진으로 이동의 접수·구동·도착)은 보통(MSG_NOR). 글의 내용으로 가른다.</para>
+        public void MakeMagMsg(string msg, cDefApp.eLogMsgType typ = cDefApp.eLogMsgType.MSG_NOR,
                                [CallerFilePath] string strFile = "",
                                [CallerMemberName] string strFunc = "")
         {
             try
             {
                 if (!cDefApp.GM_SPLIT_TABS) return;     // 분리하지 않으면 기존대로(각 층 탭의 기존 로그만)
+                if (typ == cDefApp.eLogMsgType.MSG_NOR)
+                {
+                    if (msg.Contains("공파렛트 입고 요구(N)")) typ = cDefApp.eLogMsgType.MSG_BLUE;
+                    else if (msg.Contains("매거진에서 입고")) typ = cDefApp.eLogMsgType.MSG_IMP;
+                }
                 int nMag = (int)cDefApp.eThGbn.SCH_GR06;
                 if (callPsMsgView != null)
                     callPsMsgView(msg, nMag.ToString(), "", "", nMag, typ, strFile, strFunc);
