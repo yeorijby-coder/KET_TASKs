@@ -176,6 +176,8 @@ namespace TSK_COMM_IOSCH
         public enum eComSts { ComNor = 0, ComErr = 1 };                    // @.통신상태
         // @.유량(1F) / 매거진(3F)을 별도 탭으로 분리할지 (ENV_IOSCH.INI [SCH] SPLIT_TABS, 기본 Y). N 이면 기존대로 각 층 탭에만 표현한다.
         public static bool GM_SPLIT_TABS = true;
+        // @.이음새 탭/스레드를 쓰는지 (SPLIT_TABS=Y 이고 USE_SEAM=Y). 아니면 이음새 로그를 각 층 탭에 그대로 남긴다.
+        public static bool GM_USE_SEAM = false;
 
         public enum eLogMsgType { MSG_NOR = 0, MSG_IMP = 1, MSG_ERR = 2, MSG_BLUE = 3, MSG_ORANGE = 4 }; // @.eLogMsgType[0:일반, 1:중요, 2:오류, 3:하늘색(유량 제한 해제), 4:주황(유량 제한)]
 
@@ -192,7 +194,8 @@ namespace TSK_COMM_IOSCH
             SCH_GR03 = 52,      // BOX
             SCH_GR04 = 53,      // LOG삭제 (오래된 로그 삭제)
             SCH_GR05 = 54,      // 유량(1F) (1층 출고 유량 모니터)
-            SCH_GR06 = 55       // 매거진(3F) (팔레트 매거진 207 작업 흐름 기록)
+            SCH_GR06 = 55,      // 매거진(3F) (팔레트 매거진 207 작업 흐름 기록)
+            SCH_GR07 = 56       // 이음새 (구↔신 라인 이음새 데이터 복사/삭제, 1F·3F 공통)
         };  // @.eThGbn[0 ,1:CV, 2:RTV, 3:SC, 4:SCH]
 
 

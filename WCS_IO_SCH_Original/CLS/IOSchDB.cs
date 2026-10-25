@@ -1784,6 +1784,34 @@ namespace TSK_COMM_IOSCH
                 return;
             }
         }
+        /// <summary>구↔신 라인 이음새(1F 264→531, 556→250 / 3F 352→631, 654→355) 작업 흐름을 "이음새" 탭에 남긴다.
+        /// 이음새 탭을 쓰지 않으면(SPLIT_TABS=N 또는 USE_SEAM=N) false 를 돌려주니, 부른 쪽이 각 층 탭에 그대로 남기면 된다.
+        /// 색 : 일반(복사/삭제), 주황(대기 - 왜 안 넘어가는지), 붉은색(오류).</summary>
+        public bool MakeSeamMsg(string msg, cDefApp.eLogMsgType typ = cDefApp.eLogMsgType.MSG_NOR,
+                                [CallerFilePath] string strFile = "",
+                                [CallerMemberName] string strFunc = "")
+        {
+            try
+            {
+                if (!cDefApp.GM_SPLIT_TABS || !cDefApp.GM_USE_SEAM) return false;
+                int nSeam = (int)cDefApp.eThGbn.SCH_GR07;
+                if (callPsMsgView != null)
+                    callPsMsgView(msg, nSeam.ToString(), "", "", nSeam, typ, strFile, strFunc);
+                if (cDefApp.m_LogQ[nSeam] != null)
+                    cDefApp.m_LogQ[nSeam].Enqueue(new LogParam(DateTime.Now, msg));
+                return true;
+            }
+            catch (Exception)
+            {
+                return false;
+            }
+        }
+        // @.이음새 트랙번호 -> 층. 1F 는 2xx / 5xx, 3F 는 3xx / 6xx (264, 556, 531, 250 / 352, 654, 355, 631)
+        protected static string SeamFloor(string strMcNo)
+        {
+            if (strMcNo != null && strMcNo.Length > 0 && (strMcNo[0] == '3' || strMcNo[0] == '6')) return "3F";
+            return "1F";
+        }
         /// <summary>팔레트 매거진(207) 관련 작업 흐름을 "매거진(3F)" 탭에 남긴다. (어느 스레드에서 불러도 그 탭으로 간다)</summary>
         /// <para>색 : 매거진에서 랙으로 입고(공파렛트)하는 작업은 초록 바탕 흰 글자(MSG_IMP), 상위로 보내는 공파렛트 입고 요구(N)와 그 응답은
         /// 하늘색 바탕 검은 글자(MSG_BLUE), 그 밖(매거진으로 이동의 접수·구동·도착)은 보통(MSG_NOR). 글의 내용으로 가른다.</para>
@@ -5567,7 +5595,7 @@ namespace TSK_COMM_IOSCH
                 if (nSelCnt == 0)
                 {
                     // @.왜 안 넘어가는지 보이게 : FROM 에 작업번호가 있고 센서가 꺼졌는데 TO 가 준비가 안 됐으면 작업번호마다 한 번 적는다.
-                    SeamWaitDiag(strWH_TYP, strFROM_MC, strTO_MC, strTitle);
+                    if (!cDefApp.GM_USE_SEAM) SeamWaitDiag(strWH_TYP, strFROM_MC, strTO_MC, strTitle);   // 이음새 탭을 쓰면 그 스레드가 본다
                     pRTN_MSG = "";
                     return true;
                 }
@@ -5600,6 +5628,9 @@ namespace TSK_COMM_IOSCH
                 m_dicSeamCopied[strKey] = strLUGG_NO;
                 pRTN_MSG = strTitle + "이음새 TRACK " + strFROM_MC + "→" + strTO_MC + " 작업 데이터 복사 지시. [작업번호:" + strLUGG_NO + "]";
                 InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, "", strFROM_MC, strTO_MC);
+                // @.이음새 탭을 쓰면 거기에만 남기고 층 탭에는 남기지 않는다.
+                if (MakeSeamMsg("[" + SeamFloor(strFROM_MC) + " 이음새] " + strFROM_MC + "→" + strTO_MC + " 복사 지시 - 작업번호 " + strLUGG_NO + " (" + strTitle.Trim('[', ']') + ")"))
+                    pRTN_MSG = "";
                 return true;
             }
             catch (Exception ex)
@@ -5611,8 +5642,8 @@ namespace TSK_COMM_IOSCH
         }
 
         /// <summary>이음새 복사가 안 걸릴 때 그 이유를 탭에 한 번 적는다. (작업번호마다 한 번)</summary>
-        private readonly Dictionary<string, string> m_dicSeamDiag = new Dictionary<string, string>();
-        private void SeamWaitDiag(string strWH_TYP, string strFROM_MC, string strTO_MC, string strTitle)
+        protected readonly Dictionary<string, string> m_dicSeamDiag = new Dictionary<string, string>();
+        protected void SeamWaitDiag(string strWH_TYP, string strFROM_MC, string strTO_MC, string strTitle)
         {
             try
             {
@@ -5637,7 +5668,9 @@ namespace TSK_COMM_IOSCH
                 string strLast;
                 if (m_dicSeamDiag.TryGetValue(strKey, out strLast) && strLast == strLugg + "|" + strState) return;
                 m_dicSeamDiag[strKey] = strLugg + "|" + strState;
-                MakeMsg(strTitle + "이음새 대기 : FROM " + strFROM_MC + " 작업번호 " + strLugg + " 떠남(센서 0) - " + strState);
+                string strWait = "[" + SeamFloor(strFROM_MC) + " 이음새] " + strFROM_MC + "→" + strTO_MC + " 대기 : FROM 작업번호 " + strLugg + " 떠남(센서 0) - " + strState;
+                if (!MakeSeamMsg(strWait, cDefApp.eLogMsgType.MSG_ORANGE))
+                    MakeMsg(strTitle + "이음새 대기 : FROM " + strFROM_MC + " 작업번호 " + strLugg + " 떠남(센서 0) - " + strState);
             }
             catch { }
         }
@@ -5699,6 +5732,8 @@ namespace TSK_COMM_IOSCH
                 if (m_dicSeamCopied.ContainsKey(strKey)) m_dicSeamCopied.Remove(strKey);
                 pRTN_MSG = strTitle + "이음새 TRACK " + strFROM_MC + " 작업 데이터 삭제 지시 (복사 완료 확인). [작업번호:" + strLUGG_NO + "]";
                 InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, "", strFROM_MC, strTO_MC);
+                if (MakeSeamMsg("[" + SeamFloor(strFROM_MC) + " 이음새] " + strFROM_MC + " 데이터 삭제 지시 (" + strTO_MC + " 반영 확인) - 작업번호 " + strLUGG_NO + " (" + strTitle.Trim('[', ']') + ")"))
+                    pRTN_MSG = "";
                 return true;
             }
             catch (Exception ex)
