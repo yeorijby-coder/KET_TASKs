@@ -5543,7 +5543,9 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CDF.LUGG_NO_RD, " + SQL_WS + "), ''), '0') NOT IN ('0','0000')                    ";
                 strSql += CRLF + "    AND CDF.SENSOR0_DATA_RD  = '0'                               ";   // FROM 센서 이탈 (이음새 통과 중)
                 strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CDT.LUGG_NO_RD, " + SQL_WS + "), ''), '0') IN ('0','0000')                        ";   // TO 데이터 비어있음
-                strSql += CRLF + "    AND CDT.STO_READY_RD     = '1'                               ";
+                // @.TO 트랙의 입고대 준비(STO_READY_RD)는 보지 않는다. 이음새 받는 쪽(355 / 631)은 작업대가 아닌 보통 트랙이라
+                //   CV_TASK 가 그 값을 채우지 않는다(DeviceMap 의 StoStation 비트 목록에 없음). 이 조건 때문에 현장에서
+                //   654→355 복사가 한 번도 돌지 않았다. (시뮬레이터는 CvSim 이 PLC 사이 데이터를 스스로 옮겨 드러나지 않았다)
                 strSql += CRLF + "    AND CDT.SENSOR0_DATA_RD  = '1'                               ";   // TO 에 물리 도착
                 strSql += CRLF + "    AND CDT.OD_RQ_YN         = 'N'                               ";
                 _pBdb.mComMain.CommandType = CommandType.Text;
@@ -5611,30 +5613,24 @@ namespace TSK_COMM_IOSCH
 
                 pRTN_MSG = "";
 
-                // 복사 이력이 없으면 통과
-                if (m_dicSeamCopied.ContainsKey(strKey) == false)
-                    return true;
-
-                string strLUGG_NO = m_dicSeamCopied[strKey];
-
-                // TO 트랙에 복사가 반영(PLC readback)되었는지 확인
+                // @.복사 이력(m_dicSeamCopied)이 있든 없든 TO 트랙에 FROM 과 같은 작업번호가 반영되어 있으면 FROM 을 지운다.
+                //   전에는 이력이 있어야만 지워, IO 를 다시 띄우면(이력 소실) FROM 에 작업번호가 영영 남았다.
                 strSql = "";
-                strSql += CRLF + " SELECT CDF.PLC_NO AS FROM_PLC                                   ";
+                strSql += CRLF + " SELECT CDF.PLC_NO AS FROM_PLC, CDF.LUGG_NO_RD                   ";
                 strSql += CRLF + "   FROM CV_DATA CDT                                              ";
                 strSql += CRLF + "  INNER JOIN CV_DATA CDF                                         ";
                 strSql += CRLF + "     ON CDF.WH_TYP = CDT.WH_TYP AND CDF.MC_NO = :FROM_MC         ";
                 strSql += CRLF + "  WHERE CDT.WH_TYP     = :WH_TYP                                 ";
                 strSql += CRLF + "    AND CDT.MC_NO      = :TO_MC                                  ";
-                strSql += CRLF + "    AND CDT.LUGG_NO_RD = :LUGG_NO                                ";   // 반영 확인
-                strSql += CRLF + "    AND CDF.LUGG_NO_RD = :LUGG_NO2                               ";   // FROM 에 아직 잔존
+                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CDF.LUGG_NO_RD, " + SQL_WS + "), ''), '0') NOT IN ('0','0000')                    ";   // FROM 에 아직 잔존
+                strSql += CRLF + "    AND BTRIM(CDT.LUGG_NO_RD, " + SQL_WS + ") = BTRIM(CDF.LUGG_NO_RD, " + SQL_WS + ")                             ";   // TO 에 반영 확인
+                strSql += CRLF + "    AND CDF.SENSOR0_DATA_RD = '0'                               ";   // FROM 에서 화물은 떠났다
                 strSql += CRLF + "    AND CDF.OD_RQ_YN   = 'N'                                     ";
                 _pBdb.mComMain.CommandType = CommandType.Text;
                 _pBdb.mComMain.Parameters.Clear();
                 _pBdb.mComMain.Parameters.Add("FROM_MC", DbLang.VARCHAR).Value = strFROM_MC;
                 _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
                 _pBdb.mComMain.Parameters.Add("TO_MC", DbLang.VARCHAR).Value = strTO_MC;
-                _pBdb.mComMain.Parameters.Add("LUGG_NO", DbLang.VARCHAR).Value = strLUGG_NO;
-                _pBdb.mComMain.Parameters.Add("LUGG_NO2", DbLang.VARCHAR).Value = strLUGG_NO;
                 nSelCnt = _pBdb.ExcuteQry(strSql);
                 if (nSelCnt < 0)
                 {
@@ -5648,6 +5644,7 @@ namespace TSK_COMM_IOSCH
                 }
 
                 string strFROM_PLC = "" + _pBdb.mDtMain.Rows[0]["FROM_PLC"].ToString();
+                string strLUGG_NO = "" + _pBdb.mDtMain.Rows[0]["LUGG_NO_RD"].ToString().Trim();
 
                 // FROM 트랙 데이터 삭제 지시 (작업데이터 0 클리어 - 레거시 WriteTrackInfo(...,0,0,0))
                 _pBdb.BeginTrans();
@@ -5660,7 +5657,7 @@ namespace TSK_COMM_IOSCH
                 }
                 _pBdb.Commit();
 
-                m_dicSeamCopied.Remove(strKey);
+                if (m_dicSeamCopied.ContainsKey(strKey)) m_dicSeamCopied.Remove(strKey);
                 pRTN_MSG = strTitle + "이음새 TRACK " + strFROM_MC + " 작업 데이터 삭제 지시 (복사 완료 확인). [작업번호:" + strLUGG_NO + "]";
                 InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, "", strFROM_MC, strTO_MC);
                 return true;
