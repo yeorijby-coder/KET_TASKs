@@ -5616,7 +5616,8 @@ namespace TSK_COMM_IOSCH
                 }
 
                 _pBdb.BeginTrans();
-                if (UPDATE_CV_DATA(strJOB_TYP, strTRAY_TYP, strTRAY_LEV, strDEST_POS, strIS_TURN,
+                // @.JOB_MST.DEST_POS 가 크레인이면 9NN(907)이다. 그대로 쓰면 한 바이트로 잘려(907&0xFF=139) 화물이 엉뚱한 곳으로 돈다. 호기 번호(7)로 바꿔 쓴다.
+                if (UPDATE_CV_DATA(strJOB_TYP, strTRAY_TYP, strTRAY_LEV, GfCvDestPos(strDEST_POS), strIS_TURN,
                                    strLUGG_NO, strWH_TYP, strTO_PLC, strTO_MC, "", ref pRTN_MSG) == false)
                 {
                     _pBdb.Rollback();
