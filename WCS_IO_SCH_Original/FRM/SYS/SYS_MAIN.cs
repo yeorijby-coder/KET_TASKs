@@ -335,6 +335,8 @@ namespace TSK_COMM_IOSCH
             chkRetDecideWait.Checked = cDefApp.GM_RET_DECIDE_WAIT;
             // @.체크박스는 기본으로 숨긴다. (ENV_IOSCH.INI [SCH] SHOW_RET_DECIDE_WAIT=Y 이면 보인다. 값은 숨겨도 그대로 적용된다)
             chkRetDecideWait.Visible = cDefApi.GsGetIniYN("SCH", "SHOW_RET_DECIDE_WAIT", false);
+            // @.화면 위쪽의 버전 날짜 글자(2021.01.30)는 기본으로 숨긴다. (ENV_IOSCH.INI [SCH] SHOW_VERSION_DATE=Y 이면 보인다)
+            label1.Visible = cDefApi.GsGetIniYN("SCH", "SHOW_VERSION_DATE", false);
 
 			//Main에서 동작중 상태를 나타내기위해 표시.
             // Scheduler 상태 LED (슬롯마다 하나 : picDbCn0 / 1 / 2)
