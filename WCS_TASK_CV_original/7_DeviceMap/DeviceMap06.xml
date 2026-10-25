@@ -37,6 +37,11 @@
 			<Bit  desc="D550.2" Use ="1" tid="647" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 			<Bit  desc="D550.3" Use ="1" tid="652" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 		</Area>
+				<!-- 구 ECS "Move Track Data"(상태영역 word 19 = D569) : 구↔신 라인 이음새로 받는 트랙의 데이터 이동 준비 비트.
+		     구 ECS 는 이 비트를 그 트랙의 입고대 준비(StoStationReady)로 삼아 CopyTrackData(654→355 등)를 돌렸다. -->
+		<Area type="b" seq="0" name="StoStation" address="569">
+			<Bit  desc="D569.0" Use ="1" tid="631" desc2="이음새 받는 트랙 - 데이터 이동 준비"/>
+		</Area>
 		<Area type="b" seq="0" name="RetStation" address="551">
 			<Bit  desc="D551.0" Use ="1" tid="646" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>
 			<Bit  desc="D551.1" Use ="1" tid="651" desc2="tid 가 0이면 OpBox, 반드시 하위 엘리먼트 존재"/>

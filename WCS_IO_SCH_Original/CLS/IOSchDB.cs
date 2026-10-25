@@ -5543,9 +5543,11 @@ namespace TSK_COMM_IOSCH
                 strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CDF.LUGG_NO_RD, " + SQL_WS + "), ''), '0') NOT IN ('0','0000')                    ";
                 strSql += CRLF + "    AND CDF.SENSOR0_DATA_RD  = '0'                               ";   // FROM 센서 이탈 (이음새 통과 중)
                 strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CDT.LUGG_NO_RD, " + SQL_WS + "), ''), '0') IN ('0','0000')                        ";   // TO 데이터 비어있음
-                // @.TO 트랙의 입고대 준비(STO_READY_RD)는 보지 않는다. 이음새 받는 쪽(355 / 631)은 작업대가 아닌 보통 트랙이라
-                //   CV_TASK 가 그 값을 채우지 않는다(DeviceMap 의 StoStation 비트 목록에 없음). 이 조건 때문에 현장에서
-                //   654→355 복사가 한 번도 돌지 않았다. (시뮬레이터는 CvSim 이 PLC 사이 데이터를 스스로 옮겨 드러나지 않았다)
+                // @.TO 트랙의 입고대 준비(STO_READY_RD) = 구 ECS 의 "Move Track Data" 비트(상태영역 word 19 = D569.0).
+                //   구 ECS(EcsSv Cv.cpp CopyData)는 FROM 작업번호 有·센서 OFF, TO 작업번호 無·StoStationReady·센서 ON 일 때 복사한다.
+                //   받는 트랙(355/631/250/531)은 보통 트랙이라 D550 입고대 비트가 없고, CV_TASK DeviceMap 에 D569 영역이 빠져 있어
+                //   이 값이 늘 비어 있었다. DeviceMap0x.xml 에 D569.0 -> 그 트랙의 STO_READY_RD 를 넣어 채운다. (2026-10-26)
+                strSql += CRLF + "    AND CDT.STO_READY_RD     = '1'                               ";   // 데이터 이동 준비 (D569.0)
                 strSql += CRLF + "    AND CDT.SENSOR0_DATA_RD  = '1'                               ";   // TO 에 물리 도착
                 strSql += CRLF + "    AND CDT.OD_RQ_YN         = 'N'                               ";
                 _pBdb.mComMain.CommandType = CommandType.Text;
