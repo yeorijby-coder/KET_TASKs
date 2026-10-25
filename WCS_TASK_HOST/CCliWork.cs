@@ -1024,7 +1024,12 @@ namespace TSK_HostCom
                 // @.크레인 번호는 DB 안에서 9xx 로 저장한다(CSrvWork 의 변환과 짝).
                 //   문서 IV.3 의 장비번호는 호기번호이므로 900 을 뺀다.
                 if (nScNo > 900) nScNo -= 900;
-                int nScLugg = 0; int.TryParse(strITN_LUGG_FK1.Trim(), out nScLugg);
+                int nScItn = 0; int.TryParse(strITN_LUGG_FK1.Trim(), out nScItn);
+                // @.보고하는 작업번호는 S/C PLC 가 읽어 올린 값(LUGG_NO_FK1_RD)이다. 작업이 끝나도 PLC 는 번호를 지우지 않으므로
+                //   WMS 에서 계속 보인다. (구 ECS ScInfo.m_nLuggNum = PLC 값을 그대로 보고)
+                //   예전에는 내부 작업번호(ITN_LUGG_FK1)를 보고했는데 이것은 완료 때 0 으로 지워져 완료 뒤 번호가 사라졌다.
+                int nScLugg = 0; int.TryParse(("" + m_BDb.dtMain.Rows[ii]["LUGG_NO_FK1_RD"].ToString()).Trim(), out nScLugg);
+                if (nScLugg == 0) nScLugg = nScItn;
 
                 // @.그 크레인이 속한 창고. 11호기(P-BOX)는 'B' 로 나간다.
                 string strScWhDef = modDefApp.GsWhDefOf(m_BDb.dtMain.Rows[ii]["WH_TYP"].ToString());
@@ -1032,7 +1037,7 @@ namespace TSK_HostCom
                 lstStatusFrame.Add(GfMakeStatusBody(strScWhDef, modDefApp.DEV_CLASS_SC, nScNo, nScStatus,
                                                     nScLugg,
                                                     0,                          // @.사이즈체크는 S/C 에 해당 없음
-                                                    (nScLugg > 0) ? 1 : 0));
+                                                    (nScItn > 0) ? 1 : 0));    // @.ECS작업유무는 진행 중인 작업이 있을 때만
 
                 strTempFrame = string.Format("{0:00}{1:0}{2:0000}", Convert.ToInt32(strPLC_NO), nScStatus, Convert.ToInt32(strITN_LUGG_FK1));
 
