@@ -93,6 +93,21 @@ namespace TSK_COMM_IOSCH
             }
         }
 
+        // @.INI 의 Y/N 값. 없으면 bDefault. (N 만 거짓으로 본다)
+        public static bool GsGetIniYN(string pSection, string pKey, bool bDefault)
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(16);
+                GetPrivateProfileString(pSection, pKey, bDefault ? "Y" : "N", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                return (sb.ToString().Trim().ToUpper() != "N");
+            }
+            catch
+            {
+                return bDefault;
+            }
+        }
+
         public static bool GsGetSchUse(string pKey)
         {
             try

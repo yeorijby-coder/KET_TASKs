@@ -5547,7 +5547,10 @@ namespace TSK_COMM_IOSCH
                 //   구 ECS(EcsSv Cv.cpp CopyData)는 FROM 작업번호 有·센서 OFF, TO 작업번호 無·StoStationReady·센서 ON 일 때 복사한다.
                 //   받는 트랙(355/631/250/531)은 보통 트랙이라 D550 입고대 비트가 없고, CV_TASK DeviceMap 에 D569 영역이 빠져 있어
                 //   이 값이 늘 비어 있었다. DeviceMap0x.xml 에 D569.0 -> 그 트랙의 STO_READY_RD 를 넣어 채운다. (2026-10-26)
-                strSql += CRLF + "    AND CDT.STO_READY_RD     = '1'                               ";   // 데이터 이동 준비 (D569.0)
+                //   ENV_IOSCH.INI [SCH] SEAM_NEED_STO_READY=N 이면 이 비트를 보지 않고(도착 + 데이터 없음만) 복사한다.
+                //   (현장 PLC 가 D569.0 을 올리지 않을 때 시험용. 기본 Y = 구 ECS 와 같다)
+                if (cDefApi.GsGetIniYN("SCH", "SEAM_NEED_STO_READY", true))
+                    strSql += CRLF + "    AND CDT.STO_READY_RD     = '1'                               ";   // 데이터 이동 준비 (D569.0)
                 strSql += CRLF + "    AND CDT.SENSOR0_DATA_RD  = '1'                               ";   // TO 에 물리 도착
                 strSql += CRLF + "    AND CDT.OD_RQ_YN         = 'N'                               ";
                 _pBdb.mComMain.CommandType = CommandType.Text;
@@ -5563,6 +5566,8 @@ namespace TSK_COMM_IOSCH
                 }
                 if (nSelCnt == 0)
                 {
+                    // @.왜 안 넘어가는지 보이게 : FROM 에 작업번호가 있고 센서가 꺼졌는데 TO 가 준비가 안 됐으면 작업번호마다 한 번 적는다.
+                    SeamWaitDiag(strWH_TYP, strFROM_MC, strTO_MC, strTitle);
                     pRTN_MSG = "";
                     return true;
                 }
@@ -5603,6 +5608,38 @@ namespace TSK_COMM_IOSCH
                 _pBdb.Rollback();
                 return false;
             }
+        }
+
+        /// <summary>이음새 복사가 안 걸릴 때 그 이유를 탭에 한 번 적는다. (작업번호마다 한 번)</summary>
+        private readonly Dictionary<string, string> m_dicSeamDiag = new Dictionary<string, string>();
+        private void SeamWaitDiag(string strWH_TYP, string strFROM_MC, string strTO_MC, string strTitle)
+        {
+            try
+            {
+                string strSql = "";
+                strSql += CRLF + " SELECT CDF.LUGG_NO_RD, CDF.SENSOR0_DATA_RD AS F_SEN, CDT.LUGG_NO_RD AS T_LUGG,       ";
+                strSql += CRLF + "        CDT.SENSOR0_DATA_RD AS T_SEN, CDT.STO_READY_RD AS T_RDY, CDT.OD_RQ_YN AS T_OD ";
+                strSql += CRLF + "   FROM CV_DATA CDF                                                                  ";
+                strSql += CRLF + "  INNER JOIN CV_DATA CDT ON CDT.WH_TYP = CDF.WH_TYP AND CDT.MC_NO = :TO_MC           ";
+                strSql += CRLF + "  WHERE CDF.WH_TYP = :WH_TYP AND CDF.MC_NO = :FROM_MC                                ";
+                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CDF.LUGG_NO_RD, " + SQL_WS + "), ''), '0') NOT IN ('0','0000')  ";
+                strSql += CRLF + "    AND CDF.SENSOR0_DATA_RD = '0'                                                    ";
+                _pBdb.mComMain.CommandType = CommandType.Text;
+                _pBdb.mComMain.Parameters.Clear();
+                _pBdb.mComMain.Parameters.Add("TO_MC", DbLang.VARCHAR).Value = strTO_MC;
+                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
+                _pBdb.mComMain.Parameters.Add("FROM_MC", DbLang.VARCHAR).Value = strFROM_MC;
+                if (_pBdb.ExcuteQry(strSql) <= 0) return;
+                DataRow r = _pBdb.mDtMain.Rows[0];
+                string strLugg = ("" + r["LUGG_NO_RD"]).Trim();
+                string strState = "TO " + strTO_MC + " 센서=" + r["T_SEN"] + " 작업번호=" + ("" + r["T_LUGG"]).Trim() + " 이동준비(D569.0)=" + r["T_RDY"] + " OD_RQ_YN=" + r["T_OD"];
+                string strKey = strFROM_MC + "_" + strTO_MC;
+                string strLast;
+                if (m_dicSeamDiag.TryGetValue(strKey, out strLast) && strLast == strLugg + "|" + strState) return;
+                m_dicSeamDiag[strKey] = strLugg + "|" + strState;
+                MakeMsg(strTitle + "이음새 대기 : FROM " + strFROM_MC + " 작업번호 " + strLugg + " 떠남(센서 0) - " + strState);
+            }
+            catch { }
         }
 
         protected bool DELETE_TRACK_DATA(string strWH_TYP, string strFROM_MC, string strTO_MC, string strTitle, ref string pRTN_MSG)
