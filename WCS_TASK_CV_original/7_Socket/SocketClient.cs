@@ -243,15 +243,20 @@ namespace WCS_TASK_CV
             byte[] receiveCharacter = new byte[2048];
 
 
-	        for(;;)
-	        {
-                if (_Socket.Available > 0)
+            // @.남은 바이트를 다 비운다. 예전에는 한 번만 받고 끝나 2048 바이트가 넘게 남으면 뒤가 남았다. (2026-11-02)
+            try
+            {
+                while (_Socket != null && _Socket.Available > 0)
                 {
                     int nlen = _Socket.Receive(receiveCharacter, receiveCharacter.Length, SocketFlags.None);
-		        }
-		        break;
-	        }  
+                    if (nlen <= 0) break;
+                }
+            }
+            catch (Exception) { }
         }
+        // 응답을 기다릴 때 소켓을 다시 보는 간격(ms). 0 이하면 짧게 쉬지 않고 계속 본다. 기본 30. (CvThread 가 PLC 별로 정한다)
+        public int RecvPollMs = 30;
+
         public bool RecvRst(ref byte[] message, int rcvlen, ref string msg)
         {
             try
@@ -260,6 +265,7 @@ namespace WCS_TASK_CV
                 _rcvdate = System.DateTime.Now;
                 int nreadlen = rcvlen;
                 RcvLen = 0;
+                System.Diagnostics.Stopwatch swWait = System.Diagnostics.Stopwatch.StartNew();
 
                 while (true)
                 {
@@ -284,7 +290,15 @@ namespace WCS_TASK_CV
                         return false;
                     }
 
-                    Thread.Sleep(30);
+                    // @.응답이 아직 안 왔다. 기본은 30ms 쉬고 다시 본다. RecvPollMs 가 0 이하면 50ms 까지는 쉬지 않고 계속 보고, 그 뒤에는 1ms 씩 쉰다.
+                    //   (2026-11-15 : 센서 트래킹 구간 PLC 의 한 바퀴를 줄이려고. 한 번 읽을 때마다 최소 30ms 를 기다리던 것을 없앤다)
+                    if (RecvPollMs <= 0)
+                    {
+                        if (swWait.ElapsedMilliseconds < 50) Thread.Yield();
+                        else Thread.Sleep(1);
+                    }
+                    else
+                        Thread.Sleep(RecvPollMs);
                 }
                 return true;
 

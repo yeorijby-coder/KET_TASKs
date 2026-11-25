@@ -1,4 +1,4 @@
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Text;
 using Samoh_Lib;
@@ -292,6 +292,16 @@ namespace WCS_TASK_CV
 
                 if (!ValidateResponse(rxBuf, "[READ]"))
                     return false;
+
+                // @.응답 데이터 길이([7-8] = 종료코드 2 + 데이터) 가 요청과 다르면 앞 요청의 응답이 섞인 것이다. (2026-11-02)
+                //   그대로 쓰면 트랙 데이터가 밀려 읽힌다. 남은 바이트를 비우고 실패로 돌린다.
+                int rspLen = rxBuf[7] | (rxBuf[8] << 8);
+                if (rspLen != chunkWords * 2 + 2)
+                {
+                    Clearbuffer();
+                    SetErrorMsg("[READ] Q3E 응답 데이터 길이 불일치: " + rspLen + " (기대 " + (chunkWords * 2 + 2) + ")");
+                    return false;
+                }
 
                 // 데이터 복사: 응답[헤더] 이후 -> RXBUFF[outOffset]
                 Buffer.BlockCopy(rxBuf, Q3E_RECV_HEADER, RXBUFF, outOffset, chunkWords * 2);

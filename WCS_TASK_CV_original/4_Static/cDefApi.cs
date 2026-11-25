@@ -38,6 +38,42 @@ namespace WCS_TASK_CV
          *            1234 -> 0x0C22(3106). 현장 PLC 는 이 형식이다. 키가 없으면 이것이다.
          *   BIN    : 작업번호를 16비트 이진수 그대로. 시뮬레이터(CvSim)는 이 형식이다.
          */
+        /// <summary>
+        /// 1층 출고 루프 화물 수(D570) 읽기 사용 여부. WCS_DB.INI [CNF] RET_CNT_READ (Y/N). 키가 없으면 Y.
+        /// PLC 02/05 에서만 쓴다. 현장에서 D570 읽기가 의심될 때 N 으로 끄고 비교한다. (2026-11-02)
+        /// </summary>
+        /// <summary>
+        /// 설비 접속정보 출처. WCS_DB.INI [CNF] COMM_INFO = DB(기본) | INI.
+        /// INI 면 10-19 빌드처럼 [COMMn] 의 IP / CUR_PORT / FROM_PORT / TO_PORT / PORT_CNT 를 쓰고 EQP_MST 는 보지 않는다. (2026-11-02)
+        /// </summary>
+        public static bool GsIsCommInfoIni()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(32);
+                GetPrivateProfileString("CNF", "COMM_INFO", "DB", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                return (sb.ToString().Trim().ToUpper() == "INI");
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static bool GsIsRetCntRead()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(32);
+                GetPrivateProfileString("CNF", "RET_CNT_READ", "Y", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                return (sb.ToString().Trim().ToUpper() != "N");
+            }
+            catch
+            {
+                return true;
+            }
+        }
+
         public static bool GsIsLuggWordDec100()
         {
             try
@@ -414,20 +450,26 @@ namespace WCS_TASK_CV
                             int.TryParse(("" + rd[1]).Trim(), out nCur);
                             int.TryParse(("" + rd[2]).Trim(), out nFrom);
                             int.TryParse(("" + rd[3]).Trim(), out nTo);
-                            if (strIp == "" || nCur <= 0)
+                            bool bRange = (nFrom > 0 && nTo >= nFrom);
+                            if (strIp == "" || (nCur <= 0 && !bRange))
                             {
                                 pMsg = "[GsReadComFromDb]EQP_MST 의 PLC_IP / PLC_PORT 가 비어 있습니다. WH_TYP[" + pWhTyp + "] EQP_TYP[" + pEqType + "] PLC_NO[" + pPlcNo + "]";
                                 return false;
                             }
                             pIp = strIp;
-                            pCur = nCur;
-                            if (nFrom > 0 && nTo >= nFrom && nCur >= nFrom && nCur <= nTo)
+                            // @.INI 와 같은 규칙으로 (2026-11-02) : 범위(FROM~TO)가 있으면 항상 범위를 쓴다. PLC_PORT 는 범위 안일 때만 시작 포트,
+                            //   범위 밖이면 FROM 부터 시작한다. 범위가 없을 때만 PLC_PORT 하나를 쓴다.
+                            //   전에는 PLC_PORT 가 범위 밖이면 PLC_PORT 하나만 썼다. 현장 EQP_MST 가 PLC_PORT 7000 / 범위 7001~7003 이라
+                            //   DB 모드가 7000 으로 붙어 2호기 PLC 의 다른 접속 채널을 읽었다. (INI 모드 CUR_PORT 7001~7003 은 정상)
+                            if (bRange)
                             {
-                                pFrom = nFrom; pTo = nTo; pPortCnt = nTo - nFrom + 1;
+                                pFrom = nFrom; pTo = nTo;
+                                pCur = (nCur >= nFrom && nCur <= nTo) ? nCur : nFrom;
+                                pPortCnt = 1;
                             }
                             else
                             {
-                                pFrom = nCur; pTo = nCur; pPortCnt = 1;
+                                pCur = nCur; pFrom = nCur; pTo = nCur; pPortCnt = 1;
                             }
                         }
                     }
@@ -494,6 +536,12 @@ namespace WCS_TASK_CV
             pRtnMsg = "[GsReadInitProfileProcessCnt]Error::" + pRtnMsg;
             return false;
         }
+        // @@@.GsGetCommInt : WCS_DB.INI [COMM<n>] 의 정수 값 (2026-11-15)
+        public static int GsGetCommInt(int nThNo, string strKey, int nDefault)
+        {
+            return GetPrivateProfileInt("COMM" + nThNo, strKey, nDefault, cDefApp.GM_ENV_INI);
+        }
+
         // @@@.GsReadInitProfileDelay
         public static void GsReadInitProfileDelay(string pDelayTyp, ref int pDelay, ref string pRtnMsg)
         {

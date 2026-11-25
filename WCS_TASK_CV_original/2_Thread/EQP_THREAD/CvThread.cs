@@ -225,6 +225,8 @@ namespace WCS_TASK_CV
         public string m_strLogMsg;
         public bool m_blHostErrSendYN = false;
         public bool m_blHostSendYN = false;
+        // @.PLC 에는 썼는데 DB 의 "보냄" 표시(OD_RQ_YN = 'N')를 못 한 트랙 지시. 트랙번호 -> 쓴 지시. 같은 지시를 다시 쓰지 않으려고 기억한다. (2026-11-23)
+        private Dictionary<string, string> m_dicOdSent = new Dictionary<string, string>();
         public bool m_blSimModeWrite = false;
         public bool m_blConnectYn = false;
 
@@ -265,18 +267,31 @@ namespace WCS_TASK_CV
         //   중간 대기대에서 새로 내보내지 않는다. 예전 CV 태스크는 이 값을 읽지 않아 DB 의 옛 값(8)에 멈춰 있었다.
         private int m_nLastRetCnt = -1;
         private DateTime m_dtRetCnt = DateTime.MinValue;
+        // @.D570 읽기 사용 여부 (WCS_DB.INI [CNF] RET_CNT_READ, 기본 Y). 접속마다 다시 읽는다.
+        private bool m_bRetCntRead = true;
+        // @.D570 읽기가 한 번 실패하면 이 접속에서는 더 읽지 않는다 (2026-11-02).
+        //   실패를 그냥 넘기면 늦게 온 응답이 소켓에 남아 다음 트랙 블록 읽기가 그만큼 밀려 읽힌다.
+        //   (다른 READ 실패는 통신을 끊고 다시 붙여 소켓이 비워지지만, 이 읽기만 예외였다)
+        private bool m_bRetCntStop = false;
 
         private void UpdateRetCnt()
         {
             try
             {
                 if (m_strPlc_No != "02" && m_strPlc_No != "05") return;
+                if (!m_bRetCntRead || m_bRetCntStop) return;
                 if ((DateTime.Now - m_dtRetCnt).TotalMilliseconds < 1000) return;
                 m_dtRetCnt = DateTime.Now;
 
                 byte[] rx = new byte[64];
                 if (!m_msQPlc.READ((byte)MelsecQ3E_UnitType.MELSECQ_CMD_WORD_UNIT, (byte)MelsecQ3E_UnitType_DEVICE.MELSECQ_DEVICE_CODE_D, 570, 1, ref rx))
+                {
+                    m_bRetCntStop = true;
+                    m_msQPlc.Clearbuffer();
+                    MakeMsg_Error("[UpdateRetCnt] D570 읽기 실패 - 이 접속에서는 D570 을 더 읽지 않는다 : " + m_msQPlc.GetErrorMsg(), m_nthNo);
+                    InsertWcsLogPgr("", "[UpdateRetCnt] D570 읽기 실패 (PLC " + m_strPlc_No + ") " + m_msQPlc.GetErrorMsg());
                     return;
+                }
                 int nCnt = (rx[1] << 8) | rx[0];
                 if (nCnt == m_nLastRetCnt) return;
 
@@ -398,6 +413,13 @@ namespace WCS_TASK_CV
         int nSelCnt = 0;
         private string _strErrorMsg = "";
 
+        // @.통신 한 바퀴 뒤 쉬는 시간(ms)과 응답 확인 간격(ms). (2026-11-15)
+        //   PLC 01 / 07 / 08(2층, 센서 트래킹 구간)은 화물이 굴러가는 걸 칸 단위로 따라가야 해서 촘촘하게 읽는다.
+        //   기본값 : 2층 PLC 는 10 / 0(쉬지 않고 확인), 나머지는 100 / 30.
+        //   WCS_DB.INI [COMM<n>] LOOP_SLEEP_MS, RECV_POLL_MS 로 PLC 마다 바꿀 수 있다.
+        private int m_nLoopSleepMs = 100;
+        private int m_nRecvPollMs = 30;
+
         #endregion
         #region CvThread
         public CvThread(int nThNo,
@@ -437,6 +459,12 @@ namespace WCS_TASK_CV
 
             m_msQPlc.IsHex = true;
             m_nCnt = Cnt;
+
+            bool bFastPlc = (m_strPlc_No == "01" || m_strPlc_No == "07" || m_strPlc_No == "08");
+            m_nLoopSleepMs = cDefApi.GsGetCommInt(m_nthNo, "LOOP_SLEEP_MS", bFastPlc ? 10 : 100);
+            m_nRecvPollMs = cDefApi.GsGetCommInt(m_nthNo, "RECV_POLL_MS", bFastPlc ? 0 : 30);
+            if (m_nLoopSleepMs < 0) m_nLoopSleepMs = 0;
+            m_msQPlc.RecvPollMs = m_nRecvPollMs;
 
             #endregion
         }
@@ -565,7 +593,10 @@ namespace WCS_TASK_CV
                             {
                                 // ini에 현재 설정된 포트값 쓰기
                                 string strCOMM = "COMM" + m_nthNo;
-                                cDefApi.GsWriteCurPortToDb(m_strWh_typ, m_strEqmt_typ, m_strPlc_No, m_nCurPort);   // 2026-10-20 INI 대신 DB(EQP_MST.PLC_PORT)
+                                if (cDefApi.GsIsCommInfoIni())
+                                    cDefApi.WritePrivateProfileString(strCOMM, "CUR_PORT", Convert.ToString("" + m_nCurPort), cDefApp.GM_ENV_INI);   // COMM_INFO=INI : 예전처럼 INI 에
+                                else
+                                    cDefApi.GsWriteCurPortToDb(m_strWh_typ, m_strEqmt_typ, m_strPlc_No, m_nCurPort);   // 2026-10-20 INI 대신 DB(EQP_MST.PLC_PORT)
 
                                 //접속 성공 로그 남기기 
                                 InsertWcsLogPgr("", "[Thread_Doing] CV 그룹 번호 : " + m_strPlc_No + ", 연결포트 : " + m_nCurPort + " 접속 성공");
@@ -596,6 +627,12 @@ namespace WCS_TASK_CV
                         MakeMsg_Error("[DeviceMap] " + strDevErr, m_nthNo);
                         goto EXIT_LBL;
                     }
+                    // @.D570 읽기 설정은 접속마다 다시 읽는다. INI 를 바꾸고 재접속하면 반영.
+                    m_bRetCntRead = cDefApi.GsIsRetCntRead();
+                    m_bRetCntStop = false;
+                    m_nLastRetCnt = -1;
+                    if ((m_strPlc_No == "02" || m_strPlc_No == "05") && !m_bRetCntRead)
+                        MakeMsg_Imp("[UpdateRetCnt] RET_CNT_READ=N : D570(1층 출고 루프 화물 수) 읽기를 하지 않는다", m_nthNo);
                     MakeMsg_Imp("[DeviceMap] DeviceMap" + m_strPlc_No + ".xml 로드 완료"
                                 + " (트랙당 " + m_devMap.WordPerTrack + "워드, 필드 " + m_devMap.Fields.Count + "개"
                                 + ", 상태영역 " + m_devMap.EtcAreas.Count + "개)", m_nthNo);
@@ -615,21 +652,26 @@ namespace WCS_TASK_CV
                             this.m_msQPlc.IsAscii = m_frmMain.IsAscii;
                             this.m_msQPlc.IsHex = m_frmMain.IsHex;
 
+                            int nCy0 = Environment.TickCount;
                             if (!GetFirstAddress(Idx)) goto EXIT_LBL; //읽을 첫 주소를 가져온다.
 
                             if (!CvStatus(Idx)) goto EXIT_LBL; //컨베이어 정보를 READ한다.
+                            int nCy1 = Environment.TickCount;
 
                             if (!CvEtcStatus(Idx)) goto EXIT_LBL; //SeparatelyETC 상태영역(Auto 등)을 READ한다.
+                            int nCy2 = Environment.TickCount;
 
                             if (!CvChg_CMD_RQ_YN(Idx)) goto EXIT_LBL; //컨베이어 CMD 쓰기지시를 확인하고 DATA를 WRITE한다..
 
                             if (!CvChg_OD_RQ_YN(Idx)) goto EXIT_LBL; //컨베이어 OD 쓰기지시를 확인하고 DATA를 WRITE한다..
 
+                            int nCy3 = Environment.TickCount;
                             ProcessWordReqs();    // PLC 워드 읽기/쓰기 도구의 요청 (FRM_PLC_WORD)
                             UpdateRetCnt();       // 1층 출고 루프 화물 수(D570) -> EQP_MST.CV_RET_CNT
 
                             // @.출고 H/S 쓰기 지연 줄이기 (2026-10-16) : 한 바퀴 200ms -> 100ms
-                            Thread.Sleep(100);
+                            Thread.Sleep(m_nLoopSleepMs);
+                            CycleStat(Idx, unchecked(nCy1 - nCy0), unchecked(nCy2 - nCy1), unchecked(nCy3 - nCy2), unchecked(Environment.TickCount - nCy0));
                         }
                     }
                 }
@@ -787,6 +829,29 @@ namespace WCS_TASK_CV
         #endregion
 
         #region [CvStatus] :: CV READ 후 값이 변한게 있으면 DB UPDATE (DeviceMap XML 정의 기반 파싱)
+        // @.CV TASK 한 바퀴(트랙그룹 하나: 읽기+ETC+CMD/OD 쓰기+100ms 대기) 소요 시간을 30초마다 CvCycle.log 에 남긴다.
+        //   도착 검사가 늦어지는 원인이 CV 갱신 주기인지 보려는 계측이다.
+        private int m_nCyN = 0, m_nCySt = 0, m_nCyEt = 0, m_nCyWr = 0, m_nCyTot = 0, m_nCyMax = 0, m_nCyLast = 0;
+        private void CycleStat(int nIdx, int nSt, int nEt, int nWr, int nTot)
+        {
+            try
+            {
+                m_nCyN++; m_nCySt += nSt; m_nCyEt += nEt; m_nCyWr += nWr; m_nCyTot += nTot;
+                if (nTot > m_nCyMax) m_nCyMax = nTot;
+                int nNow = Environment.TickCount;
+                if (m_nCyLast == 0) m_nCyLast = nNow;
+                if (unchecked(nNow - m_nCyLast) < 30000) return;
+                string strLine = DateTime.Now.ToString("HH:mm:ss") + " PLC " + m_strPlc_No + " 그룹수 " + m_nCnt
+                    + " 바퀴 " + m_nCyN + "회 평균 " + (m_nCyTot / m_nCyN) + " ms (읽기 " + (m_nCySt / m_nCyN)
+                    + " / ETC " + (m_nCyEt / m_nCyN) + " / 쓰기 " + (m_nCyWr / m_nCyN) + " / 대기 " + m_nLoopSleepMs + " , 응답확인 " + m_nRecvPollMs + ") 최대 " + m_nCyMax + " ms"
+                    + Environment.NewLine;
+                System.IO.File.AppendAllText(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "CvCycle.log"), strLine);
+                m_nCyN = m_nCySt = m_nCyEt = m_nCyWr = m_nCyTot = m_nCyMax = 0;
+                m_nCyLast = nNow;
+            }
+            catch { }
+        }
+
         private bool CvStatus(int Idx)
         {
             string strTitle = "[CvStatus]";
@@ -956,6 +1021,13 @@ namespace WCS_TASK_CV
 
                 //DeviceMap XML 정의대로 트랙 버퍼를 필드 단위 파싱
                 Dictionary<string, string> dicVals = m_devMap.ParseTrack(byRxBuff, nArrayIdx);
+
+                // @.에러 워드(비트) -> 숫자 코드 (2026-11-08). 구 ECS(CCvTrackInfo::SetErrorCode)와 같다.
+                //   PLC 는 에러를 비트로 올린다. 구 ECS 는 가장 낮은 켜진 비트의 번호 + 1 을 코드로 썼고, 값 3 만 17 로 보냈다.
+                //   전에는 비트 값(4, 8, 16 ...)을 그대로 DB 에 넣어 상위 보고 코드가 구 ECS 와 달랐다.
+                //   여기서 한 번 바꿔 두면 CV_DATA, 에러 이력, 상위 보고, 화면 문구(EQP_ECD_MST 0001 ~ 0017)가 모두 숫자 코드로 맞는다.
+                if (dicVals.ContainsKey("ERROR_CODE"))
+                    dicVals["ERROR_CODE"] = CvErrWordToCode(dicVals["ERROR_CODE"]);
 
                 //상위 보고 대상(hostRpt) 필드 값이 변했으면 보고 플래그 SET
                 foreach (cDeviceMapRuntime.CvField fld in m_devMap.Fields)
@@ -1899,6 +1971,35 @@ namespace WCS_TASK_CV
                     #endregion
 
                     /*
+                     * @.같은 지시를 PLC 에 두 번 쓰지 않는다. (2026-11-23)
+                     *
+                     *   순서는 PLC 쓰기 -> 로그 저장 -> OD_RQ_YN = 'N' 이다. 2026-11-23 현장에서 DB 서버 디스크가 가득 차
+                     *   로그 저장이 실패하자 여기서 그대로 돌아가 OD_RQ_YN 이 'Y' 로 남았고, 매 바퀴 같은 지시를 그 트랙에 또 썼다.
+                     *   화물은 첫 지시로 이미 떠났는데 빈 트랙에 작업번호 / 도착지가 다시 써져 "데이터만 남은 트랙" 이 생겼다.
+                     *   (3층 출고 H/S 348 / 604 / 317 과 그 다음 트랙 355, 작업 5736 / 5836 / 5834)
+                     *
+                     *   PLC 에 쓴 지시를 트랙별로 기억해 두고, 같은 지시가 아직 'Y' 로 남아 있으면 PLC 에는 다시 쓰지 않고
+                     *   DB 표시만 다시 시도한다. 표시에 성공하면 기억을 지운다.
+                     */
+                    string strOdKey = LUGG_NO_OD.Trim() + "|" + DEST_POS_OD.Trim() + "|" + JOB_TYP_OD.Trim() + "|" + PULP_SENSOR_OD.Trim();
+                    {
+                        string strSentKey;
+                        if (m_dicOdSent.TryGetValue(TRACK_NO, out strSentKey) && strSentKey == strOdKey)
+                        {
+                            MakeMsg_Imp(strTitle + " 트랙번호 : [" + TRACK_NO + "] 작업번호 : [" + LUGG_NO_OD + "] 는 이미 PLC 에 쓴 지시다. 다시 쓰지 않고 DB 표시만 다시 한다.", m_nthNo);
+                            if (UpdateCvDataOD(TRACK_NO))
+                            {
+                                m_dicOdSent.Remove(TRACK_NO);
+                                int nTrkKeyRe = 0;
+                                if (int.TryParse(TRACK_NO, out nTrkKeyRe) && CvDic.ContainsKey(nTrkKeyRe))
+                                    CvDic[nTrkKeyRe].CVSTATHEXVAL = "";
+                            }
+                            // UpdateCvDataOD 가 다른 조회를 하지는 않지만, 실패했으면 DB 가 아픈 것이므로 이번 바퀴는 여기서 끝낸다.
+                            return true;
+                        }
+                    }
+
+                    /*
                      * 한 트랙에 전체 쓰기
                      */
                     #region
@@ -1966,15 +2067,15 @@ namespace WCS_TASK_CV
                     }
 
                     m_strLogMsg = strTitle + " 트랙번호 : [" + TRACK_NO + "] 작업번호 : [" + LUGG_NO_OD + "] 도착지 : [" + DEST_POS_OD + "] 작업구분 : [" + JOB_TYP_OD + "] CV 지시 성공";
-                    if (!InsertWcsLogPgr(TRACK_NO, m_strLogMsg))
-                    {
-                        return false;
-                    }
+                    // @.PLC 에 썼다. 여기서부터는 실패해도 같은 지시를 다시 쓰지 않는다. 로그 저장 실패로는 멈추지 않는다. (2026-11-23)
+                    m_dicOdSent[TRACK_NO] = strOdKey;
+                    InsertWcsLogPgr(TRACK_NO, m_strLogMsg);
 
                     if (!UpdateCvDataOD(TRACK_NO))
                     {
-                        return false;
+                        return false;       // m_dicOdSent 에 남아 있어 다음 바퀴에는 DB 표시만 다시 한다
                     }
+                    m_dicOdSent.Remove(TRACK_NO);
                     /*
                      * @.OD_RQ_FLAG 가 'Y' 로 굳는 것 막기 (2026-10-16)
                      *   UpdateCvDataOD 가 OD_RQ_FLAG='Y' 로 두면, 다음 읽기 주기에 CvStatus 가
@@ -2008,6 +2109,20 @@ namespace WCS_TASK_CV
         #endregion
 
         #region [UpdateCvData] :: 파싱된 DeviceMap XML 필드들을 CV_DATA 에 동적 UPDATE
+        /// <summary>
+        /// PLC 에러 워드(비트)를 구 ECS 와 같은 숫자 코드로. 0 -> "0000", 3 -> "0017", 그 밖은 가장 낮은 켜진 비트 번호 + 1 (1 ~ 16).
+        /// 숫자가 아니면 그대로 돌려준다.
+        /// </summary>
+        public static string CvErrWordToCode(string strWord)
+        {
+            int nWord;
+            if (!int.TryParse(("" + strWord).Trim(), out nWord) || nWord <= 0) return (nWord == 0) ? "0000" : strWord;
+            if (nWord == 3) return "0017";
+            for (int i = 0; i < 16; i++)
+                if ((nWord & (1 << i)) != 0) return (i + 1).ToString("0000");
+            return strWord;
+        }
+
         public bool UpdateCvData(string strTRACK_NO, Dictionary<string, string> dicVals)
         {
             string strTitle = "[UpdateCvData]";
@@ -2087,6 +2202,14 @@ namespace WCS_TASK_CV
 
 
         #region [InsertWcsLogPgr] :: WCS_LOG_PGR에 LOG 남기기
+        // @.로그 문장에서 작업번호를 뽑는다. ("작업번호 : [8137]" / "작업번호:[8137]" / "JOB[8137]"). 없으면 null -> WCS 로그 조회의 작업번호 칸이 채워진다.
+        private static string PsLuggNoOfLog(string strMsg)
+        {
+            if (string.IsNullOrEmpty(strMsg)) return null;
+            System.Text.RegularExpressions.Match m = System.Text.RegularExpressions.Regex.Match(strMsg, @"(?:작업번호\s*:?\s*\[|JOB\[)\s*(\d+)\s*\]");
+            return m.Success ? m.Groups[1].Value : null;
+        }
+
         public bool InsertWcsLogPgr(string strTRACK_NO, string strLOG_MSG)
         {
             try
@@ -2111,7 +2234,7 @@ namespace WCS_TASK_CV
                 strSql += cDefApp.CRLF + "				VALUES    (:WH_TYP               ";
                 strSql += cDefApp.CRLF + "						  ," + DbLang.SYSDATE + "";
                 strSql += cDefApp.CRLF + "						  ,NEXTVAL('LOG_SEQ')    ";
-                strSql += cDefApp.CRLF + "						  ,NULL                  ";
+                strSql += cDefApp.CRLF + "						  ,:LUGG_NO              ";
                 strSql += cDefApp.CRLF + "						  ,NULL                  ";
                 strSql += cDefApp.CRLF + "						  ,NULL                  ";
                 strSql += cDefApp.CRLF + "						  ,:PGR_NM               ";
@@ -2128,6 +2251,7 @@ namespace WCS_TASK_CV
                 m_msQPlc._pBdb.mComMain.Parameters.Clear();
 
                 m_msQPlc._pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR, 255).Value = m_strWh_typ;
+                m_msQPlc._pBdb.mComMain.Parameters.Add("LUGG_NO", DbLang.VARCHAR, 255).Value = (object)PsLuggNoOfLog(strLOG_MSG) ?? DBNull.Value;
                 m_msQPlc._pBdb.mComMain.Parameters.Add("PGR_NM", DbLang.VARCHAR, 255).Value = m_strLogFileNm;
                 m_msQPlc._pBdb.mComMain.Parameters.Add("LOG_KOR", DbLang.VARCHAR, 255).Value = strLOG_MSG;
                 m_msQPlc._pBdb.mComMain.Parameters.Add("JOB_STA", DbLang.VARCHAR, 255).Value = "999";
