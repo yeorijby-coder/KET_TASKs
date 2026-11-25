@@ -61,7 +61,7 @@ namespace WCS_TASK_SC
 
             if (m_TitleBar == null) m_TitleBar = new cTitleBar(this);
 
-            m_TitleBar.SetTitle(strTitle);
+            m_TitleBar.SetTitle(PutBuildStamp(strTitle));   // 빌드 시각 포함 (2026-11-09)
         }
         #endregion
 
@@ -116,6 +116,38 @@ namespace WCS_TASK_SC
          */
         #region[Event]SYS_MAIN_Load
 
+        // @.제목 줄의 맨 앞 이름 뒤에 빌드 시각을 끼운다. 제목은 길면 흘러가므로 끝에 붙이면 안 보인다.
+        private static string PutBuildStamp(string strTitle)
+        {
+            string strStamp = BuildStampText();
+            if (strStamp == "") return strTitle;
+            int nB = strTitle.IndexOf(" [");
+            return (nB > 0) ? strTitle.Insert(nB, strStamp) : strTitle + strStamp;
+        }
+
+        // @.제목에 빌드 시각을 붙인다. (2026-11-09) 실행파일 PE 헤더의 링크 시각이라 파일을 복사/압축해도 바뀌지 않는다.
+        //   읽지 못하면 파일 수정 시각을 쓴다.
+        private static string BuildStampText()
+        {
+            try
+            {
+                string strPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                using (System.IO.FileStream fs = new System.IO.FileStream(strPath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite))
+                using (System.IO.BinaryReader br = new System.IO.BinaryReader(fs))
+                {
+                    fs.Position = 0x3C;
+                    int nPe = br.ReadInt32();
+                    fs.Position = nPe + 8;
+                    uint uTs = br.ReadUInt32();
+                    DateTime dt = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(uTs).ToLocalTime();
+                    if (dt.Year >= 2020 && dt < DateTime.Now.AddDays(1))
+                        return " [빌드 " + dt.ToString("yyyy-MM-dd HH:mm") + "]";
+                }
+                return " [빌드 " + System.IO.File.GetLastWriteTime(strPath).ToString("yyyy-MM-dd HH:mm") + "]";
+            }
+            catch { return ""; }
+        }
+
         private void SYS_MAIN_Load(object sender, EventArgs e)
         {
             // @.INI 열기 버튼 (맨 처음 참조하는 INI 를 메모장으로 연다)
@@ -146,6 +178,7 @@ namespace WCS_TASK_SC
 
             //CNF, PROCESS 읽어오기
             cDefApi.GsGetInitPorFileCNF(ref cDefApp.GM_WH_TYP, ref cDefApp.GM_USERID, ref m_strRtnMsg);
+            if (!cDefApp.GM_RE_START) PsTaskEvent(m_strConnectString, "SC", cDefApp.GM_WH_TYP, "START");
             cDefApi.GsReadInitProfileProcessCnt("PROCESS", ref m_nProcessCnt, ref m_strRtnMsg);
 
             //@@.SC 접속정보ini CNT만큼 읽어오기
@@ -671,6 +704,47 @@ namespace WCS_TASK_SC
         {
             this.Close();
         }
+        // @.TASK start/stop record : LOG\<TASK>_MMdd.log + EVENT_LOG (MC_TYP=TASK, CMD_STA=START/STOP). Best effort, failures are ignored.
+        private void PsTaskEvent(string strConn, string strTask, string strWh, string strEvt)
+        {
+            DateTime dtNow = DateTime.Now;
+            string strPc = Environment.MachineName;
+            int nPid = System.Diagnostics.Process.GetCurrentProcess().Id;
+            // 1) file log : <run folder>\LOG\<TASK>_MMdd.log (one file per day, e.g. 1119.log; reused after a year). Written first so it works even if the DB is down.
+            try
+            {
+                string strDir = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "LOG");
+                System.IO.Directory.CreateDirectory(strDir);
+                string strLine = dtNow.ToString("yyyy-MM-dd HH:mm:ss.fff") + "\t" + strEvt + "\t" + strTask + "\t" + strPc + "\tPID=" + nPid.ToString() + "\tWH=" + strWh + "\r\n";
+                string strFile = System.IO.Path.Combine(strDir, strTask + "_" + dtNow.ToString("MMdd") + ".log");
+                // same MMdd file from last year (last written on another day) is removed first, so a file never mixes two years
+                if (System.IO.File.Exists(strFile) && System.IO.File.GetLastWriteTime(strFile).Date != dtNow.Date) System.IO.File.Delete(strFile);
+                System.IO.File.AppendAllText(strFile, strLine, System.Text.Encoding.UTF8);
+            }
+            catch { }
+            // 2) EVENT_LOG (ISSUE_DATE/INS_DT are DATE only, PK = WH_TYP + ISSUE_DATE + EVENT_SEQ, so the time goes into EVENT_SEQ/REMARKS)
+            string strSeq = (strTask + "_" + strEvt + "_" + dtNow.ToString("HHmmssfff") + "_" + nPid.ToString()).Replace("'", "");
+            if (strSeq.Length > 30) strSeq = strSeq.Substring(0, 30);
+            string strRmk = (dtNow.ToString("yyyy-MM-dd HH:mm:ss") + " " + strPc + " PID=" + nPid.ToString() + " WH=" + strWh).Replace("'", "");
+            if (strRmk.Length > 100) strRmk = strRmk.Substring(0, 100);
+            string strSql = "INSERT INTO EVENT_LOG (WH_TYP, ISSUE_DATE, EVENT_SEQ, MC_TYP, MC_NO, CMD_STA, INS_DT, INS_USER_ID, REMARKS) VALUES ('SYS', CURRENT_DATE, '" + strSeq + "', 'TASK', '" + strTask + "', '" + strEvt + "', CURRENT_DATE, 'WCS_TASK_SC', '" + strRmk + "')";
+#if POSTGRESQL
+            try
+            {
+                using (Npgsql.NpgsqlConnection cn = new Npgsql.NpgsqlConnection(strConn + ";Timeout=3;"))
+                {
+                    cn.Open();
+                    using (Npgsql.NpgsqlCommand cmd = cn.CreateCommand())
+                    {
+                        cmd.CommandText = strSql;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch { }
+#endif
+        }
+
         private void SYS_MAIN_FormClosing(object sender, FormClosingEventArgs e)
         {
             if (cDefApp.GM_RE_START == false)
@@ -679,6 +753,7 @@ namespace WCS_TASK_SC
                 {
                     if (MessageBox.Show(this, "종료하시겠습니까?", "질문", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                     {
+                        PsTaskEvent(m_strConnectString, "SC", cDefApp.GM_WH_TYP, "STOP");
                         LogManager.Shutdown();
                         cDefApp.GM_STAT_MAIN = false;
                         return;

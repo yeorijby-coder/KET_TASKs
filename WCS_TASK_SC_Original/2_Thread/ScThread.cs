@@ -84,6 +84,11 @@ namespace WCS_TASK_SC
         public PfSetStatImgViewSOCKET callPicSocket = null;
 
         public int m_nThNo = 0;
+
+        // @.통신 한 바퀴 뒤 쉬는 시간(ms)과 응답 확인 간격(ms). 기본은 예전 그대로 30 / 30. (2026-11-22)
+        //   WCS_DB.INI [COMM<n>] LOOP_SLEEP_MS, RECV_POLL_MS 로 크레인(SC)마다 바꿀 수 있다. (RECV_POLL_MS=0 : 쉬지 않고 확인)
+        private int m_nLoopSleepMs = 30;
+        private int m_nRecvPollMs = 30;
         public string m_strWh_typ = "";
 
         /*
@@ -114,6 +119,8 @@ namespace WCS_TASK_SC
         public string m_strEqmtTyp = "";
         public string m_strPlc_No = "";
         public string m_strScNo = "";
+        // @.PLC 에는 썼는데 DB 의 "보냄" 표시(OD_RQ_YN = 'N')를 못 한 지시. 같은 지시를 PLC 에 다시 쓰지 않으려고 기억한다. (2026-11-23)
+        private string m_strOdSentKey = "";
         public string m_strMcNo = "";
         public string m_strScGrpNo = "";
         public string m_strIp = "";
@@ -205,6 +212,11 @@ namespace WCS_TASK_SC
             IsOpen = false;
             m_msQPlc = new MelsecQ3EProtocol(m_strConnectString);
             m_msQPlc.IsHex = true;
+
+            m_nLoopSleepMs = cDefApi.GsGetCommInt(m_nThNo, "LOOP_SLEEP_MS", 30);
+            m_nRecvPollMs = cDefApi.GsGetCommInt(m_nThNo, "RECV_POLL_MS", 30);
+            if (m_nLoopSleepMs < 0) m_nLoopSleepMs = 0;
+            m_msQPlc.RecvPollMs = m_nRecvPollMs;
         }
 
         #region Thread_Doing
@@ -282,6 +294,37 @@ namespace WCS_TASK_SC
          * 실구동용
          */
         #region
+        // @.크레인 한 바퀴 시간 계측 (2026-11-11). WMS 지시 -> PLC 쓰기 지연이 어디서 나는지 보려는 것이다.
+        //   읽기(ScReadStatus : PLC 읽기 + 상태 DB 저장) / CMD(SC_CMD_RQ_YN) / OD(SC_OD_RQ_YN : 지시 PLC 쓰기) 시간을
+        //   30초마다 실행 폴더의 ScSlow.log 에 한 줄로 남긴다. 한 바퀴가 1초를 넘으면 그때 바로 남긴다.
+        private int m_nCsN = 0, m_nCsRd = 0, m_nCsCmd = 0, m_nCsOd = 0, m_nCsMax = 0, m_nCsLast = 0;
+        private static readonly object m_objCsLock = new object();
+
+        private void ScCycleStat(int nRd, int nCmd, int nOd)
+        {
+            int nTot = nRd + nCmd + nOd;
+            int nNow = Environment.TickCount;
+            if (m_nCsLast == 0) m_nCsLast = nNow;
+            m_nCsN++; m_nCsRd += nRd; m_nCsCmd += nCmd; m_nCsOd += nOd;
+            if (nTot > m_nCsMax) m_nCsMax = nTot;
+            string strLine = null;
+            if (nTot >= 1000)
+                strLine = DateTime.Now.ToString("HH:mm:ss") + " SC" + m_nThNo + " 느린 바퀴 " + nTot + " ms (읽기 " + nRd + " / CMD " + nCmd + " / OD " + nOd + ")";
+            else if (unchecked(nNow - m_nCsLast) >= 30000)
+            {
+                strLine = DateTime.Now.ToString("HH:mm:ss") + " SC" + m_nThNo + " 30초 요약 : " + m_nCsN + "바퀴, 평균 " + ((m_nCsRd + m_nCsCmd + m_nCsOd) / m_nCsN)
+                        + " ms (읽기 " + (m_nCsRd / m_nCsN) + " / CMD " + (m_nCsCmd / m_nCsN) + " / OD " + (m_nCsOd / m_nCsN) + "), 최대 " + m_nCsMax + " ms";
+                m_nCsN = 0; m_nCsRd = 0; m_nCsCmd = 0; m_nCsOd = 0; m_nCsMax = 0; m_nCsLast = nNow;
+            }
+            if (strLine == null) return;
+            try
+            {
+                lock (m_objCsLock)
+                    System.IO.File.AppendAllText(System.IO.Path.Combine(AppDomain.CurrentDomain.BaseDirectory, "ScSlow.log"), strLine + Environment.NewLine);
+            }
+            catch { }
+        }
+
         public void Thread_Doing(object value)
         {
             string strTitle = "[Thread_Doing]";
@@ -384,13 +427,18 @@ namespace WCS_TASK_SC
                         this.m_msQPlc.IsAscii = m_frmMain.IsAscii;
                         this.m_msQPlc.IsHex = m_frmMain.IsHex;
 
+                        int nScT0 = Environment.TickCount;
                         if (!ScReadStatus()) goto EXIT_LBL;
+                        int nScT1 = Environment.TickCount;
 
                         if (!SC_CMD_RQ_YN()) goto EXIT_LBL;
+                        int nScT2 = Environment.TickCount;
 
                         if (!SC_OD_RQ_YN()) goto EXIT_LBL;
+                        int nScT3 = Environment.TickCount;
+                        ScCycleStat(unchecked(nScT1 - nScT0), unchecked(nScT2 - nScT1), unchecked(nScT3 - nScT2));
 
-                        Thread.Sleep(200); //2000
+                        Thread.Sleep(m_nLoopSleepMs); // 2026-11-11 : 200ms -> 100ms(11-09) -> 30ms (WMS 지시 -> PLC 쓰기 지연 줄이기). 바퀴 시간은 ScSlow.log 로 본다
                     }
                 }
 
@@ -1111,6 +1159,34 @@ namespace WCS_TASK_SC
                     int n_USE_FK_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["USE_FK_OD"].ToString());
                     int n_LUGG_NO_FK2_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["LUGG_NO_FK2_OD"].ToString());
                     string str_LUGG_NO_FK2_OD = n_LUGG_NO_FK2_OD.ToString("0000");
+
+                    /*
+                     * @.같은 지시를 PLC 에 두 번 쓰지 않는다. (2026-11-23)
+                     *
+                     *   순서는 PLC 쓰기 -> 로그 저장 -> OD_RQ_YN = 'N' 이다. 2026-11-23 현장에서 DB 서버 디스크가 가득 차
+                     *   로그 저장이 실패하자 여기서 그대로 돌아가 OD_RQ_YN 이 'Y' 로 남았고, 다음 바퀴에 같은 지시를
+                     *   크레인에 또 썼다. 크레인은 이미 그 지시로 움직이는 중이라 "수신데이터 OVERWRITE"(0144) 로 섰다.
+                     *   (904호기 작업 1994, 910호기 작업 5835. 지시 2 ~ 5초 뒤 에러)
+                     *
+                     *   PLC 에 쓴 지시를 기억해 두고, 같은 지시가 아직 'Y' 로 남아 있으면 PLC 에는 다시 쓰지 않고
+                     *   DB 표시만 다시 시도한다. 표시에 성공하면 기억을 지운다.
+                     */
+                    string strOdKey = "";
+                    {
+                        string[] astrKeyCol = { "JOB_TYP_OD", "LUGG_NO_FK1_OD", "START_BANK_FK1_OD", "START_BAY_FK1_OD", "START_LEVEL_FK1_OD", "START_HSPOS_FK1_OD",
+                                                "DEST_BANK_FK1_OD", "DEST_BAY_FK1_OD", "DEST_LEVEL_FK1_OD", "DEST_HSPOS_FK1_OD",
+                                                "LUGG_NO_FK2_OD", "START_BANK_FK2_OD", "START_BAY_FK2_OD", "START_LEVEL_FK2_OD", "START_HSPOS_FK2_OD",
+                                                "DEST_BANK_FK2_OD", "DEST_BAY_FK2_OD", "DEST_LEVEL_FK2_OD", "DEST_HSPOS_FK2_OD" };
+                        for (int nKey = 0; nKey < astrKeyCol.Length; nKey++)
+                            strOdKey += (m_msQPlc._pBdb.mDtMain.Columns.Contains(astrKeyCol[nKey]) ? m_msQPlc._pBdb.mDtMain.Rows[nRows][astrKeyCol[nKey]].ToString().Trim() : "") + "|";
+                    }
+                    if (m_strOdSentKey != "" && m_strOdSentKey == strOdKey)
+                    {
+                        MakeMsg_Imp(strTitle + " SC_NO : [" + m_strScNo + "] 작업번호 : [" + str_LUGG_NO_FK1_OD + "] 는 이미 PLC 에 쓴 지시다. 다시 쓰지 않고 DB 표시만 다시 한다.", m_nThNo);
+                        if (UpdateSC_OD_RQ_YN(str_LUGG_NO_FK1_OD, str_LUGG_NO_FK2_OD))
+                            m_strOdSentKey = "";
+                        return true;
+                    }
                     int n_START_BANK_FK2_OD = Convert.ToInt32(0 + m_msQPlc._pBdb.mDtMain.Rows[nRows]["START_BANK_FK2_OD"].ToString());
                     // @.크레인에는 1(왼쪽) / 2(오른쪽) 로 접어 보낸다.
                     n_START_BANK_FK2_OD = GfSideOfBank(n_START_BANK_FK2_OD);
@@ -1318,10 +1394,9 @@ namespace WCS_TASK_SC
 
                     //성공 로그 남기기
                     m_strLogMsg = strTitle + " SC_NO : [" + m_strScNo + "], 작업번호 : [" + str_LUGG_NO_FK1_OD + "], 작업구분 : [" + Convert.ToString("" + n_JOB_TYP_OD) + "], SC 지시 성공";
-                    if (!InsertWcsLogPgr(m_strScNo, m_strLogMsg))
-                    {
-                        return false;
-                    }
+                    // @.PLC 에 썼다. 여기서부터는 실패해도 같은 지시를 다시 쓰지 않는다. 로그 저장 실패로는 멈추지 않는다. (2026-11-23)
+                    m_strOdSentKey = strOdKey;
+                    InsertWcsLogPgr(m_strScNo, m_strLogMsg);
 
                     /*
                      * OD_RQ_YN = 'N' 업데이트 + 크레인이 지금 들고 있는 작업번호 기록
@@ -1337,8 +1412,9 @@ namespace WCS_TASK_SC
                      */
                     if (!UpdateSC_OD_RQ_YN(str_LUGG_NO_FK1_OD, str_LUGG_NO_FK2_OD))
                     {
-                        return false;
+                        return false;       // m_strOdSentKey 가 남아 있어 다음 바퀴에는 DB 표시만 다시 한다
                     }
+                    m_strOdSentKey = "";
                 }
 
                 return true;
@@ -1518,6 +1594,14 @@ namespace WCS_TASK_SC
         #endregion
 
         #region [InsertWcsLogPgr] :: WCS_LOG_PGR에 LOG 남기기
+        // @.로그 문장에서 작업번호를 뽑는다. ("작업번호 : [8137]" / "작업번호:[8137]" / "JOB[8137]"). 없으면 null -> WCS 로그 조회의 작업번호 칸이 채워진다.
+        private static string PsLuggNoOfLog(string strMsg)
+        {
+            if (string.IsNullOrEmpty(strMsg)) return null;
+            System.Text.RegularExpressions.Match m = System.Text.RegularExpressions.Regex.Match(strMsg, @"(?:작업번호\s*:?\s*\[|JOB\[)\s*(\d+)\s*\]");
+            return m.Success ? m.Groups[1].Value : null;
+        }
+
         public bool InsertWcsLogPgr(string strTRACK_NO, string strLOG_MSG)
         {
             try
@@ -1542,7 +1626,7 @@ namespace WCS_TASK_SC
                 strSql += CRLF + "				VALUES    (:WH_TYP               ";
                 strSql += CRLF + "						  ," + DbLang.SYSDATE + "";
                 strSql += CRLF + "						  ,NEXTVAL('LOG_SEQ')    ";
-                strSql += CRLF + "						  ,NULL                  ";
+                strSql += CRLF + "						  ,:LUGG_NO              ";
                 strSql += CRLF + "						  ,NULL                  ";
                 strSql += CRLF + "						  ,NULL                  ";
                 strSql += CRLF + "						  ,:PGR_NM               ";
@@ -1559,6 +1643,7 @@ namespace WCS_TASK_SC
                 m_msQPlc._pBdb.mComMain.Parameters.Clear();
 
                 m_msQPlc._pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR, 255).Value = m_strWh_typ;
+                m_msQPlc._pBdb.mComMain.Parameters.Add("LUGG_NO", DbLang.VARCHAR, 255).Value = (object)PsLuggNoOfLog(strLOG_MSG) ?? DBNull.Value;
                 m_msQPlc._pBdb.mComMain.Parameters.Add("PGR_NM", DbLang.VARCHAR, 255).Value = m_strLogFileNm;
                 m_msQPlc._pBdb.mComMain.Parameters.Add("LOG_KOR", DbLang.VARCHAR, 255).Value = strLOG_MSG;
                 m_msQPlc._pBdb.mComMain.Parameters.Add("JOB_STA", DbLang.VARCHAR, 255).Value = "999";

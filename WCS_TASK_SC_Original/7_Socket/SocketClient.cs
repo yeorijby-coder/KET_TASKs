@@ -252,6 +252,9 @@ namespace WCS_TASK_SC
 		        break;
 	        }  
         }
+        // 응답을 기다릴 때 소켓을 다시 보는 간격(ms). 0 이하면 짧게 쉬지 않고 계속 본다. 기본 30. (ScThread 가 INI 로 정한다)
+        public int RecvPollMs = 30;
+
         public bool RecvRst(ref byte[] message, int rcvlen, ref string msg)
         {
             try
@@ -260,6 +263,7 @@ namespace WCS_TASK_SC
                 _rcvdate = System.DateTime.Now;
                 int nreadlen = rcvlen;
                 RcvLen = 0;
+                System.Diagnostics.Stopwatch swWait = System.Diagnostics.Stopwatch.StartNew();
 
                 while (true)
                 {
@@ -284,7 +288,14 @@ namespace WCS_TASK_SC
                         return false;
                     }
 
-                    Thread.Sleep(30);
+                    // @.응답이 아직 안 왔다. 기본은 30ms 쉬고 다시 본다. RecvPollMs 가 0 이하면 50ms 까지는 쉬지 않고 계속 본다. (2026-11-22)
+                    if (RecvPollMs <= 0)
+                    {
+                        if (swWait.ElapsedMilliseconds < 50) Thread.Sleep(0);
+                        else Thread.Sleep(1);
+                    }
+                    else
+                        Thread.Sleep(RecvPollMs);
                 }
                 return true;
 

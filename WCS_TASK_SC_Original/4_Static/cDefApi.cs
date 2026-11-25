@@ -11,6 +11,12 @@ namespace WCS_TASK_SC
         [DllImport("kernel32.dll")]
         static extern int GetPrivateProfileInt(string lpApplicationName, string lpKeyName, int nDefault, string lpFileName);
 
+        // @@@.GsGetCommInt : WCS_DB.INI [COMM<n>] 의 정수 값 (2026-11-22)
+        public static int GsGetCommInt(int nThNo, string strKey, int nDefault)
+        {
+            return GetPrivateProfileInt("COMM" + nThNo, strKey, nDefault, cDefApp.GM_ENV_INI);
+        }
+
         // @@@.INI파일에서 문자형 데이터를 읽어옴.
         [DllImport("kernel32.dll")]
         static extern uint GetPrivateProfileString(string lpAppName, string lpKeyName, string lpDefault, StringBuilder lpReturnedString, int nSize, string lpFileName);
