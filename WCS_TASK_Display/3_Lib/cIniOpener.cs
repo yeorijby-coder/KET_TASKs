@@ -233,7 +233,7 @@ namespace WCS_TASK_Display
                     return;
                 }
 
-                Process.Start("notepad.exe", "\"" + strFull + "\"");
+                Process.Start(new ProcessStartInfo("notepad.exe", "\"" + strFull + "\"") { UseShellExecute = true });
             }
             catch (Exception ex)
             {

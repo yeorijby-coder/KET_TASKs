@@ -276,8 +276,12 @@ namespace WCS_TASK_Display
             try
             {
                 strSql = "";
+                // @.표시 내용 (2026-11-02) : 기존 ECS 작업정보 창의 "제품 정보2"(ITEM_INFO2 = WMS 전문 User Data). 비면 PRODUCT_ID.
+                //   1층 출고대는 도착하자마자 IO 가 JOB_MST 를 지우고 JOB_MST_HIS 로 옮기므로, JOB_MST 에 없으면 HIS 의 최신 행에서 가져온다.
+                //   (전에는 JOB_MST.PRODUCT_ID 만 봤고, HOST 가 그 컬럼을 채우지 않아 늘 공백이 나갔다)
                 strSql += CRLF + "SELECT D.DISP_NO                                        ";
-                strSql += CRLF + "      ,COALESCE(J.PRODUCT_ID,'') AS DISP_DATA           ";
+                strSql += CRLF + "      ,COALESCE(NULLIF(TRIM(J.ITEM_INFO2),''), NULLIF(TRIM(J.PRODUCT_ID),'')  ";
+                strSql += CRLF + "               ,NULLIF(TRIM(H.ITEM_INFO2),''), NULLIF(TRIM(H.PRODUCT_ID),''), '') AS DISP_DATA ";
                 strSql += CRLF + "      ,COALESCE(C.LUGG_NO_RD,'') AS LUGG_NO             ";
                 strSql += CRLF + "FROM   DISPLAY_DATA D                                   ";
                 strSql += CRLF + "LEFT   JOIN CV_DATA C                                   ";
@@ -288,6 +292,10 @@ namespace WCS_TASK_Display
                 //   (JOB_MST.WH_TYP 와 CV_DATA.WH_TYP 는 값 체계가 달라 조인 조건으로 쓸 수 없다)
                 strSql += CRLF + "LEFT   JOIN JOB_MST J                                   ";
                 strSql += CRLF + "         ON TRIM(J.LUGG_NO) = TRIM(C.LUGG_NO_RD)        ";
+                strSql += CRLF + "LEFT   JOIN LATERAL (SELECT H1.ITEM_INFO2, H1.PRODUCT_ID FROM JOB_MST_HIS H1     ";
+                strSql += CRLF + "                      WHERE TRIM(H1.LUGG_NO) = TRIM(C.LUGG_NO_RD)                ";
+                strSql += CRLF + "                        AND COALESCE(NULLIF(TRIM(C.LUGG_NO_RD),''),'0') NOT IN ('0','0000') ";
+                strSql += CRLF + "                      ORDER BY H1.INS_DT DESC NULLS LAST LIMIT 1) H ON TRUE     ";
                 strSql += CRLF + "WHERE  D.WH_TYP = :WH_TYP                               ";
                 strSql += CRLF + "AND    D.PLC_NO = :PLC_NO                               ";
                 strSql += CRLF + "AND    COALESCE(D.CMD_RQ_YN,'N') <> 'Y'                 ";
