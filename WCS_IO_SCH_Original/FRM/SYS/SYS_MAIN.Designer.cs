@@ -42,6 +42,10 @@
             this.pnlTop = new System.Windows.Forms.Panel();
             this.chkLogDelTest = new System.Windows.Forms.CheckBox();
             this.chkRetDecideWait = new System.Windows.Forms.CheckBox();
+            this.chkRetExclude204 = new System.Windows.Forms.CheckBox();
+            this.chkRetSkipHs = new System.Windows.Forms.CheckBox();
+            this.chkScAutoReset = new System.Windows.Forms.CheckBox();
+            this.chkScAutoActive = new System.Windows.Forms.CheckBox();
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.TABLOG = new System.Windows.Forms.TabControl();
             this.tbR = new System.Windows.Forms.TabPage();
@@ -212,6 +216,10 @@
             //
             this.pnlTop.Controls.Add(this.label1);
             this.pnlTop.Controls.Add(this.chkRetDecideWait);
+            this.pnlTop.Controls.Add(this.chkRetExclude204);
+            this.pnlTop.Controls.Add(this.chkRetSkipHs);
+            this.pnlTop.Controls.Add(this.chkScAutoReset);
+            this.pnlTop.Controls.Add(this.chkScAutoActive);
             this.pnlTop.Controls.Add(this.chkLogDelTest);
             this.pnlTop.Controls.Add(this.chkStopLog);
             this.pnlTop.Controls.Add(this.picDbCn0);
@@ -220,7 +228,7 @@
             this.pnlTop.Dock = System.Windows.Forms.DockStyle.Top;
             this.pnlTop.Location = new System.Drawing.Point(0, 0);
             this.pnlTop.Name = "pnlTop";
-            this.pnlTop.Size = new System.Drawing.Size(1012, 60);
+            this.pnlTop.Size = new System.Drawing.Size(1012, 84);
             this.pnlTop.TabIndex = 795;
             //
             // chkLogDelTest
@@ -248,6 +256,58 @@
             this.chkRetDecideWait.Text = "1층 출고 : 결정대가 비어야 대기대에서 출발 (추가 제한)";
             this.chkRetDecideWait.UseVisualStyleBackColor = true;
             this.chkRetDecideWait.CheckedChanged += new System.EventHandler(this.chkRetDecideWait_CheckedChanged);
+            //
+            // chkRetSkipHs
+            //
+            this.chkRetSkipHs.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
+            this.chkRetSkipHs.AutoSize = true;
+            this.chkRetSkipHs.Font = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.chkRetSkipHs.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(160)))), ((int)(((byte)(40)))), ((int)(((byte)(0)))));
+            this.chkRetSkipHs.Location = new System.Drawing.Point(164, 60);
+            this.chkRetSkipHs.Name = "chkRetSkipHs";
+            this.chkRetSkipHs.TabIndex = 821;
+            this.chkRetSkipHs.Text = "출고 H/S 조건 제외";
+            this.chkRetSkipHs.UseVisualStyleBackColor = true;
+            this.chkRetSkipHs.CheckedChanged += new System.EventHandler(this.chkRetSkipHs_CheckedChanged);
+            //
+            // chkScAutoReset
+            //
+            this.chkScAutoReset.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
+            this.chkScAutoReset.AutoSize = true;
+            this.chkScAutoReset.Font = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.chkScAutoReset.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(160)))), ((int)(((byte)(40)))), ((int)(((byte)(0)))));
+            this.chkScAutoReset.Location = new System.Drawing.Point(340, 60);
+            this.chkScAutoReset.Name = "chkScAutoReset";
+            this.chkScAutoReset.TabIndex = 822;
+            this.chkScAutoReset.Text = "크레인 자동 에러 해제";
+            this.chkScAutoReset.UseVisualStyleBackColor = true;
+            this.chkScAutoReset.CheckedChanged += new System.EventHandler(this.chkScAutoReset_CheckedChanged);
+            //
+            // chkScAutoActive
+            //
+            this.chkScAutoActive.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
+            this.chkScAutoActive.AutoSize = true;
+            this.chkScAutoActive.Font = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.chkScAutoActive.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(160)))), ((int)(((byte)(40)))), ((int)(((byte)(0)))));
+            this.chkScAutoActive.Location = new System.Drawing.Point(520, 60);
+            this.chkScAutoActive.Name = "chkScAutoActive";
+            this.chkScAutoActive.TabIndex = 823;
+            this.chkScAutoActive.Text = "크레인 자동 ACTIVE";
+            this.chkScAutoActive.UseVisualStyleBackColor = true;
+            this.chkScAutoActive.CheckedChanged += new System.EventHandler(this.chkScAutoActive_CheckedChanged);
+            //
+            // chkRetExclude204
+            //
+            this.chkRetExclude204.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left)));
+            this.chkRetExclude204.AutoSize = true;
+            this.chkRetExclude204.Font = new System.Drawing.Font("굴림", 9F, System.Drawing.FontStyle.Bold, System.Drawing.GraphicsUnit.Point, ((byte)(129)));
+            this.chkRetExclude204.ForeColor = System.Drawing.Color.FromArgb(((int)(((byte)(0)))), ((int)(((byte)(70)))), ((int)(((byte)(140)))));
+            this.chkRetExclude204.Location = new System.Drawing.Point(484, 36);
+            this.chkRetExclude204.Name = "chkRetExclude204";
+            this.chkRetExclude204.TabIndex = 820;
+            this.chkRetExclude204.Text = "트랙 204 유량 제한 제외";
+            this.chkRetExclude204.UseVisualStyleBackColor = true;
+            this.chkRetExclude204.CheckedChanged += new System.EventHandler(this.chkRetExclude204_CheckedChanged);
             //
             // splitContainer1
             //
@@ -422,7 +482,7 @@
             this.tbRLOG.Name = "tbRLOG";
             this.tbRLOG.Size = new System.Drawing.Size(1004, 464);
             this.tbRLOG.TabIndex = 21;
-            this.tbRLOG.Text = "LOG삭제";
+            this.tbRLOG.Text = "공통(LOG삭제/접수/랙투랙)";
             this.tbRLOG.UseVisualStyleBackColor = true;
             //
             // lsvRLOG
@@ -757,6 +817,10 @@
         internal System.Windows.Forms.ColumnHeader CH04;
         internal System.Windows.Forms.CheckBox chkLogDelTest;
         internal System.Windows.Forms.CheckBox chkRetDecideWait;
+        internal System.Windows.Forms.CheckBox chkRetExclude204;
+        private System.Windows.Forms.CheckBox chkRetSkipHs;
+        private System.Windows.Forms.CheckBox chkScAutoReset;
+        private System.Windows.Forms.CheckBox chkScAutoActive;
         private System.Windows.Forms.Label label1;
     }
 }

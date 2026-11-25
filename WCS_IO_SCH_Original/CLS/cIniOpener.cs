@@ -233,7 +233,7 @@ namespace TSK_COMM_IOSCH
                     return;
                 }
 
-                Process.Start("notepad.exe", "\"" + strFull + "\"");
+                Process.Start(new ProcessStartInfo("notepad.exe", "\"" + strFull + "\"") { UseShellExecute = true });
             }
             catch (Exception ex)
             {

@@ -108,6 +108,13 @@ namespace TSK_COMM_IOSCH
             }
         }
 
+        // @.INI 의 정수 값. 없으면 nDefault. (2026-11-22)
+        public static int GsGetIniInt(string pSection, string pKey, int nDefault)
+        {
+            try { return GetPrivateProfileInt(pSection, pKey, nDefault, cDefApp.GM_ENV_INI); }
+            catch { return nDefault; }
+        }
+
         public static bool GsGetSchUse(string pKey)
         {
             try
@@ -213,6 +220,43 @@ namespace TSK_COMM_IOSCH
             try
             {
                 WritePrivateProfileString("1F_RET", "DECIDE_WAIT", bWait ? "Y" : "N", cDefApp.GM_ENV_INI);
+            }
+            catch
+            {
+            }
+        }
+
+        public static bool GsGetRetExclude204()
+        {
+            try
+            {
+                StringBuilder sb = new StringBuilder(16);
+                GetPrivateProfileString("1F_RET", "EXCLUDE_204", "N", sb, sb.Capacity, cDefApp.GM_ENV_INI);
+                return (sb.ToString().Trim().ToUpper() == "Y");
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        public static void GsSetRetExclude204(bool bExclude)
+        {
+            try
+            {
+                WritePrivateProfileString("1F_RET", "EXCLUDE_204", bExclude ? "Y" : "N", cDefApp.GM_ENV_INI);
+            }
+            catch
+            {
+            }
+        }
+
+        // @.Y/N 값을 ENV_IOSCH.INI 에 쓴다. (GsGetIniYN 의 짝)
+        public static void GsSetIniYN(string pSection, string pKey, bool bValue)
+        {
+            try
+            {
+                WritePrivateProfileString(pSection, pKey, bValue ? "Y" : "N", cDefApp.GM_ENV_INI);
             }
             catch
             {

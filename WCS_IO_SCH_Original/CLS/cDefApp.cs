@@ -64,6 +64,54 @@ namespace TSK_COMM_IOSCH
          */
         public static bool GM_RET_DECIDE_WAIT = false;
 
+        /*
+         * 1층 출고 : 트랙 204 유량 제한 제외 (ENV_IOSCH.INI [1F_RET] EXCLUDE_204)
+         *
+         *   204(중간 도착대 #1, 스테이션 151)는 물리적으로 204 -> 233 -> 205 -> 206 으로 이어져
+         *   출고 루프(결정대 232)를 거치지 않는다. 켜면 204 의 화물은 유량 제한에 걸리지 않고
+         *   유량 집계(출발 트랙 중 목적지 171 / 2004 의 목적지 105)에서도 빠진다.
+         *   메인 폼 체크박스로 켜고 끄며 기본은 끔이다.
+         */
+        public static bool GM_RET_EXCLUDE_204 = false;
+
+        /*
+         * 출고 H/S 조건 제외 (ENV_IOSCH.INI [SC] RET_SKIP_HS)
+         *
+         *   켬 : 크레인에 출고를 지시할 때 출고 H/S(컨베이어) 쪽 조건 - 비어 있음 / 작업번호 없음 /
+         *        자동 / 오류 없음 / 정지 아님 - 을 보지 않는다. 크레인 자신의 준비 상태만 본다.
+         *        H/S 센서가 믿을 수 없거나 CV 통신이 끊긴 채 크레인만 돌려 볼 때 쓴다.
+         *   끔(기본) : 원본 ECS 와 같이 출고 H/S 가 비어 있어야 지시한다.
+         */
+        public static bool GM_RET_SKIP_HS = false;
+
+        // @.출고 H/S 조건을 기존 ECS 와 같이 본다 (PLC 의 출고 H/S 준비 신호 + 앞 화물 출발 여부). ENV_IOSCH.INI [SC] RET_HS_LEGACY, 기본 Y. (2026-11-25)
+        //   N 이면 전처럼 H/S 의 화물 센서 / 작업번호가 빌 때까지 기다린다.
+        public static bool GM_RET_HS_LEGACY = true;
+
+        /*
+         * 크레인 자동 에러 해제 (ENV_IOSCH.INI [SC] AUTO_RESET)
+         *   켬 : 크레인 오류코드(ERR_CODE_RD)가 0 이 아니면 5초마다 ERROR RESET(CMD_RQ_ID='RESET') 을 지시한다.
+         *        오류가 풀리면(0000) 더 지시하지 않는다. 오류가 아닐 때는 아무것도 하지 않는다.
+         */
+        public static bool GM_SC_AUTO_RESET = false;
+
+        /*
+         * 크레인 자동 ACTIVE (ENV_IOSCH.INI [SC] AUTO_ACTIVE)
+         *   켬 : 크레인 기동 상태(ACTIVE_MODE_RD)가 ACTIVE(1) 가 아니면(STOP) 5초마다 ACTIVE(CMD_RQ_ID='ACTIVE') 를 지시한다.
+         *        ACTIVE 가 되면 더 지시하지 않는다. 이미 ACTIVE 일 때는 아무것도 하지 않는다.
+         */
+        public static bool GM_SC_AUTO_ACTIVE = false;
+
+        /*
+         * 크레인 입고/출고 교대 (ENV_IOSCH.INI [SC] DISPATCH_ALT, 기본 Y) (2026-11-22)
+         *   구 ECS(CSc::InvokeCheck)처럼 호기마다 "직전에 입고였으면 출고를 먼저, 출고였으면 입고를 먼저" 지시하고,
+         *   입고는 1층(RANK_1)/3층(RANK_3), 출고는 1층(RANK_2)/3층(RANK_4) 을 번갈아 먼저 본다.
+         *   차례가 아닌 쪽은 더 앞선 후보에 "지금 지시할 일감이 실제로 있을 때만" 양보하고, 없으면 바로 지시한다. (시간을 정해 기다리지 않는다)
+         *   N 이면 예전처럼 층 스레드가 각자 먼저 걸리는 대로 지시한다.
+         */
+        public static bool GM_SC_ALTERNATE = true;
+        public static bool GM_SC_ALT_LOG = false;   // INI [SC] DISPATCH_LOG (IoTurn.log)
+
         // @@.응용프로그램 타임아웃 설정
         public static int GM_COMM_SND_TIME_OUT = 500;
         public static int GM_COMM_RCV_TIME_OUT = 500;

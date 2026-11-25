@@ -80,6 +80,10 @@ namespace TSK_COMM_IOSCH
         {
             string strSql = "";
             strSql += " SELECT COALESCE(SUM(CAST(NULLIF(EM.CV_RET_CNT,'') AS INT)), 0) AS RET_SUM ";
+            strSql += "      , (SELECT COUNT(*) FROM CV_DATA CP WHERE CP.WH_TYP = '" + SCH_WH_TYP + "' ";
+            bool bEx204 = (cDefApp.GM_RET_EXCLUDE_204 == true);   // 메인 폼 "트랙 204 유량 제한 제외" 
+            strSql += "          AND ((CP.TRACK_NO IN (" + (bEx204 ? "" : "'2004',") + "'2008','2016','2020','2059','2049','5006','5012','5018','5024') AND BTRIM(CP.DEST_POS_RD) = '171') ";
+            strSql += (bEx204 ? "            )) AS PROD_CNT " : "            OR (CP.TRACK_NO = '2004' AND BTRIM(CP.DEST_POS_RD) = '105'))) AS PROD_CNT ");
             strSql += "      , (SELECT CAST(NULLIF(DHS.CYCLE,'') AS INT) FROM DEL_HIS_SETTING DHS ";
             strSql += "          WHERE DHS.WH_TYP = '" + SCH_WH_TYP + "' AND DHS.TABLE_NAME = '1f_ret_rimit') AS RET_LIMIT ";
             strSql += "   FROM EQP_MST EM ";
@@ -91,8 +95,9 @@ namespace TSK_COMM_IOSCH
             if (nCnt == 0) return;
 
             int nSum = dt.Rows[0]["RET_SUM"] == DBNull.Value ? 0 : Convert.ToInt32(dt.Rows[0]["RET_SUM"]);
+            nSum += dt.Rows[0]["PROD_CNT"] == DBNull.Value ? 0 : Convert.ToInt32(dt.Rows[0]["PROD_CNT"]);   // 원본 ECS nProdCnt
             int nLimit = dt.Rows[0]["RET_LIMIT"] == DBNull.Value ? 0 : Convert.ToInt32(dt.Rows[0]["RET_LIMIT"]);
-            int nHold = (nSum > nLimit) ? 1 : 0;
+            int nHold = (nSum >= nLimit) ? 1 : 0;
             DateTime dtNow = DateTime.Now;
 
             if (nHold != m_nHoldState)
@@ -102,9 +107,9 @@ namespace TSK_COMM_IOSCH
                     strDur = " (이전 상태 " + ((int)(dtNow - m_dtHoldSince).TotalSeconds).ToString() + "초 지속)";
 
                 if (nHold == 1)
-                    MakeMsg_Orange("[유량 제한] 걸림 : 현재 " + nSum.ToString() + " > 제한 " + nLimit.ToString() + " - 대기대 출발 보류" + strDur);
+                    MakeMsg_Orange("[유량 제한] 걸림 : 현재 " + nSum.ToString() + " >= 제한 " + nLimit.ToString() + " - 대기대 출발 보류" + strDur);
                 else
-                    MakeMsg_Blue("[유량 제한] 해제 : 현재 " + nSum.ToString() + " <= 제한 " + nLimit.ToString() + " - 출발 재개" + strDur);
+                    MakeMsg_Blue("[유량 제한] 해제 : 현재 " + nSum.ToString() + " < 제한 " + nLimit.ToString() + " - 출발 재개" + strDur);
 
                 m_nHoldState = nHold;
                 m_dtHoldSince = dtNow;

@@ -9,7 +9,13 @@ using System.Text.RegularExpressions;
 namespace TSK_COMM_IOSCH
 {
     /// <summary>
-    /// 오래된 로그 삭제 스레드 (화면의 "LOG삭제" 탭)
+    /// 공통 스레드 (화면의 "공통" 탭) : 층과 무관한 일을 한 곳에서 맡는다.
+    ///   1) 신규 작업 접수(99 -> 10/20)  2) 랙투랙 지시(20 -> 21)  3) 오래된 로그 삭제(자식 스레드)
+    ///   접수/랙투랙은 0.1~0.2초 주기라 오래 걸리는 로그 삭제와 한 스레드에 두면 삭제 동안 접수가 멈춘다.
+    ///   그래서 로그 삭제는 자기 DB 연결을 쓰는 자식 스레드로 따로 돌리고, 같은 탭에 남긴다.
+    ///   이 스레드가 살아 있는 동안(맥박 3초) 층 스레드는 접수/랙투랙을 하지 않는다. 멈추면 층 스레드가 대신한다.
+    ///
+    /// 아래는 로그 삭제 부분의 원래 설명이다. (화면의 "LOG삭제")
     ///
     /// DEL_HIS_SETTING 의 설정(TABLE_NAME / CYCLE / UNIT / KEY_COLUMN)대로 기간이 지난 로그를 지운다.
     ///   - 전에는 cThread_R.CHECK_DEL_HIS 가 하던 일인데, 그 스레드는 현장 구성에서 빌드 제외돼
@@ -35,6 +41,11 @@ namespace TSK_COMM_IOSCH
 
         private const int DEL_CHUNK = 100000;                   // 한 번에 지우는 최대 건수
 
+        // @.공통 스레드 본체와 로그 삭제 자식 스레드를 같은 클래스로 만든다. 자식은 삭제만 한다.
+        public bool m_bDeleteOnly = false;
+        private cThread_LOG m_del = null;
+        private Thread m_thDel = null;
+
         [DllImport("kernel32.dll")]
         private static extern int GetPrivateProfileString(string section, string key, string def, StringBuilder retVal, int size, string filePath);
         #endregion
@@ -54,9 +65,128 @@ namespace TSK_COMM_IOSCH
             return sb.ToString().Trim();
         }
 
-        #region Thread_Doing
+        #region 공통 스레드 본체
+        // 접수는 두 창고(파렛트 10 / P-BOX 20)를 다 본다. 랙투랙은 파렛트 창고만.
+        private const string WH_PLT = "10";
+        private const string WH_BOX = "20";
+        public bool AcceptPlt(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return JOB_ACCEPT(WH_PLT, "[JobAccept]", ref pRTN_MSG, true); }
+        public bool AcceptBox(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return JOB_ACCEPT(WH_BOX, "[JobAccept]", ref pRTN_MSG, true); }
+        public bool ScAutoRecoverPlt(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return ScAutoRecover(WH_PLT, strPLC_NO, ref pRTN_MSG); }
+        public bool ScAutoRecoverBox(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return ScAutoRecover(WH_BOX, strPLC_NO, ref pRTN_MSG); }
+        // @.이중입고 / 공출고 재지정 뒤처리 (2026-11-05)
+        public bool ScDualStoreRetryPlt(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return ScDualStoreRetry(WH_PLT, strPLC_NO, ref pRTN_MSG); }
+        public bool ScDualStoreRetryBox(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return ScDualStoreRetry(WH_BOX, strPLC_NO, ref pRTN_MSG); }
+        public bool RackToRackCommon(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
+        { return RACK_TO_RACK_ROUTINE(WH_PLT, "[RackToRackCheck]", ref pRTN_MSG, true); }
+
+        private void StartDeleteChild()
+        {
+            try
+            {
+                StopDeleteChild();
+                m_del = new cThread_LOG(m_nId);
+                m_del.m_bDeleteOnly = true;
+                m_del.ConnectionString = this.ConnectionString;
+                m_del.callPsMsgView = this.callPsMsgView;
+                m_del.m_Main = this.m_Main;
+                m_thDel = new Thread(m_del.Thread_Doing);
+                m_thDel.IsBackground = true;
+                m_thDel.Name = "COMMON_LOGDEL_" + m_nId;
+                m_thDel.Start();
+            }
+            catch (Exception ex) { MakeMsg_Error("[공통] 로그 삭제 스레드 시작 오류: " + ex.Message); }
+        }
+
+        private void StopDeleteChild()
+        {
+            try
+            {
+                if (m_del != null) m_del.m_bManualStop = true;
+                if (m_thDel != null && m_thDel.IsAlive) m_thDel.Join(3000);
+            }
+            catch { }
+            m_del = null; m_thDel = null;
+        }
+
+        private void CommonBody()
+        {
+            while (!IsDBOpen)
+            {
+                if (m_bManualStop) { MakeMsg("[공통] 중지 지시로 스레드를 종료합니다."); m_Thread = null; return; }
+                try
+                {
+                    if (DBOpen())
+                    {
+                        MakeMsg("[공통] DB Open 완료 - 공통 스레드 시작 (신규 작업 접수 / 랙투랙 지시 / 오래된 로그 삭제)");
+                        break;
+                    }
+                    MakeMsg_Error("[공통] DB Open 실패 - 5초 후 재시도");
+                }
+                catch (Exception ex) { MakeMsg_Error("[공통] DB Open 오류 - 5초 후 재시도: " + ex.Message); }
+                Thread.Sleep(5000);
+            }
+
+            StartDeleteChild();
+
+            int nLastRecover = Environment.TickCount - 5000;
+            int nLastDualRetry = Environment.TickCount;
+            while (!m_bManualStop)
+            {
+                // 맥박 : 이 스레드가 살아 있는 동안 층 스레드는 접수/랙투랙을 하지 않는다
+                CommonBeat();
+                Thread.Sleep(100);
+
+                if (!IsDbAlive())
+                {
+                    if (!DBReopen()) Thread.Sleep(3000);
+                    continue;
+                }
+
+                try
+                {
+                    RunSchFunc(AcceptPlt);          // 신규 작업 접수 (파렛트 창고)
+                    RunSchFunc(AcceptBox);          // 신규 작업 접수 (P-BOX 창고)
+                    RunSchFunc(RackToRackCommon);   // 랙투랙 지시 20 -> 21
+
+                    // 이중입고 / 공출고 재지정 뒤처리 : 1초마다
+                    if (unchecked(Environment.TickCount - nLastDualRetry) >= 1000)
+                    {
+                        nLastDualRetry = Environment.TickCount;
+                        RunSchFunc(ScDualStoreRetryPlt);
+                        RunSchFunc(ScDualStoreRetryBox);
+                    }
+
+                    // 크레인 자동 에러 해제 / 자동 ACTIVE : 5초마다 (체크박스가 꺼져 있으면 아무것도 안 한다)
+                    if (unchecked(Environment.TickCount - nLastRecover) >= 5000)
+                    {
+                        nLastRecover = Environment.TickCount;
+                        RunSchFunc(ScAutoRecoverPlt);
+                        RunSchFunc(ScAutoRecoverBox);   // P-BOX 창고 크레인(911)도 본다
+                    }
+                }
+                catch (Exception ex)
+                {
+                    MakeMsg_Error("[공통] 처리 오류: " + ex.Message);
+                    Thread.Sleep(1000);
+                }
+            }
+
+            StopDeleteChild();
+            MakeMsg("[공통] 중지 지시로 스레드를 종료합니다. (이후 접수/랙투랙은 층 스레드가 대신합니다)");
+            m_Thread = null;
+        }
+        #endregion
+
+        #region Thread_Doing (로그 삭제 본체 / 공통 본체 선택)
         public void Thread_Doing(object value)
         {
+            if (!m_bDeleteOnly) { CommonBody(); return; }
             while (!IsDBOpen)
             {
                 if (m_bManualStop) { MakeMsg("[LOG삭제] 중지 지시로 스레드를 종료합니다."); m_Thread = null; return; }

@@ -46,6 +46,20 @@ namespace TSK_COMM_IOSCH
             if (m_lsv.IsHandleCreated) AttachHeader();
         }
 
+        /// <summary>처음부터 접어 둘 열. 접기 전 폭을 기억하므로 메뉴에서 켜면 원래 폭으로 돌아온다.</summary>
+        public void HideColumns(params int[] arrIndex)
+        {
+            foreach (int i in arrIndex)
+            {
+                if (i < 0 || i >= m_lsv.Columns.Count) continue;
+                if (m_lsv.Columns[i].Width > 0)
+                {
+                    m_nWidth[i] = m_lsv.Columns[i].Width;
+                    SetWidth(m_lsv.Columns[i], 0);
+                }
+            }
+        }
+
         private void OnHandleCreated(object sender, EventArgs e)
         {
             AttachHeader();

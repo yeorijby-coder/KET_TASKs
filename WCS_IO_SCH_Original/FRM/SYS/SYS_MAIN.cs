@@ -36,7 +36,9 @@ namespace TSK_COMM_IOSCH
 	{
         /*
          * 로그 리스트뷰 열 순서. Designer 의 CH01~ 순서와 반드시 같이 간다.
-         *   TIMESTAMP | THREAD NO | Command | FILE | FUNCTION | Message
+         *   TIMESTAMP | THREAD NO | Command | FILE | FUNCTION | LUGG NO | Message
+         *   처음에는 TIMESTAMP / LUGG NO / Message 만 보이고 나머지는 접혀 있다. (헤더 오른쪽 클릭으로 켠다)
+         *   LUGG NO 는 메시지 안의 "[작업번호:1234]" 에서 뽑아 따로 보여 준다. (LuggNoOf)
          * FILE / FUNCTION 은 그 로그를 남긴 소스 파일과 함수다.
          * 헤더를 오른쪽 클릭하면 열을 켜고 끌 수 있다. (ListViewColumnMenu)
          */
@@ -45,7 +47,8 @@ namespace TSK_COMM_IOSCH
         private const int COL_COMMAND = 2;
         private const int COL_FILE    = 3;
         private const int COL_FUNC    = 4;
-        private const int COL_MSG     = 5;
+        private const int COL_LUGG    = 5;
+        private const int COL_MSG     = 6;
 
         // @.로그 열 보이기/숨기기 (탭 3개 각각)
         private ListViewColumnMenu m_ColMenu1F;
@@ -74,7 +77,7 @@ namespace TSK_COMM_IOSCH
         private cThread_LOG     m_SchLOG = null;     // @.오래된 로그 삭제 스레드 (LOG삭제 탭)
 
         private const int SCH_CNT = 7;
-        private static readonly string[] SCH_NAME = new string[] { "1층(1F)", "3층(3F)", "BOX", "LOG삭제", "유량(1F)", "매거진(3F)", "이음새" };
+        private static readonly string[] SCH_NAME = new string[] { "1층(1F)", "3층(3F)", "BOX", "공통(LOG삭제/접수/랙투랙)", "유량(1F)", "매거진(3F)", "이음새" };
         private static readonly int[] SCH_THGBN = new int[] {
             (int)cDefApp.eThGbn.SCH_GR01,
             (int)cDefApp.eThGbn.SCH_GR02,
@@ -266,7 +269,7 @@ namespace TSK_COMM_IOSCH
 
             if (m_TitleBar == null) m_TitleBar = new cTitleBar(this);
 
-            m_TitleBar.SetTitle(strTitle);
+            m_TitleBar.SetTitle(PutBuildStamp(strTitle));   // 빌드 시각 포함 (2026-11-09)
         }
         #endregion
 
@@ -274,6 +277,19 @@ namespace TSK_COMM_IOSCH
 		public SYS_MAIN()
 		{
 			InitializeComponent();
+
+            // @.LUGG NO 열을 FUNCTION 다음(Message 앞)에 넣는다. 메뉴가 열 폭을 기억하기 전에 해야 한다.
+            foreach (ListView lv in new ListView[] { this.lsvR, this.lsvR3F, this.lsvRBOX, this.lsvRLOG, this.lsvRFLOW, this.lsvRMAG, this.lsvRSEAM })
+            {
+                ColumnHeader chLugg = new ColumnHeader();
+                chLugg.Text = "LUGG NO";
+                chLugg.Width = 80;
+                lv.Columns.Insert(COL_LUGG, chLugg);
+
+                // @.헤더를 왼쪽 클릭하면 그 열로 정렬한다. (오름차순 -> 내림차순 -> 원래 순서(들어온 순))
+                lv.HeaderStyle = ColumnHeaderStyle.Clickable;
+                lv.ColumnClick += new ColumnClickEventHandler(LogList_ColumnClick);
+            }
 
             // @.헤더 오른쪽 클릭으로 열을 켜고 끌 수 있게 한다.
             m_ColMenu1F  = new ListViewColumnMenu(this.lsvR);
@@ -283,14 +299,50 @@ namespace TSK_COMM_IOSCH
             m_ColMenuFLOW = new ListViewColumnMenu(this.lsvRFLOW);
             m_ColMenuMAG = new ListViewColumnMenu(this.lsvRMAG);
             m_ColMenuSEAM = new ListViewColumnMenu(this.lsvRSEAM);
+            // @.처음에는 TIMESTAMP / LUGG NO / Message 만 보인다.
+            foreach (ListViewColumnMenu m in new ListViewColumnMenu[] { m_ColMenu1F, m_ColMenu3F, m_ColMenuBOX, m_ColMenuLOG, m_ColMenuFLOW, m_ColMenuMAG, m_ColMenuSEAM })
+                m.HideColumns(COL_THREAD, COL_COMMAND, COL_FILE, COL_FUNC);
             // @.유량(1F) / 매거진(3F) 탭은 별도 스레드가 읽기만 해서 보여 주는 분리 화면이라 보통 글자, 나머지 탭은 굵게 그린다.
             this.TABLOG.DrawMode = TabDrawMode.OwnerDrawFixed;
             this.TABLOG.ItemSize = new Size(88, 22);      // @.굵은 글자가 붙어 보이지 않게 탭을 넓힌다
+            this.TABLOG.Padding = new Point(18, 3);      // @.굵은 글자가 탭 안에서 잘리지 않게 좌우 여백을 넓힌다 ("공통(LOG삭제/접수/랙투랙)" 같은 긴 이름용)
             this.TABLOG.DrawItem += new DrawItemEventHandler(TABLOG_DrawItem);
 		}
 		#endregion
 
 		#region[Event]SYS_MAIN_Load
+        // @.제목 줄의 맨 앞 이름 뒤에 빌드 시각을 끼운다. 제목은 길면 흘러가므로 끝에 붙이면 안 보인다.
+        private static string PutBuildStamp(string strTitle)
+        {
+            string strStamp = BuildStampText();
+            if (strStamp == "") return strTitle;
+            int nB = strTitle.IndexOf(" [");
+            return (nB > 0) ? strTitle.Insert(nB, strStamp) : strTitle + strStamp;
+        }
+
+        // @.제목에 빌드 시각을 붙인다. (2026-11-09) 실행파일 PE 헤더의 링크 시각이라 파일을 복사/압축해도 바뀌지 않는다.
+        //   읽지 못하면 파일 수정 시각을 쓴다.
+        private static string BuildStampText()
+        {
+            try
+            {
+                string strPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                using (System.IO.FileStream fs = new System.IO.FileStream(strPath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite))
+                using (System.IO.BinaryReader br = new System.IO.BinaryReader(fs))
+                {
+                    fs.Position = 0x3C;
+                    int nPe = br.ReadInt32();
+                    fs.Position = nPe + 8;
+                    uint uTs = br.ReadUInt32();
+                    DateTime dt = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(uTs).ToLocalTime();
+                    if (dt.Year >= 2020 && dt < DateTime.Now.AddDays(1))
+                        return " [빌드 " + dt.ToString("yyyy-MM-dd HH:mm") + "]";
+                }
+                return " [빌드 " + System.IO.File.GetLastWriteTime(strPath).ToString("yyyy-MM-dd HH:mm") + "]";
+            }
+            catch { return ""; }
+        }
+
 		private void SYS_MAIN_Load(object sender, EventArgs e)
 		{
 
@@ -330,11 +382,26 @@ namespace TSK_COMM_IOSCH
             cDefApi.GsGetInitPorFilePDB(ref cDefApp.GM_PDB_IP, ref cDefApp.GM_PDB_PORT, ref cDefApp.GM_PDB_DATABASE, ref cDefApp.GM_PDB_USER, ref cDefApp.GM_PDB_USER_PW, ref cDefApp.GM_LOG_PATH, ref cDefApp.GM_FILENAME, ref m_strRtnMsg);
             m_StrConnecString = "Server=" + cDefApp.GM_PDB_IP + ";Database=" + cDefApp.GM_PDB_DATABASE + ";User ID=" + cDefApp.GM_PDB_USER + ";Password=" + cDefApp.GM_PDB_USER_PW + ";";
 #endif
+            if (!cDefApp.GM_RE_START) PsTaskEvent(m_StrConnecString, "IO", "", "START");
             // @.1층 출고 : 결정대가 비어야 출발할지 (ENV_IOSCH.INI [1F_RET] DECIDE_WAIT, 기본 N)
             cDefApp.GM_RET_DECIDE_WAIT = cDefApi.GsGetRetDecideWait();
             chkRetDecideWait.Checked = cDefApp.GM_RET_DECIDE_WAIT;
             // @.체크박스는 기본으로 숨긴다. (ENV_IOSCH.INI [SCH] SHOW_RET_DECIDE_WAIT=Y 이면 보인다. 값은 숨겨도 그대로 적용된다)
             chkRetDecideWait.Visible = cDefApi.GsGetIniYN("SCH", "SHOW_RET_DECIDE_WAIT", false);
+            // @.1층 출고 : 트랙 204 를 유량 제한에서 제외할지 (ENV_IOSCH.INI [1F_RET] EXCLUDE_204, 기본 N)
+            cDefApp.GM_RET_EXCLUDE_204 = cDefApi.GsGetRetExclude204();
+            chkRetExclude204.Checked = cDefApp.GM_RET_EXCLUDE_204;
+            // @.출고 H/S 조건 제외 / 크레인 자동 에러 해제 / 크레인 자동 ACTIVE (ENV_IOSCH.INI [SC], 기본 모두 N)
+            cDefApp.GM_RET_SKIP_HS    = cDefApi.GsGetIniYN("SC", "RET_SKIP_HS", false);
+            cDefApp.GM_RET_HS_LEGACY  = cDefApi.GsGetIniYN("SC", "RET_HS_LEGACY", true);
+            cDefApp.GM_SC_AUTO_RESET  = cDefApi.GsGetIniYN("SC", "AUTO_RESET", false);
+            cDefApp.GM_SC_AUTO_ACTIVE = cDefApi.GsGetIniYN("SC", "AUTO_ACTIVE", false);
+            // @.크레인 입고/출고 교대 (구 ECS 방식) : INI [SC] DISPATCH_ALT(기본 Y), DISPATCH_LOG(기본 N)
+            cDefApp.GM_SC_ALTERNATE     = cDefApi.GsGetIniYN("SC", "DISPATCH_ALT", true);
+            cDefApp.GM_SC_ALT_LOG = cDefApi.GsGetIniYN("SC", "DISPATCH_LOG", false);
+            chkRetSkipHs.Checked    = cDefApp.GM_RET_SKIP_HS;
+            chkScAutoReset.Checked  = cDefApp.GM_SC_AUTO_RESET;
+            chkScAutoActive.Checked = cDefApp.GM_SC_AUTO_ACTIVE;
             // @.화면 위쪽의 버전 날짜 글자(2021.01.30)는 기본으로 숨긴다. (ENV_IOSCH.INI [SCH] SHOW_VERSION_DATE=Y 이면 보인다)
             label1.Visible = cDefApi.GsGetIniYN("SCH", "SHOW_VERSION_DATE", false);
 
@@ -785,11 +852,13 @@ namespace TSK_COMM_IOSCH
 				else
 				{
                     
+					item.Tag = ++m_nLogSeq;                  // 들어온 순서 (정렬을 풀 때 / 오래된 줄을 지울 때 쓴다)
 					lstView.Items.Add(item);
 					if (lstView.Items.Count > 500)
 					{
-						lstView.Items.RemoveAt(0);
+						RemoveOldestLog(lstView);
 					}
+					ReapplyLogSort(lstView);
 					if (this.chkShow.Checked == true)
 					{
 						lstView.EnsureVisible(lstView.Items.Count - 1);
@@ -801,6 +870,107 @@ namespace TSK_COMM_IOSCH
 			{
 				//MessageBox.Show(ex.Message);
 			}
+		}
+
+		// ───────────────────────────────────────────────────────────────
+		// 로그 리스트 헤더 클릭 정렬
+		//   같은 열을 누를 때마다 오름차순(▲) -> 내림차순(▼) -> 정렬 없음(들어온 순) 으로 돈다.
+		//   정렬 중에도 새 로그가 들어오면 그 순서를 지켜 끼워 넣는다. 500줄을 넘으면 정렬과 상관없이 가장 오래된 줄을 지운다.
+		//   LUGG NO 열은 숫자로, 나머지는 글자로 비교한다.
+		// ───────────────────────────────────────────────────────────────
+		private long m_nLogSeq = 0;
+		private readonly Dictionary<ListView, int[]> m_dicLogSort = new Dictionary<ListView, int[]>();   // [0]=열, [1]=0 없음/1 오름/2 내림
+
+		private sealed class LogRowSorter : System.Collections.IComparer
+		{
+			private readonly int m_nCol, m_nDir;
+			public LogRowSorter(int nCol, int nDir) { m_nCol = nCol; m_nDir = nDir; }
+			public int Compare(object a, object b)
+			{
+				ListViewItem x = (ListViewItem)a, y = (ListViewItem)b;
+				if (m_nCol < 0) return ((long)x.Tag).CompareTo((long)y.Tag);   // 정렬 없음 = 들어온 순
+				int nRet;
+				if (m_nCol == COL_LUGG)
+				{
+					long lx, ly;
+					bool bx = long.TryParse(x.SubItems[m_nCol].Text, out lx);
+					bool by = long.TryParse(y.SubItems[m_nCol].Text, out ly);
+					if (bx != by) return bx ? -1 : 1;             // 번호가 없는 줄은 방향과 상관없이 뒤로
+					nRet = bx ? lx.CompareTo(ly) : 0;
+				}
+				else
+				{
+					nRet = string.CompareOrdinal(x.SubItems[m_nCol].Text, y.SubItems[m_nCol].Text);
+				}
+				if (nRet == 0) nRet = ((long)x.Tag).CompareTo((long)y.Tag);   // 같으면 들어온 순
+				return (m_nDir == 2) ? -nRet : nRet;
+			}
+		}
+
+		private void LogList_ColumnClick(object sender, ColumnClickEventArgs e)
+		{
+			ListView lv = sender as ListView;
+			if (lv == null) return;
+
+			int[] st;
+			if (m_dicLogSort.TryGetValue(lv, out st) == false) { st = new int[] { -1, 0 }; m_dicLogSort[lv] = st; }
+
+			if (st[0] != e.Column) { st[0] = e.Column; st[1] = 1; }
+			else st[1] = (st[1] + 1) % 3;
+
+			ApplyLogSort(lv);
+		}
+
+		private void ApplyLogSort(ListView lv)
+		{
+			int[] st;
+			if (m_dicLogSort.TryGetValue(lv, out st) == false) return;
+
+			// 머리글의 화살표 : 눌린 열만 표시한다.
+			foreach (ColumnHeader ch in lv.Columns)
+			{
+				string strBase = ch.Text.Replace(" ▲", "").Replace(" ▼", "");
+				if (ch.Index == st[0] && st[1] == 1) strBase += " ▲";
+				else if (ch.Index == st[0] && st[1] == 2) strBase += " ▼";
+				if (ch.Text != strBase) ch.Text = strBase;
+			}
+
+			lv.BeginUpdate();
+			try
+			{
+				// 정렬 없음 = 들어온 순(번호 오름차순)
+				lv.ListViewItemSorter = (st[1] == 0) ? new LogRowSorter(-1, 1) : new LogRowSorter(st[0], st[1]);
+				lv.Sort();
+				lv.ListViewItemSorter = null;
+			}
+			finally { lv.EndUpdate(); }
+		}
+
+		private void ReapplyLogSort(ListView lv)
+		{
+			int[] st;
+			if (m_dicLogSort.TryGetValue(lv, out st) && st[1] != 0) ApplyLogSort(lv);
+		}
+
+		private static void RemoveOldestLog(ListView lv)
+		{
+			int nIdx = 0; long nMin = long.MaxValue;
+			for (int i = 0; i < lv.Items.Count; i++)
+			{
+				object tag = lv.Items[i].Tag;
+				if (tag is long && (long)tag < nMin) { nMin = (long)tag; nIdx = i; }
+			}
+			lv.Items.RemoveAt(nIdx);
+		}
+
+		// @.메시지 안의 작업번호("[작업번호:1234]", "작업번호 1234")를 뽑아 LUGG NO 열에 보여 준다. 없으면 빈칸.
+		private static readonly System.Text.RegularExpressions.Regex s_reLugg =
+			new System.Text.RegularExpressions.Regex(@"작업번호\s*[:：=]?\s*(\d+)", System.Text.RegularExpressions.RegexOptions.Compiled);
+		private static string LuggNoOf(string strMsg)
+		{
+			if (string.IsNullOrEmpty(strMsg)) return "";
+			System.Text.RegularExpressions.Match m = s_reLugg.Match(strMsg);
+			return m.Success ? m.Groups[1].Value : "";
 		}
 
 		// @.[CallerFilePath] 는 빌드한 PC 의 전체 경로다. 열에는 파일 이름만 남긴다.
@@ -874,6 +1044,7 @@ namespace TSK_COMM_IOSCH
 				vItem.SubItems.Add(LogMsg.Com);
 				vItem.SubItems.Add(LogMsg.File);
 				vItem.SubItems.Add(LogMsg.Func);
+				vItem.SubItems.Add(LuggNoOf(LogMsg.Msg));
 				vItem.SubItems.Add(LogMsg.Msg);
 				vItem.SubItems.Add(LogMsg.Tgm);
 
@@ -884,6 +1055,22 @@ namespace TSK_COMM_IOSCH
 					case cDefApp.eLogMsgType.MSG_BLUE: vItem.BackColor = Color.SkyBlue; vItem.ForeColor = Color.Black; break;
 					case cDefApp.eLogMsgType.MSG_ORANGE: vItem.BackColor = Color.Orange; vItem.ForeColor = Color.Black; break;
 					default: vItem.BackColor = Color.White; vItem.ForeColor = Color.Black; break;
+				}
+
+				// 전용 스레드가 낸 로그는 굵은 글씨로 보여 층 스레드 본체의 로그와 구분한다.
+				//   [지시] = 지시 전용 스레드 (파랑 계열),  [도착] = 도착 검사 전용 스레드 (초록 계열)
+				//   일반 메시지는 글자색도 바꾼다(바탕색은 그대로). 오류/중요/파랑/주황 메시지는 원래 색을 지키고 굵게만 한다.
+				bool bCmdTag = (pMsg != null && pMsg.StartsWith("[지시]"));
+				bool bArvTag = (pMsg != null && pMsg.StartsWith("[도착]"));
+				if (bCmdTag || bArvTag)
+				{
+					if (m_fontWorkerLog == null) m_fontWorkerLog = new Font(this.lsvR.Font, FontStyle.Bold);
+					vItem.Font = m_fontWorkerLog;
+					if (pMsgTyp != cDefApp.eLogMsgType.MSG_IMP && pMsgTyp != cDefApp.eLogMsgType.MSG_ERR &&
+					    pMsgTyp != cDefApp.eLogMsgType.MSG_BLUE && pMsgTyp != cDefApp.eLogMsgType.MSG_ORANGE)
+					{
+						vItem.ForeColor = bCmdTag ? Color.FromArgb(0, 51, 170)    : Color.FromArgb(0, 100, 40);
+					}
 				}
 
 				this.PsSetMsg(vItem, nId);
@@ -897,6 +1084,8 @@ namespace TSK_COMM_IOSCH
 			}
 		}
 		#endregion
+
+		private Font m_fontWorkerLog = null;   // 전용 스레드 로그용 굵은 글꼴
 
 		#region[Event]btnDelLog_Click
 		private void btnDelLog_Click(object sender, EventArgs e)
@@ -937,11 +1126,98 @@ namespace TSK_COMM_IOSCH
 		}
 		#endregion
 
+		#region[Event]chkRetExclude204_CheckedChanged
+        /*
+         * 트랙 204 유량 제한 제외
+         *
+         *   켬 : 204(중간 도착대 #1)의 화물은 1층 출고 유량 제한에 걸리지 않고 유량 집계에서도 빠진다.
+         *        204 는 물리적으로 204 -> 233 -> 205 -> 206 으로 이어져 출고 루프(결정대 232)와 상관이 없다.
+         *   끔(기본) : 원본 ECS 와 같이 다른 대기대와 같은 유량 제한을 받는다.
+         *   바꾸면 바로 반영되고 ENV_IOSCH.INI [1F_RET] EXCLUDE_204 에 남아 다음 기동에도 이어진다.
+         */
+		private void chkRetExclude204_CheckedChanged(object sender, EventArgs e)
+		{
+            cDefApp.GM_RET_EXCLUDE_204 = chkRetExclude204.Checked;
+            cDefApi.GsSetRetExclude204(cDefApp.GM_RET_EXCLUDE_204);
+
+            PsMsgViewMain("트랙 204 유량 제한 제외 = "
+                          + (cDefApp.GM_RET_EXCLUDE_204 ? "켬" : "끔"), 0);
+		}
+		#endregion
+
+		#region[Event]chkRetSkipHs / chkScAutoReset / chkScAutoActive
+        /*
+         * 출고 H/S 조건 제외 : 켬이면 크레인 출고 지시에서 출고 H/S(컨베이어) 조건을 보지 않는다. (1층/3층 공통)
+         * 크레인 자동 에러 해제 : 켬이면 오류인 크레인에 5초마다 ERROR RESET 을 지시한다. (오류가 풀리면 그침)
+         * 크레인 자동 ACTIVE : 켬이면 STOP 인 크레인에 5초마다 ACTIVE 를 지시한다. (ACTIVE 가 되면 그침)
+         *   셋 다 바꾸면 바로 반영되고 ENV_IOSCH.INI [SC] 에 남아 다음 기동에도 이어진다. 자동 지시는 공통 스레드가 한다.
+         */
+		private void chkRetSkipHs_CheckedChanged(object sender, EventArgs e)
+		{
+            cDefApp.GM_RET_SKIP_HS = chkRetSkipHs.Checked;
+            cDefApi.GsSetIniYN("SC", "RET_SKIP_HS", cDefApp.GM_RET_SKIP_HS);
+            PsMsgViewMain("출고 H/S 조건 제외 = " + (cDefApp.GM_RET_SKIP_HS ? "켬 (크레인 출고 지시에서 출고 H/S 조건을 보지 않음. 단 H/S 일시정지는 계속 봄)" : "끔"), 0);
+		}
+		private void chkScAutoReset_CheckedChanged(object sender, EventArgs e)
+		{
+            cDefApp.GM_SC_AUTO_RESET = chkScAutoReset.Checked;
+            cDefApi.GsSetIniYN("SC", "AUTO_RESET", cDefApp.GM_SC_AUTO_RESET);
+            PsMsgViewMain("크레인 자동 에러 해제 = " + (cDefApp.GM_SC_AUTO_RESET ? "켬 (오류인 크레인에 5초마다 RESET)" : "끔"), 0);
+		}
+		private void chkScAutoActive_CheckedChanged(object sender, EventArgs e)
+		{
+            cDefApp.GM_SC_AUTO_ACTIVE = chkScAutoActive.Checked;
+            cDefApi.GsSetIniYN("SC", "AUTO_ACTIVE", cDefApp.GM_SC_AUTO_ACTIVE);
+            PsMsgViewMain("크레인 자동 ACTIVE = " + (cDefApp.GM_SC_AUTO_ACTIVE ? "켬 (STOP 인 크레인에 5초마다 ACTIVE)" : "끔"), 0);
+		}
+		#endregion
+
 		#region 종료
 		private void tsbEnd_Click(object sender, EventArgs e)
 		{
 			this.Close();
 		}
+
+        // @.TASK start/stop record : LOG\<TASK>_MMdd.log + EVENT_LOG (MC_TYP=TASK, CMD_STA=START/STOP). Best effort, failures are ignored.
+        private void PsTaskEvent(string strConn, string strTask, string strWh, string strEvt)
+        {
+            DateTime dtNow = DateTime.Now;
+            string strPc = Environment.MachineName;
+            int nPid = System.Diagnostics.Process.GetCurrentProcess().Id;
+            // 1) file log : <run folder>\LOG\<TASK>_MMdd.log (one file per day, e.g. 1119.log; reused after a year). Written first so it works even if the DB is down.
+            try
+            {
+                string strDir = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "LOG");
+                System.IO.Directory.CreateDirectory(strDir);
+                string strLine = dtNow.ToString("yyyy-MM-dd HH:mm:ss.fff") + "\t" + strEvt + "\t" + strTask + "\t" + strPc + "\tPID=" + nPid.ToString() + "\tWH=" + strWh + "\r\n";
+                string strFile = System.IO.Path.Combine(strDir, strTask + "_" + dtNow.ToString("MMdd") + ".log");
+                // same MMdd file from last year (last written on another day) is removed first, so a file never mixes two years
+                if (System.IO.File.Exists(strFile) && System.IO.File.GetLastWriteTime(strFile).Date != dtNow.Date) System.IO.File.Delete(strFile);
+                System.IO.File.AppendAllText(strFile, strLine, System.Text.Encoding.UTF8);
+            }
+            catch { }
+            // 2) EVENT_LOG (ISSUE_DATE/INS_DT are DATE only, PK = WH_TYP + ISSUE_DATE + EVENT_SEQ, so the time goes into EVENT_SEQ/REMARKS)
+            string strSeq = (strTask + "_" + strEvt + "_" + dtNow.ToString("HHmmssfff") + "_" + nPid.ToString()).Replace("'", "");
+            if (strSeq.Length > 30) strSeq = strSeq.Substring(0, 30);
+            string strRmk = (dtNow.ToString("yyyy-MM-dd HH:mm:ss") + " " + strPc + " PID=" + nPid.ToString() + " WH=" + strWh).Replace("'", "");
+            if (strRmk.Length > 100) strRmk = strRmk.Substring(0, 100);
+            string strSql = "INSERT INTO EVENT_LOG (WH_TYP, ISSUE_DATE, EVENT_SEQ, MC_TYP, MC_NO, CMD_STA, INS_DT, INS_USER_ID, REMARKS) VALUES ('SYS', CURRENT_DATE, '" + strSeq + "', 'TASK', '" + strTask + "', '" + strEvt + "', CURRENT_DATE, 'IO_TASK', '" + strRmk + "')";
+#if POSTGRESQL
+            try
+            {
+                using (Npgsql.NpgsqlConnection cn = new Npgsql.NpgsqlConnection(strConn + ";Timeout=3;"))
+                {
+                    cn.Open();
+                    using (Npgsql.NpgsqlCommand cmd = cn.CreateCommand())
+                    {
+                        cmd.CommandText = strSql;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch { }
+#endif
+        }
 
 		private void SYS_MAIN_FormClosing(object sender, FormClosingEventArgs e)
 		{
@@ -951,6 +1227,7 @@ namespace TSK_COMM_IOSCH
                 {
                     if (MessageBox.Show(this, "종료하시겠습니까?", "종료", MessageBoxButtons.YesNo, MessageBoxIcon.Question) == DialogResult.Yes)
                     {
+                        PsTaskEvent(m_StrConnecString, "IO", "", "STOP");
                         LogManager.Shutdown();
                         cDefApp.GM_STAT_MAIN = false;
                         return;

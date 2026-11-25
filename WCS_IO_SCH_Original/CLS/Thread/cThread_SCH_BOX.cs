@@ -88,6 +88,35 @@ namespace TSK_COMM_IOSCH
         // ─────────────────────────────────────────────────────────────────
         // 메인 Thread 루프 (200ms 폴링)
         // ─────────────────────────────────────────────────────────────────
+        #region 지시 전용 스레드
+        /*
+         * @.WMS 지시 -> 설비 구동까지의 지연을 줄이려고 "지시를 내는 함수"만 따로 0.05초 주기로 돈다. (2026-11-08)
+         *   전에는 메인 바퀴(함수 20여 개 + 함수마다 10ms + 바퀴 200ms)를 한 번 돌아야 접수(99)->지시(20->21)가 이어졌다.
+         *   여기서 도는 것 : JobAccept, StartInvokeCheck4, StoHsCheck4, RetCmdCheck4
+         *   나머지(도착 검사, 완료, 출고 H/S, 청소 등)는 메인 바퀴에 그대로 둔다. 같은 함수가 두 곳에서 돌지 않게 메인에서는 뺐다.
+         *   자기 DB 연결을 쓴다.
+         */
+        protected override IOSchDB CreateWorker() { return new cThread_SCH_BOX(m_nId); }
+
+        protected override SchFunc[] CmdFuncs()
+        {
+            return new SchFunc[] { JobAccept, StartInvokeCheck4, StoHsCheck4, RetCmdCheck4 };
+        }
+        #endregion
+
+        #region 도착 검사 전용 스레드
+        /*
+         * @.도착 검사(상태 11 -> 19)를 메인 바퀴에서 빼서 0.05초 주기로 도는 전용 스레드로 옮겼다. (2026-11-09)
+         *   메인 바퀴가 부하가 걸리면 1초 남짓 걸려, 도착 신호를 보고도 한 바퀴를 더 기다렸다. (1F 는 전부터 이렇게 돈다)
+         *   여기서 도는 것 : ArrivedCheck4
+         *   자기 DB 연결을 쓴다. 메인에서는 이 함수들을 뺐다.
+         */
+        protected override SchFunc[] ArvFuncs()
+        {
+            return new SchFunc[] { ArrivedCheck4 };
+        }
+        #endregion
+
         #region Thread_Doing
         public void Thread_Doing(object value)
         {
@@ -116,6 +145,9 @@ namespace TSK_COMM_IOSCH
                 Thread.Sleep(5000);
             }
 
+            StartCmdWorker();   // 지시 전용 스레드
+            StartArvWorker();   // 도착 검사 전용 스레드
+
             while (!m_bManualStop)
             {
                 Thread.Sleep(200);
@@ -131,64 +163,11 @@ namespace TSK_COMM_IOSCH
 
                 try
                 {
-                    /*
-                    // C/V 도착보고
-                    if (!ARRIVE_CV(SCH_WH_TYP, m_nId.ToString(), ref strRTN_MSG))
-                    {
-                        if (strRTN_MSG != "")
-                        {
-                            MakeMsg_Error_NoLog(strRTN_MSG);
-                            SetErrorMsg(strRTN_MSG);
-                        }
-                    }
-                    else
-                    {
-                        if (strRTN_MSG != "") { MakeMsg(strRTN_MSG); }
-
-                        //MakeMsg(strRTN_MSG + "출고대에서 완료보고 하였습니다.");
-                    }
-                    Thread.Sleep(10);
-
-                    // 출고 H/S에서 최종목적지 결정 C/V목적지쓰기
-                    if (!CHECK_CV_RETHS(SCH_WH_TYP, m_nId.ToString(), ref strRTN_MSG))
-                    {
-                        if (strRTN_MSG != "")
-                        {
-                            MakeMsg_Error_NoLog(strRTN_MSG);
-                            SetErrorMsg(strRTN_MSG);
-                        }
-                    }
-                    else
-                    {
-                        if (strRTN_MSG != "") { MakeMsg(strRTN_MSG); }
-                    }
-                    Thread.Sleep(10);
-
-                    // 입고대에서 출발 하기
-                    if (!NEW_JOB_ORDER(SCH_WH_TYP, m_nId.ToString(), ref strRTN_MSG))
-                    {
-                        if (strRTN_MSG != "")
-                        {
-                            MakeMsg_Error_NoLog(strRTN_MSG);
-                            SetErrorMsg(strRTN_MSG);
-                        }
-                    }
-                    else
-                    {
-                        if (strRTN_MSG != "") { MakeMsg(strRTN_MSG); }
-                    }
-                    Thread.Sleep(10);
-                    //*/
                     // ── 3층(3F) 처리 : ECS *4 함수 포팅 (구라인 PLC 03 / 신라인 PLC 06)
-                    RunSchFunc(JobAccept);              // 신규 작업 접수 99 -> 10 / 20
 
-                    RunSchFunc(StartInvokeCheck4);      // 3F BOX 라인 입고대 출발
                     RunSchFunc(RetInvokeCheck4);        // 3F BOX 라인 출고HS → 픽킹대 지시
-                    RunSchFunc(ArrivedCheck4);          // 3F BOX 라인 피킹대 도착보고
 
                     // ── 크레인(SC) : 레거시 CSc::StoreRoutine(RANK_1) / RetrieveRoutine(RANK_2)
-                    RunSchFunc(StoHsCheck4);            // BOX 입고 H/S -> 크레인 입고 지시
-                    RunSchFunc(RetCmdCheck4);           // BOX 출고 지시 20 -> 21
                     RunSchFunc(ScCompleteCheck4);       // 크레인 작업 완료 -> 29
                     /*
                      * @.출고 H/S 쓰기 지연 줄이기 (2026-10-16)
@@ -226,6 +205,8 @@ namespace TSK_COMM_IOSCH
             // @.중지 지시로 루프를 빠져나온 경우의 정리.
             //   m_Thread 를 비워야 메인폼이 "중지됨" 으로 인식하고,
             //   시작 지시가 오면 새 스레드를 만들 수 있다.
+            StopCmdWorker();
+            StopArvWorker();
             MakeMsg("[SCH] 중지 지시로 스레드를 종료했습니다.");
             IsOpen = false;
             m_Thread = null;
@@ -235,40 +216,6 @@ namespace TSK_COMM_IOSCH
         #region 기존 함수들
 
 
-        /// <summary>
-        /// 출고대 가용 확인 : 빈 상태(무재하/AUTO/무에러) + 해당 출고대로 진입중인 화물 없음
-        /// </summary>
-        private bool CHECK_RET_LANE_READY(string strWH_TYP, string strMC_NO)
-        {
-            try
-            {
-                string strSql = "";
-                strSql += CRLF + " SELECT COUNT(*) AS READY_CNT                                        ";
-                strSql += CRLF + "   FROM CV_DATA CD                                                   ";
-                strSql += CRLF + "  WHERE CD.WH_TYP           = :WH_TYP                                ";
-                strSql += CRLF + "    AND CD.MC_NO            = :MC_NO                                 ";
-                strSql += CRLF + "    AND CD.SENSOR0_DATA_RD  = '0'                                    ";
-                strSql += CRLF + "    AND CD.AUTO_MODE_RD     = '1'                                    ";
-                strSql += CRLF + "    AND COALESCE(NULLIF(BTRIM(CD.ERROR_CODE, " + SQL_WS + "), ''), '0') IN ('0','00','000','0000')                           ";
-                strSql += CRLF + "    AND 0 = (SELECT COUNT(*) FROM CV_DATA CD2                        ";
-                strSql += CRLF + "              WHERE CD2.WH_TYP      = :WH_TYP2                       ";
-                strSql += CRLF + "                AND CD2.DEST_POS_OD = :MC_NO2                        ";
-                strSql += CRLF + "                AND CD2.OD_RQ_YN    = 'Y')                           ";
-                _pBdb.mComMain.CommandType = CommandType.Text;
-                _pBdb.mComMain.Parameters.Clear();
-                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
-                _pBdb.mComMain.Parameters.Add("MC_NO", DbLang.VARCHAR).Value = strMC_NO;
-                _pBdb.mComMain.Parameters.Add("WH_TYP2", DbLang.VARCHAR).Value = strWH_TYP;
-                _pBdb.mComMain.Parameters.Add("MC_NO2", DbLang.VARCHAR).Value = strMC_NO;
-                int nSelCnt = _pBdb.ExcuteQry(strSql);
-                if (nSelCnt <= 0) return false;
-                return Convert.ToInt32(_pBdb.mDtMain.Rows[0]["READY_CNT"]) > 0;
-            }
-            catch
-            {
-                return false;
-            }
-        }
 
 
 
@@ -300,7 +247,7 @@ namespace TSK_COMM_IOSCH
         public bool StartInvokeCheck4(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
         { return CV_STO_START_PLC(strWH_TYP, CV_PLC_3F_BOX, "[StartInvokeCheck4]", ref pRTN_MSG); }
         public bool RetInvokeCheck4(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
-        { return CV_RETHS_PLC(strWH_TYP, CV_PLC_3F_BOX, "[RetInvokeCheck4]", ref pRTN_MSG); }
+        { return CV_RETHS_PLC(strWH_TYP, CV_PLC_3F_BOX, EN_RET_FLOOR.BOX, "[RetInvokeCheck4]", ref pRTN_MSG); }
         public bool ArrivedCheck4(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
         { return CV_ARRIVE_PLC(strWH_TYP, CV_PLC_3F_BOX, "[ArrivedCheck4]", ref pRTN_MSG); }
         public bool DeleteDataStnCheck4(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
@@ -404,103 +351,6 @@ namespace TSK_COMM_IOSCH
         //   S/C 반출 완료('29') + 출고 HS(SC_HS_DEF HS_NO='04') 재하 → CV 지시 + 상태 '15'
         //   ECS 와 동일하게 목적지 재매핑 없음 (JOB_MST.DEST_POS 그대로 지시 - 1층과 다름)
         // ─────────────────────────────────────────────────────────────────
-        private bool CV_RETHS_PLC(string strWH_TYP, string strCV_PLC, string strTitle, ref string pRTN_MSG)
-        {
-            try
-            {
-                int nSelCnt = 0;
-                string strSql = "";
-
-                pRTN_MSG = strTitle;
-
-                strSql = "";
-                strSql += CRLF + " SELECT  JM.*, CD.*                                  ";
-                strSql += CRLF + "   FROM  JOB_MST JM                                  ";
-                strSql += CRLF + "  INNER  JOIN CV_DATA CD                             ";
-                strSql += CRLF + "     ON  JM.WH_TYP             = CD.WH_TYP           ";
-                strSql += CRLF + "    AND  JM.HS_TRACK_NO        = CD.MC_NO            ";
-                strSql += CRLF + "  INNER  JOIN SC_HS_DEF SHD                          ";
-                strSql += CRLF + "     ON  JM.WH_TYP             = SHD.WH_TYP          ";
-                /*
-                 * 짝 H/S 도 본다.
-                 *
-                 *   트윈으로 내보내면 포크#1 은 HS_MC_NO(410)에, 포크#2 는
-                 *   PAIR_HS_NO(411)에 내려놓는다. HS_MC_NO 만 보면 411 에 놓인
-                 *   화물을 아무도 집어 가지 않아 그 자리에 그대로 남는다.
-                 *   (cThread_CV.cs 의 같은 조인도 두 자리를 다 본다)
-                 */
-                strSql += CRLF + "    AND ( JM.HS_TRACK_NO       = SHD.HS_MC_NO         ";
-                strSql += CRLF + "       OR JM.HS_TRACK_NO       = SHD.PAIR_HS_NO        )";
-                strSql += CRLF + "    AND  SHD.HS_NO             = '02'                ";   // 3층 P-BOX 출고 HS (레거시 RANK_2)
-                strSql += CRLF + "    AND  SHD.HS_USE_YN         = 'Y'                 ";
-                strSql += CRLF + "  WHERE  CD.WH_TYP             = :WH_TYP             ";
-                strSql += CRLF + "    AND  CD.PLC_NO             = :CV_PLC             ";   // 3층 해당 PLC 한정 (ECS m_nNum 게이트)
-                strSql += CRLF + "    AND  COALESCE(CD.TR_PAUSE_RD,'0') IN ('0','')                 ";
-                strSql += CRLF + "    AND  CD.SENSOR0_DATA_RD    = '1'                 ";   // 재하 (ECS IsOnSensorIO(0))
-                strSql += CRLF + "    AND  CD.OD_RQ_YN           = 'N'                 ";
-                strSql += CRLF + "    AND  JM.JOB_STATUS 	     = '29'                ";   // S/C 반출 완료 (CV 요구)
-                _pBdb.mComMain.CommandType = CommandType.Text;
-                _pBdb.mComMain.Parameters.Clear();
-                _pBdb.mComMain.Parameters.Add("WH_TYP", DbLang.VARCHAR).Value = strWH_TYP;
-                _pBdb.mComMain.Parameters.Add("CV_PLC", DbLang.VARCHAR).Value = strCV_PLC;
-                nSelCnt = _pBdb.ExcuteQry(strSql);
-                if (nSelCnt < 0)
-                {
-                    pRTN_MSG += _pBdb.ErrMsg;
-                    return false;
-                }
-                if (nSelCnt == 0)
-                {
-                    pRTN_MSG = "";
-                    return true;
-                }
-
-                DataTable dtHs = _pBdb.mDtMain.Copy();
-
-                for (int i = 0; i < dtHs.Rows.Count; i++)
-                {
-                    string strJOB_TYP = dtHs.Rows[i]["JOB_TYP"].ToString() == "" ? "0" : dtHs.Rows[i]["JOB_TYP"].ToString();
-                    string strTRAY_TYP = "" + dtHs.Rows[i]["PRODUCT_SIZE"].ToString() == "" ? "0" : dtHs.Rows[i]["PRODUCT_SIZE"].ToString();
-                    string strTRAY_LEV = "" + dtHs.Rows[i]["TRAY_LEV"].ToString() == "" ? "0" : dtHs.Rows[i]["TRAY_LEV"].ToString();
-                    string strDEST_POS = "" + dtHs.Rows[i]["DEST_POS"].ToString() == "" ? "0" : dtHs.Rows[i]["DEST_POS"].ToString();
-                    string strIS_TURN = "" + dtHs.Rows[i]["TURN"].ToString() == "" ? "0" : dtHs.Rows[i]["TURN"].ToString();
-                    string strLUGG_NO = "" + dtHs.Rows[i]["LUGG_NO"].ToString() == "" ? "0" : dtHs.Rows[i]["LUGG_NO"].ToString();
-                    string strHS_MC = "" + dtHs.Rows[i]["MC_NO"].ToString() == "" ? "0" : dtHs.Rows[i]["MC_NO"].ToString();
-
-                    // 출고 계열 작업만 대상 (CHECK_CV_RETHS 와 동일 기준)
-                    if (IsRetJobType(strJOB_TYP) == false)
-                        continue;
-
-                    _pBdb.BeginTrans();
-
-                    // C/V에 목적지정보쓰기 (ECS: JobItem.m_nDestPos 그대로 - 재매핑 없음)
-                    if (UPDATE_CV_DATA(strJOB_TYP, strTRAY_TYP, strTRAY_LEV, strDEST_POS, strIS_TURN,
-                                       strLUGG_NO, strWH_TYP, strCV_PLC, strHS_MC, "", ref pRTN_MSG) == false)
-                    {
-                        _pBdb.Rollback();
-                        continue;
-                    }
-                    if (UPDATE_JOB_DATA(ST_CV_RUN, strLUGG_NO, strWH_TYP, strJOB_TYP, ref pRTN_MSG) == false)
-                    {
-                        _pBdb.Rollback();
-                        continue;
-                    }
-                    pRTN_MSG = strTitle + "TRACK " + strHS_MC + "번[3층 출고 H/S]에서 픽킹대(" + strDEST_POS + ")로 지시하였습니다. [작업번호:" + strLUGG_NO + "]";
-                    _pBdb.Commit();
-                    InsertLog(SCH_WH_TYP, pRTN_MSG, "", "", strLUGG_NO, ST_CV_RUN, strHS_MC, strDEST_POS);
-                    return true;
-                }
-
-                pRTN_MSG = "";
-                return true;
-            }
-            catch (Exception ex)
-            {
-                pRTN_MSG = strTitle + ex.ToString();
-                _pBdb.Rollback();
-                return false;
-            }
-        }
 
 
 
@@ -572,7 +422,7 @@ namespace TSK_COMM_IOSCH
         public bool RetCmdCheck4(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
         { return ScRetrieveRoutine(strWH_TYP, HS_NO_RET_BOX, "[RetCmdCheck4]", ref pRTN_MSG); }
         public bool ScCompleteCheck4(string strWH_TYP, string strPLC_NO, ref string pRTN_MSG)
-        { return SC_COMP_CHK(strWH_TYP, "[ScCompleteCheck4]", ref pRTN_MSG); }
+        { return SC_COMP_CHK(strWH_TYP, "[ScCompleteCheck4]", ref pRTN_MSG, "!3"); }
 
         // ─────────────────────────────────────────────────────────────────
         // BOX 출고 지시 (20 -> 21) - 레거시 CSc::RetrieveRoutine(RANK_2) + Retrieve
