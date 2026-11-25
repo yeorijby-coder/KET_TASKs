@@ -38,6 +38,7 @@
             this.splitContainer1 = new System.Windows.Forms.SplitContainer();
             this.pnlMsg = new System.Windows.Forms.Panel();
             this.chkScSta = new System.Windows.Forms.CheckBox();
+            this.chkErrPlcId = new System.Windows.Forms.CheckBox();
             this.Label1 = new System.Windows.Forms.Label();
             this.chkStatus = new System.Windows.Forms.CheckBox();
             this.picCliCom = new System.Windows.Forms.PictureBox();
@@ -147,6 +148,7 @@
             this.pnlMsg.BackColor = System.Drawing.Color.Transparent;
             this.pnlMsg.Controls.Add(this.chkSimMode);
             this.pnlMsg.Controls.Add(this.chkScSta);
+            this.pnlMsg.Controls.Add(this.chkErrPlcId);
             this.pnlMsg.Controls.Add(this.Label1);
             this.pnlMsg.Controls.Add(this.chkStatus);
             this.pnlMsg.Controls.Add(this.picCliCom);
@@ -172,7 +174,19 @@
             this.chkScSta.TabIndex = 24;
             this.chkScSta.Text = "S/C상태";
             this.chkScSta.UseVisualStyleBackColor = false;
-            // 
+            //
+            // chkErrPlcId
+            //
+            this.chkErrPlcId.BackColor = System.Drawing.Color.Transparent;
+            this.chkErrPlcId.Checked = true;
+            this.chkErrPlcId.CheckState = System.Windows.Forms.CheckState.Checked;
+            this.chkErrPlcId.Location = new System.Drawing.Point(296, 31);
+            this.chkErrPlcId.Name = "chkErrPlcId";
+            this.chkErrPlcId.Size = new System.Drawing.Size(84, 15);
+            this.chkErrPlcId.TabIndex = 25;
+            this.chkErrPlcId.Text = "E PLC ID";
+            this.chkErrPlcId.UseVisualStyleBackColor = false;
+            //
             // Label1
             // 
             this.Label1.BackColor = System.Drawing.Color.Transparent;
@@ -230,9 +244,9 @@
             // ColumnHeader2
             // 
             this.CH_FILE_Cli.Text = "FILE";
-            this.CH_FILE_Cli.Width = 150;
+            this.CH_FILE_Cli.Width = 0;    // 기본은 숨김. 머리글 경계를 끌면 보인다. (2026-11-24)
             this.CH_FUNC_Cli.Text = "FUNCTION";
-            this.CH_FUNC_Cli.Width = 200;
+            this.CH_FUNC_Cli.Width = 0;    // 기본은 숨김. 머리글 경계를 끌면 보인다. (2026-11-24)
             this.ColumnHeader2.Text = "내용";
             this.ColumnHeader2.Width = 920;
             // 
@@ -347,9 +361,9 @@
             // ColumnHeader4
             // 
             this.CH_FILE_Srv.Text = "FILE";
-            this.CH_FILE_Srv.Width = 150;
+            this.CH_FILE_Srv.Width = 0;    // 기본은 숨김. 머리글 경계를 끌면 보인다. (2026-11-24)
             this.CH_FUNC_Srv.Text = "FUNCTION";
-            this.CH_FUNC_Srv.Width = 200;
+            this.CH_FUNC_Srv.Width = 0;    // 기본은 숨김. 머리글 경계를 끌면 보인다. (2026-11-24)
             this.ColumnHeader4.Text = "내용";
             this.ColumnHeader4.Width = 920;
             // 
@@ -488,6 +502,7 @@
 		internal System.Windows.Forms.ImageList imlConnect;
 		internal System.Windows.Forms.Panel pnlMsg2;
 		internal System.Windows.Forms.CheckBox chkScSta;
+		internal System.Windows.Forms.CheckBox chkErrPlcId;      // 에러 보고(E) 끝에 PLC ID 를 붙일지 (기본 체크 = 붙임)
 		internal System.Windows.Forms.CheckBox chkStatus;
 		internal System.Windows.Forms.Label Label4;
 		internal System.Windows.Forms.PictureBox picSrvCom;

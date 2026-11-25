@@ -29,7 +29,7 @@ namespace TSK_HostCom
 
 			while (modDefApp.g_blListenThread)
 			{
-				modDefAPI.SleepA(1000);
+				modDefAPI.SleepA(250);		// 2026-11-11 : 1초 -> 0.25초. 상위(WMS)가 붙을 때 받아들이는 시간이 줄어든다.
 				if (modDefApp.g_tcplsn.Pending())
 				{
 					// 이미 연결 되어 있으면 이전 Socket Close
@@ -310,7 +310,12 @@ namespace TSK_HostCom
 			int iCnt = 0;
 			string strErrMsg = null;
 
-			while (!modDefApp.g_CliWork.m_areCliExitEvent.WaitOne(1000, false))
+			// @.0.25초 주기 (2026-11-09). 상태/에러 보고는 GetSendData 안에서 1초에 한 번으로 따로 맞춘다.
+			// @.0.05초 주기 (2026-11-22). 완료/도착 보고가 IO 의 19 기록 뒤 최대 0.25초 + 조회 시간만큼 늦었다.
+			//   상태 보고는 GetSendData 안에서 0.25초에 한 번, 에러 등은 1초에 한 번으로 그대로 묶고,
+			//   생존 표시(HeartBeat)도 1초에 한 번으로 묶는다.
+			DateTime dtHeartBeat = DateTime.MinValue;
+			while (!modDefApp.g_CliWork.m_areCliExitEvent.WaitOne(50, false))
 			{
 				try
 				{
@@ -339,13 +344,17 @@ namespace TSK_HostCom
 					//==LKM[20140430]DB연결
 
                     // @.관제 화면의 통신 램프가 UPD_DT 로 판정한다. 살아 있다고 적어 둔다.
-                    modDefApp.g_CliWork.HeartBeatEqpMst();
+                    if ((DateTime.Now - dtHeartBeat).TotalMilliseconds >= 1000)
+                    {
+                        dtHeartBeat = DateTime.Now;
+                        modDefApp.g_CliWork.HeartBeatEqpMst();
+                    }
 
                     if (!modDefApp.g_CliWork.m_blSockConnected && modDefApp.g_frmForm.chkSimMode.Checked == false)
 					{
 						iCnt += 1;
 						// 3초
-						if (iCnt == 3)      // 15
+						if (iCnt == 60)     // 0.05초 x 60 = 3초
 						{
 							iCnt = 0;
 							modDefApp.g_CliWork.ConnectSock();

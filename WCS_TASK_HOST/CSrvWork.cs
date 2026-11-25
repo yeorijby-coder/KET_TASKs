@@ -443,7 +443,8 @@ namespace TSK_HostCom
 		public bool Parsing(int p_iBodyCnt)
 		{
 
-			m_strLog = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, 0, modDefApp.MSG_HEAD_CNT + p_iBodyCnt);
+			// @.WMS 는 한글을 CP949 로 보낸다. UTF8 로 풀면 로그(파일 / HOST_IF_LOG)의 한글이 깨진다. (2026-11-24)
+			m_strLog = System.Text.Encoding.GetEncoding(949).GetString(m_bytRxBuff, 0, modDefApp.MSG_HEAD_CNT + p_iBodyCnt);
 			modCmWork.ShowMsgServer(m_strLog);
 			m_strHostCmd = m_strMsgType = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, modDefApp.MSG_HEAD_CNT + 1, 1);
 
@@ -545,6 +546,19 @@ namespace TSK_HostCom
         }
 
         #region 작업대에 대한 Validation
+        /// <summary>
+        /// 랙 위치 문자열("BB-BBB-LL" 또는 "BBBBBLL")에서 크레인 호기를 구한다. (호기 = (뱅크+1)/2, 실패하면 0)
+        /// </summary>
+        private static int CraneOfLoc(string strLoc)
+        {
+            if (strLoc == null) return 0;
+            string strRaw = strLoc.Replace("-", "").Trim();
+            if (strRaw.Length != 7) return 0;
+            int nBank;
+            if (!int.TryParse(strRaw.Substring(0, 2), out nBank) || nBank <= 0) return 0;
+            return (nBank + 1) / 2;
+        }
+
         private bool IsValidStation(int nJobPattern, string strStation, bool bStart, ref string strCV_PLT_JOB_TYP, string strWhTyp)
         {
             m_BDb.ParamsClear();
@@ -727,15 +741,18 @@ namespace TSK_HostCom
             // @.수신한 만큼만 읽는다. (예전에는 77바이트로 고정돼 있었다)
             int nMsgLen = modDefApp.MSG_HEAD_CNT + p_iBodyCnt;
             if (nMsgLen > m_bytRxBuff.Length) nMsgLen = m_bytRxBuff.Length;
-            strMsg = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, 0, nMsgLen);//상위에서 내린 작업 메시지
+            strMsg = System.Text.Encoding.GetEncoding(949).GetString(m_bytRxBuff, 0, nMsgLen);//상위에서 내린 작업 메시지
 
             #region 수신 기본 데이터 파싱
             string strO_Priority = "";
             string strO_LotNo = "";
+            string strO_ItemInfo = "", strO_ItemInfo2 = "";
             string strO_Size = "";
             string strO_PairLuggNo = "0";
             string strR_Kind = "";
             string strR_ScNum = "";
+            string strO_UserData = "";
+            string strO_LdCtnNo = "";
 
             /*
              * 문서 IV.1 작업지시 / IV.2 재작업지시
@@ -761,6 +778,7 @@ namespace TSK_HostCom
             if (m_strMsgType == "O")
             {
                 #region 작업지시(O) 자리
+                strO_LdCtnNo = GfField(12, 20);
                 strStartPos   = GfField(32, 3);
                 strStartBank  = GfField(35, 2);
                 strStartBay   = GfField(37, 3);
@@ -814,6 +832,16 @@ namespace TSK_HostCom
                 strDestPos = string.Format("9{0:00}", nDestPos);
             #endregion
 
+            // @.랙투랙(4)/호기간이동(5)은 출발/도착이 랙이라 작업대 칸을 0 으로 보내는 상위도 있다.
+            //   그 경우 랙 위치의 뱅크로 호기를 구해 크레인 번호(9NN)로 채운다. (호기 = (뱅크+1)/2)
+            //   문서(IV.1)는 이 두 작업에서 Source/Dest Stn 에 크레인 호기를 주도록 한다. 주어 왔으면 그대로 쓴다.
+            if (strJob_Define == "4" || strJob_Define == "5" || strJob_Define == "14" || strJob_Define == "15")
+            {
+                if (Convert.ToInt32(strStartPos) == 0 && CraneOfLoc(strStartLoc) > 0)
+                    strStartPos = string.Format("9{0:00}", CraneOfLoc(strStartLoc));
+                if (Convert.ToInt32(strDestPos) == 0 && CraneOfLoc(strDestLoc) > 0)
+                    strDestPos = string.Format("9{0:00}", CraneOfLoc(strDestLoc));
+            }
             #endregion
 
             #region 수신 데이터 검증
@@ -903,10 +931,16 @@ namespace TSK_HostCom
                 strO_Priority = GfField(59, 3);
                 strO_Size     = GfField(62, 1);
                 strO_LotNo    = GfField(63, 20).TrimEnd();
+                // @.전광판/작업정보 창 표시용 (2026-11-02). 기존 ECS 는 전광판에 JobItem.GetUserData() = 전문 +83(20) User Data 를 표시했고,
+                //   작업정보 창의 "제품 정보2" 가 이 값(ITEM_INFO2)이다. Product ID(+63) 는 ITEM_INFO(제품 정보1).
+                //   전광판 태스크(DispAuto)가 JOB_MST.PRODUCT_ID 를 읽으므로 PRODUCT_ID 에도 User Data 를 넣는다. LOT_NO 는 예전대로 Product ID.
+                strO_ItemInfo  = GfField(63, 20).TrimEnd().Replace("'", "''");
+                strO_ItemInfo2 = GfField(83, 20).TrimEnd().Replace("'", "''");
+                strO_UserData = GfField(83, 20).TrimEnd();
 
-                #region 존재하는 작업인지 체크
-                #region 작업번호가 존재하는 경우 에러 로깅
-                if (bExistJob == true)
+                    #region 존재하는 작업인지 체크
+                    #region 작업번호가 존재하는 경우 에러 로깅
+                    if (bExistJob == true)
                 {
                     m_strLog = string.Format("이미 지시된 작업입니다. [창고 타입:{0}][작업번호:{1}]", strJobWhTyp, strLuggNo);
                     modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
@@ -933,10 +967,14 @@ namespace TSK_HostCom
                 //   보지 않는다. P-BOX 순환은 251->221 이동이 화물마다 잇달아 내려오는데, 앞 것이
                 //   대기대에 닿아 완료보고될 때까지 뒤 것을 거절하면 둘째 화물이 60초 안에 짝 자리에
                 //   못 와 트윈이 영영 안 묶인다. 아직 CV 에 안 쓰인 것(10)끼리만 겹침으로 본다.
+                // @.이동(6)은 이 내용 비교를 하지 않는다. 현장 HOST 가 LOT_NO/사이즈를 고정값으로 주면
+                //   "같은 출발지->도착지 이동이 아직 CV 에 안 실렸는데 다음 화물 지시가 오면" 전부 거절이
+                //   됐다(대물량 테스트에서 재현). 같은 지시가 다시 오는 것은 위의 작업번호 중복 검사가
+                //   이미 잡아 주고, 같은 경로 작업이 여럿 쌓여도 IO_TASK 가 작업번호 순으로 하나씩 보낸다.
                 if (strJob_Define == "6")
-                    m_strSql += modDefApp.CRLF + "  AND JOB_STATUS = '10'";
-
-                m_iSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
+                    m_iSelCnt = 0;
+                else
+                    m_iSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
 
                 if (m_iSelCnt > 0)
                 {
@@ -1027,51 +1065,57 @@ namespace TSK_HostCom
 
                         #endregion
                         break;
-                    case "4":       // 랙투랙
+                    case "4":       // 랙투랙 : 같은 호기 안에서 랙 위치만 바꾼다.
                         #region 랙투랙시에 출발지와 도착지가 정상적인지 체크
-                        // 출발LOC 올바른지 체크!
-                        // 도착LOC 올바른지 체크!
-                        // 출발 랙과 도착 랙의 SC 번호가 다른지 체크 
+                        // 출발/도착 호기가 같아야 한다.
                         if (strStartPos != strDestPos)
                         {
-                            m_strLog = string.Format("출발 S/C와 도착 S/C가 다릅니다.[작업번호:{0}][출발SC:{1}][도착SC:{2}]", nLuggNum, strStartPos, strDestLoc);
+                            m_strLog = string.Format("출발 S/C와 도착 S/C가 다릅니다.[작업번호:{0}][출발SC:{1}][도착SC:{2}]", nLuggNum, strStartPos, strDestPos);
                             modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
                             MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INVALID_LOC);
                             return;
                         }
-                        // 출발 Location과 도착 Location의 SC 번호가 다른지 체크 
-                        if (modDefApp.GetStackerNum(10, strStartLoc) != modDefApp.GetStackerNum(10, strDestLoc))
+                        // 출발/도착 랙 위치가 그 호기의 랙(뱅크 2n-1, 2n)이어야 한다.
+                        if (CraneOfLoc(strStartLoc) <= 0 || CraneOfLoc(strDestLoc) <= 0 ||
+                            CraneOfLoc(strStartLoc) != CraneOfLoc(strDestLoc) ||
+                            ("9" + CraneOfLoc(strStartLoc).ToString("00")) != strStartPos)
                         {
-                            m_strLog = string.Format("출발 S/C와 도착 S/C가 다릅니다.[작업번호:{0}][출발Location:{1}][도착Location:{2}]", nLuggNum, strStartLoc, strDestLoc);
+                            m_strLog = string.Format("랙 위치가 출발 호기의 랙이 아닙니다.[작업번호:{0}][출발SC:{1}][출발Location:{2}][도착Location:{3}]", nLuggNum, strStartPos, strStartLoc, strDestLoc);
                             modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
                             MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INVALID_LOC);
                             return;
                         }
-
-                        
+                        // 같은 자리로의 이동은 의미가 없다.
+                        if (strStartLoc == strDestLoc)
+                        {
+                            m_strLog = string.Format("출발 Location 과 도착 Location 이 같습니다.[작업번호:{0}][Location:{1}]", nLuggNum, strStartLoc);
+                            modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
+                            MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INVALID_LOC);
+                            return;
+                        }
                         #endregion
                         break;
-                    case "5":       // 호기간 이동
+                    case "5":       // 호기간 이동 : 다른 호기의 랙으로 옮긴다. 출고는 3층으로만 나가 도착 호기를 찾아간다.
                         #region 호기간 이동시에 출발지와 도착지가 정상적인지 체크
-                        // 출발LOC 올바른지 체크!
-                        // 도착LOC 올바른지 체크!
-                        // 출발 랙과 도착 랙의 SC 번호가 다른지 체크 
+                        // 출발/도착 호기가 달라야 한다.
                         if (strStartPos == strDestPos)
                         {
-                            m_strLog = string.Format("출발 S/C와 도착 S/C가 같습니다.[작업번호:{0}][출발SC:{1}][도착SC:{2}]", nLuggNum, strStartPos, strDestLoc);
+                            m_strLog = string.Format("출발 S/C와 도착 S/C가 같습니다.[작업번호:{0}][출발SC:{1}][도착SC:{2}]", nLuggNum, strStartPos, strDestPos);
                             modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
                             MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INVALID_LOC);
                             return;
                         }
-                        // 출발 Location과 도착 Location의 SC 번호가 다른지 체크 
-                        if (modDefApp.GetStackerNum(10, strStartLoc) != modDefApp.GetStackerNum(10, strDestLoc))
+                        // 출발 랙은 출발 호기, 도착 랙은 도착 호기의 것이어야 한다. (전에는 두 랙의 호기가 "다르면" 거절해
+                        //   정상 요청이 막힐 수 있었고, 위치 문자열에 '-' 가 있어 호기가 늘 0 으로 읽혀 검사가 걸리지도 않았다)
+                        if (CraneOfLoc(strStartLoc) <= 0 || CraneOfLoc(strDestLoc) <= 0 ||
+                            ("9" + CraneOfLoc(strStartLoc).ToString("00")) != strStartPos ||
+                            ("9" + CraneOfLoc(strDestLoc).ToString("00")) != strDestPos)
                         {
-                            m_strLog = string.Format("출발 S/C와 도착 S/C가 같습니다.[작업번호:{0}][출발Location:{1}][도착Location:{2}]", nLuggNum, strStartLoc, strDestLoc);
+                            m_strLog = string.Format("랙 위치가 해당 호기의 랙이 아닙니다.[작업번호:{0}][출발SC:{1}][출발Location:{2}][도착SC:{3}][도착Location:{4}]", nLuggNum, strStartPos, strStartLoc, strDestPos, strDestLoc);
                             modCmWork.ShowMsgServer(strTitle + m_strLog, modDefApp.MSG_ERR);
                             MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_INVALID_LOC);
                             return;
                         }
-
                         #endregion
                         break;
                     case "6":       // 작업대 이동
@@ -1147,7 +1191,8 @@ namespace TSK_HostCom
                 m_BDb.BeginTrans();
 
                 m_BDb.ParamsClear();
-                if (modDefApp.g_frmForm.InsertJobMst(m_BDb, strLuggNo, strStartPos, strStartLoc, strDestPos, strDestLoc, strJob_Define, strO_LotNo, strO_Priority, strO_Size, true, strO_PairLuggNo, strJobWhTyp) == false)
+                if (modDefApp.g_frmForm.InsertJobMst(m_BDb, strLuggNo, strStartPos, strStartLoc, strDestPos, strDestLoc, 
+                                                     strJob_Define, strO_LotNo, strO_Priority, strO_Size, true, strO_PairLuggNo, strJobWhTyp, strO_UserData, strO_LdCtnNo, strO_ItemInfo) == false)
                 {
                     // 함수안에서 실패시 화면에 메세지 출력함!
                     MakeResponse(m_strMsgType, strLuggNo, modDefApp.MSG_ECS_BUFFER_FULL);
@@ -1171,7 +1216,10 @@ namespace TSK_HostCom
                 m_strSql += modDefApp.CRLF + " , JOB_PRIORITY     	";
                 m_strSql += modDefApp.CRLF + " , INS_DT		    	";
                 m_strSql += modDefApp.CRLF + " , INS_USER_ID       	";
-                m_strSql += modDefApp.CRLF + " , REMARKS )         	";
+                m_strSql += modDefApp.CRLF + " , REMARKS           	";
+                m_strSql += modDefApp.CRLF + " , PRODUCT_ID        	";
+                m_strSql += modDefApp.CRLF + " , ITEM_INFO         	";
+                m_strSql += modDefApp.CRLF + " , ITEM_INFO2 )      	";
                 // @.이 작업이 속한 창고. 전문의 창고구분에서 나온다.
                 m_strSql += modDefApp.CRLF + "VALUES ('" + strJobWhTyp + "'";
                 m_strSql += modDefApp.CRLF + "     ,  '" + strLuggNo + "'";
@@ -1185,7 +1233,10 @@ namespace TSK_HostCom
                 m_strSql += modDefApp.CRLF + "     ,  '" + strO_Priority + "'";
                 m_strSql += modDefApp.CRLF + "     ,   " + modDateTime.SYSDATE;
                 m_strSql += modDefApp.CRLF + "     ,  'HOST_TASK'"; 
-                m_strSql += modDefApp.CRLF + "     ,  '');";
+                m_strSql += modDefApp.CRLF + "     ,  ''";
+                m_strSql += modDefApp.CRLF + "     ,  '" + strO_ItemInfo2 + "'";   // PRODUCT_ID = User Data (전광판)
+                m_strSql += modDefApp.CRLF + "     ,  '" + strO_ItemInfo + "'";    // ITEM_INFO  = Product ID (제품 정보1)
+                m_strSql += modDefApp.CRLF + "     ,  '" + strO_ItemInfo2 + "');"; // ITEM_INFO2 = User Data  (제품 정보2)
 
                 m_iSelCnt = m_BDb.ExcuteNonQry_Par(ref m_strSql);
 
@@ -1307,7 +1358,9 @@ namespace TSK_HostCom
 
                     m_strSql = modDefApp.CRLF + "  UPDATE JOB_MST ";
                     m_strSql += modDefApp.CRLF + "    SET DEST_LOCATION = " + m_BDb.ParamsAdd("DEST_LOCATION", strDestLoc);
-                    m_strSql += modDefApp.CRLF + "      , JOB_STATUS    = " + m_BDb.ParamsAdd("JOB_STATUS", ((int)modDefApp.EN_JOB_STATUS.enJobStatusDualStoreRetry).ToString());
+                    // @.작업 상태는 바꾸지 않는다 (2026-11-05). 예전에는 구 ECS 의 enJobStatusDualStoreRetry(=9)를 넣었는데
+                    //   지금 IO 스케줄은 10/11/19/20/21/29 만 쓴다. 9 가 되면 완료 검사(SC 구동중 21)에서 빠져 작업이 영영 안 끝난다.
+                    //   IO 는 "크레인이 이중입고 에러이고 도착 위치가 마지막 지시와 다르다" 로 재지정을 알아채 다시 지시한다. (ScDualStoreRetry)
                     m_strSql += modDefApp.CRLF + "      , UPD_DT        = " + modDateTime.SYSDATE;
                     m_strSql += modDefApp.CRLF + "      , UPD_USER_ID   = 'HOST_TASK'";
                     m_strSql += modDefApp.CRLF + "  WHERE WH_TYP        IN " + modDefApp.GsWhTypList();
@@ -1348,13 +1401,17 @@ namespace TSK_HostCom
 
                     m_BDb.ParamsClear();
 
-                    m_strSql = modDefApp.CRLF + "  UPDATE LUGG_MST ";
+                    // @.LUGG_MST / LUGGNO 는 없는 테이블, 없는 컬럼이다. 출고 재지정은 늘 SQL 오류로 끝났다. JOB_MST / LUGG_NO 로 고친다. (2026-11-05)
+                    m_strSql = modDefApp.CRLF + "  UPDATE JOB_MST ";
                     m_strSql += modDefApp.CRLF + "    SET START_LOCATION = " + m_BDb.ParamsAdd("START_LOCATION", strStartLoc);
-                    m_strSql += modDefApp.CRLF + "      , JOB_STATUS    = " + Convert.ToInt32((int)modDefApp.EN_JOB_STATUS.enJobStatusEmptyRetrieveRetry);
+                    // @.구 ECS 값 enJobStatusEmptyRetrieveRetry(=10)은 지금 체계에서 "CV 구동대기" 라 쓸 수 없다.
+                    //   SC 구동요구(20)로 되돌려, IO 가 새 출발 위치로 크레인에 다시 지시하게 한다. 크레인 에러는 IO 가 푼다. (ScDualStoreRetry)
+                    m_strSql += modDefApp.CRLF + "      , JOB_STATUS    = '20'";
                     m_strSql += modDefApp.CRLF + "      , UPD_DT        = " + modDateTime.SYSDATE;
                     m_strSql += modDefApp.CRLF + "      , UPD_USER_ID   = 'HOST_TASK'";
                     m_strSql += modDefApp.CRLF + "  WHERE WH_TYP        IN " + modDefApp.GsWhTypList();
-                    m_strSql += modDefApp.CRLF + "    AND LUGGNO        = " + m_BDb.ParamsAdd("LUGGNO", strLuggNo);
+                    m_strSql += modDefApp.CRLF + "    AND LUGG_NO       = " + m_BDb.ParamsAdd("LUGG_NO", strLuggNo);
+                    m_strSql += modDefApp.CRLF + "    AND JOB_STATUS    IN ('20','21')";   // 크레인 대기 / 구동중인 출고만 재지정한다
                     m_iSelCnt = m_BDb.ExcuteNonQry_Par(ref m_strSql);
                     if (m_iSelCnt < 0)
                     {
@@ -1395,7 +1452,7 @@ namespace TSK_HostCom
             // @.수신한 만큼만 읽는다. (예전에는 77바이트로 고정돼 있었다)
             int nMsgLen = modDefApp.MSG_HEAD_CNT + p_iBodyCnt;
             if (nMsgLen > m_bytRxBuff.Length) nMsgLen = m_bytRxBuff.Length;
-            strMsg = System.Text.Encoding.UTF8.GetString(m_bytRxBuff, 0, nMsgLen);//상위에서 내린 작업 메시지
+            strMsg = System.Text.Encoding.GetEncoding(949).GetString(m_bytRxBuff, 0, nMsgLen);//상위에서 내린 작업 메시지
 
 
             /*

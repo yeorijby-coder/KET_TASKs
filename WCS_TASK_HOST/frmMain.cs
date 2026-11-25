@@ -126,12 +126,44 @@ namespace TSK_HostCom
 
 			if (m_TitleBar == null) m_TitleBar = new cTitleBar(this);
 
-			m_TitleBar.SetTitle(strTitle);
+			m_TitleBar.SetTitle(PutBuildStamp(strTitle));   // 빌드 시각 포함 (2026-11-09)
 		}
 
 		//---------------------------------------------
 		// 메인화면 로딩 및 초기화
 		//---------------------------------------------
+        // @.제목 줄의 맨 앞 이름 뒤에 빌드 시각을 끼운다. 제목은 길면 흘러가므로 끝에 붙이면 안 보인다.
+        private static string PutBuildStamp(string strTitle)
+        {
+            string strStamp = BuildStampText();
+            if (strStamp == "") return strTitle;
+            int nB = strTitle.IndexOf(" [");
+            return (nB > 0) ? strTitle.Insert(nB, strStamp) : strTitle + strStamp;
+        }
+
+        // @.제목에 빌드 시각을 붙인다. (2026-11-09) 실행파일 PE 헤더의 링크 시각이라 파일을 복사/압축해도 바뀌지 않는다.
+        //   읽지 못하면 파일 수정 시각을 쓴다.
+        private static string BuildStampText()
+        {
+            try
+            {
+                string strPath = System.Reflection.Assembly.GetExecutingAssembly().Location;
+                using (System.IO.FileStream fs = new System.IO.FileStream(strPath, System.IO.FileMode.Open, System.IO.FileAccess.Read, System.IO.FileShare.ReadWrite))
+                using (System.IO.BinaryReader br = new System.IO.BinaryReader(fs))
+                {
+                    fs.Position = 0x3C;
+                    int nPe = br.ReadInt32();
+                    fs.Position = nPe + 8;
+                    uint uTs = br.ReadUInt32();
+                    DateTime dt = new DateTime(1970, 1, 1, 0, 0, 0, DateTimeKind.Utc).AddSeconds(uTs).ToLocalTime();
+                    if (dt.Year >= 2020 && dt < DateTime.Now.AddDays(1))
+                        return " [빌드 " + dt.ToString("yyyy-MM-dd HH:mm") + "]";
+                }
+                return " [빌드 " + System.IO.File.GetLastWriteTime(strPath).ToString("yyyy-MM-dd HH:mm") + "]";
+            }
+            catch { return ""; }
+        }
+
 		private void frmMain_Load(object sender, EventArgs e)
 		{
             // @.INI 열기 버튼 (맨 처음 참조하는 INI 를 메모장으로 연다)
@@ -161,6 +193,7 @@ namespace TSK_HostCom
 			}
 
 			PsSetMainTitle();   // @.타이틀에 시스템 구성정보 표시
+			PsTaskEvent("START");
 
 			//---------------------------------------------------------------------------------
 			// 컨트롤의 System.Windows.Forms.Control.Handle 속성에 액세스하는 잘못된 스레드에 대한 
@@ -240,6 +273,52 @@ namespace TSK_HostCom
 		//---------------------------------------------
 		// 컨트롤 이벤트
 		//---------------------------------------------
+        // @.TASK start/stop record : LOG\<TASK>_MMdd.log + EVENT_LOG (MC_TYP=TASK, CMD_STA=START/STOP). Best effort, failures are ignored.
+        private void PsTaskEvent(string strEvt)
+        {
+            string strTask = "HOST";
+            string strWh = "";
+            DateTime dtNow = DateTime.Now;
+            string strPc = Environment.MachineName;
+            int nPid = System.Diagnostics.Process.GetCurrentProcess().Id;
+            // 1) file log : <run folder>\LOG\<TASK>_MMdd.log (one file per day, e.g. 1119.log; reused after a year). Written first so it works even if the DB is down.
+            try
+            {
+                string strDir = System.IO.Path.Combine(System.IO.Directory.GetCurrentDirectory(), "LOG");
+                System.IO.Directory.CreateDirectory(strDir);
+                string strLine = dtNow.ToString("yyyy-MM-dd HH:mm:ss.fff") + "\t" + strEvt + "\t" + strTask + "\t" + strPc + "\tPID=" + nPid.ToString() + "\tWH=" + strWh + "\r\n";
+                string strFile = System.IO.Path.Combine(strDir, strTask + "_" + dtNow.ToString("MMdd") + ".log");
+                // same MMdd file from last year (last written on another day) is removed first, so a file never mixes two years
+                if (System.IO.File.Exists(strFile) && System.IO.File.GetLastWriteTime(strFile).Date != dtNow.Date) System.IO.File.Delete(strFile);
+                System.IO.File.AppendAllText(strFile, strLine, System.Text.Encoding.UTF8);
+            }
+            catch { }
+            // 2) EVENT_LOG (ISSUE_DATE/INS_DT are DATE only, PK = WH_TYP + ISSUE_DATE + EVENT_SEQ, so the time goes into EVENT_SEQ/REMARKS)
+            string strSeq = (strTask + "_" + strEvt + "_" + dtNow.ToString("HHmmssfff") + "_" + nPid.ToString()).Replace("'", "");
+            if (strSeq.Length > 30) strSeq = strSeq.Substring(0, 30);
+            string strRmk = (dtNow.ToString("yyyy-MM-dd HH:mm:ss") + " " + strPc + " PID=" + nPid.ToString() + " WH=" + strWh).Replace("'", "");
+            if (strRmk.Length > 100) strRmk = strRmk.Substring(0, 100);
+            string strSql = "INSERT INTO EVENT_LOG (WH_TYP, ISSUE_DATE, EVENT_SEQ, MC_TYP, MC_NO, CMD_STA, INS_DT, INS_USER_ID, REMARKS) VALUES ('SYS', CURRENT_DATE, '" + strSeq + "', 'TASK', '" + strTask + "', '" + strEvt + "', CURRENT_DATE, 'TSK_HostCom', '" + strRmk + "')";
+#if POSTGRESSQL
+            try
+            {
+                // own short connection (same login info as modCmLib.DBLogIn); the shared m_BDb has no connection bound at this point
+                modCmLib.ReadInitProfile();
+                string strConn = "host=" + modDefApp.g_User.g_strDbIP + ";username=" + modDefApp.g_User.g_strUserID + ";password=" + modDefApp.g_User.g_strUserPassword + ";database=" + modDefApp.g_User.g_strDatabase + ";Timeout=3;";
+                using (Npgsql.NpgsqlConnection cn = new Npgsql.NpgsqlConnection(strConn))
+                {
+                    cn.Open();
+                    using (Npgsql.NpgsqlCommand cmd = cn.CreateCommand())
+                    {
+                        cmd.CommandText = strSql;
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+            }
+            catch { }
+#endif
+        }
+
 		private void frmMain_FormClosing(object sender, FormClosingEventArgs e)
 		{
 			string strSql = null;
@@ -308,6 +387,7 @@ namespace TSK_HostCom
             //    modDefApp.g_CliWork.m_BDb.trnMain.Commit();
             //}
 
+			PsTaskEvent("STOP");
 			if ((modDefApp.g_CliWork.m_BDb.conMain != null))
 			{
 				modDefApp.g_CliWork.m_BDb.conMain.Close();
@@ -440,7 +520,10 @@ namespace TSK_HostCom
                                  *
                                  *   비워 두면 예전처럼 modDefApp.WH_TYP 로 간다.
                                  */
-                                , string strWhTyp = null)
+                                , string strWhTyp = null
+                                , String strUserData = ""
+                                , string strLdCtnNo = ""
+                                , string strProductId = "")
         {
             string strTitle = "[InsertJobMst] .. ";
             string strSql = "";
@@ -466,6 +549,9 @@ namespace TSK_HostCom
             strSql += modDefApp.CRLF + " , INS_USER_ID       	";
             strSql += modDefApp.CRLF + " , REMARKS          	";
             strSql += modDefApp.CRLF + " , PAIR_LUGG_NO      	";
+            strSql += modDefApp.CRLF + " , BCR_BOTTOM      	    ";
+            strSql += modDefApp.CRLF + " , ITEM_INFO      	    ";
+            strSql += modDefApp.CRLF + " , ITEM_INFO2           ";
             strSql += modDefApp.CRLF + " , WC_STEP )         	";
             strSql += modDefApp.CRLF + "VALUES ('" + GsWhTypOrDefault(strWhTyp) + "'";
             strSql += modDefApp.CRLF + "     ,  '" + strLuggNo + "'";
@@ -482,6 +568,9 @@ namespace TSK_HostCom
             strSql += modDefApp.CRLF + "     ,  'HOST_TASK'";
             strSql += modDefApp.CRLF + "     ,  ''";
             strSql += modDefApp.CRLF + "     ,  '" + GsPairLuggNo(strPairLuggNo) + "'";
+            strSql += modDefApp.CRLF + "     ,  '" + strLdCtnNo + "'";
+            strSql += modDefApp.CRLF + "     ,  '" + strProductId + "'";
+            strSql += modDefApp.CRLF + "     ,  '" + strUserData + "'";
             strSql += modDefApp.CRLF + "     ,  '0');";
 
             int iSelCnt = bDb.ExcuteNonQry_Par(ref strSql);
@@ -836,7 +925,9 @@ namespace TSK_HostCom
                 strSql += modDefApp.CRLF + "           , FK_NO                                                                 ";
                 strSql += modDefApp.CRLF + "           , AGING_TIME                                                            ";
                 strSql += modDefApp.CRLF + "           , PAIR_LUGG_NO                                                          ";
-                strSql += modDefApp.CRLF + "           , LOT_NO )                                                              ";
+                strSql += modDefApp.CRLF + "           , LOT_NO                                                                ";
+                strSql += modDefApp.CRLF + "           , ITEM_INFO                                                             ";
+                strSql += modDefApp.CRLF + "           , ITEM_INFO2 )                                                          ";
                 strSql += modDefApp.CRLF + " SELECT " + modDateTime.SYSDATE_TO_CDT + " AS INS_DATE                             ";
                 strSql += modDefApp.CRLF + "      , " + modDateTime.SYSDATE_TO_CTM + " AS INS_TIME, WH_TYP, LUGG_NO, START_POS ";
                 strSql += modDefApp.CRLF + "      , START_LOCATION, DEST_POS, DEST_LOCATION, TURN, PRODUCT_ID, PRODUCT_SIZE    ";
@@ -845,6 +936,7 @@ namespace TSK_HostCom
                 strSql += modDefApp.CRLF + "      , " + modDateTime.SYSDATE + " AS INS_DT, 'HOST_TASK', REMARKS, TRAY_TYP      ";
                 strSql += modDefApp.CRLF + "      , TRAY_LEV, HS_TRACK_NO, SC_NO, DURATION_TIME, SYSTEM_BYTE, S6F12_RESPONSE   ";
                 strSql += modDefApp.CRLF + "      , S6F11_YON, CEID_NAME, FK_NO, AGING_TIME, PAIR_LUGG_NO, LOT_NO              ";
+                strSql += modDefApp.CRLF + "      , ITEM_INFO, ITEM_INFO2                                                      ";
                 strSql += modDefApp.CRLF + "   FROM JOB_MST                                                                    ";
                 strSql += modDefApp.CRLF + "  WHERE WH_TYP        IN " + modDefApp.GsWhTypList();
                 strSql += modDefApp.CRLF + "    AND LUGG_NO       = " + bDb.ParamsAdd("LUGG_NO", strLuggNo);

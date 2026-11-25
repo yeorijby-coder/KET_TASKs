@@ -8,7 +8,7 @@ using System.Data;
 
 namespace TSK_HostCom
 {
-	class CCliWork
+	partial class CCliWork
 	{
 		public Socket m_sktSock; //소켓
 		public bool m_blSockConnected;//소켓접속여부
@@ -28,6 +28,10 @@ namespace TSK_HostCom
 
 		//로그
 		private string m_strLog = "";
+        // @.S/C 상태보고용 크레인별 마지막 작업번호 (2026-11-05). 완료 때 IO 가 포크 데이터 삭제(DELFK1)를 내고 SC 태스크가 PLC D199 에 써서
+        //   PLC 의 포크 작업번호(LUGG_NO_FK1_RD)가 0 이 된다. 구 ECS 때처럼 완료 뒤에도 WMS 에 번호가 남도록, PLC 값과 내부 값이 모두 0 이면
+        //   마지막으로 보고한 번호를 그대로 싣는다. 새 작업이 잡히면 그 번호로 바뀐다. (키 = PLC_NO + SC_NO)
+        private System.Collections.Generic.Dictionary<string, int> m_dicScLastLugg = new System.Collections.Generic.Dictionary<string, int>();
 		//SQL 문장
 		private string m_strSql;
 		//처리 건수 반환
@@ -399,6 +403,8 @@ namespace TSK_HostCom
         // 22 : 출고 H/S 도착보고  
         // 19 : 출고작업 완료 보고(CV 완료)
         // 29 : 입고작업 완료 보고(SC 완료)
+        private DataTable m_dtJobSnap = null;      // IsJobExist 가 조회한 행들의 복사본
+
         public int IsJobExist(int nJobStatus
                         , ref int nJobType
                         , ref string strUserID
@@ -407,39 +413,50 @@ namespace TSK_HostCom
                         , ref string strSPosition
                         , ref string strDPosition
                         , ref string strLuggNum
-                        , string strJobTypNotIn = "")
+                        , string strJobTypNotIn = ""
+                        , int nRow = 0)
         {
             string strTitle = "[IsJobExist]";
             string strTemp;
 
             try
             {
-                m_BDb.ParamsClear();
-
-                m_strSql = "";
-
-                m_strSql = modDefApp.CRLF + " SELECT * FROM JOB_MST                   ";
-                m_strSql += modDefApp.CRLF + "  WHERE JOB_STATUS = " + m_BDb.ParamsAdd("JOB_STATUS", nJobStatus.ToString());
-                m_strSql += modDefApp.CRLF + "    AND WH_TYP     IN " + modDefApp.GsWhTypList();
-                if (strJobTypNotIn != "")
+                // @.(2026-11-15) 한 바퀴에 여러 건을 보내려고 nRow 번째 행을 돌려준다.
+                //   첫 행(nRow 0)에서 조회하고 결과를 복사해 둔다. 뒤의 행은 그 복사본에서 꺼낸다.
+                //   (보고를 만드는 동안 다른 조회가 m_BDb.dtMain 을 바꿔도 복사본은 그대로다)
+                if (nRow == 0)
                 {
-                    // 해당 상태가 최종이 아닌 작업구분을 뺀다
-                    m_strSql += modDefApp.CRLF + "    AND JOB_TYP NOT IN (" + strJobTypNotIn + ")";
+                    m_BDb.ParamsClear();
+
+                    m_strSql = "";
+
+                    m_strSql = modDefApp.CRLF + " SELECT * FROM JOB_MST                   ";
+                    m_strSql += modDefApp.CRLF + "  WHERE JOB_STATUS = " + m_BDb.ParamsAdd("JOB_STATUS", nJobStatus.ToString());
+                    m_strSql += modDefApp.CRLF + "    AND WH_TYP     IN " + modDefApp.GsWhTypList();
+                    if (strJobTypNotIn != "")
+                    {
+                        // 해당 상태가 최종이 아닌 작업구분을 뺀다
+                        m_strSql += modDefApp.CRLF + "    AND JOB_TYP NOT IN (" + strJobTypNotIn + ")";
+                    }
+                    m_strSql += modDefApp.CRLF + "  ORDER BY UPD_DT, LUGG_NO";
+                    int nSelCnt0 = m_BDb.ExcuteQry_Par(ref m_strSql);
+                    if (nSelCnt0 < 0)
+                    {
+                        return 0;
+                    }
+                    m_dtJobSnap = (nSelCnt0 == 0) ? null : m_BDb.dtMain.Copy();
                 }
-                int nSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
-                if (nSelCnt < 0) 
-                { 
-                    return 0; 
-                }
-                if (nSelCnt == 0)
+
+                if (m_dtJobSnap == null || nRow >= m_dtJobSnap.Rows.Count)
                 {
                     return -2;       // 완료보고할 작업이 없는 상황도 정상이긴함!
                 }
-                nJobType = Convert.ToInt32(m_BDb.dtMain.Rows[0]["JOB_TYP"].ToString());
+                DataRow rowJ = m_dtJobSnap.Rows[nRow];
+                nJobType = Convert.ToInt32(rowJ["JOB_TYP"].ToString());
 
                 // @.완료보고에 실을 창고구분. 기존 ECS 도 완료보고에는
                 //   JobItem.m_nStartWareHouse(작업의 창고) 를 싣는다.
-                m_strJobWhDef = modDefApp.GsWhDefOf(m_BDb.dtMain.Rows[0]["WH_TYP"].ToString());
+                m_strJobWhDef = modDefApp.GsWhDefOf(rowJ["WH_TYP"].ToString());
 
                 switch (nJobType)
                 {
@@ -447,28 +464,28 @@ namespace TSK_HostCom
                     // @.입고 - 반자동(11)도 같이 받는다
                     case 11:
                     case 1:
-                        strSPosition = m_BDb.dtMain.Rows[0]["START_POS"].ToString();
-                        strDPosition = m_BDb.dtMain.Rows[0]["DEST_LOCATION"].ToString();
+                        strSPosition = rowJ["START_POS"].ToString();
+                        strDPosition = rowJ["DEST_LOCATION"].ToString();
                         //strDPosition = strTemp.Substring(0, 2) + strTemp.Substring(4, 2) + strTemp.Substring(7, 2);
                         if (nJobStatus == 12)
                         {
-                            strSPosition = m_BDb.dtMain.Rows[0]["HS_TRACK_NO"].ToString();
+                            strSPosition = rowJ["HS_TRACK_NO"].ToString();
                         }
-                        strDScNum = m_BDb.dtMain.Rows[0]["DEST_POS"].ToString();
+                        strDScNum = rowJ["DEST_POS"].ToString();
                         break;
 
                     // 출고
                     // @.출고 - 반자동(12)도 같이 받는다
                     case 12:
                     case 2:
-                        strSPosition = m_BDb.dtMain.Rows[0]["START_LOCATION"].ToString();
+                        strSPosition = rowJ["START_LOCATION"].ToString();
                         //strSPosition = strTemp.Substring(0, 2) + strTemp.Substring(4, 2) + strTemp.Substring(7, 2);
-                        strDPosition = m_BDb.dtMain.Rows[0]["DEST_POS"].ToString();
+                        strDPosition = rowJ["DEST_POS"].ToString();
                         if (nJobStatus == 22)
                         {
-                            strDPosition = m_BDb.dtMain.Rows[0]["HS_TRACK_NO"].ToString();
+                            strDPosition = rowJ["HS_TRACK_NO"].ToString();
                         }
-                        strSScNum = m_BDb.dtMain.Rows[0]["START_POS"].ToString();
+                        strSScNum = rowJ["START_POS"].ToString();
                         break;
 
                     // 피킹
@@ -479,54 +496,54 @@ namespace TSK_HostCom
                     // @.피킹출고 - 반자동(13)도 같이 받는다
                     case 13:
                     case 3:
-                        strSPosition = m_BDb.dtMain.Rows[0]["START_LOCATION"].ToString();
-                        strDPosition = m_BDb.dtMain.Rows[0]["DEST_POS"].ToString();
+                        strSPosition = rowJ["START_LOCATION"].ToString();
+                        strDPosition = rowJ["DEST_POS"].ToString();
                         if (nJobStatus == 22)
                         {
-                            strDPosition = m_BDb.dtMain.Rows[0]["HS_TRACK_NO"].ToString();
+                            strDPosition = rowJ["HS_TRACK_NO"].ToString();
                         }
-                        strSScNum = m_BDb.dtMain.Rows[0]["START_POS"].ToString();
+                        strSScNum = rowJ["START_POS"].ToString();
                         break;
 
                     // RACK TO RACK (호기내)
                     // @.랙투랙 - 반자동(14)도 같이 받는다
                     case 14:
                     case 4:
-                        strSPosition = m_BDb.dtMain.Rows[0]["START_LOCATION"].ToString();
+                        strSPosition = rowJ["START_LOCATION"].ToString();
                         //strSPosition = strTemp.Substring(0, 2) + strTemp.Substring(4, 2) + strTemp.Substring(7, 2);
-                        strDPosition = m_BDb.dtMain.Rows[0]["DEST_LOCATION"].ToString();
+                        strDPosition = rowJ["DEST_LOCATION"].ToString();
                         //strDPosition = strTemp.Substring(0, 2) + strTemp.Substring(4, 2) + strTemp.Substring(7, 2);
-                        strSScNum = strDScNum = m_BDb.dtMain.Rows[0]["START_POS"].ToString();
+                        strSScNum = strDScNum = rowJ["START_POS"].ToString();
                         break;
 
                     // RACK TO RACK (호기간 출고)
                     // @.호기간이동 - 반자동(15)도 같이 받는다
                     case 15:
                     case 5:
-                        strSPosition = m_BDb.dtMain.Rows[0]["START_LOCATION"].ToString();
+                        strSPosition = rowJ["START_LOCATION"].ToString();
                         //strSPosition = strTemp.Substring(0, 2) + strTemp.Substring(4, 2) + strTemp.Substring(7, 2);
-                        strDPosition = m_BDb.dtMain.Rows[0]["DEST_LOCATION"].ToString();
+                        strDPosition = rowJ["DEST_LOCATION"].ToString();
                         //strDPosition = strTemp.Substring(0, 2) + strTemp.Substring(4, 2) + strTemp.Substring(7, 2);
-                        strSScNum = m_BDb.dtMain.Rows[0]["START_POS"].ToString();
-                        strDScNum = m_BDb.dtMain.Rows[0]["DEST_POS"].ToString();
+                        strSScNum = rowJ["START_POS"].ToString();
+                        strDScNum = rowJ["DEST_POS"].ToString();
                         if (nJobStatus == 12)
                         {
-                            strDPosition = m_BDb.dtMain.Rows[0]["HS_TRACK_NO"].ToString();
+                            strDPosition = rowJ["HS_TRACK_NO"].ToString();
                         }
                         if (nJobStatus == 22)
                         {
-                            strSPosition = m_BDb.dtMain.Rows[0]["HS_TRACK_NO"].ToString();
+                            strSPosition = rowJ["HS_TRACK_NO"].ToString();
                         }
                         break;
                     // @.이동 - 반자동(10)도 같이 받는다
                     case 10:
                     case 6:
-                        strSPosition = m_BDb.dtMain.Rows[0]["START_POS"].ToString();
-                        strDPosition = m_BDb.dtMain.Rows[0]["DEST_POS"].ToString();
+                        strSPosition = rowJ["START_POS"].ToString();
+                        strDPosition = rowJ["DEST_POS"].ToString();
                         break;
                 }
-                strUserID = m_BDb.dtMain.Rows[0]["UPD_USER_ID"].ToString();
-                strLuggNum = m_BDb.dtMain.Rows[0]["LUGG_NO"].ToString();
+                strUserID = rowJ["UPD_USER_ID"].ToString();
+                strLuggNum = rowJ["LUGG_NO"].ToString();
 
             }
             catch (Exception ex)
@@ -655,6 +672,11 @@ namespace TSK_HostCom
 
                     strDeviceNo = "" + m_BDb.dtMain.Rows[0]["MC_NO"].ToString();
                     strLuggNo = "" + m_BDb.dtMain.Rows[0]["LUGG_NO_FK1_RD"].ToString();
+                    string strLuggFk2 = "" + m_BDb.dtMain.Rows[0]["LUGG_NO_FK2_RD"].ToString();
+                    string strItnFk1 = "" + m_BDb.dtMain.Rows[0]["ITN_LUGG_FK1"].ToString();
+                    string strItnFk2 = "" + m_BDb.dtMain.Rows[0]["ITN_LUGG_FK2"].ToString();
+                    string strJobTypOd = ("" + m_BDb.dtMain.Rows[0]["JOB_TYP_OD"].ToString()).Trim();   // 우리가 지시한 작업구분 (1 입고, 2 출고, 4 랙투랙)
+                    bool bNoReport = false;     // 구 ECS 가 보고하지 않던 경우 (아래 이중입고 / 공출고)
                     strErrorCode = "" + m_BDb.dtMain.Rows[0]["MC_ERR_CD"].ToString();
 
                     // @.상위에 보낼 장비번호는 호기번호다. DB 의 9xx 에서 900 을 뺀다.
@@ -666,6 +688,7 @@ namespace TSK_HostCom
                     if (nScNo > 900) nScNo -= 900;
                     strHostDevNo = nScNo.ToString();
                     m_strEqpWhDef = modDefApp.GsWhDefOf(m_BDb.dtMain.Rows[0]["WH_TYP"].ToString());
+                    m_nEqpPlcId = 0;            // 크레인 에러의 PLC ID 는 구 ECS 에서 늘 0 이었다
 
 
                     string strSBank = "" + m_BDb.dtMain.Rows[0]["START_BANK_FK1_RD"].ToString();
@@ -713,10 +736,66 @@ namespace TSK_HostCom
                     {
                     case "0054": strErrorKind = "1"; break;     // 이중입고
                     case "0055": strErrorKind = "1"; break;     // 이중입고
-                    case "0056": strErrorKind = "2"; break;     // 입고장애
-                    case "0057": strErrorKind = "4"; break;     // 출고장애
+                    // @.입고장애 56 / 출고장애 57 은 기계적 에러(종류 0)로 보낸다 (2026-11-06).
+                    //   문서에는 종류 2(입고장애) / 4(출고장애)가 있으나 구 ECS(CScInfo::SetErrorCode)는
+                    //   54/55/58/59 를 뺀 모든 코드를 종류 0 으로 보냈다. 상위는 종류 2 / 4 를 받아 본 적이 없다.
                     case "0058": strErrorKind = "3"; break;     // 공출고
                     case "0059": strErrorKind = "3"; break;     // 공출고
+                    }
+
+                    /*
+                     * @.이중입고 / 공출고 보고는 구 ECS(Sc.cpp CSc::ErrorCheck) 와 같게 한다 (2026-11-05).
+                     *
+                     *   구 ECS 는 이 네 코드(54/55/58/59)를 기계적 에러 보고(CScInfo::SetErrorCode)에서 빼고 ErrorCheck 에서만 보고했다.
+                     *     - 작업번호는 크레인이 읽어 준 값이 아니라 우리가 지시해 기억해 둔 번호(m_nInternalLuggNum)다.
+                     *       포크#2 에러(55 / 59)면 포크#2 의 번호다. 지금은 ITN_LUGG_FK1 / FK2 가 그 값이다.
+                     *     - 지시한 작업이 없으면(번호 0) 로그만 남기고 보고하지 않았다.
+                     *     - 출고 작업 중의 이중입고, 입고 작업 중의 공출고는 "SC 로직체크" 로그만 남기고 보고하지 않았다.
+                     *     - 에러종류는 이중입고 1, 공출고 3 이다.
+                     *   전에는 크레인이 읽어 준 번호를 먼저 썼고, 위 두 경우에도 보고가 나갔다.
+                     */
+                    if (strErrorKind == "1" || strErrorKind == "3")
+                    {
+                        bool bFk2Err = (strErrorCode == "0055" || strErrorCode == "0059");
+                        int nJobLugg = 0; int.TryParse((bFk2Err ? strItnFk2 : strItnFk1).Trim(), out nJobLugg);
+
+                        string strSkip = "";
+                        if (nJobLugg <= 0) strSkip = "지시한 작업이 없음";
+                        else if (strErrorKind == "1" && strJobTypOd == "2") strSkip = "출고 작업 중 이중입고 (SC 로직체크)";
+                        else if (strErrorKind == "3" && strJobTypOd == "1") strSkip = "입고 작업 중 공출고 (SC 로직체크)";
+
+                        if (strSkip != "")
+                        {
+                            bNoReport = true;
+                            m_strLog = string.Format("에러 보고 생략.. SC {0}호기 에러코드=[{1}] 작업번호=[{2}] 사유=[{3}] (구 ECS 와 같음)",
+                                strHostDevNo, strErrorCode, nJobLugg, strSkip);
+                            modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_NOR);
+                        }
+                        else
+                        {
+                            strLuggNo = nJobLugg.ToString("0000");
+
+                            // 위치 : 이중입고는 작업의 도착 위치, 공출고는 작업의 출발 위치 (JOB_MST 의 참 뱅크).
+                            //   크레인이 읽어 준 BANK 는 1 / 2 로 접힌 값이라 쓰지 않는다.
+                            m_BDb.ParamsClear();
+                            m_strSql = "";
+                            m_strSql += modDefApp.CRLF + " SELECT START_LOCATION, DEST_LOCATION ";
+                            m_strSql += modDefApp.CRLF + "   FROM JOB_MST                        ";
+                            m_strSql += modDefApp.CRLF + "  WHERE WH_TYP IN " + modDefApp.GsWhTypList();
+                            m_strSql += modDefApp.CRLF + "    AND LUGG_NO = " + m_BDb.ParamsAdd("LUGG_NO", nJobLugg.ToString("0000"));
+                            if (m_BDb.ExcuteQry_Par(ref m_strSql) > 0)
+                            {
+                                string strJobLoc = "" + m_BDb.dtMain.Rows[0][(strErrorKind == "1") ? "DEST_LOCATION" : "START_LOCATION"].ToString();
+                                string strDigit = "";
+                                foreach (char ch in strJobLoc) if (ch >= '0' && ch <= '9') strDigit += ch;
+                                if (strDigit.Length == 7 && strDigit != "0000000")
+                                {
+                                    strBank  = strDigit.Substring(0, 2);
+                                    strBay   = strDigit.Substring(2, 3);
+                                    strLevel = strDigit.Substring(5, 2);
+                                }
+                            }
+                        }
                     }
 
                     // 2.MES SEND STATUS ('N' -> 'Y') UPDATE
@@ -742,6 +821,7 @@ namespace TSK_HostCom
                     }
 
                     m_BDb.CommitTrans();
+                    if (bNoReport) return -1;       // 보고 대기 표시만 내리고 전문은 보내지 않는다
                     return 1;
                 }
                 else if (strEQP_TYP == "CV")
@@ -779,6 +859,8 @@ namespace TSK_HostCom
                     if (strHostDevNo.Length == 0) strHostDevNo = strDeviceNo;
                     m_strEqpWhDef = modDefApp.GsWhDefOf(m_BDb.dtMain.Rows[0]["WH_TYP"].ToString());
                     strErrorKind = "0";         // 기계적 에러 
+                    // 컨베이어 에러의 PLC ID 는 그 트랙이 속한 컨베이어 PLC 번호다 (구 ECS CCvTrackInfo::m_nPlcID, 1 ~ 8)
+                    m_nEqpPlcId = 0; int.TryParse(("" + m_BDb.dtMain.Rows[0]["PLC_NO"].ToString()).Trim(), out m_nEqpPlcId);
                     strDeviceClass = "2";       // CV
                     strBank = "00";
                     strBay = "000";
@@ -825,18 +907,51 @@ namespace TSK_HostCom
 		//최초작성자	: BASE(이길문)
 		//작성일		: 20160829
 		//설명		: ECS송신정보 구하기
+        // @.보고 주기 분리 (2026-11-09)
+        //   통신 스레드는 0.25초마다 돈다. 에러(E)/공파렛트·P-BOX 입고 요구는 전처럼 1초에 한 번만 하고(상태(S)는 2026-11-11 부터 매 바퀴),
+        //   완료(F)/도착 보고는 매 바퀴 본다. 전에는 모두 1초에 한 번이라 이동 완료(11)가 된 뒤 F 보고가 최대 1초 늦었다.
+        private DateTime m_dtSlowRpt = DateTime.MinValue;
+        private const int DEF_SLOW_RPT_MS = 1000;
+        private DateTime m_dtStatusRpt = DateTime.MinValue;
+        private const int DEF_STATUS_RPT_MS = 50;      // (2026-11-23) 0.25초 -> 0.05초. 변경 보고가 바뀐 설비만 보내게 되어 매 바퀴 봐도 가볍다
+
 		public bool GetSendData()
 		{
             DataTable_Dispose();
+
+            // @.비동기 송신 : 응답을 받은(또는 실패한) 전송을 먼저 마무리한다. 작업 삭제 같은 ACK 뒤의 일이 여기서 돈다. (2026-11-15)
+            ProcessSendDone();
+
+            bool bSlowRpt = (DateTime.Now - m_dtSlowRpt).TotalMilliseconds >= DEF_SLOW_RPT_MS;
+            if (bSlowRpt) m_dtSlowRpt = DateTime.Now;
+
+            /*
+             * @.완료(F)/도착 보고를 한 바퀴의 맨 앞으로 옮겼다. (2026-11-22)
+             *
+             *   IO 가 도착을 잡아 작업 상태를 19 로 바꾼 뒤 WMS 에 F 가 나가기까지가 현장에서 0.3~1.1초(중앙값 0.77초)였다.
+             *   바퀴 사이 대기 0.25초에 더해, 한 바퀴 안에서 완료 보고가 상태/에러 보고 조회 뒤에 서 있어
+             *   그 조회들이 끝나야 완료 보고에 닿았다. 기존 ECS 는 도착 판정과 같은 프로세스에서 바로 보고했다.
+             *   완료/도착 보고는 매 바퀴 먼저 보고, 상태/에러 보고는 뒤에서 하되 상태 보고는 전처럼 0.25초에 한 번으로 묶는다.
+             */
+            GetJobCompleteReport();     // @.작업 완료 보고(F) 1차완료   문서 IV.5
+            GetLoadArrivalReport();     // @.도착 보고. 원본은 완료보고(F) 최종완료로 보낸다
+
+            bool bStatusRpt = (DateTime.Now - m_dtStatusRpt).TotalMilliseconds >= DEF_STATUS_RPT_MS;
+            if (bStatusRpt) m_dtStatusRpt = DateTime.Now;
 
             if (modDefApp.g_frmForm.chkSimMode.Checked == false)
             {
                 // @.상태 보고(S). 안에서 30초 경과 여부를 보고 정기보고/변경보고를 가른다.
                 //   원본 문서 : "상태가 변경되면 즉시 + 정기적으로 30초에 1회"
-                GetStatusReport();      // @.상태 보고(S)          문서 IV.3
-                GetErrorReport();       // @.에러 보고(E)          문서 IV.4
-                GetPmStoRequest();      // @.공파렛트 입고 요구(N) 문서 IV.8
-                GetBoxStoRequest();     // @.P-BOX 입고 요구(L)    문서 IV.9
+                //   (2026-11-11) 상태 변경을 빨리 알리려고 0.25초마다 본다. 정기보고 30초 규칙은 그대로다.
+                //   (2026-11-22) 바퀴가 0.05초로 짧아져서 상태 조회만 0.25초에 한 번으로 묶는다.
+                if (bStatusRpt) GetStatusReport();      // @.상태 보고(S)          문서 IV.3
+                if (bSlowRpt)
+                {
+                    GetErrorReport();       // @.에러 보고(E)          문서 IV.4
+                    GetPmStoRequest();      // @.공파렛트 입고 요구(N) 문서 IV.8
+                    GetBoxStoRequest();     // @.P-BOX 입고 요구(L)    문서 IV.9
+                }
 
                 /*
                  * 아래 두 가지는 없앴다.
@@ -845,50 +960,47 @@ namespace TSK_HostCom
                  *                          GetPmStoRequest() 가 담당한다. 중복이었다.
                  */
             }
-            GetJobCompleteReport();     // @.작업 완료 보고(F) 1차완료   문서 IV.5
-            GetLoadArrivalReport();     // @.도착 보고. 원본은 완료보고(F) 최종완료로 보낸다
 
 			return true;
 		}
         //최초작성자	: BASE(정복열)
         //작성일		: 20200519
         //설명		    : 상태 보고  
+        /*
+         * @.정기 보고(30초) 판정을 메모리의 시각으로 한다. (2026-11-23)
+         *
+         *   전에는 EQP_MST 의 EQP_TYP = 'HOST2' 행의 UPD_DT 가 30초 안쪽인지를 조회해서 정했다.
+         *   그런데 그 행이 로컬 DB 에도 현장 DB(2026-11-22 덤프)에도 없다. 그래서 조회는 늘 0건이고
+         *   "30초가 지났다" 로 판정되어, 바뀐 것이 없어도 전체 설비(크레인 11 + 작업대 24 = 35건)의 상태 전문이
+         *   쉬지 않고 계속 나갔다. 상위와는 한 건씩 응답을 받고 보내므로 완료 / 도착 보고(F)도 이 줄 뒤에 서서 늦어졌다.
+         *   (로컬 측정 : 상태 전문이 초당 약 60건씩 끊임없이 나갔다)
+         *
+         *   이제 마지막으로 전체를 보낸 시각을 기억해 두고, 30초가 지났을 때만 전체를 보낸다. 그 사이에는 바뀐 설비만 보낸다.
+         *   처음 켰을 때와 상위에 다시 붙었을 때는 시각이 비어 있어 전체를 한 번 보낸다.
+         */
+        private DateTime m_dtStatusFull = DateTime.MinValue;
+        private const int DEF_STATUS_FULL_S = 30;
+
         private void GetStatusReport()
         {
-            string strTitle = "[GetStatusReport] .. ";
-            #region HOST로 최종 인터페이스한 시간을 가져온다
-            m_BDb.ParamsClear();
-
-            m_strSql = modDefApp.CRLF + "   SELECT  *                                                                               ";
-            m_strSql += modDefApp.CRLF + "    FROM  EQP_MST                                                                         ";
-            m_strSql += modDefApp.CRLF + "   WHERE  WH_TYP    IN " + modDefApp.GsWhTypList();
-            m_strSql += modDefApp.CRLF + "     AND  TO_CHAR(" + modDateTime.SYSDATE + " - UPD_DT, 'YYYYMMDDHH24MISS')::INTEGER < 30 ";       // 30초       
-            m_strSql += modDefApp.CRLF + "     AND  EQP_TYP   = 'HOST2'                                                             ";
-            m_strSql += modDefApp.CRLF + "ORDER BY  UPD_DT DESC                                                                     ";
-
-            int iCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
-
-            if (iCnt < 0)
+            if (!m_blSockConnected)
             {
-                m_strLog = m_BDb.ErrMsg + m_strSql;
-                modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
+                m_dtStatusFull = DateTime.MinValue;     // 다시 붙으면 전체를 한 번 보낸다
                 return;
             }
 
-            #endregion
-            #region 30초가 지났는지에 따라 보내는 파라미터가 달라진다.
-
-            if (iCnt == 0)
+            bool bTime = (DateTime.Now - m_dtStatusFull).TotalSeconds >= DEF_STATUS_FULL_S;
+            if (bTime)
             {
-                // 30초가 지났다.
-                GetStatusReport(true);
+                // 앞 묶음이 가는 중이면 GetStatusReport(true) 는 아무것도 하지 않고 true 를 돌려준다. 그때는 시각을 찍지 않는다.
+                bool bWasInFlight = m_bStatusInFlight;
+                if (GetStatusReport(true) && !bWasInFlight)
+                    m_dtStatusFull = DateTime.Now;
             }
-            else 
+            else
             {
-                // 30초가 안지났다.
                 GetStatusReport(false);
             }
-            #endregion
         }
 
         //최초작성자	: BASE(정복열)
@@ -903,6 +1015,10 @@ namespace TSK_HostCom
             {
                 return false;
             }
+
+            // @.앞 상태 보고 묶음이 ACK 를 기다리는 중이면 다시 만들지 않는다. (2026-11-15)
+            if (m_bStatusInFlight)
+                return true;
 
             int nJobType = 0;
             string strTempFrame = null;
@@ -970,6 +1086,23 @@ namespace TSK_HostCom
             string strJOB_TYP_RD = "";
             string strPLC_NO = "";
 
+            /*
+             * @.변경 보고는 바뀐 설비만 보낸다. (2026-11-23)
+             *
+             *   전에는 설비 하나만 바뀌어도 크레인 11대 + 작업대 24곳 = 35건을 모두 다시 보냈다. 상위와는 한 건 보내고
+             *   응답을 받은 뒤 다음 건을 보내므로, 바뀐 작업대의 전문은 앞선 전문들이 다 나간 뒤에야 나갔다. 묶음이 가는
+             *   중에는 다음 묶음을 만들지도 않는다. (로컬 측정 : 바뀐 뒤 그 작업대 전문이 나가기까지 중앙값 0.69초, 최대 1.0초)
+             *   기존 ECS 는 트랙마다 상태가 바뀔 때 그 트랙만 보고했다. (CCvTrackInfo::StatusReport)
+             *
+             *   변경 보고(bTimeReport == false) : HOST_SEND_YN = 'N' 인 설비만 보낸다.
+             *       큐에 넣기 전에 그 설비들을 'Y' 로 바꿔 둔다. 가는 도중에 값이 또 바뀌면 설비 태스크가 다시 'N' 으로
+             *       세우므로 다음 바퀴에 한 번 더 나간다. (전에는 응답을 받은 뒤에 'Y' 로 바꿔, 그 사이의 변경이 묻혔다)
+             *       전송이 실패하면 다시 'N' 으로 되돌려 다음에 다시 보낸다.
+             *   정기 보고(30초, bTimeReport == true) : 전처럼 전체를 보낸다.
+             */
+            bool bPartial = (bTimeReport == false);
+            string strScSentList = "'0'";
+
             int nScCnt = iCnt;
             for (int ii = 0; ii < iCnt; ii++)
             {
@@ -1030,14 +1163,26 @@ namespace TSK_HostCom
                 //   예전에는 내부 작업번호(ITN_LUGG_FK1)를 보고했는데 이것은 완료 때 0 으로 지워져 완료 뒤 번호가 사라졌다.
                 int nScLugg = 0; int.TryParse(("" + m_BDb.dtMain.Rows[ii]["LUGG_NO_FK1_RD"].ToString()).Trim(), out nScLugg);
                 if (nScLugg == 0) nScLugg = nScItn;
+                // @.완료 뒤 포크 데이터 삭제로 PLC 값이 0 이 되어도 마지막 작업번호를 계속 보고한다 (2026-11-05)
+                string strScKey = strPLC_NO + "_" + strScNo;
+                if (nScLugg > 0)
+                    m_dicScLastLugg[strScKey] = nScLugg;
+                else if (m_dicScLastLugg.ContainsKey(strScKey))
+                    nScLugg = m_dicScLastLugg[strScKey];
 
                 // @.그 크레인이 속한 창고. 11호기(P-BOX)는 'B' 로 나간다.
                 string strScWhDef = modDefApp.GsWhDefOf(m_BDb.dtMain.Rows[ii]["WH_TYP"].ToString());
 
-                lstStatusFrame.Add(GfMakeStatusBody(strScWhDef, modDefApp.DEV_CLASS_SC, nScNo, nScStatus,
-                                                    nScLugg,
-                                                    0,                          // @.사이즈체크는 S/C 에 해당 없음
-                                                    (nScItn > 0) ? 1 : 0));    // @.ECS작업유무는 진행 중인 작업이 있을 때만
+                bool bScChanged = (("" + m_BDb.dtMain.Rows[ii]["HOST_SEND_YN"]).Trim() == "N");
+                if (bPartial == false || bScChanged)
+                {
+                    lstStatusFrame.Add(GfMakeStatusBody(strScWhDef, modDefApp.DEV_CLASS_SC, nScNo, nScStatus,
+                                                        nScLugg,
+                                                        0,                          // @.사이즈체크는 S/C 에 해당 없음
+                                                        (nScItn > 0) ? 1 : 0));    // @.ECS작업유무는 진행 중인 작업이 있을 때만
+                    if (bScChanged)
+                        strScSentList += ",'" + ("" + m_BDb.dtMain.Rows[ii]["SC_NO"]).Trim().Replace("'", "") + "'";
+                }
 
                 strTempFrame = string.Format("{0:00}{1:0}{2:0000}", Convert.ToInt32(strPLC_NO), nScStatus, Convert.ToInt32(strITN_LUGG_FK1));
 
@@ -1142,6 +1287,9 @@ namespace TSK_HostCom
                 strMC_NO = "" + m_BDb.dtMain.Rows[iii]["MC_NO"].ToString() == "" ? "0" : m_BDb.dtMain.Rows[iii]["MC_NO"].ToString();
                 strMC_NO_NM = "" + m_BDb.dtMain.Rows[iii]["MC_NO_NM"].ToString() == "" ? "0" : m_BDb.dtMain.Rows[iii]["MC_NO_NM"].ToString();
                 
+                // @.변경 보고는 바뀐 작업대만 (2026-11-23)
+                if (bPartial && ("" + m_BDb.dtMain.Rows[iii]["HOST_SEND_YN"]).Trim() != "N")
+                    continue;
                 strMC_NO_LIST += ",'" + strMC_NO + "'";
                 /*
                  * @.상태값 (원본 GetCvStoWorkingStatus / GetCvRetWorkingStatus / GetCvWorkingStationStatus / GetCvPickingStationStatus)
@@ -1214,12 +1362,104 @@ namespace TSK_HostCom
              * 예전에는 모든 설비를 한 전문(94자)에 몰아 담았는데
              * 그런 형식은 문서에도 원본(CCvTrackInfo::StatusReport)에도 없다.
              */
+            // @.비동기 송신 (2026-11-15) : 전문을 큐에 넣고, 설비 전문이 모두 ACK 를 받으면 보냈다는 표시(HOST_SEND_YN)를 한다.
+            //   한 묶음이 끝나기 전에는 다시 만들지 않는다(m_bStatusInFlight).
+            if (bPartial)
+            {
+                if (lstStatusFrame.Count == 0)
+                    return true;
+                // 보내기 전에 보냈다는 표시를 먼저 한다. 가는 도중의 변경은 설비 태스크가 다시 'N' 으로 세운다.
+                if (!StatusMarkSent(strScSentList, strMC_NO_LIST, "Y"))
+                    return false;
+            }
+            else if (lstStatusFrame.Count == 0)
+                return StatusAckUpdate(strMC_NO_LIST);
+
+            string strMcListForAck = strMC_NO_LIST;
+            string strScListForAck = strScSentList;
+            int nStatusRemain = lstStatusFrame.Count;
+            bool bStatusAllOk = true;
+            m_bStatusInFlight = true;
             for (int nFrame = 0; nFrame < lstStatusFrame.Count; nFrame++)
             {
-                if (!SendBody(lstStatusFrame[nFrame])) return false;
+                bool bDupS = false;
+                bool bQueued = SendBodyQ(lstStatusFrame[nFrame], delegate (bool bOk)
+                {
+                    if (!bOk) bStatusAllOk = false;
+                    nStatusRemain--;
+                    if (nStatusRemain == 0)
+                    {
+                        m_bStatusInFlight = false;
+                        if (bPartial)
+                        {
+                            if (!bStatusAllOk) StatusMarkSent(strScListForAck, strMcListForAck, "N");   // 못 보냈다 : 다음에 다시
+                        }
+                        else if (bStatusAllOk) StatusAckUpdate(strMcListForAck);
+                    }
+                }, out bDupS);
+
+                if (!bQueued)
+                {
+                    // 연결이 끊겨 넣지 못했다. 이미 넣은 것의 콜백은 실패로 끝난다. 못 넣은 나머지는 세지 않는다.
+                    bStatusAllOk = false;
+                    nStatusRemain -= (lstStatusFrame.Count - nFrame);
+                    if (nStatusRemain <= 0)
+                    {
+                        m_bStatusInFlight = false;
+                        if (bPartial) StatusMarkSent(strScListForAck, strMcListForAck, "N");
+                    }
+                    return false;
+                }
+                if (bDupS)
+                    nStatusRemain--;        // 같은 전문이 이미 가는 중이다. 그쪽 콜백이 일한다.
             }
+            if (nStatusRemain <= 0) m_bStatusInFlight = false;
             #endregion
 
+            return true;
+        }
+
+        // 변경 보고용 : 고른 크레인 / 작업대의 HOST_SEND_YN 을 바꾼다. (2026-11-23)
+        //   strYn = "Y" : 보내기 직전에 (N -> Y).   strYn = "N" : 전송이 실패해 되돌릴 때 (Y -> N)
+        //   정기 보고의 시각(EQP_MST HOST2)은 건드리지 않는다. 변경 보고가 잦아도 30초 정기 보고는 그대로 나가야 한다.
+        private bool StatusMarkSent(string strSC_NO_LIST, string strMC_NO_LIST, string strYn)
+        {
+            string strFrom = (strYn == "Y") ? "N" : "Y";
+            try
+            {
+                m_BDb.BeginTrans();
+
+                m_BDb.ParamsClear();
+                m_strSql = "";
+                m_strSql += modDefApp.CRLF + " UPDATE SC_DATA                    ";
+                m_strSql += modDefApp.CRLF + "    SET HOST_SEND_YN = '" + strYn + "' ";
+                m_strSql += modDefApp.CRLF + "  WHERE WH_TYP       IN " + modDefApp.GsWhTypList();
+                m_strSql += modDefApp.CRLF + "    AND SC_NO        IN (" + strSC_NO_LIST + ") ";
+                m_strSql += modDefApp.CRLF + "    AND HOST_SEND_YN = '" + strFrom + "' ";
+                if (m_BDb.ExcuteNonQry_Par(ref m_strSql) < 0) { m_BDb.RollbackTrans(); return false; }
+
+                m_BDb.ParamsClear();
+                m_strSql = "";
+                m_strSql += modDefApp.CRLF + " UPDATE CV_DATA                    ";
+                m_strSql += modDefApp.CRLF + "    SET HOST_SEND_YN = '" + strYn + "' ";
+                m_strSql += modDefApp.CRLF + "  WHERE WH_TYP       IN " + modDefApp.GsWhTypList();
+                m_strSql += modDefApp.CRLF + "    AND MC_NO        IN (" + strMC_NO_LIST + ") ";
+                m_strSql += modDefApp.CRLF + "    AND HOST_SEND_YN = '" + strFrom + "' ";
+                if (m_BDb.ExcuteNonQry_Par(ref m_strSql) < 0) { m_BDb.RollbackTrans(); return false; }
+
+                m_BDb.CommitTrans();
+                return true;
+            }
+            catch
+            {
+                try { m_BDb.RollbackTrans(); } catch { }
+                return false;
+            }
+        }
+
+        // 상태 보고(S)를 모두 ACK 받은 뒤 : SC_DATA / CV_DATA 의 HOST_SEND_YN 을 Y 로, EQP_MST(HOST2) 의 시각을 갱신한다. (CliWorkThread 에서 불린다)
+        private bool StatusAckUpdate(string strMC_NO_LIST)
+        {
             #region 응답 받고 SC_DATA와 CV_DATA의 HOST_SEND_YN을 Y로 변경
             #region SC_DATA의 HOST_SEND_YN을 Y로 변경
             // 2.MES SEND STATUS ('N' -> 'Y') UPDATE
@@ -1388,11 +1628,16 @@ namespace TSK_HostCom
              *   "이상 발생. DB Logout" 뒤 재접속 - 이것이 끝없이 돌았다.
              *   못 읽는 칸은 0 으로 둔다. 보고를 못 하는 것보다 낫다.
              */
-            strTemp = string.Format("E{0}{1:0}{2:000}{3:0}{4:0000}{5:0000}{6:00}{7:000}{8:00}",
+            // @.끝에 PLC ID 를 붙인다 (2026-11-06). 문서 표에는 없는 칸이지만 구 ECS(CHostCl::Error)는
+            //   Level 뒤에 "%d" 로 PLC ID 를 붙여 보냈다. 크레인은 0, 컨베이어는 PLC 번호다. (본문 23자)
+            //   화면의 "E PLC ID" 체크(기본 체크)를 풀면 붙이지 않는다. (문서 표대로 본문 22자)
+            bool bSendPlcId = modDefApp.g_frmForm.chkErrPlcId.Checked;
+            strTemp = string.Format("E{0}{1:0}{2:000}{3:0}{4:0000}{5:0000}{6:00}{7:000}{8:00}{9}",
                 m_strEqpWhDef,
                 GfToInt(strDeviceClass), GfToInt(strHostDevNo), GfToInt(strErrorKind),
                 GfToInt(strErrorCode), GfToInt(strLuggNo),
-                GfToInt(strBank), GfToInt(strBay), GfToInt(strLevel));
+                GfToInt(strBank), GfToInt(strBay), GfToInt(strLevel),
+                bSendPlcId ? m_nEqpPlcId.ToString() : "");
 
             int iTxCnt = modDefApp.MSG_HEAD_CNT + strTemp.Length + 2;
             //MSG_ORDER_CNT
@@ -1415,8 +1660,9 @@ namespace TSK_HostCom
 
             #endregion
 
-            #region 메세지 보내기
-            if (!RequestSrv(iTxCnt.ToString()))
+            #region 메세지 보내기 (비동기 : 큐에 넣는다)
+            bool bDupE = false;
+            if (!QueueSrv(null, out bDupE))
             {
                 return false;
             }
@@ -1472,23 +1718,35 @@ namespace TSK_HostCom
          */
         private bool GetRetFirstReport()
         {
+            for (int n = 0; n < DEF_REPORT_QUEUE_MAX; n++)
+            {
+                bool bNoMore = false;
+                bool bOk = GetRetFirstReportOne(ref bNoMore);
+                if (bNoMore || !bOk) break;
+            }
+            return true;
+        }
+
+        private bool GetRetFirstReportOne(ref bool bNoMore)
+        {
             string strTitle = "[GetRetFirstReport] .. ";
             m_strHostCmd = "F";
             try
             {
-                if (!m_blSockConnected) return false;
+
 
                 m_BDb.ParamsClear();
                 m_strSql = "";
                 m_strSql += modDefApp.CRLF + " SELECT * FROM JOB_MST                                         ";
-                m_strSql += modDefApp.CRLF + "  WHERE JOB_STATUS IN ('29', '11', '19')                       ";
-                m_strSql += modDefApp.CRLF + "    AND JOB_TYP    IN ('2', '3', '12', '13')                   ";
+                m_strSql += modDefApp.CRLF + "  WHERE JOB_STATUS IN ('29', '11', '19', '28')                       ";
+                m_strSql += modDefApp.CRLF + "    AND JOB_TYP    IN ('2', '3', '12', '13', '5', '15')                   ";
                 m_strSql += modDefApp.CRLF + "    AND COALESCE(NULLIF(TRIM(WC_STEP), ''), '0') <> '1'        ";
                 m_strSql += modDefApp.CRLF + "    AND WH_TYP     IN " + modDefApp.GsWhTypList();
                 m_strSql += modDefApp.CRLF + "  ORDER BY UPD_DT                                              ";
                 m_strSql += modDefApp.CRLF + "  LIMIT 1                                                      ";
                 int nSelCnt = m_BDb.ExcuteQry_Par(ref m_strSql);
-                if (nSelCnt <= 0) return true;
+                if (nSelCnt <= 0) { bNoMore = true; return true; }
+
 
                 string strLuggNum = m_BDb.dtMain.Rows[0]["LUGG_NO"].ToString().Trim();
                 int nJobType = Convert.ToInt32(m_BDb.dtMain.Rows[0]["JOB_TYP"].ToString().Trim());
@@ -1496,6 +1754,11 @@ namespace TSK_HostCom
                 string strWhTyp = m_BDb.dtMain.Rows[0]["WH_TYP"].ToString().Trim();
                 int nLuggNum = Convert.ToInt32(strLuggNum);
                 m_strJobWhDef = modDefApp.GsWhDefOf(strWhTyp);
+
+                if (nJobType != 5 && nJobType != 15)
+                {
+                    if (!m_blSockConnected) return false;
+                }
 
                 // 반자동(9000 이상)이거나 SIM MODE 는 보고하지 않는다. 표만 해 두어 다시 찾지 않게 한다.
                 bool bNoSend = (nLuggNum >= 9000 && modDefApp.g_frmForm.chkSimMode.Checked == false)
@@ -1518,10 +1781,18 @@ namespace TSK_HostCom
                     //   상위는 차수 2 만 받아도 1차를 함께 처리한다. 응답이 없으면(RequestSrv 가 거짓) 소켓이
                     //   닫히지만 1차는 다시 보내지 않고 "보냈다"고 표시한 채 넘어가, 도착 때 차수 2 가 나가게 한다.
                     //   (연결이 끊겨 보내지도 못한 경우는 위의 연결 확인에서 먼저 돌아가므로 표시하지 않는다)
-                    if (!RequestSrv(iTxCnt.ToString()))
+                    //   (2026-11-15) 비동기 : 큐에 넣고 바로 넘어간다. 응답이 없으면 콜백에서 같은 로그를 남긴다.
                     {
-                        m_strLog = string.Format("출고 1차 완료 보고에 응답이 없습니다. 다시 보내지 않고 넘어갑니다. [작업번호:{0}]", strLuggNum);
-                        modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
+                        string strLuggFirst = strLuggNum;
+                        bool bDupF = false;
+                        QueueSrv(delegate (bool bOkF)
+                        {
+                            if (!bOkF)
+                            {
+                                m_strLog = string.Format("출고 1차 완료 보고에 응답이 없습니다. 다시 보내지 않고 넘어갑니다. [작업번호:{0}]", strLuggFirst);
+                                modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
+                            }
+                        }, out bDupF);
                     }
                 }
 
@@ -1558,7 +1829,33 @@ namespace TSK_HostCom
         //최초작성자	: BASE(정복열)
         //작성일		: 20200519
         //설명		    : 완료 보고 
+        // 한 바퀴에 보고를 큐에 넣는 최대 건수 / 훑어볼 최대 행 수 (2026-11-15)
+        private const int DEF_REPORT_QUEUE_MAX = 20;
+        private const int DEF_REPORT_SCAN_MAX = 60;
+
+        // 지금 큐 / 대기 / 끝난 목록에 있는 전문 수 (새로 큐에 들어갔는지 세는 데 쓴다)
+        private int PendingSendCount()
+        {
+            lock (m_objSendLock)
+                return m_setSendKey.Count;
+        }
+
+        // 한 바퀴에 여러 건을 큐에 넣는다. 이미 가는 중인 건은 QueueSrv 가 건너뛴다.
         private bool GetJobCompleteReport(int nJobStatus)
+        {
+            int nQueued = 0;
+            for (int nRow = 0; nRow < DEF_REPORT_SCAN_MAX && nQueued < DEF_REPORT_QUEUE_MAX; nRow++)
+            {
+                bool bNoMore = false;
+                int nBefore = PendingSendCount();
+                GetJobCompleteReportOne(nJobStatus, nRow, ref bNoMore);
+                if (bNoMore) break;
+                if (PendingSendCount() > nBefore) nQueued++;
+            }
+            return true;
+        }
+
+        private bool GetJobCompleteReportOne(int nJobStatus, int nRow, ref bool bNoMore)
         {
             string strTitle = "[GetJobCompleteReport] .. ";
             m_strHostCmd = "F";
@@ -1585,14 +1882,16 @@ namespace TSK_HostCom
 
             #region 완료 보고해야할 작업이 있는지?
 
-            int nResult = IsJobExist(nJobStatus, ref nJobType, ref strUserID, ref strSScNum, ref strDScNum, ref strSPosition, ref strDPosition, ref strLuggNum, strJobTypNotIn);
+            int nResult = IsJobExist(nJobStatus, ref nJobType, ref strUserID, ref strSScNum, ref strDScNum, ref strSPosition, ref strDPosition, ref strLuggNum, strJobTypNotIn, nRow);
             if (nResult == 0)
             {
                 // 이미 함수내에서 리스트 박스에 디스플레이함!
+                bNoMore = true;
                 return false;
             }
             if (nResult < 0)
             {
+                bNoMore = true;
                 return true;
             }
             #endregion
@@ -1607,8 +1906,27 @@ namespace TSK_HostCom
             int nLuggNum = Convert.ToInt32(strLuggNum);
             bool bResult = false;
             // @.출고/피킹출고가 CV 에 도착했다(19)면 최종(차수 2) 보고다. 크레인 완료 때 1차를 보낸 뒤(WC_STEP='1')에만 나간다.
-            int nReportStep = modDefApp.STEP_FIRST;
+            /*
+             * @.입고 / 이동 / 랙투랙의 완료차수 (2026-11-23)
+             *
+             *   기본은 1 이다. 현장 상위(WMS)가 지금까지 받아 온 값이다.
+             *   ECSCOMA.ini [Property] COMPLETE_STEP_FINAL=1 로 두면 기존 ECS 와 같이 2 로 보낸다.
+             *
+             *   기존 ECS 가 차수 1 로 보내는 것은 출고 / 피킹출고의 크레인 완료 하나뿐이다
+             *   (Sc.cpp CompleteCheck : JOB->Complete(번호, 출고, 1)). 그 보고는 GetRetFirstReport 가 따로 보낸다.
+             *   나머지는 모두 차수 2 다.
+             *     입고 / 랙투랙 크레인 완료 : JOB->Complete(번호, 입고)  -> nStep 기본값 2
+             *     이동 / 출고 도착          : JOB->Arrived -> ArrivedReport -> 차수 2 고정
+             *     작업정보 창의 강제완료 / 도착보고 : 위와 같은 함수를 부른다 -> 차수 2
+             *   출고 도착(19)과 호기간 이동(29)은 이 설정과 상관없이 아래에서 2 로 보낸다.
+             */
+            int nReportStep = GfIsCompleteStepFinal() ? modDefApp.STEP_FINAL : modDefApp.STEP_FIRST;
             if (nJobStatus == 19 && (nJobType == 2 || nJobType == 3 || nJobType == 12 || nJobType == 13))
+            {
+                // 1차 보고(GetRetFirstReport)가 응답을 받았든 못 받았든 최종(차수 2)은 나간다. 상위는 차수 2 만 받아도 1차를 처리한다.
+                nReportStep = modDefApp.STEP_FINAL;
+            }
+            if (nJobStatus == 29 && (nJobType == 5 || nJobType == 15))
             {
                 // 1차 보고(GetRetFirstReport)가 응답을 받았든 못 받았든 최종(차수 2)은 나간다. 상위는 차수 2 만 받아도 1차를 처리한다.
                 nReportStep = modDefApp.STEP_FINAL;
@@ -1866,30 +2184,34 @@ namespace TSK_HostCom
 
             if (!m_blSockConnected)
             {
+                bNoMore = true;
                 return false;
             }
             
-            #region 메세지 보내기
-            if (!RequestSrv(iTxCnt.ToString()))
+            #region 메세지 보내기 (비동기 : 큐에 넣고, ACK 를 받으면 CliWorkThread 에서 작업을 삭제한다. 2026-11-15)
+            string strLuggForDel = strLuggNum;
+            bool bDupC = false;
+            if (!QueueSrv(delegate (bool bOkC)
+            {
+                if (!bOkC)
+                    return;         // 응답이 없다. 작업이 남아 있으므로 다음에 다시 만든다.
+
+                #region 응답 받고 작업 삭제
+                bool bDel = modDefApp.g_frmForm.DeleteJobMst(m_BDb, true, strLuggForDel);     // 함수안에서 Transaction 처리함!
+                if (bDel == false)
+                {
+                    m_strLog = string.Format("작업 삭제 실패하였습니다. [작업번호:{0}][실패내용:{1}]", strLuggForDel, modDefApp.GM_RTN_MSG);
+                    modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
+                    return;
+                }
+
+                m_strLog = string.Format("작업 삭제 성공하였습니다. [작업번호:{0}]", strLuggForDel);
+                modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_NOR);
+                #endregion
+            }, out bDupC))
             {
                 return false;
             }
-            #endregion
-
-            #region 응답 받고 작업 삭제
-            //modDefApp.g_frmForm.DeleteJobMst(false);
-
-            bResult = modDefApp.g_frmForm.DeleteJobMst(m_BDb, true, strLuggNum);     // 함수안에서 Transaction 처리함!
-            if (bResult == false)
-            {
-                m_strLog = string.Format("작업 삭제 실패하였습니다. [작업번호:{0}][실패내용:{1}]", strLuggNum, modDefApp.GM_RTN_MSG);
-                modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_ERR);
-
-                return false;
-            }
-
-            m_strLog = string.Format("작업 삭제 성공하였습니다. [작업번호:{0}]", strLuggNum);
-            modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_NOR);
             #endregion
 
                         /*
@@ -2013,10 +2335,18 @@ namespace TSK_HostCom
             Array.Copy(bytTempByte, 0, m_bytTxBuff, modDefApp.MSG_HEAD_CNT + 1, strTemp.Length);
             m_bytTxBuff[iTxCnt - 1] = modDefApp.ETX;
 
-            if (!RequestSrv(iTxCnt.ToString())) return false;
-
-            m_strLog = string.Format("공파렛트 입고 요구.. 스테이션=[{0}]", nStation);
-            modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_NOR);
+            int nStationForLog = nStation;
+            bool bDupN = false;
+            if (!QueueSrv(delegate (bool bOkN)
+            {
+                if (!bOkN)
+                {
+                    m_bPmReqSent = false;       // 응답이 없다. 다음에 다시 보낸다.
+                    return;
+                }
+                m_strLog = string.Format("공파렛트 입고 요구.. 스테이션=[{0}]", nStationForLog);
+                modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_NOR);
+            }, out bDupN)) return false;
             return true;
         }
 
@@ -2092,6 +2422,7 @@ namespace TSK_HostCom
          */
         private string m_strJobWhDef = modDefApp.WH_DEF;   // 작업의 창고
         private string m_strEqpWhDef = modDefApp.WH_DEF;   // 설비의 창고
+        private int m_nEqpPlcId = 0;                        // 에러 보고 끝에 붙는 PLC ID (크레인 0, 컨베이어는 PLC 번호)
 
         /*
          * P-BOX 입고 요구 전문에 미실행 유무를 붙일지.
@@ -2112,6 +2443,19 @@ namespace TSK_HostCom
          *   알려 주는 값이다.
          */
         private int m_nBoxStoReqFlag = -1;      // -1 = 아직 안 읽음
+
+        // @.입고 / 이동 / 랙투랙 완료 보고의 완료차수 (2026-11-23)
+        //     [Property]
+        //     COMPLETE_STEP_FINAL=0     ; 0(기본) = 완료차수 1, 1 = 완료차수 2 (기존 ECS 와 같음)
+        //   한 번만 읽는다. 바꾸면 HOST 태스크를 다시 켠다.
+        private int m_nCompleteStepFinal = -1;  // -1 = 아직 안 읽음
+        private bool GfIsCompleteStepFinal()
+        {
+            if (m_nCompleteStepFinal < 0)
+                m_nCompleteStepFinal = modDefAPI.GetPrivateProfileInt("Property", "COMPLETE_STEP_FINAL", 0, modDefApp.MAIN_INI);
+
+            return (m_nCompleteStepFinal != 0);
+        }
 
         // @@.INI 를 한 번만 읽는다. 전문을 낼 때마다 파일을 열 까닭이 없다.
         private bool GfIsBoxStoReqFlagUsed()
@@ -2237,14 +2581,20 @@ namespace TSK_HostCom
             Array.Copy(bytTempByte, 0, m_bytTxBuff, modDefApp.MSG_HEAD_CNT + 1, strTemp.Length);
             m_bytTxBuff[iTxCnt - 1] = modDefApp.ETX;
 
-            if (!RequestSrv(iTxCnt.ToString())) return false;
+            int nF1 = nFork1LuggNum, nF2 = nFork2LuggNum;
+            string strTempForLog = strTemp;
+            bool bDupL = false;
+            if (!QueueSrv(delegate (bool bOkL)
+            {
+                if (!bOkL) return;      // 응답이 없다. 낸 시각을 적지 않아 다음에 다시 낸다.
 
-            // @.낸 시각을 적어 둔다. 다음 요구는 DEF_BOX_WAIT_S 초 뒤에 나간다.
-            m_dtBoxRequested = DateTime.Now;
+                // @.낸 시각을 적어 둔다. 다음 요구는 DEF_BOX_WAIT_S 초 뒤에 나간다.
+                m_dtBoxRequested = DateTime.Now;
 
-            m_strLog = string.Format("P-BOX 입고 요구.. Fork1(222)=[{0}] Fork2(221)=[{1}] 전문=[{2}]",
-                nFork1LuggNum, nFork2LuggNum, strTemp);
-            modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_NOR);
+                m_strLog = string.Format("P-BOX 입고 요구.. Fork1(222)=[{0}] Fork2(221)=[{1}] 전문=[{2}]",
+                    nF1, nF2, strTempForLog);
+                modCmWork.ShowMsgClient(strTitle + m_strLog, modDefApp.MSG_NOR);
+            }, out bDupL)) return false;
             return true;
         }
 
@@ -2311,6 +2661,17 @@ namespace TSK_HostCom
         //설명		    : 도착보고 
         private bool GetLoadArrivalReport(int nJobStatus)
         {
+            for (int n = 0; n < DEF_REPORT_QUEUE_MAX; n++)
+            {
+                bool bNoMore = false;
+                bool bOk = GetLoadArrivalReportOne(nJobStatus, ref bNoMore);
+                if (bNoMore || !bOk) break;
+            }
+            return true;
+        }
+
+        private bool GetLoadArrivalReportOne(int nJobStatus, ref bool bNoMore)
+        {
             string strTitle = "[GetLoadArrivalReport] .. ";
             // @.원본과 같이 완료보고 전문으로 보낸다.(완료차수만 2)
             m_strHostCmd = "F";
@@ -2328,10 +2689,12 @@ namespace TSK_HostCom
             int nResult = IsJobExist(nJobStatus, ref nJobType, ref strUserID, ref strSScNum, ref strDScNum, ref strSPosition, ref strDPosition, ref strLuggNum);
             if (nResult == 0)
             {
+                bNoMore = true;
                 return false;
             }
             if (nResult < 0)
             {
+                bNoMore = true;
                 return true;
             }
             #endregion
@@ -2344,9 +2707,13 @@ namespace TSK_HostCom
              *   보고는 못 보냈는데 상태만 올라가, 그 작업의 도착보고가 영영 나가지
              *   않았다. 원본은 보고를 보낸 뒤에 상태를 정리한다.
              */
-            if (!m_blSockConnected)
+
+            if (nJobType != 5)
             {
-                return false;
+                if (!m_blSockConnected)
+                {
+                    return false;
+                }
             }
 
             #region 보고를 못했어도 그냥 지나감! - 다시 보고안하기 위해서 먼저 업데이트 하고 넘어감
@@ -2356,12 +2723,24 @@ namespace TSK_HostCom
             //### Status UPDATE
             m_BDb.ParamsClear();
 
-            m_strSql = modDefApp.CRLF + "  UPDATE JOB_MST ";
-            m_strSql += modDefApp.CRLF + "    SET JOB_STATUS   = " + m_BDb.ParamsAdd("JOB_STATUS", nJobStatus + 6);      // 도착 보고에서 도착보고완료로 수정 
-            m_strSql += modDefApp.CRLF + "      , UPD_USER_ID  = 'HOST_TASK'";
-            m_strSql += modDefApp.CRLF + "      , UPD_DT       = " + modDateTime.SYSDATE;
-            m_strSql += modDefApp.CRLF + "  WHERE WH_TYP       IN " + modDefApp.GsWhTypList();
-            m_strSql += modDefApp.CRLF + "    AND LUGG_NO      = " + m_BDb.ParamsAdd("LUGG_NO", strLuggNum);
+            if (nJobType != 5)
+            {
+                m_strSql = modDefApp.CRLF + "  UPDATE JOB_MST ";
+                m_strSql += modDefApp.CRLF + "    SET JOB_STATUS   = " + m_BDb.ParamsAdd("JOB_STATUS", nJobStatus + 6);      // 도착 보고에서 도착보고완료로 수정 
+                m_strSql += modDefApp.CRLF + "      , UPD_USER_ID  = 'HOST_TASK'";
+                m_strSql += modDefApp.CRLF + "      , UPD_DT       = " + modDateTime.SYSDATE;
+                m_strSql += modDefApp.CRLF + "  WHERE WH_TYP       IN " + modDefApp.GsWhTypList();
+                m_strSql += modDefApp.CRLF + "    AND LUGG_NO      = " + m_BDb.ParamsAdd("LUGG_NO", strLuggNum);
+            }
+            //if (nJobType == 5)
+            //{
+            //    m_strSql = modDefApp.CRLF + "  UPDATE JOB_MST ";
+            //    m_strSql += modDefApp.CRLF + "    SET MES_WRITE_YN = " + m_BDb.ParamsAdd("MES_WRITE_YN", "Y");      // 도착 보고에서 도착보고완료로 수정 
+            //    m_strSql += modDefApp.CRLF + "      , UPD_USER_ID  = 'HOST_TASK'";
+            //    m_strSql += modDefApp.CRLF + "      , UPD_DT       = " + modDateTime.SYSDATE;
+            //    m_strSql += modDefApp.CRLF + "  WHERE WH_TYP       IN " + modDefApp.GsWhTypList();
+            //    m_strSql += modDefApp.CRLF + "    AND LUGG_NO      = " + m_BDb.ParamsAdd("LUGG_NO", strLuggNum);
+            //}
 
             m_iSelCnt = m_BDb.ExcuteNonQry_Par(ref m_strSql);
 
@@ -2475,9 +2854,10 @@ namespace TSK_HostCom
             #endregion
 
 
-            #region 메세지 보내기
-            if (!RequestSrv(iTxCnt.ToString()))
-            { 
+            #region 메세지 보내기 (비동기 : 큐에 넣는다)
+            bool bDupA = false;
+            if (!QueueSrv(null, out bDupA))
+            {
                 return false;
             }
             #endregion

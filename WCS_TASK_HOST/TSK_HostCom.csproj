@@ -84,6 +84,7 @@
     <Compile Include="cIniOpener.cs" />
     <Compile Include="cCbBasePost.cs" />
     <Compile Include="CCliWork.cs" />
+    <Compile Include="CCliWorkAsync.cs" />
     <Compile Include="cDbPostUse.cs" />
     <Compile Include="CLog.cs" />
     <Compile Include="CSrvWork.cs" />

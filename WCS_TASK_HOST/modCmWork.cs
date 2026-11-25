@@ -80,22 +80,19 @@ namespace TSK_HostCom
                         break;
                 }
 
-                modDefApp.g_frmForm.lsvMsgClient.Items.Add(lvitem);
-
-                if (modDefApp.g_frmForm.lsvMsgClient.Items.Count > 50)
+                // @.화면 목록은 통신 스레드가 직접 그리지 않는다. 전에는 통신 스레드가 줄을 넣고 Refresh() 로
+                //   다시 그리기가 끝날 때까지 기다려, 창이 앞에 보일 때 지시 한 건 응답에 1~4초가 걸렸다. 그 사이
+                //   HostSim 이 8초 안에 응답을 못 받아 같은 전문을 다시 보내 "이미 지시된 작업" 이 쏟아졌다.
+                //   줄 넣기는 UI 스레드에 맡기고(BeginInvoke) 바로 돌아온다. Refresh() 는 넣을 때 알아서 그려지므로 뺀다. (2026-10-28)
+                ListView lsv = modDefApp.g_frmForm.lsvMsgClient;
+                bool blShow = modDefApp.g_frmForm.chkShowClient.Checked;
+                if (!lsv.IsHandleCreated) return;
+                lsv.BeginInvoke((MethodInvoker)delegate
                 {
-                    modDefApp.g_frmForm.lsvMsgClient.Items.Clear();
-                }
-
-                if (modDefApp.g_frmForm.chkShowClient.Checked)
-                {
-                    modDefApp.g_frmForm.lsvMsgClient.EnsureVisible(modDefApp.g_frmForm.lsvMsgClient.Items.Count - 1);
-                }
-
-                if (p_strMsgKind != modDefApp.MSG_NOR)
-                {
-                    modDefApp.g_frmForm.lsvMsgClient.Refresh();
-                }
+                    if (lsv.Items.Count > 50) lsv.Items.Clear();
+                    lsv.Items.Add(lvitem);
+                    if (blShow) lsv.EnsureVisible(lsv.Items.Count - 1);
+                });
             }
             catch(Exception Ex)
             {
@@ -165,23 +162,19 @@ namespace TSK_HostCom
                         break;
                 }
 
-                modDefApp.g_frmForm.lsvMsgServer.Items.Add(lvitem);
-
-                if (modDefApp.g_frmForm.lsvMsgServer.Items.Count > 50)
+                // @.화면 목록은 통신 스레드가 직접 그리지 않는다. 전에는 통신 스레드가 줄을 넣고 Refresh() 로
+                //   다시 그리기가 끝날 때까지 기다려, 창이 앞에 보일 때 지시 한 건 응답에 1~4초가 걸렸다. 그 사이
+                //   HostSim 이 8초 안에 응답을 못 받아 같은 전문을 다시 보내 "이미 지시된 작업" 이 쏟아졌다.
+                //   줄 넣기는 UI 스레드에 맡기고(BeginInvoke) 바로 돌아온다. Refresh() 는 넣을 때 알아서 그려지므로 뺀다. (2026-10-28)
+                ListView lsv = modDefApp.g_frmForm.lsvMsgServer;
+                bool blShow = modDefApp.g_frmForm.chkShowServer.Checked;
+                if (!lsv.IsHandleCreated) return;
+                lsv.BeginInvoke((MethodInvoker)delegate
                 {
-                    modDefApp.g_frmForm.lsvMsgServer.Items.Clear();
-                }
-
-                if (modDefApp.g_frmForm.chkShowServer.Checked)
-                {
-                    modDefApp.g_frmForm.lsvMsgServer.EnsureVisible(modDefApp.g_frmForm.lsvMsgServer.Items.Count - 1);
-                }
-                if (p_strMsgKind != modDefApp.MSG_NOR)
-                {
-                    modDefApp.g_frmForm.lsvMsgServer.Refresh();
-                }
-
-                modDefApp.g_frmForm.lsvMsgServer.Refresh();
+                    if (lsv.Items.Count > 50) lsv.Items.Clear();
+                    lsv.Items.Add(lvitem);
+                    if (blShow) lsv.EnsureVisible(lsv.Items.Count - 1);
+                });
 
             }
             catch (Exception Ex)
