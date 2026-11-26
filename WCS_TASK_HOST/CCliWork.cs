@@ -32,6 +32,8 @@ namespace TSK_HostCom
         //   PLC 의 포크 작업번호(LUGG_NO_FK1_RD)가 0 이 된다. 구 ECS 때처럼 완료 뒤에도 WMS 에 번호가 남도록, PLC 값과 내부 값이 모두 0 이면
         //   마지막으로 보고한 번호를 그대로 싣는다. 새 작업이 잡히면 그 번호로 바뀐다. (키 = PLC_NO + SC_NO)
         private System.Collections.Generic.Dictionary<string, int> m_dicScLastLugg = new System.Collections.Generic.Dictionary<string, int>();
+        // @.크레인마다 마지막으로 상위에 보낸 상태 전문 본문. 지금 만든 본문과 다르면 바뀐 것으로 보고 보낸다. (2026-11-26)
+        private System.Collections.Generic.Dictionary<string, string> m_dicScLastBody = new System.Collections.Generic.Dictionary<string, string>();
 		//SQL 문장
 		private string m_strSql;
 		//처리 건수 반환
@@ -1102,6 +1104,9 @@ namespace TSK_HostCom
              */
             bool bPartial = (bTimeReport == false);
             string strScSentList = "'0'";
+            // @.이번 묶음에 넣은 크레인. 전송이 실패하면 "마지막으로 보낸 본문" 을 지워 다음에 다시 보내게 한다. (2026-11-26)
+            System.Collections.Generic.List<string> lstScSentKey = new System.Collections.Generic.List<string>();
+            System.Collections.Generic.List<string> lstScSentBody = new System.Collections.Generic.List<string>();
 
             int nScCnt = iCnt;
             for (int ii = 0; ii < iCnt; ii++)
@@ -1174,12 +1179,33 @@ namespace TSK_HostCom
                 string strScWhDef = modDefApp.GsWhDefOf(m_BDb.dtMain.Rows[ii]["WH_TYP"].ToString());
 
                 bool bScChanged = (("" + m_BDb.dtMain.Rows[ii]["HOST_SEND_YN"]).Trim() == "N");
-                if (bPartial == false || bScChanged)
+                string strScBody = GfMakeStatusBody(strScWhDef, modDefApp.DEV_CLASS_SC, nScNo, nScStatus,
+                                                    nScLugg,
+                                                    0,                          // @.사이즈체크는 S/C 에 해당 없음
+                                                    (nScItn > 0) ? 1 : 0);     // @.ECS작업유무는 진행 중인 작업이 있을 때만
+                /*
+                 * @.보낼 전문이 마지막으로 보낸 것과 다르면 바뀐 것으로 본다. (2026-11-26)
+                 *
+                 *   S/C 태스크는 운전 모드 / 동작 상태(UCSTATUS)가 바뀔 때만 HOST_SEND_YN 을 'N' 으로 세운다.
+                 *   그런데 상위에 보내는 상태(대기 / 입고중 / 출고중)는 PLC 의 작업구분(JOB_TYP_RD), 지시한 작업번호(ITN_LUGG_FK1),
+                 *   입출고 정지(SUSPEND)로 정한다. 이 값들은 바뀌어도 'N' 이 서지 않는다.
+                 *   지시 직후 동작 상태가 먼저 바뀌고 작업구분이 조금 뒤에 올라오면, 그 사이에 읽힌 값으로 "대기" 가 한 번 나가고
+                 *   작업구분이 올라온 뒤에는 다시 보낼 계기가 없어 30초 정기 보고 때에야 "작업중" 이 나갔다.
+                 *   (현장 2026-11-25 : 지시 2,361건 가운데 45건이 지시 뒤 약 30초에 "작업중" 으로 보고됐다)
+                 */
+                string strScLastBody;
+                bool bScBodyChanged;
+                lock (m_dicScLastBody)
                 {
-                    lstStatusFrame.Add(GfMakeStatusBody(strScWhDef, modDefApp.DEV_CLASS_SC, nScNo, nScStatus,
-                                                        nScLugg,
-                                                        0,                          // @.사이즈체크는 S/C 에 해당 없음
-                                                        (nScItn > 0) ? 1 : 0));    // @.ECS작업유무는 진행 중인 작업이 있을 때만
+                    bScBodyChanged = (!m_dicScLastBody.TryGetValue(strScKey, out strScLastBody) || strScLastBody != strScBody);
+                }
+                if (bScBodyChanged)
+                    bScTemp = true;
+                if (bPartial == false || bScChanged || bScBodyChanged)
+                {
+                    lstStatusFrame.Add(strScBody);
+                    lstScSentKey.Add(strScKey);
+                    lstScSentBody.Add(strScBody);       // 큐에 넣는 자리에서 m_dicScLastBody 에 적는다
                     if (bScChanged)
                         strScSentList += ",'" + ("" + m_BDb.dtMain.Rows[ii]["SC_NO"]).Trim().Replace("'", "") + "'";
                 }
@@ -1370,10 +1396,20 @@ namespace TSK_HostCom
                     return true;
                 // 보내기 전에 보냈다는 표시를 먼저 한다. 가는 도중의 변경은 설비 태스크가 다시 'N' 으로 세운다.
                 if (!StatusMarkSent(strScSentList, strMC_NO_LIST, "Y"))
+                {
+                    StatusForgetScBody(lstScSentKey);
                     return false;
+                }
             }
             else if (lstStatusFrame.Count == 0)
                 return StatusAckUpdate(strMC_NO_LIST);
+
+            // @.여기까지 왔으면 큐에 넣는다. 보낼 본문을 "마지막으로 보낸 본문" 으로 적어 둔다. (실패하면 StatusForgetScBody 가 지운다)
+            lock (m_dicScLastBody)
+            {
+                for (int nKey = 0; nKey < lstScSentKey.Count; nKey++)
+                    m_dicScLastBody[lstScSentKey[nKey]] = lstScSentBody[nKey];
+            }
 
             string strMcListForAck = strMC_NO_LIST;
             string strScListForAck = strScSentList;
@@ -1390,6 +1426,7 @@ namespace TSK_HostCom
                     if (nStatusRemain == 0)
                     {
                         m_bStatusInFlight = false;
+                        if (!bStatusAllOk) StatusForgetScBody(lstScSentKey);
                         if (bPartial)
                         {
                             if (!bStatusAllOk) StatusMarkSent(strScListForAck, strMcListForAck, "N");   // 못 보냈다 : 다음에 다시
@@ -1402,6 +1439,7 @@ namespace TSK_HostCom
                 {
                     // 연결이 끊겨 넣지 못했다. 이미 넣은 것의 콜백은 실패로 끝난다. 못 넣은 나머지는 세지 않는다.
                     bStatusAllOk = false;
+                    StatusForgetScBody(lstScSentKey);
                     nStatusRemain -= (lstStatusFrame.Count - nFrame);
                     if (nStatusRemain <= 0)
                     {
@@ -1417,6 +1455,21 @@ namespace TSK_HostCom
             #endregion
 
             return true;
+        }
+
+        // 전송하지 못한 크레인의 "마지막으로 보낸 본문" 을 지운다. 다음 바퀴에 다시 보낸다. (2026-11-26)
+        //   전송 결과 콜백은 송신 스레드에서 불리므로 잠그고 쓴다.
+        private void StatusForgetScBody(System.Collections.Generic.List<string> lstKey)
+        {
+            try
+            {
+                lock (m_dicScLastBody)
+                {
+                    for (int i = 0; i < lstKey.Count; i++)
+                        m_dicScLastBody.Remove(lstKey[i]);
+                }
+            }
+            catch { }
         }
 
         // 변경 보고용 : 고른 크레인 / 작업대의 HOST_SEND_YN 을 바꾼다. (2026-11-23)
