@@ -291,8 +291,18 @@ namespace WCS_TASK_SC
                     // @.응답이 아직 안 왔다. 기본은 30ms 쉬고 다시 본다. RecvPollMs 가 0 이하면 50ms 까지는 쉬지 않고 계속 본다. (2026-11-22)
                     if (RecvPollMs <= 0)
                     {
-                        if (swWait.ElapsedMilliseconds < 50) Thread.Sleep(0);
-                        else Thread.Sleep(1);
+                        /*
+                         * @.쉬지 않고 도는 대신, 응답이 올 때까지 소켓에서 기다린다. (2026-11-26, CV TASK 와 같은 수정)
+                         *
+                         *   전에는 Thread.Sleep(0) 으로 50ms 까지 계속 돌면서 소켓을 봤다. 같은 우선순위로 기다리는 스레드가 없으면
+                         *   Sleep(0) 은 바로 돌아오므로, 응답을 기다리는 동안 그 스레드가 CPU 코어 하나를 다 썼다.
+                         *   Poll 은 응답이 도착하면 바로 깨어나고, 기다리는 동안에는 CPU 를 쓰지 않는다.
+                         */
+                        bool bReadable = false;
+                        try { bReadable = _Socket.Poll(20000, SelectMode.SelectRead); }     // 최대 20ms. 그 안에 오면 바로 돌아온다 (시간초과를 보려고 끊어 기다린다)
+                        catch (Exception) { Thread.Sleep(1); }                              // 소켓이 닫혔다 - 돌지 않게 쉰다 (아래 시간초과가 정리한다)
+                        // 끊긴 소켓은 읽을 것이 없는데도 "읽을 수 있음" 으로 나온다. 그대로 두면 다시 쉬지 않고 돌게 되므로 잠깐 쉰다.
+                        if (bReadable && _Socket.Available <= 0) Thread.Sleep(1);
                     }
                     else
                         Thread.Sleep(RecvPollMs);
