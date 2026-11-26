@@ -294,8 +294,19 @@ namespace WCS_TASK_CV
                     //   (2026-11-15 : 센서 트래킹 구간 PLC 의 한 바퀴를 줄이려고. 한 번 읽을 때마다 최소 30ms 를 기다리던 것을 없앤다)
                     if (RecvPollMs <= 0)
                     {
-                        if (swWait.ElapsedMilliseconds < 50) Thread.Yield();
-                        else Thread.Sleep(1);
+                        /*
+                         * @.쉬지 않고 도는 대신, 응답이 올 때까지 소켓에서 기다린다. (2026-11-26)
+                         *
+                         *   전에는 Thread.Yield() 로 50ms 까지 계속 돌면서 소켓을 봤다. 양보받을 스레드가 없으면 Yield 는 바로
+                         *   돌아오므로, 응답을 기다리는 동안 그 스레드가 CPU 코어 하나를 다 썼다. RECV_POLL_MS=0 인 PLC 가 5개면
+                         *   코어 4~5개분이다. (로컬 측정 : CV TASK 혼자 코어 4.7개분, 12코어 PC 의 39%)
+                         *   Poll 은 응답이 도착하면 바로 깨어나고, 기다리는 동안에는 CPU 를 쓰지 않는다. 응답을 받는 빠르기는 같다.
+                         */
+                        bool bReadable = false;
+                        try { bReadable = _Socket.Poll(20000, SelectMode.SelectRead); }     // 최대 20ms. 그 안에 오면 바로 돌아온다 (시간초과를 보려고 끊어 기다린다)
+                        catch (Exception) { Thread.Sleep(1); }                              // 소켓이 닫혔다 - 돌지 않게 쉰다 (아래 시간초과가 정리한다)
+                        // 끊긴 소켓은 읽을 것이 없는데도 "읽을 수 있음" 으로 나온다. 그대로 두면 다시 쉬지 않고 돌게 되므로 잠깐 쉰다.
+                        if (bReadable && _Socket.Available <= 0) Thread.Sleep(1);
                     }
                     else
                         Thread.Sleep(RecvPollMs);
